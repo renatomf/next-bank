@@ -135,6 +135,17 @@ Legenda STRIDE: **S** falsificação de identidade · **T** adulteração · **R
 | API-09 | Dependência ou GitHub Action maliciosa | T, E | A6 | Lockfile e instalação congelada; osv-scanner; Dependabot; actions fixadas por SHA; `GITHUB_TOKEN` com permissão mínima | CI falha com dependência vulnerável conhecida | 2 |
 | API-10 | Injeção em logs | T | A2 | Logs estruturados em JSON (o valor nunca vira linha nova) | Campo com `\n` não quebra o log | 2 |
 
+### 5.6 Demo pública
+
+A V1 fica publicada para avaliação por recrutadores. Uma demo aberta tem riscos próprios.
+
+| ID | Ameaça | STRIDE | Ator | Mitigação | Teste | Sem. |
+|---|---|---|---|---|---|---|
+| DEMO-01 | Visitantes cadastram **dados pessoais reais** (CPF, nome, e-mail) numa demo pública | I | Visitante | O app gera um CPF fictício válido no cadastro; aviso explícito para não usar dados reais; contas de demonstração prontas dispensam o cadastro | Fluxo de cadastro oferece o CPF gerado por padrão | 3 |
+| DEMO-02 | Dados de visitantes acumulados indefinidamente | I | A5 | Reset semanal do banco da demo (apaga contas de visitantes, recria as de demonstração); retenção documentada no README | Job de reset em ambiente de teste deixa só as contas de demonstração | 8 |
+| DEMO-03 | Contas de demonstração alteradas para prejudicar a experiência de outros visitantes (trocar PIN, encerrar sessões, zerar saldo) | T, D | Visitante | Contas de demonstração não podem trocar senha ou PIN; saldo recomposto no reset; rate limit normal | Troca de PIN numa conta de demonstração → 403 | 7 |
+| DEMO-04 | Uso da demo para hospedar conteúdo ofensivo (nomes, descrições de Pix) | T | Visitante | Limite de tamanho nos campos; reset semanal | Descrição acima de 140 caracteres → 422 | 5 |
+
 ## 6. Decisões de segurança
 
 | # | Decisão | Proposta |

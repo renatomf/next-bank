@@ -1,6 +1,6 @@
 # Plano — Semana 1: Arquitetura + Segurança
 
-- **Spec:** `docs/superpowers/specs/2026-10-05-next-bank-roadmap-design.md` (seções 6, 8)
+- **Roadmap:** `docs/roadmap.md` (seções 6, 8)
 - **Carga:** ~30h (5 dias × 6h)
 - **Objetivo:** fechar no papel tudo o que a semana 2 em diante vai implementar, para que nenhuma decisão de domínio ou segurança seja tomada no meio do código.
 - **Pronto quando:** modelo de domínio, ERD, threat model, ADRs 001–008 e diagramas C4 estão commitados e revisados pelo desenvolvedor.
@@ -119,7 +119,9 @@
 
 **Commit:** `docs(adr): ADRs 001-008`
 
-## Tarefa 5 — C4, sequências e README inicial (dia 5, ~6h)
+## Tarefa 5 — C4 e diagramas de sequência (limite: meio dia)
+
+> Escopo reduzido na revisão de fechamento: o README já foi feito; ficam só os diagramas e a revisão de consistência.
 
 **Arquivos:** `docs/architecture/c4.md`, `docs/architecture/sequences.md`, `README.md`
 
@@ -129,7 +131,7 @@
 - [ ] Diagramas de sequência (Mermaid):
   - login + refresh com detecção de reuso
   - PIX interno: criar → autorizar com PIN → processar (com idempotência e locks)
-- [ ] `README.md` inicial: nome, tagline, **aviso genérico de projeto fictício**, objetivo, stack, links para spec, brief, ADRs e threat model, status "em construção"
+- [ ] `README.md` inicial: nome, tagline, **aviso genérico de projeto fictício**, objetivo, stack, links para roadmap, brief, ADRs e threat model, status "em construção"
 - [ ] Revisão final da semana: conferir consistência entre os documentos
 
 **Aceite:** um entrevistador entende o sistema só pelo README e pelos diagramas, em 5 minutos.

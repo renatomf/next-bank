@@ -78,9 +78,11 @@ next-bank/
 ├── docs/
 │   ├── adr/
 │   ├── architecture/      # C4, diagramas de sequência, ERD
-│   ├── design/            # referências, brief visual, mockups HTML
+│   ├── design/            # brief visual, mockups (referências de terceiros só localmente)
+│   ├── plans/             # plano de cada semana
 │   ├── security/          # threat model, checklists ASVS/MASVS
-│   └── superpowers/specs/
+│   ├── evolucao.md        # como chegamos aqui e para onde vamos
+│   └── roadmap.md         # este documento
 └── .github/workflows/
 ```
 
@@ -264,20 +266,35 @@ Cada semana tem itens **obrigatórios** e **extras**. Se a semana estourar, os e
 | Sem. | Fatia | Obrigatório | Extra | Pronto quando |
 |---|---|---|---|---|
 | 1 | Arquitetura + Segurança | *(Design já concluído: identidade, tokens e 3 mockups.)* Modelo de domínio (contextos, agregados, máquina de estados, plano de contas); threat model (Auth, PIX); ADRs 001–008; C4 (contexto e containers); ERD inicial; mapa de navegação e estados das telas | — | ADRs, threat model e diagramas commitados e revisados |
-| 2 | Esqueleto ponta a ponta | Monorepo; Fastify + Drizzle + Postgres (Docker Compose); CI (format, lint, typecheck, testes, build) nos dois apps; dependency-cruiser; gitleaks; Pino + requestId; Sentry; Home exibe saldo vindo da API | Geração de contratos; osv-scanner + Semgrep; deploy no Render + Neon | PR verde; app conversa com a API |
-| 3 | Identity | Cadastro, login, logout; Argon2id; JWT + refresh rotativo com detecção de reuso; sessões; rate limit; auditoria de auth. Mobile: login e cadastro, secure storage, interceptor de refresh com fila única, restauração e expiração de sessão; PIN de transação validado no servidor | Desbloqueio por biometria no app | Testes de domínio e de API verdes; itens de auth do threat model mitigados |
+| 2 | Esqueleto ponta a ponta | **Spikes (dias 1–2):** gerador de cliente Dart, migrations Drizzle com triggers/`GRANT`s no Neon, serviço privado no Render. Monorepo (pnpm + Turborepo + pub workspaces); app movido para `apps/mobile`, **sem as plataformas não usadas** (linux, macos, windows, web) e com **identificador único** (`dev.renatomf.nextbank`); Fastify + Drizzle + Postgres (Docker Compose); CI (format, lint, typecheck, testes, build) nos dois apps; dependency-cruiser; gitleaks (CI e pré-commit); proteção da `main`; Pino + requestId; Sentry; Home exibe saldo vindo da API | Geração de contratos; osv-scanner + Semgrep; deploy no Render + Neon | PR verde; app conversa com a API |
+| 3 | Identity | Cadastro, login, logout; Argon2id; JWT + refresh rotativo com detecção de reuso; sessões; rate limit; auditoria de auth. Mobile: login e cadastro, secure storage, interceptor de refresh com fila única, restauração e expiração de sessão; PIN de transação validado no servidor; **cadastro da demo com CPF fictício gerado no app** (nunca dados reais) | Desbloqueio por biometria no app | Testes de domínio e de API verdes; itens de auth do threat model mitigados |
 | 4 | Accounts + Ledger | `Money`; `Account`; plano de contas; `JournalEntry` em partidas dobradas; saldos posted/available com versão; funding pela conta de sistema; authorization por dono. Mobile: Home (saldo, ações rápidas, recentes, estados de loading, vazio e erro) | Job de reconciliação interna | Σ débitos = Σ créditos garantido por teste; "usuário A → conta B = 404" |
 | 5 | PIX — backend | Chaves PIX; máquina de estados; idempotência (escopo + validade); locks ordenados; `CHECK` de saldo; auditoria na transação; teste de concorrência (2 × R$80 sobre R$100) | Limites por transação e noturno | Todos os testes de integridade financeira verdes |
 | 6 | PIX — mobile + Extrato | Fluxo do PIX; confirmação com PIN/biometria; comprovante; extrato com paginação por cursor; detalhe da transação | Filtros do extrato (período, tipo) | **PIX funcionando de ponta a ponta** |
-| 7 | Perfil + Polimento | Perfil; segurança (sessões ativas, encerrar sessão); acessibilidade (semântica, contraste, escala de fonte); estados de erro revisados | Animações; ocultar saldo | As 10 telas implementadas |
-| 8 | Qualidade + Produção | E2E Login → PIX → Comprovante → Extrato; testes de segurança (authz, rate limit, idempotência, reuso de refresh, bloqueio do PIN); deploy; README com diagramas; vídeo de demo (2–3 min) | Profiling básico (startup, rebuilds, queries lentas) | **Tag `v1.0.0`** |
+| 7 | Perfil + Polimento | Perfil; segurança (sessões ativas, encerrar sessão); acessibilidade (semântica, contraste, escala de fonte); estados de erro revisados | Animações; ocultar saldo | As 14 telas implementadas |
+| 8 | Qualidade + Produção | E2E Login → PIX → Comprovante → Extrato; testes de segurança (authz, rate limit, idempotência, reuso de refresh, bloqueio do PIN); deploy; README com diagramas; **demo acessível** (seção 8.2) | Profiling básico (startup, rebuilds, queries lentas); app em emulador no navegador | **Tag `v1.0.0`** |
+
+### 8.0 Congelamento de escopo
+
+O escopo da V1 está **congelado** desde 2026-10-05. Ideia nova, mesmo boa, vai para "Próximos passos" (seção 11) até a tag `v1.0.0`. Exceções só para correções de segurança ou de integridade financeira. Estimativa realista: **8 a 9 semanas**.
 
 ### 8.1 Checkpoints
 
 - **Fim da semana 2:** se o esqueleto não estiver de pé, simplificar o tooling: ativar o plano B dos contratos e reduzir o CI ao essencial.
 - **Fim da semana 6:** se o PIX não estiver funcionando de ponta a ponta, a Fase 3 passa a ser opcional.
 
-### 8.2 ADRs da V1
+### 8.2 Demo pública (para recrutadores)
+
+Quem avalia o projeto precisa vê-lo funcionando **em menos de um minuto**, sem instalar nada e sem dados reais:
+
+- **Vídeo de demo** (2–3 min) no topo do README
+- **APK** publicado nas Releases do GitHub a cada versão
+- **Contas de demonstração prontas** (ex.: Ana e Bruno, com saldo), documentadas no README, para um Pix entre elas em 30 segundos
+- **Cadastro sem dados reais:** o app gera um CPF fictício válido; o aviso pede para não usar dados pessoais
+- **Reset semanal** do banco da demo, apagando contas de visitantes e recriando as contas de demonstração
+- *Extra:* app rodando num emulador dentro do navegador
+
+### 8.3 ADRs da V1
 
 | # | Decisão |
 |---|---|
@@ -290,7 +307,7 @@ Cada semana tem itens **obrigatórios** e **extras**. Se a semana estourar, os e
 | 007 | Idempotência e controle de concorrência |
 | 008 | Contrato único (Zod → OpenAPI → clientes gerados) |
 
-### 8.3 Estratégia de testes
+### 8.4 Estratégia de testes
 
 > Os padrões obrigatórios de segurança, arquitetura, qualidade, testes e performance (incluindo gates de CI, cobertura de 90% em domínio/aplicação e orçamentos de performance) estão em `CLAUDE.md`, seção "Padrões de engenharia", e valem para todas as fases.
 

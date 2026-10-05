@@ -28,6 +28,7 @@ O projeto começou com três roadmaps rascunhados: um com 38 fases, outro com ve
 | 12 | Monorepo | **Turborepo** no lado TypeScript; Flutter com ferramentas nativas | Ordem de build declarada e CI que roda só o que mudou |
 | 13 | Infraestrutura | Backoffice no **Render** com API administrativa **privada**; cache do CI no GitHub Actions | Menos fornecedores e segredos; ferramenta interna fora da internet |
 | 14 | Microsserviços | **Não no núcleo.** Monólito modular, com serviços separados só onde há fronteira real | A operação crítica (mover dinheiro) precisa ser atômica |
+| 15 | Revisão de fechamento da semana 1 | **Demo pública sem dados reais** (CPF fictício, contas de demonstração, reset semanal), README em inglês com mockups, licença, documentação reorganizada e **escopo da V1 congelado** | Recrutadores precisam ver o app funcionando em um minuto, e uma demo aberta não pode coletar dados pessoais reais |
 
 ### O que ficou de fora, de propósito
 

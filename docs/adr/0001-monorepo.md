@@ -38,4 +38,4 @@ No lado TypeScript, há dependências de build entre pacotes (os contratos preci
 
 ## Referências
 
-- Spec, seção 5 (estrutura do monorepo)
+- [Roadmap](../roadmap.md), seção 5 (estrutura do monorepo)

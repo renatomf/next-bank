@@ -1,6 +1,6 @@
 # next bank — Regras do projeto
 
-- Spec: `docs/superpowers/specs/2026-10-05-next-bank-roadmap-design.md`
+- Roadmap: `docs/roadmap.md`
 - Brief visual: `docs/design/brief.md`
 - Modelo de domínio: `docs/architecture/domain-model.md`
 - Responder sempre em português (pt-BR).
@@ -10,6 +10,8 @@
 O projeto é tratado como um **banco real em produção**. Nenhum padrão abaixo é relaxado por prazo: se não cabe, reduz-se o escopo, nunca a qualidade.
 
 **Prioridade em caso de conflito:** Segurança > Correção financeira > Testes e qualidade > Performance > Velocidade de entrega.
+
+**Escopo da V1 congelado** (desde 2026-10-05): funcionalidade, ferramenta ou serviço novo não entra até a `v1.0.0`; vai para "Próximos passos" no roadmap. Exceção: correções de segurança ou de integridade financeira. Documento novo só quando o código precisar dele.
 
 ### 1. Segurança (prioridade máxima)
 

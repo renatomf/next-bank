@@ -1,0 +1,22 @@
+# Quebras de linha padronizadas (LF) em todo o repositório,
+# independentemente do sistema operacional de quem faz o commit.
+* text=auto eol=lf
+
+# Scripts do Windows precisam de CRLF
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.ps1  text eol=crlf
+
+# Binários: nunca converter
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.ico  binary
+*.jar  binary
+*.ttf  binary
+*.otf  binary
+*.woff binary
+*.woff2 binary
+*.pdf  binary

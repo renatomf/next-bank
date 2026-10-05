@@ -1,6 +1,15 @@
 # next bank
 
+🇧🇷 Português · [🇺🇸 English](README.en.md)
+
 ### Seu dinheiro, um passo à frente.
+
+<p align="center">
+  <img src="docs/design/mockups/home-dark.png" width="230" alt="Tela inicial com saldo e últimas movimentações">
+  <img src="docs/design/mockups/pix-dark.png" width="230" alt="Tela de envio de Pix">
+  <img src="docs/design/mockups/comprovante-dark.png" width="230" alt="Comprovante de Pix">
+</p>
+<p align="center"><sub>Conceito visual da V1 — as telas finais são construídas em Flutter.</sub></p>
 
 O **next bank** é um banco digital pensado para quem quer controle total do próprio dinheiro, sem filas, sem letras miúdas e sem surpresas.
 
@@ -33,7 +42,7 @@ O next bank é construído com as práticas de um banco em produção:
 | Mobile | Flutter, Riverpod, GoRouter, Dio, Freezed |
 | API | Node.js, TypeScript, Fastify, Zod, Drizzle, PostgreSQL |
 | Backoffice | Next.js, TypeScript |
-| Infra | Docker, GitHub Actions, Sentry |
+| Infra | Docker, GitHub Actions, Turborepo, Sentry |
 
 ### Roadmap
 
@@ -46,17 +55,17 @@ O next bank é construído com as práticas de um banco em produção:
 ### Documentação
 
 - [Evolução do projeto](docs/evolucao.md): como chegamos aqui e para onde a arquitetura vai
-- [Roadmap e design de arquitetura](docs/superpowers/specs/2026-10-05-next-bank-roadmap-design.md)
+- [Roadmap e design de arquitetura](docs/roadmap.md)
 - [Decisões de arquitetura (ADRs)](docs/adr/README.md)
 - [Modelo de domínio](docs/architecture/domain-model.md)
 - [Banco de dados](docs/architecture/database.md)
 - [Threat model](docs/security/threat-model.md) e [checklist OWASP ASVS/MASVS](docs/security/checklist-asvs-masvs.md)
 - [Brief visual e design tokens](docs/design/brief.md)
-- [Plano da semana atual](docs/superpowers/plans/2026-10-05-semana-1-arquitetura-seguranca.md)
+- [Plano da semana atual](docs/plans/semana-01-arquitetura-seguranca.md)
 - [Changelog](CHANGELOG.md)
 
 ---
 
 Feito por **Renato Marques** · [github.com/renatomf](https://github.com/renatomf)
 
-<sub>Projeto de portfólio com fins de estudo e demonstração. Não é uma instituição financeira, não movimenta dinheiro real e utiliza apenas dados fictícios.</sub>
+<sub>Projeto de portfólio com fins de estudo e demonstração. Não é uma instituição financeira, não movimenta dinheiro real e utiliza apenas dados fictícios. Veja a [LICENSE](LICENSE).</sub>
