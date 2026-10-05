@@ -115,10 +115,12 @@ O **extrato** é um read model sobre Ledger + Payments, não um contexto. Na V1,
 ### 6.3 PIX — máquina de estados
 
 ```
-CREATED → AWAITING_AUTH → PROCESSING → COMPLETED
-                │               └────→ FAILED
-                └─→ CANCELLED (PIN inválido em excesso ou expiração)
+(criação) → AWAITING_AUTH → PROCESSING → COMPLETED
+                  │               └────→ FAILED
+                  └─→ CANCELLED (cancelado, PIN bloqueado ou expiração)
 ```
+
+O Pix nasce em `AWAITING_AUTH`; "criado" é só o evento `PixTransferCreated`. Detalhes em `docs/architecture/domain-model.md`.
 
 - **V1 (interno):** `PROCESSING → COMPLETED` acontece na mesma transação: débito no pagador e crédito no recebedor.
 - **Fase 2 (externo):** débito do pagador e crédito em `system:pix_clearing`. A confirmação do SPI move o valor de `pix_clearing` para fora (liquidação); uma falha estorna para o pagador.
