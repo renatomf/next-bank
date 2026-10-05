@@ -1,4 +1,4 @@
-package com.example.nexus_bank
+package dev.renatomf.nextbank
 
 import io.flutter.embedding.android.FlutterActivity
 
