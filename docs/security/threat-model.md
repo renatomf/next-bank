@@ -1,6 +1,6 @@
 # next bank — Threat Model (V1)
 
-- **Status:** Rascunho para revisão
+- **Status:** Aprovado (2026-10-05), incluindo as decisões D4–D7
 - **Método:** STRIDE por fluxo, sobre um diagrama de fluxo de dados com fronteiras de confiança
 - **Referências:** OWASP ASVS (nível 2) para API, OWASP MASVS para o app — checklist em `checklist-asvs-masvs.md`
 - **Base:** `docs/architecture/domain-model.md`, `docs/architecture/database.md`

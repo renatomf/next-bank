@@ -1,6 +1,6 @@
 # next bank — Checklist OWASP ASVS e MASVS (V1)
 
-- **Status:** Rascunho para revisão
+- **Status:** Aprovado (2026-10-05)
 - **Uso:** cada item tem a semana em que é implementado ou a justificativa de estar fora da V1. Os IDs entre parênteses apontam para as ameaças do `threat-model.md`.
 - **Nota:** os itens estão organizados pelos capítulos do OWASP ASVS (nível 2) e pelas categorias do OWASP MASVS v2, descritos com palavras próprias. A verificação formal requisito a requisito é feita na semana 8, contra a versão vigente dos padrões.
 
