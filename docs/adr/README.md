@@ -6,7 +6,7 @@ Cada ADR registra **uma** decisão de arquitetura: o contexto, as alternativas c
 
 | # | Decisão | Status |
 |---|---|---|
-| [0001](0001-monorepo.md) | Monorepo com pnpm workspaces e pub workspaces | Aceito |
+| [0001](0001-monorepo.md) | Monorepo com pnpm workspaces, Turborepo e pub workspaces | Aceito |
 | [0002](0002-monolito-modular-ddd-hexagonal.md) | Monólito modular com DDD e arquitetura hexagonal | Aceito |
 | [0003](0003-flutter-riverpod.md) | Flutter + Riverpod no app mobile | Aceito |
 | [0004](0004-autenticacao.md) | Autenticação com JWT EdDSA, refresh rotativo e PIN no servidor | Aceito |
