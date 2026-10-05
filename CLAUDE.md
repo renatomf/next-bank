@@ -51,7 +51,14 @@ O projeto é tratado como um **banco real em produção**. Nenhum padrão abaixo
 
 ### 5. Testes
 
-- **TDD** no domínio e nos casos de uso.
+- **TDD (teste antes do código, ciclo vermelho → verde → refatorar):**
+  - Domínio: TDD estrito. A lista de testes de cada fatia sai do modelo de domínio (cada invariante e cada erro do catálogo vira teste).
+  - Casos de uso: TDD com portas falsas e `Clock` controlável.
+  - API: outside-in — o teste HTTP (contra Postgres real) é escrito antes da rota.
+  - Segurança: o teste do ataque (IDOR, reuso de token, força bruta no PIN) é escrito antes da defesa.
+  - Flutter: TDD em notifiers e repositórios.
+  - **Sem TDD:** layout de telas e componentes visuais (testes de widget depois), configuração (validada pelo CI) e código gerado.
+  - Commits mostram a sequência: `test:` antes de `feat:`.
 - **Cobertura mínima de 90%** em `domain/` e `application/` (gate no CI). Sem meta numérica para o resto: o que importa é testar comportamento, não linhas.
 - Testes de integração contra **Postgres real** (Docker), nunca banco em memória.
 - Testes de segurança obrigatórios: autorização/IDOR, idempotência, concorrência, rate limit, reuso de refresh token, bloqueio de PIN.
