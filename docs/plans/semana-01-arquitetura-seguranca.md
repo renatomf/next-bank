@@ -119,7 +119,9 @@
 
 **Commit:** `docs(adr): ADRs 001-008`
 
-## Tarefa 5 — C4, sequências e README inicial (dia 5, ~6h)
+## Tarefa 5 — C4 e diagramas de sequência (limite: meio dia)
+
+> Escopo reduzido na revisão de fechamento: o README já foi feito; ficam só os diagramas e a revisão de consistência.
 
 **Arquivos:** `docs/architecture/c4.md`, `docs/architecture/sequences.md`, `README.md`
 
