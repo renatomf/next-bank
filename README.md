@@ -59,6 +59,7 @@ O next bank é construído com as práticas de um banco em produção:
 - [Decisões de arquitetura (ADRs)](docs/adr/README.md)
 - [Modelo de domínio](docs/architecture/domain-model.md)
 - [Banco de dados](docs/architecture/database.md)
+- [Diagramas C4](docs/architecture/c4.md) e [diagramas de sequência](docs/architecture/sequences.md)
 - [Threat model](docs/security/threat-model.md) e [checklist OWASP ASVS/MASVS](docs/security/checklist-asvs-masvs.md)
 - [Brief visual e design tokens](docs/design/brief.md)
 - [Plano da semana atual](docs/plans/semana-01-arquitetura-seguranca.md)

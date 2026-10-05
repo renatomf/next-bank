@@ -60,6 +60,7 @@ The detailed documentation is written in Portuguese:
 - [Roadmap and architecture design](docs/roadmap.md)
 - [Architecture Decision Records](docs/adr/README.md)
 - [Domain model](docs/architecture/domain-model.md) · [Database design](docs/architecture/database.md)
+- [C4 diagrams](docs/architecture/c4.md) · [Sequence diagrams](docs/architecture/sequences.md)
 - [Threat model](docs/security/threat-model.md) · [OWASP ASVS/MASVS checklist](docs/security/checklist-asvs-masvs.md)
 - [Visual brief and design tokens](docs/design/brief.md)
 - [Changelog](CHANGELOG.md)
