@@ -49,3 +49,124 @@ app.*.map.json
 
 # Referências visuais de terceiros (uso local, não publicar)
 docs/design/references/
+
+# =====================================================================
+# SEGREDOS E DADOS SENSÍVEIS — nunca versionar
+# (só arquivos *.example com valores falsos entram no git)
+# =====================================================================
+
+# Variáveis de ambiente (API, backoffice, simulador, CI local)
+.env
+.env.*
+*.env
+!.env.example
+!**/.env.example
+
+# Chaves, certificados e keystores
+*.pem
+*.key
+*.p8
+*.p12
+*.pfx
+*.crt
+*.cer
+*.der
+*.jks
+*.keystore
+key.properties
+**/secrets/
+**/*.secret
+**/*.secrets.*
+id_rsa*
+id_ed25519*
+
+# Chaves de assinatura de JWT geradas localmente
+**/keys/*.json
+jwt*.key
+
+# Firebase / FCM / Google (Fase 2+)
+google-services.json
+GoogleService-Info.plist
+firebase-debug.log
+.firebaserc
+
+# Apple / distribuição
+*.mobileprovision
+*.provisionprofile
+AuthKey_*.p8
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+
+# Sentry (token de upload de símbolos/source maps)
+.sentryclirc
+sentry.properties
+
+# Credenciais de nuvem e deploy
+.vercel/
+.render/
+.netlify/
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Bancos locais, dumps e backups (podem conter dados pessoais)
+*.sql.gz
+*.dump
+*.backup
+*.sqlite
+*.sqlite3
+*.db
+pgdata/
+infra/**/data/
+
+# Logs (podem conter tokens ou dados pessoais)
+*.log
+logs/
+
+# =====================================================================
+# MONOREPO — Node / Next.js / Flutter / ferramentas
+# =====================================================================
+
+# Node / pnpm
+node_modules/
+.pnpm-store/
+.npm/
+npm-debug.log*
+pnpm-debug.log*
+.turbo/
+*.tsbuildinfo
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+
+# Builds e cobertura em qualquer pacote
+build/
+dist/
+coverage/
+**/coverage/
+
+# Testes E2E (Playwright)
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Flutter em subpastas (apps/mobile, packages_flutter/*)
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/android/local.properties
+
+# Editores e SO
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+Thumbs.db
+*.swp
+
+# Ferramentas de IA (estado local)
+graphify-out/
