@@ -59,7 +59,7 @@ flowchart LR
 - Eventos: `UserRegistered`, `UserLoggedIn`, `LoginFailed`, `PasswordChanged`
 
 **`Session`** (família de refresh tokens)
-- Atributos: `id`, `userId`, `familyId`, `currentRefreshTokenHash`, `createdAt`, `lastUsedAt`, `expiresAt`, `revokedAt`, `deviceLabel`
+- Atributos: `id` (a própria sessão é a família de tokens), `userId`, `refreshTokens[]` (histórico da rotação), `createdAt`, `lastUsedAt`, `idleExpiresAt`, `absoluteExpiresAt`, `revokedAt`, `revokedReason`, `deviceLabel`
 - Invariantes:
   - Cada refresh gera um novo token; o anterior deixa de valer
   - **Uso de um token já substituído revoga a família inteira** (sinal de roubo)
@@ -94,7 +94,7 @@ flowchart LR
 
 **`JournalEntry`**
 - Atributos: `id`, `kind` (`FUNDING`, `PIX_INTERNAL`; na Fase 2: `PIX_OUT`, `PIX_OUT_SETTLEMENT`, `PIX_OUT_REVERSAL`, `PIX_IN`; na Fase 3: `REVERSAL`), `referenceType`, `referenceId`, `postings[]`, `createdAt`
-- `Posting`: `ledgerAccountId`, `direction` (`DEBIT`, `CREDIT`), `amount` (`Money` > 0)
+- `Posting`: `ledgerAccountId`, `direction` (`DEBIT`, `CREDIT`), `amount` (`Money` > 0), `counterpartyName`, `counterpartyDocumentMasked` (snapshot de quem está do outro lado, usado pelo extrato)
 - Invariantes:
   - Pelo menos duas partidas
   - **Σ débitos = Σ créditos**
@@ -239,16 +239,16 @@ O PIN é criado logo depois, numa tela própria (o cadastro só termina com o PI
 
 ## 8.1 Extrato (read model)
 
-O extrato não é um agregado: é uma consulta (lado de leitura do CQRS) que junta partidas do ledger com os dados do Pix.
+O extrato não é um agregado: é uma consulta (lado de leitura do CQRS) que lê **só o ledger**. Os dados da contraparte vêm do snapshot gravado em cada partida, então o extrato não depende do contexto Payments.
 
 | Campo exibido | Origem |
 |---|---|
-| Data e hora | `JournalEntry.createdAt` |
+| Data e hora | `Posting.createdAt` |
 | Tipo (Pix enviado, Pix recebido, Depósito inicial) | `JournalEntry.kind` + direção da partida |
-| Contraparte (nome) | `PixTransfer.payeeName` (envio) ou nome do pagador (recebimento) |
+| Contraparte (nome e documento mascarado) | `Posting.counterpartyName`, `Posting.counterpartyDocumentMasked` |
 | Valor com sinal | Partida da conta do cliente: crédito `+`, débito `−` |
-| Status | `PixTransfer.status`. Na V1, só aparecem no extrato Pix `COMPLETED` (os outros não geram lançamento) |
-| Link para comprovante | `PixTransfer.id` |
+| Status | Na V1, só Pix `COMPLETED` geram lançamento; logo, todo item do extrato está concluído |
+| Link para comprovante | `JournalEntry.referenceId` (id do Pix) |
 
 - **Paginação por cursor** em (`createdAt`, `id`), do mais recente para o mais antigo, 20 itens por página.
 - **Filtros (extra):** período e tipo (entradas/saídas).
