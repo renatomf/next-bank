@@ -1,6 +1,15 @@
 # next bank
 
+🇧🇷 Português · [🇺🇸 English](README.en.md)
+
 ### Seu dinheiro, um passo à frente.
+
+<p align="center">
+  <img src="docs/design/mockups/home-dark.png" width="230" alt="Tela inicial com saldo e últimas movimentações">
+  <img src="docs/design/mockups/pix-dark.png" width="230" alt="Tela de envio de Pix">
+  <img src="docs/design/mockups/comprovante-dark.png" width="230" alt="Comprovante de Pix">
+</p>
+<p align="center"><sub>Conceito visual da V1 — as telas finais são construídas em Flutter.</sub></p>
 
 O **next bank** é um banco digital pensado para quem quer controle total do próprio dinheiro, sem filas, sem letras miúdas e sem surpresas.
 
@@ -33,7 +42,7 @@ O next bank é construído com as práticas de um banco em produção:
 | Mobile | Flutter, Riverpod, GoRouter, Dio, Freezed |
 | API | Node.js, TypeScript, Fastify, Zod, Drizzle, PostgreSQL |
 | Backoffice | Next.js, TypeScript |
-| Infra | Docker, GitHub Actions, Sentry |
+| Infra | Docker, GitHub Actions, Turborepo, Sentry |
 
 ### Roadmap
 
@@ -59,4 +68,4 @@ O next bank é construído com as práticas de um banco em produção:
 
 Feito por **Renato Marques** · [github.com/renatomf](https://github.com/renatomf)
 
-<sub>Projeto de portfólio com fins de estudo e demonstração. Não é uma instituição financeira, não movimenta dinheiro real e utiliza apenas dados fictícios.</sub>
+<sub>Projeto de portfólio com fins de estudo e demonstração. Não é uma instituição financeira, não movimenta dinheiro real e utiliza apenas dados fictícios. Veja a [LICENSE](LICENSE).</sub>
