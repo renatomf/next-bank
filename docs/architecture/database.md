@@ -28,6 +28,8 @@
 - `PII_ENCRYPTION_KEY` (32 bytes): cifra AES-256-GCM. Cada valor cifrado guarda `key_version`, o que permite rotação gradual.
 - `PII_HMAC_KEY` (32 bytes): índice cego. Rotacionar exige recalcular os índices (procedimento documentado no runbook, fora da V1).
 
+**Risco aceito na V1 e caminho de evolução:** em bancos reais, essas chaves não ficam em variáveis de ambiente: ficam num **KMS/HSM**, com *envelope encryption* (uma chave mestra no KMS cifra as chaves de dados, e a aplicação nunca vê a chave mestra). Na V1, a criptografia é acessada por uma porta `KeyProvider`; trocar a implementação de "variável de ambiente" para KMS não muda o restante do código.
+
 ## 3. Convenções
 
 | Item | Convenção |
@@ -225,6 +227,7 @@ erDiagram
 - **`CHECK (kind = 'SYSTEM' OR available_balance >= 0)`** — saldo de cliente nunca negativo
 - **`CHECK (kind = 'SYSTEM' OR available_balance <= posted_balance)`** — reservas nunca criam saldo
 - `version` incrementado a cada atualização de saldo
+- **Contas `SYSTEM` não têm saldo materializado** (as colunas ficam em zero e não são atualizadas). O saldo delas é calculado pela soma dos lançamentos, no job de reconciliação ou sob demanda. Motivo: contas como `system:funding` e `system:pix_clearing` participam de **todas** as operações do seu tipo. Se cada operação travasse e atualizasse essa linha, ela viraria um gargalo único (*hot account*) e todas as operações fariam fila nela. Contas de cliente continuam materializadas, porque o saldo disponível precisa ser verificado com lock antes de cada débito.
 
 **`journal_entries`** (append-only)
 - `kind`: `CHECK (kind IN ('FUNDING','PIX_INTERNAL'))` na V1 (ampliado por migration nas fases seguintes)
@@ -293,7 +296,7 @@ Conexões sempre com TLS (`sslmode=verify-full` no ambiente publicado), `stateme
 2. `pix_transfers WHERE id = $1 FOR UPDATE` — impede autorizar o mesmo Pix duas vezes; confere status e expiração
 3. `transaction_pins WHERE user_id = $1 FOR UPDATE` — tentativas de PIN contadas de forma atômica
 4. `accounts WHERE id IN (pagador, recebedor) FOR SHARE` — status das contas não muda durante a operação
-5. `ledger_accounts WHERE id IN (a, b) ORDER BY id FOR UPDATE` — **ordem fixa por ID evita deadlock** entre um Pix A→B e outro B→A simultâneos
+5. `ledger_accounts WHERE id IN (a, b) ORDER BY id FOR UPDATE` — só contas de cliente (contas de sistema nunca são travadas); **ordem fixa por ID evita deadlock** entre um Pix A→B e outro B→A simultâneos
 6. Verifica saldo disponível e limites (com o horário do `Clock`)
 7. Insere `journal_entries` + `postings`; atualiza saldos e `version`
 8. Atualiza o Pix para `COMPLETED` (ou `FAILED`, sem lançamentos)
@@ -367,7 +370,24 @@ Todos rodam contra **Postgres real** (Docker), com o papel `nextbank_app`.
 | T-DB-13 | Papel da aplicação tenta `CREATE TABLE` / `TRUNCATE` | Recusado |
 | T-DB-14 | Reconciliação após 1.000 Pix aleatórios concorrentes | Saldo projetado = Σ lançamentos em todas as contas |
 
-## 12. Decisões desta tarefa
+## 12. Escalabilidade e caminho de evolução
+
+O desenho segue os **mesmos princípios** de ledgers de bancos e fintechs (partidas dobradas, imutabilidade, idempotência, saldo disponível × contabilizado, contexto com dados próprios). O que muda em escala é a **topologia física**. Um único Postgres bem indexado atende com folga o volume de um banco pequeno a médio; acima disso, o caminho é:
+
+| Gargalo | Quando aparece | Evolução | Preparado desde a V1 por |
+|---|---|---|---|
+| Conta muito movimentada (*hot account*) | Desde o primeiro volume relevante | Contas de sistema sem saldo materializado; se preciso, subcontas (`system:pix_clearing:00..15`) | Contas `SYSTEM` não travadas (seção 5.3) |
+| Tabela `postings` muito grande | Centenas de milhões de linhas | Particionamento por mês (`PARTITION BY RANGE (created_at)`) | Toda consulta filtra por conta + data |
+| Leituras (extrato, saldo) disputando com escritas | Muito acesso simultâneo | Réplicas de leitura para o lado de consulta (CQRS) | Extrato já é um read model separado |
+| Um banco de dados não basta | Milhões de clientes ativos | **Sharding por cliente/conta** ("células": cada uma com seu banco, atendendo uma fatia dos clientes) | Tudo é chaveado por conta; sem FK entre contextos |
+| Pix entre clientes de shards diferentes | Junto com o sharding | Transferência em duas etapas via conta transitória, como o Pix externo | **É o mesmo padrão da Fase 2** (`pix_clearing` + conciliação) |
+| Módulo precisa escalar sozinho | Times e cargas independentes | Extrair o contexto para um serviço com banco próprio | Um schema por contexto, comunicação por portas, Outbox |
+| Auditoria em volume regulatório | Anos de retenção | Armazenamento imutável dedicado (ex.: object storage com bloqueio de escrita) | Auditoria append-only e isolada no schema `audit` |
+| Chaves de criptografia | Produção real | KMS/HSM com envelope encryption | Porta `KeyProvider` (seção 2) |
+
+**O que não foi copiado de propósito:** bancos grandes operam com dezenas de serviços, mensageria (Kafka) e, nos tradicionais, núcleos legados em mainframe. Essa complexidade resolve problemas de escala e de organização que a V1 não tem. A V1 adota os princípios e deixa os pontos de extensão prontos, sem pagar o custo operacional antes da hora.
+
+## 13. Decisões desta tarefa
 
 | Decisão | Escolha | Alternativa descartada |
 |---|---|---|
@@ -378,3 +398,5 @@ Todos rodam contra **Postgres real** (Docker), com o papel `nextbank_app`.
 | Enums | `text` + `CHECK` | `ENUM` nativo (difícil de alterar) |
 | Extrato | Snapshot da contraparte nas partidas | Join entre schemas `ledger` e `payments` |
 | Paginação | Cursor `(created_at, id)` | `OFFSET` (lento e instável) |
+| Contas de sistema | Saldo não materializado, sem lock | Saldo atualizado a cada operação (gargalo de *hot account*) |
+| Chaves de criptografia | Variável de ambiente atrás da porta `KeyProvider` (risco aceito) | KMS já na V1 (custo e complexidade de infraestrutura sem ganho para a demo) |
