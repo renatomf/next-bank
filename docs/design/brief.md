@@ -98,7 +98,7 @@ Lucide (traço 1.8; 2–3 nos ícones de check e seta dentro de botões). Ícone
 
 ## 6. Logo
 
-Wordmark **"next"** em Sora 700, tracking −4%, seguido de um ponto Paraíba com glow. Nunca usar elementos do logo do next (Bradesco).
+Wordmark **"next"** em Sora 700, tracking −4%, seguido de um ponto Paraíba com glow. Identidade 100% própria: nenhum elemento de logos de outras instituições.
 
 ## 7. Componentes validados nos mockups
 

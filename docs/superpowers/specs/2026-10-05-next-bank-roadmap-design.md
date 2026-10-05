@@ -39,7 +39,7 @@ next bank é um banco fictício construído como **projeto de portfólio para va
 
 | Decisão | Escolha | Motivo |
 |---|---|---|
-| Nome | **next bank** (logo em minúsculas) | Escolha do desenvolvedor. Homônimo do banco digital "next" do Bradesco: o README traz aviso de projeto fictício, sem relação com a marca |
+| Nome | **next bank** (logo em minúsculas) | Escolha do desenvolvedor. O README traz um aviso genérico de projeto fictício de portfólio |
 | Repositório | Monorepo (pnpm workspaces + pacotes Flutter); o app atual vai para `apps/mobile` | Contratos, CI e versionamento num só lugar |
 | Ordem de construção | Esqueleto ponta a ponta + fatias verticais | Integração descoberta cedo e sempre algo demonstrável |
 | Design | Referências visuais → mockups HTML → tokens em Flutter (sem Figma) | Reduz o design de ~5 para ~2 dias |
@@ -204,7 +204,7 @@ Schemas Zod da API → OpenAPI → cliente Dart (mobile) + cliente TS (backoffic
   - Pacote Flutter: `next_bank`
   - Escopo npm: `@nextbank/*` (ex.: `@nextbank/api`, `@nextbank/backoffice`, `@nextbank/contracts`). **Não** usar `@next/*`, que é o escopo oficial do Next.js.
   - Repositório: `next-bank`
-- **Aviso obrigatório no README:** "Projeto fictício de portfólio, sem relação com o banco digital next (Bradesco)." Nenhum ativo visual (logo, cores, ilustrações) do next real é usado.
+- **Aviso no README:** uma linha genérica de projeto fictício de portfólio (não é instituição financeira, sem dinheiro real, dados fictícios). Nenhum ativo visual (logo, cores, ilustrações) de outras instituições é usado.
 - **Cor de marca: Paraíba `#00FFC8`.** Menta neon, inspirada na turmalina Paraíba (gema brasileira).
 - **Assinatura visual:** card de saldo sempre escuro, com brilho (glow) Paraíba, nos dois modos.
 
@@ -387,7 +387,7 @@ Cada item recebe um parágrafo de design no README, sem implementação:
 | Atraso nas semanas 2, 3 e 5 | Divisão obrigatório/extra; checkpoints nas semanas 2 e 6; plano B dos contratos |
 | Escopo crescer | Tudo fora deste documento vai para "Próximos passos" |
 | Código gerado por IA sem dono | Toda fatia começa por ADR e testes de domínio revisados pelo desenvolvedor |
-| Nome homônimo do next (Bradesco) gerar confusão | Aviso no README; identidade visual própria; escopo `@nextbank/*` |
+| Nome coincidir com marcas existentes | Aviso genérico no README; identidade visual própria; escopo `@nextbank/*` |
 | Cold start do Render na demo | Health check agendado ou plano pago durante o período de candidaturas |
 | Biometria indisponível em emulador | O PIN é o controle real; biometria simulada nos testes |
 | Esperar o projeto "ficar perfeito" para se candidatar | Candidaturas começam na `v1.0.0` |
