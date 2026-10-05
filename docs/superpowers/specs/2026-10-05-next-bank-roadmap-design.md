@@ -40,7 +40,7 @@ next bank é um banco fictício construído como **projeto de portfólio para va
 | Decisão | Escolha | Motivo |
 |---|---|---|
 | Nome | **next bank** (logo em minúsculas) | Escolha do desenvolvedor. O README traz um aviso genérico de projeto fictício de portfólio |
-| Repositório | Monorepo (pnpm workspaces + pacotes Flutter); o app atual vai para `apps/mobile` | Contratos, CI e versionamento num só lugar |
+| Repositório | Monorepo: pnpm workspaces + Turborepo (TypeScript) e pub workspaces (Flutter); o app atual vai para `apps/mobile` (ADR 0001) | Contratos, CI e versionamento num só lugar |
 | Ordem de construção | Esqueleto ponta a ponta + fatias verticais | Integração descoberta cedo e sempre algo demonstrável |
 | Design | Referências visuais → mockups HTML → tokens em Flutter (sem Figma) | Reduz o design de ~5 para ~2 dias |
 | Ambientes | Um ambiente publicado (produção de demo) + local | Staging não agrega valor ao portfólio |
@@ -57,7 +57,7 @@ next bank é um banco fictício construído como **projeto de portfólio para va
 | Backoffice | Next.js (App Router), TypeScript, Server Components/Actions, Tailwind, Playwright |
 | Simulador Bacen | Fastify + TypeScript (serviço separado) |
 | Contratos | Zod → OpenAPI → cliente Dart + cliente TS gerados |
-| Infra | Docker Compose (local), GitHub Actions, Render (API + simulador), Neon (Postgres), Vercel (backoffice) |
+| Infra | Docker Compose (local), GitHub Actions (CI + cache do Turborepo), Render (API, simulador e backoffice, com rede privada entre eles), Neon (Postgres) |
 | Qualidade e segurança | Vitest, integration_test, Playwright, dependency-cruiser, regras de import no Dart, gitleaks, osv-scanner/Dependabot, Semgrep |
 | Observabilidade | Pino + requestId e Sentry (V1); OpenTelemetry (Fase 2) |
 
@@ -281,7 +281,7 @@ Cada semana tem itens **obrigatórios** e **extras**. Se a semana estourar, os e
 
 | # | Decisão |
 |---|---|
-| 001 | Monorepo (pnpm workspaces + pacotes Flutter) |
+| 001 | Monorepo (pnpm workspaces + Turborepo + pub workspaces) |
 | 002 | Monólito modular com DDD + arquitetura hexagonal |
 | 003 | Flutter + Riverpod (inclui "por que não React Native") |
 | 004 | Autenticação: JWT + refresh rotativo + PIN de transação no servidor |
@@ -348,7 +348,7 @@ Cada semana tem itens **obrigatórios** e **extras**. Se a semana estourar, os e
 - **API:** endpoints `/admin/*` no contexto **Operations**, com RBAC verificado no servidor.
 - **Next.js:** App Router, Server Components para leitura, Server Actions para comandos, cliente TS gerado do OpenAPI.
 - **Testes:** Playwright cobrindo o fluxo de dupla aprovação, incluindo a tentativa do solicitante de aprovar a própria solicitação (deve falhar).
-- **Deploy:** Vercel.
+- **Deploy:** Render, no mesmo provedor da API. Os endpoints `/admin/*` são servidos por uma instância separada da API (mesma imagem, modo `admin`), implantada como **serviço privado**, sem URL pública: só o backoffice a alcança pela rede interna. A API pública não registra as rotas `/admin/*`. Evolução opcional: gateway de identidade (zero trust) na frente do backoffice.
 
 **ADR:** 011 Backoffice: RBAC e dupla aprovação
 
