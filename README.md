@@ -45,10 +45,15 @@ O next bank é construído com as práticas de um banco em produção:
 
 ### Documentação
 
+- [Evolução do projeto](docs/evolucao.md): como chegamos aqui e para onde a arquitetura vai
 - [Roadmap e design de arquitetura](docs/superpowers/specs/2026-10-05-next-bank-roadmap-design.md)
+- [Decisões de arquitetura (ADRs)](docs/adr/README.md)
 - [Modelo de domínio](docs/architecture/domain-model.md)
+- [Banco de dados](docs/architecture/database.md)
+- [Threat model](docs/security/threat-model.md) e [checklist OWASP ASVS/MASVS](docs/security/checklist-asvs-masvs.md)
 - [Brief visual e design tokens](docs/design/brief.md)
 - [Plano da semana atual](docs/superpowers/plans/2026-10-05-semana-1-arquitetura-seguranca.md)
+- [Changelog](CHANGELOG.md)
 
 ---
 
