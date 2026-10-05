@@ -5,6 +5,85 @@
 - Modelo de domínio: `docs/architecture/domain-model.md`
 - Responder sempre em português (pt-BR).
 
+## Padrões de engenharia (inegociáveis)
+
+O projeto é tratado como um **banco real em produção**. Nenhum padrão abaixo é relaxado por prazo: se não cabe, reduz-se o escopo, nunca a qualidade.
+
+**Prioridade em caso de conflito:** Segurança > Correção financeira > Testes e qualidade > Performance > Velocidade de entrega.
+
+### 1. Segurança (prioridade máxima)
+
+- **Security by design:** toda feature começa revisando o threat model (`docs/security/threat-model.md`). Ameaça nova vira uma linha no threat model **e** um teste.
+- **Baseline:** OWASP ASVS L2 (API e backoffice) e OWASP MASVS (app).
+- **Entrada:** toda entrada validada na borda (Zod no backend, validação no app); sem SQL concatenado (só queries parametrizadas do Drizzle).
+- **Autorização:** negar por padrão; todo endpoint verifica dono do recurso; **todo recurso tem teste de IDOR** (usuário A acessando dado de B → 404).
+- **Autenticação e criptografia:** só bibliotecas consolidadas (argon2, jose); nunca criptografia caseira; comparação de segredos em tempo constante.
+- **Segredos:** só em variáveis de ambiente / secret store; nunca em código, teste, log ou mensagem de erro.
+- **Dados pessoais (LGPD):** redação automática de CPF, tokens, senhas e PIN nos logs (Pino `redact`) e no Sentry (`beforeSend`); minimização de dados em todas as respostas.
+- **Erros:** respostas nunca expõem stack trace, SQL ou detalhes internos.
+- **Headers e transporte:** HTTPS, HSTS, headers seguros, CORS restrito, rate limit em rotas sensíveis.
+- **Mobile:** tokens só em Keychain/Keystore; nada sensível em logs, cache ou `SharedPreferences`; build de release ofuscado.
+- **Dependências:** lockfile commitado; scanner de vulnerabilidades no CI; dependência nova exige justificativa (manutenção ativa, licença, tamanho).
+- **Gates de CI que bloqueiam merge:** gitleaks (segredos), Semgrep (SAST), osv-scanner (dependências).
+- **Revisão de segurança obrigatória** (`/security-review`) em toda mudança em auth, sessão, PIN, ledger, Pix, idempotência ou autorização.
+
+### 2. Correção financeira
+
+- Dinheiro só como `Money` (inteiro em centavos); `double`/`number` de ponto flutuante para valores é proibido.
+- Todo comando financeiro é idempotente, transacional e usa locks em ordem determinística.
+- Ledger só aceita inclusão; correção apenas por estorno.
+- Toda regra financeira tem teste, incluindo **testes de concorrência** (requisições simultâneas sobre o mesmo saldo).
+
+### 3. Arquitetura
+
+- Fronteiras hexagonais e regras de import verificadas no CI (dependency-cruiser no TS, lint de imports no Dart). Violação quebra o build.
+- Domínio sem dependência de framework.
+- Toda decisão relevante vira ADR (`docs/adr/`), com alternativas e consequências negativas.
+- Atalho "temporário" só com issue aberta e prazo.
+
+### 4. Qualidade de código
+
+- **TypeScript:** `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`; ESLint sem warnings; Prettier.
+- **Dart:** lints estritos (`very_good_analysis` ou equivalente); zero warnings no `flutter analyze`.
+- Sem `any`/`dynamic` sem justificativa em comentário; sem código morto; sem `print`/`console.log` (só o logger).
+- Nomes seguem a linguagem ubíqua do modelo de domínio.
+- Commits no padrão Conventional Commits; PRs pequenos e focados.
+
+### 5. Testes
+
+- **TDD** no domínio e nos casos de uso.
+- **Cobertura mínima de 90%** em `domain/` e `application/` (gate no CI). Sem meta numérica para o resto: o que importa é testar comportamento, não linhas.
+- Testes de integração contra **Postgres real** (Docker), nunca banco em memória.
+- Testes de segurança obrigatórios: autorização/IDOR, idempotência, concorrência, rate limit, reuso de refresh token, bloqueio de PIN.
+- E2E do fluxo crítico (login → Pix → comprovante → extrato).
+- **Bug corrigido = teste que o reproduz antes da correção.**
+- Desejável: testes de mutação (Stryker) no domínio de Ledger e Payments.
+
+### 6. Performance
+
+- **Orçamentos (medidos, não estimados):**
+  - API: p95 < 200 ms nas leituras e < 400 ms no Pix (ambiente publicado, carga nominal)
+  - App: início a frio < 2 s em aparelho intermediário; listas sem jank (60 fps)
+- Toda query nova passa por `EXPLAIN ANALYZE` e tem índice que a sustente; sem N+1; paginação sempre.
+- Medir antes de otimizar; regressões de performance são bugs.
+
+### 7. Observabilidade
+
+- `requestId` propagado do app ao banco; logs estruturados (JSON) sem dados sensíveis.
+- Todo erro inesperado chega ao Sentry com release e ambiente.
+- Health check na API.
+
+### Definition of Done (toda tarefa)
+
+- [ ] Threat model revisado; ameaças novas registradas e testadas
+- [ ] Testes escritos (unitários, integração e segurança quando aplicável) e passando
+- [ ] Lint, typecheck e analyze sem warnings
+- [ ] Gates de segurança do CI verdes
+- [ ] Sem segredos, dados reais ou PII no diff
+- [ ] Queries novas com índice verificado
+- [ ] ADR criado ou atualizado se houve decisão de arquitetura
+- [ ] Documentação atualizada (README, diagramas, modelo de domínio)
+
 ## Segurança do repositório (obrigatório)
 
 O repositório `renatomf/next-bank` é **público**. Antes de qualquer commit:

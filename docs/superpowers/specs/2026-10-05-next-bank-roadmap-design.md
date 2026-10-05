@@ -290,6 +290,9 @@ Cada semana tem itens **obrigatórios** e **extras**. Se a semana estourar, os e
 
 ### 8.3 Estratégia de testes
 
+> Os padrões obrigatórios de segurança, arquitetura, qualidade, testes e performance (incluindo gates de CI, cobertura de 90% em domínio/aplicação e orçamentos de performance) estão em `CLAUDE.md`, seção "Padrões de engenharia", e valem para todas as fases.
+
+
 - **Domínio (TDD):** Money, JournalEntry, PixTransfer (transições de estado), limites, Session, TransactionPin
 - **Use cases:** com portas falsas e `Clock` controlável
 - **Integração:** repositórios contra Postgres real (Docker)
