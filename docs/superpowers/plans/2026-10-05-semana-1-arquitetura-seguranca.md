@@ -43,6 +43,8 @@
   - PIX externo (Fase 2): envio, liquidação, falha/estorno
 - [ ] Regras de limite (D2) e de horário (fuso `America/Sao_Paulo`)
 - [ ] Decisões D1, D2, D3 e D8 registradas
+- [ ] Mapa de navegação (Mermaid) das 15 telas da V1
+- [ ] Estados de cada tela, ligados ao erro de domínio que os causa (ex.: `InsufficientFunds` → "Saldo insuficiente")
 
 **Aceite:** dá para responder, só com o documento, "o que acontece no ledger quando um PIX interno de R$ 80 é feito e quando ele falha?"
 
@@ -129,8 +131,6 @@
   - PIX interno: criar → autorizar com PIN → processar (com idempotência e locks)
 - [ ] `README.md` inicial: nome, tagline, **aviso de projeto fictício sem relação com o next (Bradesco)**, objetivo, stack, links para spec, brief, ADRs e threat model, status "em construção"
 - [ ] Revisão final da semana: conferir consistência entre os documentos
-
-**Extra (se sobrar tempo):** mockups das 7 telas restantes (Splash, Login/Cadastro, Confirmar PIX com PinPad, Extrato, Detalhe, Perfil, Segurança) no mesmo canvas.
 
 **Aceite:** um entrevistador entende o sistema só pelo README e pelos diagramas, em 5 minutos.
 

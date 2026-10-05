@@ -224,7 +224,29 @@ Schemas Zod da API → OpenAPI → cliente Dart (mobile) + cliente TS (backoffic
 
 ### 7.1 Telas da V1
 
-Splash, Login/Cadastro, Home, PIX (chave + valor), Confirmar PIX (PIN/biometria), Comprovante, Extrato, Detalhe da transação, Perfil, Segurança (sessões ativas).
+As telas são construídas **direto no Flutter**, dentro de cada fatia (sem mockups adicionais). Cada tela começa consumindo uma interface de repositório; repositórios falsos só existem em testes.
+
+| # | Tela | Semana |
+|---|---|---|
+| 1 | Splash (restaura sessão) | 2 |
+| 2 | Login | 3 |
+| 3 | Cadastro (nome, CPF, e-mail, senha) | 3 |
+| 4 | Criar PIN de transação | 3 |
+| 5 | Desbloqueio do app (PIN/biometria) | 3 |
+| 6 | Home | 2 (simples) → 4 |
+| 7 | Pix: enviar (chave + valor) | 6 |
+| 8 | Revisar Pix + PIN (bottom sheet) | 6 |
+| 9 | Pix processando | 6 |
+| 10 | Comprovante | 6 |
+| 11 | Extrato | 6 |
+| 12 | Detalhe da transação | 6 |
+| 13 | Perfil | 7 |
+| 14 | Segurança (sessões ativas, encerrar sessão, trocar PIN) | 7 |
+| 15 | *Extra:* Minhas chaves Pix (aba "Receber") | 7 |
+
+- **Chave CPF automática:** todo cadastro cria uma chave Pix do tipo CPF, para a demo funcionar sem a tela 15.
+- **Semana 2:** navegação completa no GoRouter (todas as rotas, com telas vazias) + componentes base do `design_system`.
+- Os estados de cada tela (vazio, erro, carregando, regras de negócio) são listados no modelo de domínio.
 
 ### 7.2 Componentes do Design System (V1)
 
@@ -239,7 +261,7 @@ Cada semana tem itens **obrigatórios** e **extras**. Se a semana estourar, os e
 
 | Sem. | Fatia | Obrigatório | Extra | Pronto quando |
 |---|---|---|---|---|
-| 1 | Arquitetura + Segurança | *(Design já concluído: identidade, tokens e 3 mockups.)* Modelo de domínio (contextos, agregados, máquina de estados, plano de contas); threat model (Auth, PIX); ADRs 001–008; C4 (contexto e containers); ERD inicial | Mockups das 7 telas restantes | ADRs, threat model e diagramas commitados e revisados |
+| 1 | Arquitetura + Segurança | *(Design já concluído: identidade, tokens e 3 mockups.)* Modelo de domínio (contextos, agregados, máquina de estados, plano de contas); threat model (Auth, PIX); ADRs 001–008; C4 (contexto e containers); ERD inicial; mapa de navegação e estados das telas | — | ADRs, threat model e diagramas commitados e revisados |
 | 2 | Esqueleto ponta a ponta | Monorepo; Fastify + Drizzle + Postgres (Docker Compose); CI (format, lint, typecheck, testes, build) nos dois apps; dependency-cruiser; gitleaks; Pino + requestId; Sentry; Home exibe saldo vindo da API | Geração de contratos; osv-scanner + Semgrep; deploy no Render + Neon | PR verde; app conversa com a API |
 | 3 | Identity | Cadastro, login, logout; Argon2id; JWT + refresh rotativo com detecção de reuso; sessões; rate limit; auditoria de auth. Mobile: login e cadastro, secure storage, interceptor de refresh com fila única, restauração e expiração de sessão; PIN de transação validado no servidor | Desbloqueio por biometria no app | Testes de domínio e de API verdes; itens de auth do threat model mitigados |
 | 4 | Accounts + Ledger | `Money`; `Account`; plano de contas; `JournalEntry` em partidas dobradas; saldos posted/available com versão; funding pela conta de sistema; authorization por dono. Mobile: Home (saldo, ações rápidas, recentes, estados de loading, vazio e erro) | Job de reconciliação interna | Σ débitos = Σ créditos garantido por teste; "usuário A → conta B = 404" |
