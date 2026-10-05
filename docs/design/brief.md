@@ -2,7 +2,7 @@
 
 - **Status:** Aprovado (2026-10-05)
 - **Mockups:** https://claude.ai/artifact/4PEwqAQm3w1pfLKW8TBa6F (Home, Pix, Comprovante — dark e light)
-- **Referência:** `references/01-concept-banking-dark.jpg` (conceito de app bancário dark; usado como inspiração de estrutura, não copiado)
+- **Referência:** um conceito de app bancário dark de terceiros, usado só como inspiração de estrutura (não copiado). A imagem fica apenas localmente em `docs/design/references/` (ignorada pelo git) por ser trabalho de outro designer.
 
 ## 1. Direção
 
