@@ -159,8 +159,8 @@ Legenda STRIDE: **S** falsificação de identidade · **T** adulteração · **R
 
 ## 8. Ações de segurança no repositório (semana 2)
 
-- [ ] Ativar **secret scanning** e **push protection** no GitHub
-- [ ] Ativar **Dependabot alerts** e atualizações de segurança
+- [x] Ativar **secret scanning** e **push protection** no GitHub (2026-10-05)
+- [x] Ativar **Dependabot alerts** e atualizações de segurança (2026-10-05)
 - [ ] **Proteção da `main`:** PR obrigatório, CI verde, sem force push
 - [ ] Gitleaks também como hook local de pré-commit
 
