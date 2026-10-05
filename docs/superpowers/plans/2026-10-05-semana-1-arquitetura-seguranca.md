@@ -129,7 +129,7 @@
 - [ ] Diagramas de sequência (Mermaid):
   - login + refresh com detecção de reuso
   - PIX interno: criar → autorizar com PIN → processar (com idempotência e locks)
-- [ ] `README.md` inicial: nome, tagline, **aviso de projeto fictício sem relação com o next (Bradesco)**, objetivo, stack, links para spec, brief, ADRs e threat model, status "em construção"
+- [ ] `README.md` inicial: nome, tagline, **aviso genérico de projeto fictício**, objetivo, stack, links para spec, brief, ADRs e threat model, status "em construção"
 - [ ] Revisão final da semana: conferir consistência entre os documentos
 
 **Aceite:** um entrevistador entende o sistema só pelo README e pelos diagramas, em 5 minutos.
