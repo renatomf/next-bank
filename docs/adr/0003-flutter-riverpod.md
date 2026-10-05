@@ -34,5 +34,5 @@ O app precisa rodar em Android e iOS com uma única base de código, ter UI alta
 
 ## Referências
 
-- Spec, seção 6.7 (Flutter — feature-first + Clean Architecture)
+- [Roadmap](../roadmap.md), seção 6.7 (Flutter — feature-first + Clean Architecture)
 - `docs/design/brief.md`

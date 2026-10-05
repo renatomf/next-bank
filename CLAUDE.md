@@ -1,6 +1,6 @@
 # next bank — Regras do projeto
 
-- Spec: `docs/superpowers/specs/2026-10-05-next-bank-roadmap-design.md`
+- Roadmap: `docs/roadmap.md`
 - Brief visual: `docs/design/brief.md`
 - Modelo de domínio: `docs/architecture/domain-model.md`
 - Responder sempre em português (pt-BR).

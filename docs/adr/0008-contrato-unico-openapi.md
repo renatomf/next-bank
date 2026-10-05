@@ -32,4 +32,4 @@ A API é consumida por um app Dart (Flutter) e, na Fase 3, por um backoffice Typ
 
 ## Referências
 
-- Spec, seção 6.8 (contrato único)
+- [Roadmap](../roadmap.md), seção 6.8 (contrato único)

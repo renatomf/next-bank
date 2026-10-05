@@ -1,7 +1,7 @@
 # next bank — Modelo de Domínio (V1)
 
 - **Status:** Aprovado (2026-10-05)
-- **Spec:** `docs/superpowers/specs/2026-10-05-next-bank-roadmap-design.md` (seção 6)
+- **Roadmap:** `docs/roadmap.md` (seção 6)
 
 ## 1. Linguagem ubíqua
 

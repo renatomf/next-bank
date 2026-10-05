@@ -78,9 +78,11 @@ next-bank/
 ├── docs/
 │   ├── adr/
 │   ├── architecture/      # C4, diagramas de sequência, ERD
-│   ├── design/            # referências, brief visual, mockups HTML
+│   ├── design/            # brief visual, mockups (referências de terceiros só localmente)
+│   ├── plans/             # plano de cada semana
 │   ├── security/          # threat model, checklists ASVS/MASVS
-│   └── superpowers/specs/
+│   ├── evolucao.md        # como chegamos aqui e para onde vamos
+│   └── roadmap.md         # este documento
 └── .github/workflows/
 ```
 
