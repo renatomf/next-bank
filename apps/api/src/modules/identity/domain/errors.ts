@@ -58,3 +58,12 @@ export class AlreadyRegistered extends DomainError {
     super('E-mail or CPF already registered');
   }
 }
+
+/** Missing, invalid or expired access token: the app refreshes once, then asks for login. */
+export class Unauthenticated extends DomainError {
+  readonly code = 'Unauthenticated';
+
+  constructor() {
+    super('Access token is missing, invalid or expired');
+  }
+}

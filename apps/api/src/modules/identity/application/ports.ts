@@ -25,18 +25,29 @@ export interface CpfProtector {
   blindIndex(cpf: Cpf): Uint8Array;
 }
 
-/** A new opaque refresh token: the value goes to the client, only the hash is stored. */
+/** Opaque refresh tokens: the value goes to the client, only the hash is stored. */
 export interface RefreshTokenGenerator {
   generate(): { token: string; hash: Uint8Array };
+  /** Hash of a presented token, or null when it is not a token this server could have issued. */
+  hash(token: string): Uint8Array | null;
 }
 
-/** Short-lived access token (ADR 0004: EdDSA JWT, 15 minutes). */
+/**
+ * Short-lived access token (ADR 0004: EdDSA JWT, 15 minutes). This port is also
+ * where a KMS would plug in: with a KMS the key never leaves it, so signing moves
+ * behind this interface rather than behind a separate key provider.
+ */
 export interface AccessTokenIssuer {
   issue(input: {
     userId: string;
     sessionId: string;
     now: Date;
   }): Promise<{ token: string; expiresAt: Date }>;
+}
+
+/** Checks an access token; throws Unauthenticated when it cannot be trusted. */
+export interface AccessTokenVerifier {
+  verify(token: string, now: Date): Promise<{ userId: string; sessionId: string }>;
 }
 
 /** How the CPF is stored: never in clear. */

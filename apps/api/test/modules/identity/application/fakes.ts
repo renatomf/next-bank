@@ -64,6 +64,9 @@ export class FakeRefreshTokens implements RefreshTokenGenerator {
   generate() {
     return { token: 'refresh-token-value', hash: new TextEncoder().encode('hash-of-refresh') };
   }
+  hash(token: string): Uint8Array | null {
+    return token === 'refresh-token-value' ? new TextEncoder().encode('hash-of-refresh') : null;
+  }
 }
 
 export class FakeAccessTokens implements AccessTokenIssuer {
