@@ -63,7 +63,8 @@ flowchart LR
 - Invariantes:
   - Cada refresh gera um novo token; o anterior deixa de valer
   - **Uso de um token já substituído revoga a família inteira** (sinal de roubo)
-  - **Janela de tolerância de 10 s:** se o token anterior for reapresentado dentro de 10 s após a rotação (ex.: resposta perdida na rede), devolve-se o mesmo par novo em vez de revogar. Fora dessa janela, é reuso. Isso evita derrubar o usuário legítimo por uma falha de rede
+  - **Janela de tolerância de 10 s:** se o token anterior for reapresentado até 10 s após a rotação **e o sucessor dele ainda for o token ativo** (ex.: resposta perdida na rede), emite-se um par novo, rotacionado a partir do token ativo, em vez de revogar. O par perdido deixa de valer. Fora dessa janela, ou se a cadeia já avançou, é reuso. Isso evita derrubar o usuário legítimo por uma falha de rede
+  - O mesmo par não pode ser reenviado: o servidor guarda só o hash do refresh token
   - Sessão revogada ou expirada não renova
 - Comandos: `Create`, `Refresh`, `Revoke`, `RevokeAll`
 - Eventos: `SessionCreated`, `SessionRefreshed`, `RefreshTokenReuseDetected`, `SessionRevoked`

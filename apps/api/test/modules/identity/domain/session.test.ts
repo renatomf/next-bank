@@ -68,7 +68,8 @@ describe('Session', () => {
     it('never extends beyond the absolute limit', () => {
       const session = newSession();
 
-      session.refresh(token(), at(25 * DAY));
+      // Used every 6 days: on day 24 the 7-day window would end on day 31.
+      for (const day of [6, 12, 18, 24]) session.refresh(token(), at(day * DAY));
 
       expect(session.state.idleExpiresAt).toEqual(at(30 * DAY));
     });
