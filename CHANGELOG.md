@@ -12,6 +12,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Domínio Identity: CPF (dígitos verificadores, exibição mascarada) e política de senha (10 a 128 caracteres, lista de senhas comuns)
 - Regras de arquitetura no CI (dependency-cruiser) e gate de cobertura de 90% em `domain/` e `application/`
 - Domínio Identity: sessão com rotação de refresh token, janela de 10 s para resposta perdida, revogação da sessão inteira no reuso e expiração por inatividade (7 dias) e absoluta (30 dias)
+- Domínio Identity: PIN de transação (4 dígitos, sem sequências triviais, novo erro `InvalidPin`) com bloqueio de 30 min após 5 erros seguidos
 
 ### Adicionado — Semana 2: esqueleto ponta a ponta
 - Postgres 17 local (Docker Compose) com papéis de menor privilégio (`nextbank_migrator`, `nextbank_app`) e timeouts no papel da aplicação

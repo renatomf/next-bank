@@ -54,6 +54,15 @@ describe('TransactionPin', () => {
     expect(pin.state).toMatchObject({ failedAttempts: 5, lockedUntil: at(31 * MINUTE) });
   });
 
+  it('lets an unlocked PIN be verified without changing it', () => {
+    const pin = newPin();
+    fail(pin, 2);
+
+    pin.assertCanVerify(at(MINUTE));
+
+    expect(pin.state).toMatchObject({ failedAttempts: 2, updatedAt: START });
+  });
+
   it('refuses to verify while locked, before any hashing (PinLocked)', () => {
     const pin = newPin();
     fail(pin, 5);

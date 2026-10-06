@@ -266,6 +266,7 @@ O extrato não é um agregado: é uma consulta (lado de leitura do CQRS) que lê
 | `AlreadyRegistered` | 409 | Cadastro | "Não foi possível concluir o cadastro com esses dados." (genérica de propósito) |
 | `SessionExpired` | 401 | Qualquer | Volta para o login: "Sua sessão expirou." |
 | `RefreshTokenReuseDetected` | 401 | Qualquer | Volta para o login: "Por segurança, entre novamente." |
+| `InvalidPin` | 422 | Criar PIN | "Use 4 dígitos que não sejam repetidos nem em sequência." |
 | `PinIncorrect` | 422 | Revisar Pix | "PIN incorreto. Restam N tentativas." |
 | `PinLocked` | 423 | Revisar Pix | "PIN bloqueado por 30 minutos." |
 | `PixKeyNotFound` | 404 | Pix | "Não encontramos essa chave Pix." |

@@ -23,3 +23,21 @@ export class SessionExpired extends DomainError {
     super('Session is expired or revoked');
   }
 }
+
+export class InvalidPin extends DomainError {
+  readonly code = 'InvalidPin';
+
+  constructor() {
+    super('PIN must be 4 digits without a trivial pattern');
+  }
+}
+
+export class PinLocked extends DomainError {
+  readonly code = 'PinLocked';
+  readonly lockedUntil: Date;
+
+  constructor(lockedUntil: Date) {
+    super('PIN verification is locked');
+    this.lockedUntil = lockedUntil;
+  }
+}
