@@ -101,7 +101,7 @@ Ordem das etapas, reorganizada para não criar telas provisórias: 1) fundação
 - [x] `x-request-id` gerado no app e enviado em toda requisição
 - [ ] Telas: cadastro (com **CPF fictício gerado no app** e aviso de demo, DEMO-01), login e criação do PIN; restauração e expiração de sessão
 - [x] Falhas como `sealed class`, mapeadas a partir do `code` do erro da API
-- [ ] Primeiros componentes do `design_system` (botão, campo de texto) com as telas que os usam; pub workspace nasce com o pacote
+- [x] Primeiros componentes do `design_system` (botão, campo de texto, PIN, logo, aviso de demo), tokens do brief com contraste AA verificado em teste e fontes Sora e Manrope empacotadas (nunca baixadas em tempo de execução); pub workspace nasce com o pacote
 
 ## Tarefa 5 — Fechamento
 
