@@ -77,6 +77,31 @@ jobs:
       - run: flutter analyze --fatal-infos
       - run: flutter test
 
+  contracts:
+    name: Contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: 3.47.5
+          channel: stable
+          cache: true
+      # The generated client must match the API schemas (ADR 0008).
+      - run: sh packages/contracts/generate.sh
+      - name: Fail if the contract or the client drifted
+        run: |
+          git status --porcelain
+          test -z "$(git status --porcelain)"
+
   secrets:
     name: Secrets (gitleaks)
     runs-on: ubuntu-24.04
