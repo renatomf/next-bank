@@ -6,6 +6,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não publicado]
 
+### Adicionado — Semana 3: Identity
+- Primeiras migrations: schemas `identity` (usuários, sessões, refresh tokens, PIN) e `audit` (trilha append-only garantida por `GRANT` e trigger), com as invariantes também no banco
+- Testes de integração sempre contra o schema real: o banco de testes é recriado e migrado a cada execução
+
 ### Adicionado — Semana 2: esqueleto ponta a ponta
 - Postgres 17 local (Docker Compose) com papéis de menor privilégio (`nextbank_migrator`, `nextbank_app`) e timeouts no papel da aplicação
 - Threat model: API-11 (papel com privilégio do provedor) e API-12 (transação travando saldo)

@@ -39,6 +39,7 @@ jobs:
       NEXTBANK_MIGRATOR_PASSWORD: ci-migrator
       NEXTBANK_APP_PASSWORD: ci-app
       TEST_DATABASE_URL: postgres://nextbank_app:ci-app@localhost:5432/nextbank_test?sslmode=disable
+      TEST_MIGRATION_DATABASE_URL: postgres://nextbank_migrator:ci-migrator@localhost:5432/nextbank_test?sslmode=disable
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
