@@ -85,6 +85,32 @@ describe('RefreshSession', () => {
     await expect(refresh.execute(refreshWith('refresh-999'))).rejects.toThrow(SessionExpired);
   });
 
+  it('refuses a token whose session no longer exists (SessionExpired)', async () => {
+    const { db, refresh } = setup();
+    db.sessions = [];
+
+    await expect(refresh.execute(refreshWith('refresh-0'))).rejects.toThrow(SessionExpired);
+  });
+
+  it('refuses a token removed while waiting for the session lock (SessionExpired)', async () => {
+    const { db, refresh } = setup();
+    // The cleanup job deletes the token between the first read and the reread.
+    const repositoriesFor = db.for.bind(db);
+    db.for = (tx) => {
+      const repositories = repositoriesFor(tx);
+      const lockById = repositories.sessions.lockById.bind(repositories.sessions);
+      repositories.sessions.lockById = async (id) => {
+        const state = await lockById(id);
+        db.refreshTokens = [];
+        repositories.refreshTokens.findByHash = () => Promise.resolve(null);
+        return state;
+      };
+      return repositories;
+    };
+
+    await expect(refresh.execute(refreshWith('refresh-0'))).rejects.toThrow(SessionExpired);
+  });
+
   it('refuses after 7 days without use and writes nothing (SessionExpired, D5)', async () => {
     const { db, clock, refresh } = setup();
     clock.current = at(7 * DAY);

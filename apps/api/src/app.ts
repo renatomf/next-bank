@@ -19,6 +19,8 @@ import {
   type CpfKeys,
   createIdentityModule,
   loginRoutes,
+  registerAuthentication,
+  sessionRoutes,
 } from './modules/identity/index.ts';
 import { healthRoutes } from './shared/http/health.ts';
 import { registerProblemHandlers } from './shared/http/problem.ts';
@@ -94,23 +96,37 @@ export function buildApp({ pool, logStream, security }: AppDependencies) {
   });
   // Collects the route schemas into the OpenAPI contract (ADR 0008). Not served over HTTP.
   void app.register(swagger, {
-    openapi: { openapi: '3.1.0', info: { title: 'next bank API', version: '0.1.0' } },
+    openapi: {
+      openapi: '3.1.0',
+      info: { title: 'next bank API', version: '0.1.0' },
+      components: {
+        securitySchemes: { bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' } },
+      },
+    },
     transform: jsonSchemaTransform,
     transformObject: jsonSchemaTransformObject,
   });
-  void app.register(healthRoutes, { pool });
 
+  const clock = new SystemClock();
   const unitOfWork = new PgUnitOfWork(pool);
   const identity = createIdentityModule({
     unitOfWork,
-    clock: new SystemClock(),
+    clock,
     ids: new UuidV7Generator(),
     accessTokenKeys: security.accessTokenKeys,
     cpfKeys: security.cpfKeys,
   });
+  // Before any route: every route requires a token unless declared public.
+  registerAuthentication(app, identity.accessTokenVerifier, clock);
+
+  void app.register(healthRoutes, { pool });
   const registerCustomer = new RegisterCustomer({ unitOfWork, identity: identity.registration });
   void app.register(onboardingRoutes, { registerCustomer });
   void app.register(loginRoutes, { login: identity.login });
+  void app.register(sessionRoutes, {
+    refreshSession: identity.refreshSession,
+    logout: identity.logout,
+  });
 
   return app;
 }

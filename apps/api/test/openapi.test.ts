@@ -53,8 +53,19 @@ describe('OpenAPI document', () => {
       'Health',
       'LoginRequestInput',
       'Problem',
+      'RefreshRequestInput',
       'RegisterRequestInput',
     ]);
+  });
+
+  it('declares bearer authentication and requires it only on protected operations', () => {
+    expect(document.components.securitySchemes).toEqual({
+      bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+    });
+    expect(document.paths['/v1/auth/logout']?.post?.security).toEqual([{ bearerAuth: [] }]);
+    expect(document.paths['/v1/auth/logout']?.post?.operationId).toBe('logout');
+    expect(document.paths['/v1/auth/refresh']?.post?.operationId).toBe('refreshSession');
+    expect(document.paths['/v1/auth/refresh']?.post?.security).toBeUndefined();
   });
 
   it('describes POST /v1/auth/login with the shared token answer', () => {

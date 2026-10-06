@@ -5,12 +5,13 @@ interface MediaType {
 }
 interface Operation {
   operationId?: string;
+  security?: Record<string, string[]>[];
   responses: Record<string, { content?: Record<string, MediaType> } | undefined>;
 }
 export interface OpenApiDocument {
   openapi: string;
   paths: Record<string, Record<string, Operation> | undefined>;
-  components: { schemas: Record<string, unknown> };
+  components: { schemas: Record<string, unknown>; securitySchemes?: Record<string, unknown> };
 }
 
 const REF_PREFIX = '#/components/schemas/';

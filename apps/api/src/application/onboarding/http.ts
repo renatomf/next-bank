@@ -33,7 +33,7 @@ export const onboardingRoutes: FastifyPluginAsyncZod<{ registerCustomer: Registe
   app.post(
     '/v1/auth/register',
     {
-      config: { rateLimit: REGISTRATIONS_PER_IP },
+      config: { public: true, rateLimit: REGISTRATIONS_PER_IP },
       schema: {
         operationId: 'registerCustomer',
         body: RegisterRequestSchema,
