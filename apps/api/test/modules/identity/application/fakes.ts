@@ -11,11 +11,13 @@ import type {
   EncryptedCpf,
   IdentityRepositories,
   IdentityRepositoriesFactory,
+  LoginAttemptsStore,
   RefreshTokenGenerator,
   SecretHasher,
   StoredRefreshToken,
 } from '../../../../src/modules/identity/application/ports.ts';
 import { Cpf } from '../../../../src/modules/identity/domain/cpf.ts';
+import type { LoginAttemptsState } from '../../../../src/modules/identity/domain/login-attempts.ts';
 import type { SessionState } from '../../../../src/modules/identity/domain/session.ts';
 import type { UserState } from '../../../../src/modules/identity/domain/user.ts';
 
@@ -43,8 +45,26 @@ export class FakeHasher implements SecretHasher {
     this.hashed.push(secret);
     return Promise.resolve(`hashed(${String(secret.length)})`);
   }
-  verify(): Promise<boolean> {
-    return Promise.resolve(false);
+  /** Hashes checked, in order: shows that every login attempt costs one verification. */
+  verified: string[] = [];
+  /** Matches when the secret has the length encoded in the fake hash; tests use distinct lengths. */
+  verify(hash: string, secret: string): Promise<boolean> {
+    this.verified.push(hash);
+    return Promise.resolve(hash === `hashed(${String(secret.length)})`);
+  }
+}
+
+/** Login attempt counters kept in a plain map, keyed by the normalized e-mail. */
+export class FakeLoginAttemptsStore implements LoginAttemptsStore {
+  readonly entries = new Map<string, LoginAttemptsState>();
+  get(key: string): LoginAttemptsState | undefined {
+    return this.entries.get(key);
+  }
+  set(key: string, state: LoginAttemptsState): void {
+    this.entries.set(key, state);
+  }
+  delete(key: string): void {
+    this.entries.delete(key);
   }
 }
 
@@ -139,6 +159,18 @@ export class InMemoryDatabase implements UnitOfWork, IdentityRepositoriesFactory
                 Buffer.from(u.cpf.blindIndex).equals(Buffer.from(cpfBlindIndex)),
             ),
           ),
+        findByEmail: (email) => {
+          const found = tables.users.find((u) => u.state.email === email);
+          return Promise.resolve(
+            found
+              ? {
+                  id: found.state.id,
+                  passwordHash: found.state.passwordHash,
+                  status: found.state.status,
+                }
+              : null,
+          );
+        },
         insert: (user, cpf) => {
           tables.users.push({ state: user, cpf });
           return Promise.resolve();

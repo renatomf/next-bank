@@ -227,3 +227,49 @@ describe('PgUsersRepository', () => {
     }
   });
 });
+
+describe('PgUsersRepository.findByEmail (login)', () => {
+  it('returns the id, password hash and status of the account', async () => {
+    const email = uniqueEmail();
+    const { userId } = await newRegister().execute(input({ email }));
+    const client = await pool.connect();
+    try {
+      const found = await new PgUsersRepository(client).findByEmail(email);
+
+      expect(found).toEqual({
+        id: userId,
+        passwordHash: expect.any(String) as string,
+        status: 'ACTIVE',
+      });
+    } finally {
+      client.release();
+    }
+  });
+
+  it('returns null for an unknown e-mail', async () => {
+    const client = await pool.connect();
+    try {
+      await expect(new PgUsersRepository(client).findByEmail(uniqueEmail())).resolves.toBeNull();
+    } finally {
+      client.release();
+    }
+  });
+
+  it('is served by the unique e-mail index', async () => {
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query('SET LOCAL enable_seqscan = off');
+      const { rows } = await client.query<{ 'QUERY PLAN': string }>(
+        `EXPLAIN ${PgUsersRepository.FIND_BY_EMAIL_SQL}`,
+        [uniqueEmail()],
+      );
+      const plan = rows.map((row) => row['QUERY PLAN']).join('\n');
+      expect(plan).toContain('users_email_key');
+      expect(plan).not.toMatch(/Seq Scan/);
+    } finally {
+      await client.query('ROLLBACK');
+      client.release();
+    }
+  });
+});
