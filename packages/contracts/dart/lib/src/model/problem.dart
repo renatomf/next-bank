@@ -25,6 +25,8 @@ class Problem {
     required  this.title,
 
     required  this.status,
+
+     this.code,
   });
 
   @JsonKey(
@@ -65,19 +67,33 @@ class Problem {
 
 
 
+  @JsonKey(
+    
+    name: r'code',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? code;
+
+
+
 
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is Problem &&
       other.type == type &&
       other.title == title &&
-      other.status == status;
+      other.status == status &&
+      other.code == code;
 
     @override
     int get hashCode =>
         type.hashCode +
         title.hashCode +
-        status.hashCode;
+        status.hashCode +
+        code.hashCode;
 
   factory Problem.fromJson(Map<String, dynamic> json) => _$ProblemFromJson(json);
 

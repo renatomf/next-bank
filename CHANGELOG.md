@@ -17,6 +17,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Infraestrutura do Identity: Argon2id (parâmetros OWASP), cifragem do CPF (AES-256-GCM + índice cego HMAC), UUIDv7 e lista de senhas comuns reproduzível e sem dados pessoais
 - Caso de uso de cadastro (`RegisterCustomer`): usuário, sessão e auditoria numa só transação; hash da senha calculado antes de checar se a conta existe, para o tempo de resposta não revelar quem é cliente
 - Persistência do cadastro em Postgres: transação única com usuário, sessão, hash do refresh token e auditoria; corrida de cadastros simultâneos resolvida pelas restrições `UNIQUE`; consulta de existência servida pelos índices únicos
+- Respostas de erro com o `code` do catálogo (RFC 9457), validação com 422 `InvalidRequest`, `Cache-Control: no-store` em toda resposta e rate limit global por IP (100/min) com 429 `TooManyAttempts`
 
 ### Adicionado — Semana 2: esqueleto ponta a ponta
 - Postgres 17 local (Docker Compose) com papéis de menor privilégio (`nextbank_migrator`, `nextbank_app`) e timeouts no papel da aplicação
