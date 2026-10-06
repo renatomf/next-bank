@@ -3,12 +3,12 @@ import 'package:design_system/src/tokens.dart';
 import 'package:flutter/material.dart';
 
 /// A visible notice with an icon and text (status never by color alone),
-/// used to warn visitors of the public demo (threat model DEMO-01).
-class DemoNotice extends StatelessWidget {
+/// such as the public demo warning (DEMO-01) or why the session ended.
+class InfoNotice extends StatelessWidget {
   /// Creates the notice with its [message].
   const new({required this.message, super.key});
 
-  /// What the visitor must know.
+  /// What the user must know.
   final String message;
 
   @override

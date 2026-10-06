@@ -143,15 +143,50 @@ void main() {
     });
   });
 
+  for (final (mode, theme, colors) in [
+    ('dark', NbTheme.dark(), NbColors.dark),
+    ('light', NbTheme.light(), NbColors.light),
+  ]) {
+    testWidgets('GlowBackground lights the top in $mode mode', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: theme,
+          home: const GlowBackground(child: Text('Conteúdo')),
+        ),
+      );
+
+      final ground = tester.widget<ColoredBox>(
+        find
+            .descendant(
+              of: find.byType(GlowBackground),
+              matching: find.byType(ColoredBox),
+            )
+            .first,
+      );
+      final glow = tester.widget<DecoratedBox>(
+        find
+            .descendant(
+              of: find.byType(GlowBackground),
+              matching: find.byType(DecoratedBox),
+            )
+            .first,
+      );
+      final gradient = (glow.decoration as BoxDecoration).gradient!;
+      expect(ground.color, colors.background);
+      expect(gradient.colors.first, colors.glow);
+      expect(find.text('Conteúdo'), findsOneWidget);
+    });
+  }
+
   testWidgets('NextLogo reads as "next bank"', (tester) async {
     await tester.pumpWidget(host(const NextLogo()));
 
     expect(find.bySemanticsLabel('next bank'), findsOneWidget);
   });
 
-  testWidgets('DemoNotice shows its message with an icon', (tester) async {
+  testWidgets('InfoNotice shows its message with an icon', (tester) async {
     await tester.pumpWidget(
-      host(const DemoNotice(message: 'Demonstração: não use dados reais.')),
+      host(const InfoNotice(message: 'Demonstração: não use dados reais.')),
     );
 
     expect(find.text('Demonstração: não use dados reais.'), findsOneWidget);

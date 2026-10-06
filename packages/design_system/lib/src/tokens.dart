@@ -30,6 +30,7 @@ final class NbColors extends ThemeExtension<NbColors> {
     required this.onPrimary,
     required this.success,
     required this.danger,
+    required this.glow,
   });
 
   /// Dark mode, the app's default look.
@@ -45,6 +46,7 @@ final class NbColors extends ThemeExtension<NbColors> {
     onPrimary: Color(0xFF0A0F14),
     success: Color(0xFFC4F27A),
     danger: Color(0xFFFF6B6B),
+    glow: Color(0x1A00FFC8),
   );
 
   /// Light mode.
@@ -60,6 +62,7 @@ final class NbColors extends ThemeExtension<NbColors> {
     onPrimary: NbBrand.mint,
     success: Color(0xFF3B6E0E),
     danger: Color(0xFFC62828),
+    glow: Color(0x3800FFC8),
   );
 
   /// Screen background.
@@ -95,6 +98,10 @@ final class NbColors extends ThemeExtension<NbColors> {
   /// Errors and failures.
   final Color danger;
 
+  /// Ambient mint light at the top of the screen: 10% in dark mode, 22% in
+  /// light mode (brief, section 2.2).
+  final Color glow;
+
   @override
   NbColors copyWith({
     Color? background,
@@ -108,6 +115,7 @@ final class NbColors extends ThemeExtension<NbColors> {
     Color? onPrimary,
     Color? success,
     Color? danger,
+    Color? glow,
   }) => NbColors(
     background: background ?? this.background,
     surface: surface ?? this.surface,
@@ -120,6 +128,7 @@ final class NbColors extends ThemeExtension<NbColors> {
     onPrimary: onPrimary ?? this.onPrimary,
     success: success ?? this.success,
     danger: danger ?? this.danger,
+    glow: glow ?? this.glow,
   );
 
   @override
