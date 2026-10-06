@@ -2,11 +2,15 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.ts';
 import { createPool } from '../src/shared/db.ts';
 import { buildOpenApiDocument, type OpenApiDocument } from '../src/shared/openapi.ts';
-import { captureLogs, testDatabaseUrl } from './helpers.ts';
+import { captureLogs, testDatabaseUrl, testSecurity } from './helpers.ts';
 
 // The OpenAPI document is the contract the Dart client is generated from (ADR 0008).
 describe('OpenAPI document', () => {
-  const app = buildApp({ pool: createPool(testDatabaseUrl()), logStream: captureLogs().stream });
+  const app = buildApp({
+    pool: createPool(testDatabaseUrl()),
+    logStream: captureLogs().stream,
+    security: testSecurity(),
+  });
   let document: OpenApiDocument;
 
   beforeAll(async () => {
@@ -28,8 +32,28 @@ describe('OpenAPI document', () => {
     });
   });
 
+  it('describes POST /v1/auth/register with the request the client sends and its answers', () => {
+    const operation = document.paths['/v1/auth/register']?.post;
+
+    expect(operation?.operationId).toBe('registerCustomer');
+    expect(operation?.responses['201']?.content?.['application/json']?.schema).toEqual({
+      $ref: '#/components/schemas/AuthTokens',
+    });
+    for (const status of ['409', '422', '429']) {
+      expect(operation?.responses[status]?.content?.['application/problem+json']?.schema).toEqual({
+        $ref: '#/components/schemas/Problem',
+      });
+    }
+  });
+
+  // The approved contract: a new schema must be added here on purpose (READ-02).
   it('keeps only referenced schemas, without input duplicates', () => {
-    expect(Object.keys(document.components.schemas).sort()).toEqual(['Health', 'Problem']);
+    expect(Object.keys(document.components.schemas).sort()).toEqual([
+      'AuthTokens',
+      'Health',
+      'Problem',
+      'RegisterRequestInput',
+    ]);
   });
 
   it('is deterministic', async () => {

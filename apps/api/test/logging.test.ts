@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.ts';
 import { createPool } from '../src/shared/db.ts';
-import { captureLogs, testDatabaseUrl } from './helpers.ts';
+import { captureLogs, testDatabaseUrl, testSecurity } from './helpers.ts';
 
 // Fictitious data only: no real values.
 const SECRETS = {
@@ -21,7 +21,11 @@ describe('logs', () => {
 
   beforeEach(() => {
     logs = captureLogs();
-    app = buildApp({ pool: createPool(testDatabaseUrl()), logStream: logs.stream });
+    app = buildApp({
+      pool: createPool(testDatabaseUrl()),
+      logStream: logs.stream,
+      security: testSecurity(),
+    });
     app.post('/test/log', (request) => {
       request.log.info({ ...SECRETS, payload: SECRETS }, 'event with sensitive data');
       return { ok: true };

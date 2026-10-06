@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.ts';
 import { createPool } from '../src/shared/db.ts';
-import { captureLogs, testDatabaseUrl } from './helpers.ts';
+import { captureLogs, testDatabaseUrl, testSecurity } from './helpers.ts';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
@@ -12,7 +12,11 @@ describe('HTTP security', () => {
 
   beforeEach(() => {
     logs = captureLogs();
-    app = buildApp({ pool: createPool(testDatabaseUrl()), logStream: logs.stream });
+    app = buildApp({
+      pool: createPool(testDatabaseUrl()),
+      logStream: logs.stream,
+      security: testSecurity(),
+    });
     // Test-only routes to trigger the scenarios.
     app.post('/test/echo', (request) => request.body);
     app.get('/test/boom', () => {

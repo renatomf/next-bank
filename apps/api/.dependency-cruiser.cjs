@@ -54,10 +54,27 @@ module.exports = {
       severity: 'error',
       comment:
         'Flows owned by no context (ADR 0010) only sequence calls to module public APIs and shared ports.',
-      from: { path: '^src/application/' },
+      from: { path: '^src/application/', pathNot: '/http\\.ts$' },
       to: {
         path: '^src/(modules|shared)/',
         pathNot: ['^src/modules/[^/]+/index\\.ts$', '^src/shared/(domain|application)/'],
+      },
+    },
+    {
+      name: 'orchestration-use-cases-are-framework-free',
+      severity: 'error',
+      comment: 'Only the http.ts edge of a flow may use Fastify, Zod or Node APIs.',
+      from: { path: '^src/application/', pathNot: '/http\\.ts$' },
+      to: { dependencyTypes: ['npm', 'npm-dev', 'npm-optional', 'npm-peer', 'core'] },
+    },
+    {
+      name: 'orchestration-http-edge',
+      severity: 'error',
+      comment: 'The HTTP edge of a flow also reaches modules only through their public API.',
+      from: { path: '^src/application/.+/http\\.ts$' },
+      to: {
+        path: '^src/(modules|shared)/',
+        pathNot: ['^src/modules/[^/]+/index\\.ts$', '^src/shared/(domain|application|http)/'],
       },
     },
     {

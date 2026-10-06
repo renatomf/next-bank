@@ -94,6 +94,19 @@ describe('POST /v1/auth/register', () => {
     ]);
   });
 
+  it('accepts a registration without a device label', async () => {
+    const body = validBody({ deviceLabel: undefined });
+    const response = await register(body);
+
+    expect(response.statusCode).toBe(201);
+    const { rows } = await pool.query<{ device_label: string | null }>(
+      `SELECT s.device_label FROM identity.sessions s
+       JOIN identity.users u ON u.id = s.user_id WHERE u.email = $1`,
+      [body.email],
+    );
+    expect(rows).toEqual([{ device_label: null }]);
+  });
+
   it('never stores the CPF digits in clear (API-06)', async () => {
     const body = validBody();
     await register(body);
@@ -103,7 +116,7 @@ describe('POST /v1/auth/register', () => {
       [body.email],
     );
     expect(rows).toHaveLength(1);
-    expect(rows[0]?.cpf_ciphertext.includes(Buffer.from(String(body.cpf)))).toBe(false);
+    expect(rows[0]?.cpf_ciphertext.includes(Buffer.from(body.cpf))).toBe(false);
   });
 
   it('refuses a common password (WeakPassword, AUTH-07)', async () => {
