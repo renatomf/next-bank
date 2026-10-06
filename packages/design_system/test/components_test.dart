@@ -208,6 +208,17 @@ void main() {
     expect(trail.style?.fontWeight, FontWeight.w400);
   });
 
+  testWidgets('FormErrorText is announced and shown in the danger color', (
+    tester,
+  ) async {
+    await tester.pumpWidget(host(const FormErrorText('Sem conexão.')));
+
+    final semantics = tester.getSemantics(find.byType(FormErrorText));
+    expect(semantics.flagsCollection.isLiveRegion, isTrue);
+    final text = tester.widget<Text>(find.text('Sem conexão.'));
+    expect(text.style?.color, NbColors.dark.danger);
+  });
+
   testWidgets('NextLogo reads as "next bank"', (tester) async {
     await tester.pumpWidget(host(const NextLogo()));
 
