@@ -1,5 +1,7 @@
+import 'package:nextbank_api/src/model/auth_tokens.dart';
 import 'package:nextbank_api/src/model/health.dart';
 import 'package:nextbank_api/src/model/problem.dart';
+import 'package:nextbank_api/src/model/register_request_input.dart';
 
 final _regList = RegExp(r'^List<(.*)>$');
 final _regSet = RegExp(r'^Set<(.*)>$');
@@ -19,10 +21,14 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return (valueString == 'true' || valueString == '1') as ReturnType;
         case 'double':
           return (value is double ? value : double.parse('$value')) as ReturnType;
+        case 'AuthTokens':
+          return AuthTokens.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Health':
           return Health.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Problem':
           return Problem.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'RegisterRequestInput':
+          return RegisterRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
         default:
           RegExpMatch? match;
 
