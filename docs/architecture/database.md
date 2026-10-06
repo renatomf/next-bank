@@ -402,3 +402,4 @@ O desenho segue os **mesmos princípios** de ledgers de bancos e fintechs (parti
 | Paginação | Cursor `(created_at, id)` | `OFFSET` (lento e instável) |
 | Contas de sistema | Saldo não materializado, sem lock | Saldo atualizado a cada operação (gargalo de *hot account*) |
 | Chaves de criptografia | Variável de ambiente atrás da porta `KeyProvider` (risco aceito) | KMS já na V1 (custo e complexidade de infraestrutura sem ganho para a demo) |
+| Isolamento por dono | Filtro por dono em toda query + teste de IDOR obrigatório | RLS (só a API acessa o banco; o Pix cruza donos na mesma transação, o que exigiria políticas permissivas no código mais crítico; o `neon_superuser` tem `BYPASSRLS`). Reavaliar se outro cliente acessar o banco diretamente |
