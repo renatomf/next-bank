@@ -1,9 +1,18 @@
 import { Writable } from 'node:stream';
 
 export function testDatabaseUrl(): string {
-  const url = process.env.TEST_DATABASE_URL;
-  if (!url) throw new Error('TEST_DATABASE_URL is not set (see .env.example)');
-  return url;
+  return requiredEnv('TEST_DATABASE_URL');
+}
+
+/** Migrator role on the test database: only for setup and defense-in-depth tests. */
+export function testMigrationDatabaseUrl(): string {
+  return requiredEnv('TEST_MIGRATION_DATABASE_URL');
+}
+
+function requiredEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) throw new Error(`${name} is not set (see .env.example)`);
+  return value;
 }
 
 /** Captures JSON log lines for inspection in tests. */
