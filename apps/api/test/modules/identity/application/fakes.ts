@@ -40,7 +40,7 @@ export class FakeHasher implements SecretHasher {
   hashed: string[] = [];
   hash(secret: string): Promise<string> {
     this.hashed.push(secret);
-    return Promise.resolve(`hashed(${secret.length})`);
+    return Promise.resolve(`hashed(${String(secret.length)})`);
   }
   verify(): Promise<boolean> {
     return Promise.resolve(false);

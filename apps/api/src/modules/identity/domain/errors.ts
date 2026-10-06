@@ -49,3 +49,12 @@ export class PinResetRequired extends DomainError {
     super('PIN was locked too many times and must be reset with the password');
   }
 }
+
+/** Deliberately vague for the client: it must not confirm that an e-mail or CPF has an account. */
+export class AlreadyRegistered extends DomainError {
+  readonly code = 'AlreadyRegistered';
+
+  constructor() {
+    super('E-mail or CPF already registered');
+  }
+}
