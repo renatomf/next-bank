@@ -31,7 +31,16 @@ module.exports = {
       comment:
         'Use cases talk to the outside world only through ports they declare; infrastructure and HTTP implement them.',
       from: { path: '^src/modules/([^/]+)/application/' },
-      to: { pathNot: ['^src/modules/$1/(domain|application)/', '^src/shared/domain/'] },
+      to: {
+        pathNot: ['^src/modules/$1/(domain|application)/', '^src/shared/(domain|application)/'],
+      },
+    },
+    {
+      name: 'shared-application-depends-only-inward',
+      severity: 'error',
+      comment: 'Shared ports follow the same rule as every application layer.',
+      from: { path: '^src/shared/application/' },
+      to: { pathNot: '^src/shared/(domain|application)/' },
     },
     {
       name: 'modules-talk-through-public-api',

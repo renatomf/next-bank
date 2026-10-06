@@ -34,10 +34,10 @@ Manutenção ativa, licença e tamanho de cada biblioteca são conferidos na Tar
 
 | # | Decisão | Padrão recomendado |
 |---|---|---|
-| D1 | Biblioteca de Argon2id | `@node-rs/argon2`: binários prontos, sem compilação nativa no Windows e no CI; parâmetros OWASP (19 MiB, 2 iterações) |
+| D1 | Biblioteca de Argon2id | `@node-rs/argon2`: binários prontos, sem compilação nativa no Windows e no CI; parâmetros OWASP (19 MiB, 2 iterações). Fixada na 2.2.1: a 2.2.2 tinha horas de publicada (quarentena contra pacote comprometido) |
 | D2 | JWT | `jose`; chave Ed25519 em variável de ambiente (PEM), com `kid`; script local para gerar o par |
 | D3 | Armazenamento do rate limit | Em memória (uma instância na V1). Risco aceito e registrado: com mais de uma instância, migrar para Postgres ou Redis |
-| D4 | Lista de senhas comuns | 10 mil senhas mais comuns da SecLists (licença MIT), versionada como arquivo |
+| D4 | Lista de senhas comuns | ~~10 mil mais comuns~~ → **lista de 100 mil do NCSC (SecLists, MIT) filtrada para 10 a 128 caracteres** (as 10 mil mais comuns quase todas já caem na regra de tamanho), sem entradas com formato de CPF válido ou de e-mail; gerada por `scripts/build-common-passwords.ts` |
 | D5 | Identificadores | UUIDv7 gerado na aplicação, porta `IdGenerator` (biblioteca `uuid`) |
 | D6 | Criptografia do CPF (API-06) | AES-256-GCM com chave atrás da porta `KeyProvider` (variável de ambiente), mais índice cego HMAC para a unicidade |
 | D7 | Navegação no app | GoRouter entra agora: login é a segunda tela e o redirect de sessão é o motivo de existir |
