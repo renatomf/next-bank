@@ -327,11 +327,11 @@ LIMIT 21;                                      -- 20 itens + 1 para saber se há
 
 ## 9. Migrations
 
-- Geradas pelo `drizzle-kit`, **revisadas e commitadas** como SQL. Triggers, `GRANT`s e constraints diferidas ficam em migrations SQL escritas à mão.
+- **Arquivos `.sql` puros, escritos e revisados à mão**, aplicados pelo **dbmate** (ADR 0009). Tabelas, triggers, `GRANT`s e constraints diferidas ficam todos no mesmo formato.
 - **Só para frente:** nenhuma migration é editada depois de publicada; correção é uma nova migration.
 - **Expand/contract** para mudanças incompatíveis: adiciona o novo → migra os dados → passa a usar → remove o antigo (em migrations separadas).
 - Executadas pelo papel `nextbank_migrator` no pipeline, nunca pela API em execução.
-- CI: sobe Postgres limpo, aplica todas as migrations e roda os testes de integração.
+- CI: sobe Postgres limpo, aplica todas as migrations, **gera os tipos das queries com pgTyped** (falha se alguma query não bater com o schema) e roda os testes de integração.
 
 ## 10. Invariantes: onde cada uma é garantida
 

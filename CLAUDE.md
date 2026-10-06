@@ -17,7 +17,7 @@ O projeto é tratado como um **banco real em produção**. Nenhum padrão abaixo
 
 - **Security by design:** toda feature começa revisando o threat model (`docs/security/threat-model.md`). Ameaça nova vira uma linha no threat model **e** um teste.
 - **Baseline:** OWASP ASVS L2 (API e backoffice) e OWASP MASVS (app).
-- **Entrada:** toda entrada validada na borda (Zod no backend, validação no app); sem SQL concatenado (só queries parametrizadas do Drizzle).
+- **Entrada:** toda entrada validada na borda (Zod no backend, validação no app); sem SQL concatenado (só queries parametrizadas, tipadas pelo pgTyped).
 - **Autorização:** negar por padrão; todo endpoint verifica dono do recurso; **todo recurso tem teste de IDOR** (usuário A acessando dado de B → 404).
 - **Autenticação e criptografia:** só bibliotecas consolidadas (argon2, jose); nunca criptografia caseira; comparação de segredos em tempo constante.
 - **Segredos:** só em variáveis de ambiente / secret store; nunca em código, teste, log ou mensagem de erro.
