@@ -25,6 +25,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Refresh (`POST /v1/auth/refresh`) com rotação, janela de 10 s e revogação da sessão no reuso, sob lock da sessão e com um só token ativo por sessão garantido no banco; logout (`POST /v1/auth/logout`) idempotente; autenticação negando por padrão (rotas só públicas quando declaradas)
 - Criação do PIN de transação (`POST /v1/me/pin`): uma vez só (`PinAlreadyCreated`), hash Argon2id com pepper do servidor contra quebra a partir de um dump (API-13, `PIN_PEPPER`), e verificação no banco de que a sessão segue ativa nas operações sensíveis (AUTH-04)
 - Revisão consolidada do Identity: e-mail e nome passam a ser redigidos nos logs (F-13); caso de uso de cadastro do Identity renomeado para `RegisterUser`
+- App: sessão guardada só no Keychain/Keystore, num único registro, sem iCloud e sem backup do Android (MOB-01); sessão restaurada ao abrir o app; `x-request-id` em toda requisição
 
 ### Adicionado — Semana 2: esqueleto ponta a ponta
 - Postgres 17 local (Docker Compose) com papéis de menor privilégio (`nextbank_migrator`, `nextbank_app`) e timeouts no papel da aplicação
