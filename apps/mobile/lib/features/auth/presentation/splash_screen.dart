@@ -28,7 +28,7 @@ class SplashScreen extends ConsumerWidget {
                     Text(
                       'Não foi possível abrir sua sessão.',
                       textAlign: TextAlign.center,
-                      style: NbType.bodyText.copyWith(color: colors.text),
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: NbSpace.lg),
                     PrimaryButton(

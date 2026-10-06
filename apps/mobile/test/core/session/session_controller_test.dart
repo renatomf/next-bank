@@ -2,33 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/core/session/session_end_reason.dart';
-import 'package:next_bank/core/session/session_tokens.dart';
-import 'package:next_bank/core/session/token_store.dart';
 
-class FakeTokenStore implements TokenStore {
-  new([this.stored]);
-
-  SessionTokens? stored;
-  int clears = 0;
-
-  @override
-  Future<SessionTokens?> read() async => stored;
-
-  @override
-  Future<void> write(SessionTokens tokens) async => stored = tokens;
-
-  @override
-  Future<void> clear() async {
-    clears++;
-    stored = null;
-  }
-}
-
-final SessionTokens tokens = SessionTokens(
-  accessToken: 'access-token-value',
-  accessTokenExpiresAt: DateTime.utc(2026, 10, 6, 12, 15),
-  refreshToken: 'refresh-token-value',
-);
+import '../../support/fake_token_store.dart';
 
 ProviderContainer containerWith(FakeTokenStore store) {
   final container = ProviderContainer(

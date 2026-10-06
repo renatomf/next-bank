@@ -9,6 +9,12 @@ abstract final class AppRoutes {
   /// Entry point without a session.
   static const String login = '/login';
 
+  /// Registration with a fictitious CPF.
+  static const String register = '/register';
+
+  /// Transaction PIN creation, right after the registration.
+  static const String createPin = '/create-pin';
+
   /// Home of a signed-in user.
   static const String home = '/home';
 }
@@ -18,11 +24,14 @@ abstract final class AppRoutes {
 /// login from any screen.
 String? redirectFor(AsyncValue<Session> session, String location) {
   final target = switch (session) {
-    AsyncData(value: SignedIn()) =>
-      location == AppRoutes.splash || location == AppRoutes.login
-          ? AppRoutes.home
-          : location,
-    AsyncData(value: SignedOut()) => AppRoutes.login,
+    AsyncData(value: SignedIn()) => switch (location) {
+      AppRoutes.splash || AppRoutes.login => AppRoutes.home,
+      // A finished registration always continues to the PIN.
+      AppRoutes.register => AppRoutes.createPin,
+      _ => location,
+    },
+    AsyncData(value: SignedOut()) =>
+      location == AppRoutes.register ? location : AppRoutes.login,
     // Still restoring, or the device storage failed: splash shows which.
     _ => AppRoutes.splash,
   };

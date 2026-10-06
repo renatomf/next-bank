@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/features/auth/domain/auth_repository.dart';
 
@@ -7,3 +9,7 @@ import 'package:next_bank/features/auth/domain/auth_repository.dart';
 final Provider<AuthRepository> authRepositoryProvider = Provider(
   (ref) => throw UnimplementedError('Bound in main.dart'),
 );
+
+/// Draws the fictitious data of the public demo, such as the CPF; tests
+/// override it with a seeded generator.
+final Provider<Random> randomProvider = Provider((ref) => Random.secure());

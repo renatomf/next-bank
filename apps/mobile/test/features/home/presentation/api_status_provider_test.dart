@@ -3,18 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/features/home/domain/api_status.dart';
 import 'package:next_bank/features/home/presentation/api_status_provider.dart';
 
-class FakeApiStatusRepository implements ApiStatusRepository {
-  new(this.status);
-
-  ApiStatus status;
-  int calls = 0;
-
-  @override
-  Future<ApiStatus> check() async {
-    calls++;
-    return status;
-  }
-}
+import '../../../support/fake_api_status_repository.dart';
 
 void main() {
   group('apiStatusProvider', () {

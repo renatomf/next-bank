@@ -7,8 +7,8 @@ import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/features/auth/presentation/auth_providers.dart';
 import 'package:next_bank/features/auth/presentation/sign_out_controller.dart';
 
-import '../../../core/session/session_controller_test.dart';
-import 'fake_auth_repository.dart';
+import '../../../support/fake_auth_repository.dart';
+import '../../../support/fake_token_store.dart';
 
 Future<(ProviderContainer, FakeAuthRepository, FakeTokenStore)>
 setUpSignedIn() async {

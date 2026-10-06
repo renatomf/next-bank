@@ -10,8 +10,11 @@ import 'package:next_bank/features/auth/presentation/login_controller.dart';
 /// Login with e-mail and password (screen 2). Says why the user is back
 /// here when the server ended the session.
 class LoginScreen extends ConsumerStatefulWidget {
-  /// Creates the login screen.
-  const new({super.key});
+  /// Creates the login screen; [onRegister] opens the registration.
+  const new({required this.onRegister, super.key});
+
+  /// "Criar conta".
+  final VoidCallback onRegister;
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -40,7 +43,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
     final state = ref.watch(loginControllerProvider);
     final endReason = switch (ref.watch(sessionProvider).value) {
       SignedOut(:final reason) => reason,
@@ -55,25 +57,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               children: [
                 const Align(alignment: Alignment.centerLeft, child: NextLogo()),
                 const SizedBox(height: NbSpace.xxl),
-                // The tagline of the Home mockup: 600, then 400 muted.
-                Semantics(
-                  header: true,
-                  child: Text.rich(
-                    TextSpan(
-                      text: 'Seu dinheiro,\n',
-                      children: [
-                        TextSpan(
-                          text: 'um passo à frente.',
-                          style: TextStyle(
-                            color: colors.textMuted,
-                            fontWeight: FontWeight.w400,
-                            fontVariations: const [FontVariation.weight(400)],
-                          ),
-                        ),
-                      ],
-                    ),
-                    style: NbType.displayLarge.copyWith(color: colors.text),
-                  ),
+                // The tagline of the Home mockup.
+                const DisplayTitle(
+                  lead: 'Seu dinheiro,',
+                  trail: 'um passo à frente.',
                 ),
                 if (endReason != null) ...[
                   const SizedBox(height: NbSpace.xl),
@@ -97,23 +84,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   obscureText: true,
                   autofillHints: const [AutofillHints.password],
                   textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => _submit(),
                   enabled: !state.sending,
                 ),
                 if (state.error case final error?) ...[
                   const SizedBox(height: NbSpace.lg),
-                  Semantics(
-                    liveRegion: true,
-                    child: Text(
-                      error,
-                      style: NbType.caption.copyWith(color: colors.danger),
-                    ),
-                  ),
+                  FormErrorText(error),
                 ],
                 const SizedBox(height: NbSpace.xl),
                 PrimaryButton(
                   label: 'Entrar',
                   loading: state.sending,
                   onPressed: _submit,
+                ),
+                const SizedBox(height: NbSpace.sm),
+                Center(
+                  child: TextButton(
+                    onPressed: state.sending ? null : widget.onRegister,
+                    child: const Text('Criar conta'),
+                  ),
                 ),
               ],
             ),

@@ -7,7 +7,7 @@ import 'package:next_bank/features/home/domain/api_status.dart';
 import 'package:next_bank/features/home/presentation/api_status_provider.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
 
-import 'api_status_provider_test.dart';
+import '../../../support/fake_api_status_repository.dart';
 
 class _PendingRepository implements ApiStatusRepository {
   final completer = Completer<ApiStatus>();

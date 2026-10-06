@@ -8,13 +8,11 @@ import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/core/session/session_end_reason.dart';
 import 'package:next_bank/core/session/session_tokens.dart';
 import 'package:next_bank/features/auth/presentation/auth_providers.dart';
-import 'package:next_bank/features/home/domain/api_status.dart';
-import 'package:next_bank/features/home/presentation/api_status_provider.dart';
 import 'package:next_bank/main.dart';
 
-import '../core/session/session_controller_test.dart';
-import '../features/auth/presentation/fake_auth_repository.dart';
-import '../features/home/presentation/api_status_provider_test.dart';
+import '../support/fake_auth_repository.dart';
+import '../support/fake_token_store.dart';
+import '../support/pump_app.dart';
 
 /// A device whose keystore fails on the first read only.
 class FlakyTokenStore extends FakeTokenStore {
@@ -25,30 +23,6 @@ class FlakyTokenStore extends FakeTokenStore {
     if (reads++ == 0) throw PlatformException(code: 'keystore');
     return stored;
   }
-}
-
-/// The whole app, as main.dart builds it, over fakes.
-Future<ProviderContainer> pumpApp(
-  WidgetTester tester, {
-  required FakeTokenStore store,
-  FakeAuthRepository? repository,
-}) async {
-  await tester.pumpWidget(
-    ProviderScope(
-      overrides: [
-        tokenStoreProvider.overrideWithValue(store),
-        authRepositoryProvider.overrideWithValue(
-          repository ?? FakeAuthRepository(tokens),
-        ),
-        apiStatusRepositoryProvider.overrideWithValue(
-          FakeApiStatusRepository(ApiStatus.available),
-        ),
-      ],
-      child: const NextBankApp(),
-    ),
-  );
-  await tester.pumpAndSettle();
-  return ProviderScope.containerOf(tester.element(find.byType(NextBankApp)));
 }
 
 final Finder loginButton = find.widgetWithText(FilledButton, 'Entrar');
@@ -80,6 +54,19 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.logins.single.email, 'ana@example.test');
+    expect(find.text('API disponível'), findsOneWidget);
+  });
+
+  testWidgets("logs in with the keyboard's done key", (tester) async {
+    final repository = FakeAuthRepository(tokens);
+    await pumpApp(tester, store: FakeTokenStore(), repository: repository);
+
+    await tester.enterText(find.byType(TextField).at(0), 'ana@example.test');
+    await tester.enterText(find.byType(TextField).at(1), 'a long passphrase');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    expect(repository.logins, hasLength(1));
     expect(find.text('API disponível'), findsOneWidget);
   });
 

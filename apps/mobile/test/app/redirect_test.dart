@@ -4,7 +4,7 @@ import 'package:next_bank/app/redirect.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/core/session/session_end_reason.dart';
 
-import '../core/session/session_controller_test.dart';
+import '../support/fake_token_store.dart';
 
 // Navigation rules (domain-model.md, section 10): the session decides where
 // the app can be; an ended session goes back to login from any screen.
@@ -26,6 +26,22 @@ void main() {
     ('signed in, on splash', signedIn, AppRoutes.splash, AppRoutes.home),
     ('signed in, on login', signedIn, AppRoutes.login, AppRoutes.home),
     ('signed in, on home', signedIn, AppRoutes.home, null),
+    ('restoring, on register', loading, AppRoutes.register, AppRoutes.splash),
+    ('signed out, on register', signedOut, AppRoutes.register, null),
+    (
+      'signed out, on create-pin',
+      signedOut,
+      AppRoutes.createPin,
+      AppRoutes.login,
+    ),
+    // A finished registration always continues to the PIN.
+    (
+      'signed in, on register',
+      signedIn,
+      AppRoutes.register,
+      AppRoutes.createPin,
+    ),
+    ('signed in, on create-pin', signedIn, AppRoutes.createPin, null),
   ]) {
     test('$name → ${expected ?? 'stays'}', () {
       expect(redirectFor(session, location), expected);
