@@ -119,6 +119,7 @@ Legenda STRIDE: **S** falsificação de identidade · **T** adulteração · **R
 | MOB-03 | Interceptação do tráfego (MITM) | T, I | A4 | Só HTTPS; tráfego em texto puro desabilitado (Android e iOS) | Build não aceita `http://` | 2 |
 | MOB-04 | App descompilado em busca de segredos | I | A4 | Nenhum segredo no app; release ofuscado; servidor é a única autoridade | Busca por chaves no binário de release | 8 |
 | MOB-05 | Pessoa ao lado vê o saldo | I | A3 | Opção de ocultar saldo; desbloqueio após 5 min em segundo plano | Teste de widget do saldo oculto | 4, 7 |
+| MOB-06 | Link externo ou intent abre uma tela interna direto, pulando o fluxo (o Flutter liga deep links por padrão) | T, E | A1, A4 | Deep links desligados no Android (`flutter_deeplinking_enabled`) e no iOS (`FlutterDeepLinkingEnabled`); o app sempre abre pela Splash e um redirect central decide a tela pela sessão | `deep_links_test.dart` confere o manifesto e o `Info.plist`; `redirect_test.dart` cobre cada estado de sessão × rota | 3 |
 
 ### 5.5 API, dados e infraestrutura
 

@@ -91,7 +91,7 @@
 | Proteção contra captura de tela | 🔭 | Risco aceito (baixo impacto na demo); há a opção de ocultar o saldo (MOB-05). | — |
 | Ofuscação | ⏳ | Build de release ofuscado; busca por segredos no binário (MOB-04). | 8 |
 | Integridade do app (Play Integrity / App Attest) | 🔭 | Risco aceito: exige contas de loja e configuração de backend. | — |
-| Deep links seguros | ➖ | Não há deep links na V1. | — |
+| Deep links seguros | ✅ | Não há deep links na V1, e o padrão do Flutter (ligado) foi desligado no Android e no iOS; o app sempre abre pela Splash e o redirect decide a tela pela sessão (MOB-06, `deep_links_test.dart`). | 3 |
 | Biometria integrada corretamente | ⏳ | Só uma conveniência local que libera o PIN guardado no secure storage. O servidor nunca confia na biometria (ADR 0004). É item extra do roadmap. | 3, 6 |
 | Comunicação só via TLS | ✅ | Texto puro desligado no release; no debug, liberado só para hosts locais (MOB-03, build do APK no CI valida o manifesto). | 2 |
 
