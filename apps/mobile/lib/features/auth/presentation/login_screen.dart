@@ -10,8 +10,11 @@ import 'package:next_bank/features/auth/presentation/login_controller.dart';
 /// Login with e-mail and password (screen 2). Says why the user is back
 /// here when the server ended the session.
 class LoginScreen extends ConsumerStatefulWidget {
-  /// Creates the login screen.
-  const new({super.key});
+  /// Creates the login screen; [onRegister] opens the registration.
+  const new({required this.onRegister, super.key});
+
+  /// "Criar conta".
+  final VoidCallback onRegister;
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -93,6 +96,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   label: 'Entrar',
                   loading: state.sending,
                   onPressed: _submit,
+                ),
+                const SizedBox(height: NbSpace.sm),
+                Center(
+                  child: TextButton(
+                    onPressed: state.sending ? null : widget.onRegister,
+                    child: const Text('Criar conta'),
+                  ),
                 ),
               ],
             ),

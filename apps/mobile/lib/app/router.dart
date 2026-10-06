@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:next_bank/app/redirect.dart';
 import 'package:next_bank/core/session/session_controller.dart';
+import 'package:next_bank/features/auth/presentation/create_pin_screen.dart';
 import 'package:next_bank/features/auth/presentation/login_screen.dart';
+import 'package:next_bank/features/auth/presentation/register_screen.dart';
 import 'package:next_bank/features/auth/presentation/sign_out_button.dart';
 import 'package:next_bank/features/auth/presentation/splash_screen.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
@@ -24,7 +26,21 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
     redirect: (_, state) => redirectFor(session.value, state.matchedLocation),
     routes: [
       GoRoute(path: AppRoutes.splash, builder: (_, _) => const SplashScreen()),
-      GoRoute(path: AppRoutes.login, builder: (_, _) => const LoginScreen()),
+      GoRoute(
+        path: AppRoutes.login,
+        builder: (context, _) =>
+            LoginScreen(onRegister: () => context.go(AppRoutes.register)),
+      ),
+      GoRoute(
+        path: AppRoutes.register,
+        builder: (context, _) =>
+            RegisterScreen(onLogin: () => context.go(AppRoutes.login)),
+      ),
+      GoRoute(
+        path: AppRoutes.createPin,
+        builder: (context, _) =>
+            CreatePinScreen(onCreated: () => context.go(AppRoutes.home)),
+      ),
       GoRoute(
         path: AppRoutes.home,
         builder: (_, _) => const HomeScreen(actions: [SignOutButton()]),

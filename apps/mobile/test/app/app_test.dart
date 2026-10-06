@@ -8,13 +8,11 @@ import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/core/session/session_end_reason.dart';
 import 'package:next_bank/core/session/session_tokens.dart';
 import 'package:next_bank/features/auth/presentation/auth_providers.dart';
-import 'package:next_bank/features/home/domain/api_status.dart';
-import 'package:next_bank/features/home/presentation/api_status_provider.dart';
 import 'package:next_bank/main.dart';
 
-import '../support/fake_api_status_repository.dart';
 import '../support/fake_auth_repository.dart';
 import '../support/fake_token_store.dart';
+import '../support/pump_app.dart';
 
 /// A device whose keystore fails on the first read only.
 class FlakyTokenStore extends FakeTokenStore {
@@ -25,30 +23,6 @@ class FlakyTokenStore extends FakeTokenStore {
     if (reads++ == 0) throw PlatformException(code: 'keystore');
     return stored;
   }
-}
-
-/// The whole app, as main.dart builds it, over fakes.
-Future<ProviderContainer> pumpApp(
-  WidgetTester tester, {
-  required FakeTokenStore store,
-  FakeAuthRepository? repository,
-}) async {
-  await tester.pumpWidget(
-    ProviderScope(
-      overrides: [
-        tokenStoreProvider.overrideWithValue(store),
-        authRepositoryProvider.overrideWithValue(
-          repository ?? FakeAuthRepository(tokens),
-        ),
-        apiStatusRepositoryProvider.overrideWithValue(
-          FakeApiStatusRepository(ApiStatus.available),
-        ),
-      ],
-      child: const NextBankApp(),
-    ),
-  );
-  await tester.pumpAndSettle();
-  return ProviderScope.containerOf(tester.element(find.byType(NextBankApp)));
 }
 
 final Finder loginButton = find.widgetWithText(FilledButton, 'Entrar');
