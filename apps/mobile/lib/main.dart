@@ -6,7 +6,8 @@ void main() {
 
 /// Raiz do app next bank.
 class NextBankApp extends StatelessWidget {
-  const NextBankApp({super.key});
+  /// Cria a raiz do app.
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) {
