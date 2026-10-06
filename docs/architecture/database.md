@@ -331,7 +331,7 @@ LIMIT 21;                                      -- 20 itens + 1 para saber se há
 - **Só para frente:** nenhuma migration é editada depois de publicada; correção é uma nova migration.
 - **Expand/contract** para mudanças incompatíveis: adiciona o novo → migra os dados → passa a usar → remove o antigo (em migrations separadas).
 - Executadas pelo papel `nextbank_migrator` no pipeline, nunca pela API em execução.
-- CI: sobe Postgres limpo, aplica todas as migrations, **gera os tipos das queries com pgTyped** (falha se alguma query não bater com o schema) e roda os testes de integração.
+- CI: sobe Postgres limpo, aplica todas as migrations e roda os testes de integração com o papel `nextbank_app` (falham se alguma query não bater com o schema).
 
 ## 10. Invariantes: onde cada uma é garantida
 

@@ -124,7 +124,7 @@ Legenda STRIDE: **S** falsificação de identidade · **T** adulteração · **R
 
 | ID | Ameaça | STRIDE | Ator | Mitigação | Teste | Sem. |
 |---|---|---|---|---|---|---|
-| API-01 | SQL injection | T, I | A1, A2 | Só queries parametrizadas (`pg` + pgTyped); regra Semgrep contra SQL concatenado | Payloads de injeção nos campos de texto | 2+ |
+| API-01 | SQL injection | T, I | A1, A2 | Só queries parametrizadas (`pg`); regra Semgrep contra SQL concatenado | Payloads de injeção nos campos de texto | 2+ |
 | API-02 | Sobrecarga da API | D | A1 | Rate limit global e por rota; corpo máximo de 16 KB; timeouts | Corpo de 1 MB → 413 | 2 |
 | API-03 | Erros revelando detalhes internos | I | A1 | RFC 7807 com mensagem genérica; stack só no log interno | Erro forçado não traz stack nem SQL | 2 |
 | API-04 | Dados pessoais e segredos nos logs | I | A5 | `redact` do Pino (senha, PIN, tokens, CPF, chave Pix, `authorization`) | Teste que loga um payload sensível e verifica a saída | 2 |

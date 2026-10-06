@@ -29,7 +29,7 @@ O projeto começou com três roadmaps rascunhados: um com 38 fases, outro com ve
 | 13 | Infraestrutura | Backoffice no **Render** com API administrativa **privada**; cache do CI no GitHub Actions | Menos fornecedores e segredos; ferramenta interna fora da internet |
 | 14 | Microsserviços | **Não no núcleo.** Monólito modular, com serviços separados só onde há fronteira real | A operação crítica (mover dinheiro) precisa ser atômica |
 | 15 | Revisão de fechamento da semana 1 | **Demo pública sem dados reais** (CPF fictício, contas de demonstração, reset semanal), README em inglês com mockups, licença, documentação reorganizada e **escopo da V1 congelado** | Recrutadores precisam ver o app funcionando em um minuto, e uma demo aberta não pode coletar dados pessoais reais |
-| 16 | Acesso a dados | **SQL puro tipado** (`pg` + pgTyped + dbmate) no lugar do Drizzle | Num ledger, o SQL é o código mais crítico e precisa ser revisado exatamente como roda; o Drizzle 1.0 ainda está em beta |
+| 16 | Acesso a dados | **SQL puro tipado** (`pg` + dbmate) no lugar do Drizzle; pgTyped descartado no spike (sem manutenção, só TS ≤ 5) | Num ledger, o SQL é o código mais crítico e precisa ser revisado exatamente como roda; o Drizzle 1.0 ainda está em beta |
 
 ### O que ficou de fora, de propósito
 

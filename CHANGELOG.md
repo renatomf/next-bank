@@ -6,6 +6,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não publicado]
 
+### Adicionado — Semana 2: esqueleto ponta a ponta
+- Postgres 17 local (Docker Compose) com papéis de menor privilégio (`nextbank_migrator`, `nextbank_app`)
+- Workspace pnpm e migrations SQL com dbmate em `apps/api`
+
 ### Adicionado — Semana 1: arquitetura e segurança
 - Roadmap e design de arquitetura (V1 Core, Pix assíncrono, backoffice)
 - Brief visual e design tokens (cor Paraíba, dark-first) e mockups de Home, Pix e Comprovante
@@ -22,7 +26,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 ### Alterado
 - Documentação reorganizada (`docs/roadmap.md`, `docs/plans/`)
 - Monorepo com Turborepo no lado TypeScript; backoffice no Render com API administrativa privada
-- Acesso a dados com SQL puro tipado (`pg` + pgTyped + dbmate) no lugar do Drizzle
+- Acesso a dados com SQL puro (`pg` + dbmate) no lugar do Drizzle; pgTyped descartado no spike da semana 2
 - Escopo da V1 congelado até a `v1.0.0`
 - App mobile sem o código de exemplo do template do Flutter
 - Lints estritos no app mobile (`very_good_analysis`)
