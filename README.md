@@ -20,7 +20,7 @@ Abra sua conta em minutos, acompanhe cada centavo em tempo real e envie Pix com 
 - **⚡ Pix na hora, sem duplicidade.** Caiu a internet no meio do envio? Tente de novo sem medo: o seu Pix é processado uma única vez.
 - **🔒 Segurança em cada camada.** PIN de transação validado no servidor, bloqueio automático contra tentativas suspeitas e sessões protegidas contra roubo de credenciais.
 - **📊 Cada centavo no lugar certo.** Saldo e extrato vêm de um livro-razão que nunca é editado, só acrescentado. O que aparece no app sempre fecha com a conta.
-- **✨ Simples por fora, sólido por dentro.** Uma experiência leve e escura, com o brilho da cor Paraíba, sobre uma engenharia construída para não falhar.
+- **✨ Simples por fora, sólido por dentro.** Uma experiência leve e escura, com o brilho da cor Menta, sobre uma engenharia construída para não falhar.
 
 > 🚧 **Em construção:** semana 1 de 8 da primeira versão.
 

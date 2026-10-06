@@ -20,7 +20,7 @@ O projeto começou com três roadmaps rascunhados: um com 38 fases, outro com ve
 | 4 | Olhar de banco real | O Pix interno e síncrono não exercitava os problemas difíceis. Entrou um **simulador do Bacen** com falhas, conta transitória e conciliação | O difícil num banco é o que acontece fora do próprio banco de dados |
 | 5 | Objetivo do projeto | Foco em **vagas fullstack (web + mobile) no setor financeiro**: três fases em vez de nove releases. Entrou o **backoffice Next.js** para mostrar a parte web | Profundidade em poucas coisas convence mais que amplitude |
 | 6 | Realismo de prazo | V1 de 6–7 para **8 semanas**, com itens obrigatórios × extras e checkpoints nas semanas 2 e 6 | Projetos solo atrasam 30–50%; o escopo cede antes da qualidade |
-| 7 | Design | **Sem Figma:** referência visual → mockups → tokens. Nome **next bank**, cor **Paraíba `#00FFC8`**, dark-first | Mais rápido, e o código das telas nasce direto no Flutter |
+| 7 | Design | **Sem Figma:** referência visual → mockups → tokens. Nome **next bank**, cor **Menta `#00FFC8`**, dark-first | Mais rápido, e o código das telas nasce direto no Flutter |
 | 8 | Telas | **Direto no Flutter, por fatia**, sem mockups das telas restantes | O visual já estava decidido; mockup extra seria trabalho em dobro |
 | 9 | Padrões | **Padrões de engenharia inegociáveis**, com segurança em primeiro lugar, TDD onde rende e fluxo de Git com PRs | O projeto é tratado como um banco real em produção |
 | 10 | Banco de dados | **Schema por contexto**, banco como última barreira, ledger imutável no próprio banco, CPF criptografado, contas de sistema sem *hot account* | As regras financeiras precisam sobreviver a bugs da aplicação |

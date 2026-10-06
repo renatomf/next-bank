@@ -207,14 +207,14 @@ Schemas Zod da API → OpenAPI → cliente Dart (mobile) + cliente TS (backoffic
   - Escopo npm: `@nextbank/*` (ex.: `@nextbank/api`, `@nextbank/backoffice`, `@nextbank/contracts`). **Não** usar `@next/*`, que é o escopo oficial do Next.js.
   - Repositório: `next-bank`
 - **Aviso no README:** uma linha genérica de projeto fictício de portfólio (não é instituição financeira, sem dinheiro real, dados fictícios). Nenhum ativo visual (logo, cores, ilustrações) de outras instituições é usado.
-- **Cor de marca: Paraíba `#00FFC8`.** Menta neon, inspirada na turmalina Paraíba (gema brasileira).
-- **Assinatura visual:** card de saldo sempre escuro, com brilho (glow) Paraíba, nos dois modos.
+- **Cor de marca: Menta `#00FFC8`** (menta neon). No código, `NbBrand.mint`.
+- **Assinatura visual:** card de saldo sempre escuro, com brilho (glow) Menta, nos dois modos.
 
 **Tokens finais:** paleta completa, tipografia, raios, espaçamento e componentes estão em **[`docs/design/brief.md`](../../design/brief.md)**, a fonte da verdade do visual.
 
 - **Tema:** a V1 entrega o **dark como padrão** (a referência e os mockups são dark-first). Os tokens do light já estão definidos; o seletor de tema na tela de Perfil é item extra da semana 7.
 - `#00FFC8` **nunca** é usado como texto sobre fundo claro (1.3:1, ilegível), nem com texto branco por cima.
-- **Status ≠ marca:** status de sucesso usa verde-lima (`#C4F27A` no dark, `#3B6E0E` no light), distinto da Paraíba. Entradas e saídas são indicadas por ícone + sinal (`+ R$ 50,00`).
+- **Status ≠ marca:** status de sucesso usa verde-lima (`#C4F27A` no dark, `#3B6E0E` no light), distinto da Menta. Entradas e saídas são indicadas por ícone + sinal (`+ R$ 50,00`).
 
 ### 7.0.1 Processo (concluído na semana 0)
 

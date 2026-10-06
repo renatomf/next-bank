@@ -6,7 +6,7 @@
 
 ## 1. Direção
 
-**Dark, premium e luminoso.** Fundo quase preto, superfícies em camadas sutis, e a cor Paraíba como luz: ela brilha nos pontos de ação e no card de saldo, nunca inunda a tela.
+**Dark, premium e luminoso.** Fundo quase preto, superfícies em camadas sutis, e a cor Menta como luz: ela brilha nos pontos de ação e no card de saldo, nunca inunda a tela.
 
 | Aproveitamos da referência | Evitamos |
 |---|---|
@@ -22,9 +22,9 @@
 
 | Token | Valor | Uso |
 |---|---|---|
-| `brand.paraiba` | `#00FFC8` | Cor de marca: botões (dark), ação central, glow, logo |
-| `brand.paraibaDeep` | `#007A6A` | Paraíba para texto, links e ícones no light (5.3:1 sobre branco) |
-| `brand.paraibaInk` | `#006B5D` | Texto sobre chips Paraíba claros |
+| `brand.mint` | `#00FFC8` | Cor de marca: botões (dark), ação central, glow, logo |
+| `brand.mintDeep` | `#007A6A` | Menta para texto, links e ícones no light (5.3:1 sobre branco) |
+| `brand.mintInk` | `#006B5D` | Texto sobre chips Menta claros |
 
 ### 2.2 Tema
 
@@ -46,13 +46,13 @@
 | `successSoft` | `rgba(196,242,122,0.12)` | `rgba(120,190,40,0.16)` | Fundo do selo de status |
 | `danger` | `#FF6B6B` | `#C62828` | Erro, falha (a validar na semana 6) |
 | `navBg` | `rgba(18,26,33,0.88)` + blur 16 | `rgba(255,255,255,0.92)` + blur 16 | Navegação flutuante |
-| `glow` | Paraíba a 10%, radial no topo | Paraíba a 22%, radial no topo | Brilho ambiente no fundo |
+| `glow` | Menta a 10%, radial no topo | Menta a 22%, radial no topo | Brilho ambiente no fundo |
 
 ### 2.3 Card de saldo (assinatura, igual nos dois modos)
 
 Sempre escuro. Camadas, de cima para baixo:
 
-1. Radial Paraíba 75% no canto superior direito
+1. Radial Menta 75% no canto superior direito
 2. Radial `#00BEA0` 65% no canto inferior esquerdo
 3. Faixa diagonal clara (efeito de seda) a 16%
 4. Base linear `#0B2A26 → #06110F`
@@ -98,7 +98,7 @@ Lucide (traço 1.8; 2–3 nos ícones de check e seta dentro de botões). Ícone
 
 ## 6. Logo
 
-Wordmark **"next"** em Sora 700, tracking −4%, seguido de um ponto Paraíba com glow. Identidade 100% própria: nenhum elemento de logos de outras instituições.
+Wordmark **"next"** em Sora 700, tracking −4%, seguido de um ponto Menta com glow. Identidade 100% própria: nenhum elemento de logos de outras instituições.
 
 ## 7. Componentes validados nos mockups
 
