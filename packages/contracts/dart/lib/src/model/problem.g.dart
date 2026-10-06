@@ -13,6 +13,8 @@ abstract class _$ProblemCWProxy {
 
   Problem status(int status);
 
+  Problem code(String? code);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Problem(...).copyWith.fieldName(value)`.
@@ -21,7 +23,7 @@ abstract class _$ProblemCWProxy {
   /// ```dart
   /// Problem(...).copyWith(id: 12, name: "My name")
   /// ```
-  Problem call({ProblemTypeEnum type, String title, int status});
+  Problem call({ProblemTypeEnum type, String title, int status, String? code});
 }
 
 /// Callable proxy for `copyWith` functionality.
@@ -40,6 +42,9 @@ class _$ProblemCWProxyImpl implements _$ProblemCWProxy {
   @override
   Problem status(int status) => call(status: status);
 
+  @override
+  Problem code(String? code) => call(code: code);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Problem(...).copyWith.fieldName(value)`.
@@ -53,6 +58,7 @@ class _$ProblemCWProxyImpl implements _$ProblemCWProxy {
     Object? type = const $CopyWithPlaceholder(),
     Object? title = const $CopyWithPlaceholder(),
     Object? status = const $CopyWithPlaceholder(),
+    Object? code = const $CopyWithPlaceholder(),
   }) {
     return Problem(
       type: type == const $CopyWithPlaceholder() || type == null
@@ -67,6 +73,10 @@ class _$ProblemCWProxyImpl implements _$ProblemCWProxy {
           ? _value.status
           // ignore: cast_nullable_to_non_nullable
           : status as int,
+      code: code == const $CopyWithPlaceholder()
+          ? _value.code
+          // ignore: cast_nullable_to_non_nullable
+          : code as String?,
     );
   }
 }
@@ -92,6 +102,7 @@ Problem _$ProblemFromJson(Map<String, dynamic> json) =>
         ),
         title: $checkedConvert('title', (v) => v as String),
         status: $checkedConvert('status', (v) => (v as num).toInt()),
+        code: $checkedConvert('code', (v) => v as String?),
       );
       return val;
     });
@@ -100,6 +111,7 @@ Map<String, dynamic> _$ProblemToJson(Problem instance) => <String, dynamic>{
   'type': _$ProblemTypeEnumEnumMap[instance.type]!,
   'title': instance.title,
   'status': instance.status,
+  'code': ?instance.code,
 };
 
 const _$ProblemTypeEnumEnumMap = {
