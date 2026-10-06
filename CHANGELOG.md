@@ -16,6 +16,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - CI no GitHub Actions (API com Postgres real, mobile e gitleaks em todo o histórico), actions fixadas por SHA e Dependabot
 - Contrato da API: OpenAPI gerado dos schemas Zod e cliente Dart em `packages/contracts`, com gate de divergência no CI
 - App: Home exibe o status da API pelo cliente gerado (Riverpod + Dio); HTTP só para hosts locais em builds de debug (MOB-03)
+- Gates de segurança completos no CI: osv-scanner (vulnerabilidades em todos os lockfiles) e Semgrep (incluindo regra própria contra SQL montado com strings, API-01)
+- Teste de arquitetura no app (regra de dependência da Clean Architecture)
 
 ### Adicionado — Semana 1: arquitetura e segurança
 - Roadmap e design de arquitetura (V1 Core, Pix assíncrono, backoffice)

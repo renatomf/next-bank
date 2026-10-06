@@ -139,11 +139,13 @@ Também: TypeScript estrito (`strict`, `noUncheckedIndexedAccess`, `exactOptiona
 
 ---
 
-## Checkpoint de fim de semana
+## Checkpoint de fim de semana (concluído em 2026-10-06)
 
-- [ ] Resultados dos spikes registrados nos ADRs 0008 e 0009
-- [ ] App → API → Postgres funcionando localmente
-- [ ] CI obrigatório na `main`
-- [ ] Roadmap atualizado com os ajustes aceitos
-- [ ] Se o esqueleto não estiver de pé: ativar o plano B dos contratos e reduzir o CI ao essencial (roadmap 8.1)
+- [x] Resultados dos spikes registrados nos ADRs 0008 e 0009
+- [x] App → API → Postgres funcionando localmente (validado no emulador Android)
+- [x] CI obrigatório na `main` (ruleset `protect-main`): API, Mobile, Contracts, gitleaks, osv-scanner e Semgrep
+- [x] Roadmap atualizado com os ajustes aceitos
+- [x] Plano B não foi necessário: o esqueleto ficou de pé com o tooling previsto
 - [ ] Próximo passo: plano da semana 3 (Identity)
+
+**Ficou para depois, de forma consciente:** Sentry (MOB-02), deploy no Render + Neon (semana 8), iOS não testado (sem Mac), módulos hexagonais e dependency-cruiser na API (com o primeiro módulo, semana 3).
