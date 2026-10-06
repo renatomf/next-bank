@@ -93,7 +93,7 @@ flowchart LR
 | Particionar a tabela de partidas | Centenas de milhões de linhas | Consultas sempre filtram por conta e data |
 | Réplicas de leitura | Consultas disputando com escritas | Extrato já é um read model |
 | **Sharding por cliente (células)** | Um banco de dados não dá conta | Dados chaveados por conta; Pix entre células usa o mesmo padrão do Pix externo |
-| KMS/HSM para chaves | Operação real | Porta `KeyProvider` |
+| KMS/HSM para chaves | Operação real | Portas `CpfProtector` e `AccessTokenIssuer` |
 | Vínculo de dispositivo, integridade do app, pinning | Exposição real a fraude | Riscos aceitos e documentados no threat model |
 | Gateway zero trust no backoffice | Mais de um operador real | Backoffice já isolado da API pública |
 | UI dirigida pelo servidor (SDUI) | Mudar telas sem publicar nova versão do app | Design System isolado e declarativo |

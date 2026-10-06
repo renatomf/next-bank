@@ -23,7 +23,7 @@
 | Controle | Status | Como / evidência | Sem. |
 |---|---|---|---|
 | OAuth 2.0 / OIDC | ➖ | Não há terceiros nem login delegado: o app é o único cliente da própria API (ADR 0004). Os mecanismos de token seguem as boas práticas do OAuth 2.0 (token de acesso curto, refresh rotativo com detecção de reuso). Reavaliar se houver login social ou integração com parceiros. | — |
-| Access token curto + refresh token | 🟡 | Agregado `Session` pronto (#34). Falta emitir o JWT EdDSA de 15 min (`jose`, D2) e o refresh opaco de 256 bits, guardado só como hash (schema pronto, #32). | 3 |
+| Access token curto + refresh token | 🟡 | Agregado `Session` (#34); JWT EdDSA de 15 min com `kid` e `typ: at+jwt`, recusando `alg: none`, troca de algoritmo, outra chave, adulteração e claims ausentes (`jose-access-tokens.test.ts`, AUTH-05); refresh opaco de 256 bits guardado só como SHA-256 (`random-refresh-tokens.test.ts`). Falta ligar às rotas. | 3 |
 | Rotação e revogação de tokens | 🟡 | Rotação a cada uso, janela de 10 s e revogação da sessão inteira no reuso: domínio pronto e testado (#34, AUTH-03). Falta o caso de uso com `SELECT … FOR UPDATE` e o endpoint. | 3 |
 | MFA / 2FA no login | 🔭 | Risco aceito no threat model (seção 7). Evolução: OTP por e-mail em dispositivo novo. | — |
 | Segundo fator nas operações (step-up) | 🟡 | PIN de transação verificado **no servidor** em todo Pix (ADR 0004). Domínio do PIN pronto (#35). A integração com o Pix vem na semana 5. | 3, 5 |
