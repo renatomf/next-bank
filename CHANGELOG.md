@@ -12,7 +12,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Modelo de domínio: contextos, agregados, máquina de estados do Pix, plano de contas, catálogo de erros, mapa de navegação
 - Desenho do banco de dados: schema por contexto, restrições como última barreira, ledger e auditoria imutáveis, criptografia de dados pessoais, estratégia de concorrência, caminho de escala
 - Threat model STRIDE com 42 ameaças (incluindo a demo pública) e checklist OWASP ASVS/MASVS
-- ADRs 0001–0008
+- ADRs 0001–0009
 - Diagramas C4 (contexto e containers) e de sequência (login com renovação de sessão e Pix interno)
 - Padrões de engenharia, regras de TDD e convenções de Git
 - Documento de evolução do projeto
@@ -22,6 +22,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 ### Alterado
 - Documentação reorganizada (`docs/roadmap.md`, `docs/plans/`)
 - Monorepo com Turborepo no lado TypeScript; backoffice no Render com API administrativa privada
+- Acesso a dados com SQL puro tipado (`pg` + pgTyped + dbmate) no lugar do Drizzle
 - Escopo da V1 congelado até a `v1.0.0`
 
 ### Segurança

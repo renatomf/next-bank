@@ -40,7 +40,7 @@ next bank is built with the practices of a production bank:
 | Layer | Technologies |
 |---|---|
 | Mobile | Flutter, Riverpod, GoRouter, Dio, Freezed |
-| API | Node.js, TypeScript, Fastify, Zod, Drizzle, PostgreSQL |
+| API | Node.js, TypeScript, Fastify, Zod, PostgreSQL (typed SQL with pgTyped) |
 | Back office | Next.js, TypeScript |
 | Infra | Docker, GitHub Actions, Turborepo, Sentry |
 
