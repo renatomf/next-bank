@@ -259,6 +259,7 @@ O extrato não é um agregado: é uma consulta (lado de leitura do CQRS) que lê
 
 | Erro | HTTP | Tela | Mensagem ao cliente |
 |---|---|---|---|
+| `InvalidRequest` | 422 | Qualquer | "Confira os dados informados." (entrada fora do formato ou com campo desconhecido; o app valida antes, então indica erro de programação ou cliente adulterado) |
 | `InvalidCredentials` | 401 | Login | "E-mail ou senha incorretos." |
 | `TooManyAttempts` | 429 | Login, Pix | "Muitas tentativas. Tente de novo em alguns minutos." |
 | `InvalidCpf` | 422 | Cadastro | "CPF inválido." |

@@ -39,7 +39,7 @@
 | Controle | Status | Como / evidência | Sem. |
 |---|---|---|---|
 | Validação rigorosa de entrada | 🟡 | Zod em toda rota (type provider), corpo máximo de 16 KB (`http-security.test.ts`), `x-request-id` validado. Schemas estritos (campo desconhecido → 422) entram com cada rota. | 2+ |
-| Rate limiting / throttling | ⏳ | Login, cadastro, PIN, consulta de chave Pix e comandos financeiros (AUTH-01, AUTH-09, PIX-07). Em memória na V1 (D3). **Previsto na semana 2 (API-02), ainda não feito:** entra na semana 3. | 3, 5 |
+| Rate limiting / throttling | 🟡 | Global: 100 requisições/min por IP, 429 no formato do catálogo (✅, F-05). Por rota: login, cadastro, PIN, consulta de chave Pix e comandos financeiros (AUTH-01, AUTH-09, PIX-07). Em memória na V1 (D3). | 3, 5 |
 | CORS | ✅ | Negado por padrão: a API não registra plugin de CORS, então o navegador bloqueia chamadas de outras origens (o app mobile não precisa de CORS). Falta um teste explícito, que entra na semana 3. | 2 |
 | CSRF | ➖ | A autenticação usa `Authorization: Bearer`, e não cookies, então o navegador não envia credenciais automaticamente. Reavaliar no backoffice (Fase 3) se ele usar cookies. | — |
 | SQL injection | ✅ | Só queries parametrizadas com `pg` (ADR 0009), sem ORM e sem SQL montado com strings; regra própria do Semgrep no CI (API-01). | 2+ |
@@ -48,7 +48,7 @@
 | IDOR / BOLA | ⏳ | Conta sempre derivada do token; **todo recurso tem teste de IDOR** (CLAUDE.md, READ-01, PIX-01). | 4–6 |
 | Command injection | ➖ | A API não executa comandos do sistema. O único uso (`execFileSync` no setup dos testes) tem argumentos fixos e não usa shell. | — |
 | Path traversal | ➖ | Nenhuma leitura ou escrita de arquivo a partir de entrada do cliente. | — |
-| Headers de segurança | 🟡 | helmet (HSTS, CSP, `nosniff`…). `http-security.test.ts` verifica HSTS, `nosniff` e a ausência de `x-powered-by`. **Falta `Cache-Control: no-store`** nas respostas com dados do cliente, que entra junto com a autenticação. | 2, 3 |
+| Headers de segurança | 🟡 | helmet (HSTS, CSP, `nosniff`…). `http-security.test.ts` verifica HSTS, `nosniff` e a ausência de `x-powered-by`. `Cache-Control: no-store` em toda resposta (✅, F-06). | 2, 3 |
 | Versionamento de API | ⏳ | Prefixo `/v1` a partir das rotas de autenticação. | 3 |
 | Contratos e schemas | ✅ | OpenAPI gerado dos schemas Zod, cliente Dart gerado e gate de divergência no CI (ADR 0008, job `Contracts`). | 2 |
 | Idempotência em operações financeiras | ⏳ | `Idempotency-Key` com escopo (usuário, chave), validade de 24 h, hash do payload e resposta guardada (ADR 0007, PIX-02, T-DB-06). | 5 |
@@ -192,8 +192,9 @@ Achados das revisões de segurança e da construção, no formato de relatório 
 | F-02 | Banco | 🟡 Média | `CHECK` de revogação da sessão aceitava sessão revogada sem motivo (um `CHECK` que dá `NULL` passa) | Corrigido antes do merge (#32), com teste |
 | F-03 | CI/CD | 🟡 Média | Checks `Contracts`, `osv-scanner` e `Semgrep` rodavam, mas não eram obrigatórios para o merge | Corrigido (ruleset atualizado, 2026-10-06) |
 | F-04 | Segredos | 🟢 Baixa | gitleaks só rodava depois do push, num repositório público | Corrigido (#31, hook `pre-commit`) |
-| F-05 | API | 🟡 Média | Rate limit global previsto na semana 2 (API-02) não foi implementado | Aberto (semana 3) |
-| F-06 | API | 🟢 Baixa | Respostas sem `Cache-Control: no-store` | Aberto (semana 3, com a autenticação) |
+| F-05 | API | 🟡 Média | Rate limit global previsto na semana 2 (API-02) não foi implementado | Corrigido: 100 requisições/min por IP, resposta 429 `TooManyAttempts` no formato RFC 9457 (`http-problems.test.ts`). Limites por rota (login, cadastro, PIN) entram com cada rota |
+| F-06 | API | 🟢 Baixa | Respostas sem `Cache-Control: no-store` | Corrigido: `no-store` em toda resposta, inclusive erros e 404 |
+| F-09 | Infra | 🟠 Alta | Atrás do proxy do Render, sem `trustProxy` configurado, todos os clientes compartilhariam o mesmo IP: o rate limit bloquearia todo mundo junto, ou ninguém | Aberto (semana 8, no deploy): configurar `trustProxy` só para o proxy do provedor, com teste |
 | F-07 | Observabilidade | 🟢 Baixa | Sentry obrigatório pelo CLAUDE.md, mas sem semana no plano | Aberto (proposta: semana 8) |
 | F-08 | Criptografia | 🟠 Alta | Decifragem AES-GCM do CPF sem tamanho de tag fixado: o Node aceitaria tag truncada (ex.: 4 bytes), facilitando forjar valores. Apontado pelo Semgrep no CI (`gcm-no-tag-length`) | Corrigido antes do merge (#37): `authTagLength: 16` e recusa de valor curto, com teste do ataque |
 
