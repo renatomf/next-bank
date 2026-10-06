@@ -119,3 +119,35 @@ jobs:
           docker run --rm -v "$PWD:/repo"
           ghcr.io/gitleaks/gitleaks@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f
           git /repo --no-banner --redact
+
+  dependencies:
+    name: Dependencies (osv-scanner)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Known vulnerabilities in every lockfile: npm and pub (API-09). Image pinned by digest.
+      - name: Scan lockfiles
+        run: >-
+          docker run --rm -v "$PWD:/src" -w /src
+          ghcr.io/google/osv-scanner@sha256:afd838850ac1a0fcc15ff4a041dc9ba11123c3f0d2666217a5f0fcf9222b55fa
+          scan source --recursive .
+
+  sast:
+    name: SAST (Semgrep)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Project rules (.semgrep/, incl. SQL built from strings, API-01) plus the
+      # TypeScript and Node registry rulesets. Image pinned by digest; no telemetry.
+      - name: Static analysis
+        run: >-
+          docker run --rm -v "$PWD:/src" -w /src
+          semgrep/semgrep@sha256:93963d9295a366f59e4850127b1550400ee7b388f04fe144e4a1f6325d96e01b
+          semgrep scan --config .semgrep --config p/typescript --config p/nodejs
+          --metrics=off --error
