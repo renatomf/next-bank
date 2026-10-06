@@ -7,7 +7,7 @@ import { Login } from './application/login.ts';
 import { Logout } from './application/logout.ts';
 import type { AccessTokenVerifier } from './application/ports.ts';
 import { RefreshSession } from './application/refresh-session.ts';
-import { UserRegistration } from './application/user-registration.ts';
+import { RegisterUser } from './application/register-user.ts';
 import { AesGcmCpfProtector, type CpfKeys } from './infrastructure/aes-gcm-cpf-protector.ts';
 import { Argon2idHasher } from './infrastructure/argon2id-hasher.ts';
 import { loadCommonPasswords } from './infrastructure/common-password-file.ts';
@@ -27,16 +27,13 @@ export type {
   PreparedRegistration,
   RegisteredUser,
   RegistrationInput,
-} from './application/user-registration.ts';
+} from './application/register-user.ts';
 
 /** The registration steps an orchestrator sequences (ADR 0010). */
-export type IdentityRegistration = Pick<
-  UserRegistration,
-  'prepare' | 'register' | 'issueAccessToken'
->;
+export type RegisterUserSteps = Pick<RegisterUser, 'prepare' | 'register' | 'issueAccessToken'>;
 
 export interface IdentityModule {
-  registration: IdentityRegistration;
+  registerUser: RegisterUserSteps;
   login: Login;
   refreshSession: RefreshSession;
   logout: Logout;
@@ -62,7 +59,7 @@ export function createIdentityModule(settings: IdentitySettings): IdentityModule
   const refreshTokens = new RandomRefreshTokens();
   const accessTokens = new JoseAccessTokens(settings.accessTokenKeys);
   return {
-    registration: new UserRegistration({
+    registerUser: new RegisterUser({
       repositories,
       clock: settings.clock,
       ids: settings.ids,

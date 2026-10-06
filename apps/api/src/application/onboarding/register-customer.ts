@@ -1,5 +1,5 @@
 import type { UnitOfWork } from '../../shared/application/ports.ts';
-import type { IdentityRegistration, RegistrationInput } from '../../modules/identity/index.ts';
+import type { RegisterUserSteps, RegistrationInput } from '../../modules/identity/index.ts';
 
 export interface RegisterCustomerInput extends RegistrationInput {
   requestId: string | null;
@@ -20,9 +20,9 @@ export interface RegisterCustomerResult {
  */
 export class RegisterCustomer {
   readonly #unitOfWork: UnitOfWork;
-  readonly #identity: IdentityRegistration;
+  readonly #identity: RegisterUserSteps;
 
-  constructor(deps: { unitOfWork: UnitOfWork; identity: IdentityRegistration }) {
+  constructor(deps: { unitOfWork: UnitOfWork; identity: RegisterUserSteps }) {
     this.#unitOfWork = deps.unitOfWork;
     this.#identity = deps.identity;
   }

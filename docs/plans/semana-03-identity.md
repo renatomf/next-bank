@@ -53,21 +53,21 @@ Manutenção ativa, licença e tamanho de cada biblioteca são conferidos na Tar
 
 ## Tarefa 1 — Fundação do módulo (dia 1)
 
-- [ ] **Refactor estrutural** (primeiro commit, sem mudar comportamento; os testes atuais provam isso): infraestrutura transversal vai para `src/shared/` (config, db, logs, erros, OpenAPI, health); `app.ts` vira a raiz de composição única
-- [ ] Estrutura `src/modules/identity/{domain,application,infrastructure,http}` e núcleo compartilhado mínimo: `Clock`, `IdGenerator`, transação (unidade de trabalho)
-- [ ] **dependency-cruiser no CI:** domínio sem framework; módulos só se falam pela API pública (`index.ts`)
-- [ ] **Gate de cobertura de 90%** em `domain/` e `application/` (Vitest)
-- [ ] Primeiras migrations reais: schema `identity` (`users`, `sessions`, `refresh_tokens`, `transaction_pins`) e `audit.audit_events`, com `GRANT`s, `CHECK`s e triggers de imutabilidade da auditoria; `REVOKE EXECUTE … FROM PUBLIC` nas funções
-- [ ] Mapeamento de erro de domínio → resposta RFC 9457 com `code` do catálogo (`domain-model.md`, seção 9)
-- [ ] `EXPLAIN ANALYZE` de cada query nova, com o índice que a sustenta
+- [x] **Refactor estrutural** (primeiro commit, sem mudar comportamento; os testes atuais provam isso): infraestrutura transversal vai para `src/shared/` (config, db, logs, erros, OpenAPI, health); `app.ts` vira a raiz de composição única
+- [x] Estrutura `src/modules/identity/{domain,application,infrastructure,http}` e núcleo compartilhado mínimo: `Clock`, `IdGenerator`, transação (unidade de trabalho)
+- [x] **dependency-cruiser no CI:** domínio sem framework; módulos só se falam pela API pública (`index.ts`)
+- [x] **Gate de cobertura de 90%** em `domain/` e `application/` (Vitest)
+- [x] Primeiras migrations reais: schema `identity` (`users`, `sessions`, `refresh_tokens`, `transaction_pins`) e `audit.audit_events`, com `GRANT`s, `CHECK`s e triggers de imutabilidade da auditoria; `REVOKE EXECUTE … FROM PUBLIC` nas funções
+- [x] Mapeamento de erro de domínio → resposta RFC 9457 com `code` do catálogo (`domain-model.md`, seção 9)
+- [x] `EXPLAIN ANALYZE` de cada query nova, com o índice que a sustenta
 
 ## Tarefa 2 — Domínio Identity, TDD estrito (dia 1–2)
 
 Cada invariante e cada erro do catálogo vira teste, com `Clock` controlável:
 
-- [ ] `Cpf` (dígitos verificadores → `InvalidCpf`), `Email` (normalizado), política de senha (10 a 128 caracteres, lista comum → `WeakPassword`)
-- [ ] `Session`: rotação a cada refresh; reuso fora de 10 s revoga a família (`RefreshTokenReuseDetected`); reapresentação dentro de 10 s devolve o mesmo par; expiração por inatividade (7 dias) e absoluta (30 dias) → `SessionExpired`
-- [ ] `TransactionPin`: 4 dígitos sem sequências triviais; 5 erros bloqueiam por 30 min (`PinLocked`); acerto zera as tentativas
+- [x] `Cpf` (dígitos verificadores → `InvalidCpf`), e-mail normalizado (`normalizeEmail`, compartilhado por cadastro e login), política de senha (10 a 128 caracteres, lista comum → `WeakPassword`)
+- [x] `Session`: rotação a cada refresh; reuso fora de 10 s revoga a família (`RefreshTokenReuseDetected`); reapresentação dentro de 10 s, com o sucessor ainda ativo, recebe um par novo (o mesmo par é impossível: só o hash é guardado); expiração por inatividade (7 dias) e absoluta (30 dias) → `SessionExpired`
+- [x] `TransactionPin`: 4 dígitos sem sequências triviais; 5 erros bloqueiam por 30 min (`PinLocked`); acerto zera as tentativas
 
 ## Tarefa 3 — Casos de uso e API, outside-in (dia 2–3)
 
@@ -86,10 +86,10 @@ O teste HTTP (Postgres real) vem antes da rota. Testes de segurança antes das d
 | AUTH-09 | 4º cadastro do mesmo IP em 1 h → 429 |
 | API-06 | Coluna do CPF não contém o CPF em claro |
 
-- [ ] Rotas: `POST /v1/auth/register`, `POST /v1/auth/login`, `POST /v1/auth/refresh`, `POST /v1/auth/logout`, `POST /v1/me/pin`
-- [ ] Autenticação negando por padrão: toda rota exige token, exceto as públicas declaradas explicitamente
-- [ ] Auditoria: `USER_REGISTERED`, `LOGIN_FAILED`, `SESSION_REVOKED`, `REFRESH_TOKEN_REUSE_DETECTED`, na mesma transação da operação
-- [ ] Contrato atualizado: esquema de segurança Bearer no OpenAPI; cliente Dart regenerado
+- [x] Rotas: `POST /v1/auth/register`, `POST /v1/auth/login`, `POST /v1/auth/refresh`, `POST /v1/auth/logout`, `POST /v1/me/pin`
+- [x] Autenticação negando por padrão: toda rota exige token, exceto as públicas declaradas explicitamente
+- [x] Auditoria: `USER_REGISTERED`, `LOGIN_FAILED`, `SESSION_REVOKED`, `REFRESH_REUSE_DETECTED` (nome do `domain-model.md`), na mesma transação da operação; falhas commitadas antes do erro
+- [x] Contrato atualizado: esquema de segurança Bearer no OpenAPI; cliente Dart regenerado
 
 ## Tarefa 4 — App (dia 4–5)
 
@@ -103,9 +103,24 @@ O teste HTTP (Postgres real) vem antes da rota. Testes de segurança antes das d
 
 ## Tarefa 5 — Fechamento
 
-- [ ] `/security-review` (obrigatório: auth, sessão e PIN)
-- [ ] Threat model: novos riscos registrados (ex.: rate limit em memória, D3)
-- [ ] ADR se alguma decisão D1–D7 mudar; CHANGELOG e roadmap
+- [x] `/security-review` (obrigatório: auth, sessão e PIN)
+- [x] Threat model: novos riscos registrados (ex.: rate limit em memória, D3)
+- [x] ADR se alguma decisão D1–D7 mudar; CHANGELOG e roadmap
+
+## Desvios e decisões tomadas durante a semana
+
+| Tema | Plano original | O que foi feito | Registro |
+|---|---|---|---|
+| Orquestração do cadastro | Caso de uso no Identity | Camada `src/application/onboarding` e unidade de trabalho compartilhada entre módulos | ADR 0010 |
+| Janela de 10 s do refresh | Devolver o mesmo par | Par novo, só com o sucessor ainda ativo | `domain-model.md` 3.1 |
+| Porta `KeyProvider` (D4, D6) | Porta separada para as chaves | As portas `AccessTokenIssuer` e `CpfProtector` são a fronteira de troca para KMS | Threat model D4, `database.md` |
+| Lista de senhas comuns (D4 do plano) | 10 mil mais comuns | 100 mil do NCSC filtradas para 10–128 caracteres, sem CPF válido nem e-mail | D4 acima |
+| Argon2 (D1) | Versão mais recente | Fixado na 2.2.1 (quarentena: a 2.2.2 tinha horas) | D1 acima |
+| PIN | 5 erros → 30 min | Também o 3º bloqueio em 24 h exige redefinir com a senha, e o hash usa pepper do servidor | Threat model D7, API-13 |
+| Job de limpeza de refresh tokens | Semana 3 | Semana 8, junto com o agendamento do deploy | Matriz de controles |
+| Processo | — | Desenho aprovado antes do código, com seção de concorrência | CLAUDE.md |
+
+**Achados da semana** (log em `docs/security/controles-de-seguranca.md`): F-01, F-08, F-10, F-11 e F-13 corrigidos antes do merge; F-02 a F-06 corrigidos; F-07, F-09 e F-12 abertos, com semana definida.
 
 ---
 

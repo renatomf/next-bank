@@ -38,7 +38,7 @@ export interface RegisteredUser {
   registeredAt: Date;
 }
 
-export interface UserRegistrationDependencies {
+export interface RegisterUserDependencies {
   repositories: IdentityRepositoriesFactory;
   clock: Clock;
   ids: IdGenerator;
@@ -54,10 +54,10 @@ export interface UserRegistrationDependencies {
  * steps an orchestrator sequences (ADR 0010): prepare outside the transaction,
  * register inside it, issue the access token after the commit.
  */
-export class UserRegistration {
-  readonly #deps: UserRegistrationDependencies;
+export class RegisterUser {
+  readonly #deps: RegisterUserDependencies;
 
-  constructor(deps: UserRegistrationDependencies) {
+  constructor(deps: RegisterUserDependencies) {
     this.#deps = deps;
   }
 

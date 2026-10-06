@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { RegisterCustomer } from '../../../src/application/onboarding/register-customer.ts';
-import { UserRegistration } from '../../../src/modules/identity/application/user-registration.ts';
+import { RegisterUser } from '../../../src/modules/identity/application/register-user.ts';
 import {
   AlreadyRegistered,
   InvalidCpf,
@@ -32,7 +32,7 @@ const INPUT = {
 function setup() {
   const store = new InMemoryDatabase();
   const hasher = new FakeHasher();
-  const identity = new UserRegistration({
+  const identity = new RegisterUser({
     repositories: store,
     clock: new FixedClock(NOW),
     ids: new SequentialIds(),
