@@ -33,7 +33,7 @@ class PrimaryButton extends StatelessWidget {
       label: label,
       excludeSemantics: true,
       child: DecoratedBox(
-        // The Paraíba halo marks the action that can be taken (mockups).
+        // The mint halo marks the action that can be taken (mockups).
         decoration: ShapeDecoration(
           shape: const StadiumBorder(),
           shadows: enabled

@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 
 /// Brand colors (docs/design/brief.md, section 2.1).
 abstract final class NbBrand {
-  /// Paraíba: buttons in dark mode, central action, glow, logo.
-  static const Color paraiba = Color(0xFF00FFC8);
+  /// Mint: buttons in dark mode, central action, glow, logo.
+  static const Color mint = Color(0xFF00FFC8);
 
-  /// Paraíba for text, links and icons in light mode (5.3:1 on white).
-  static const Color paraibaDeep = Color(0xFF007A6A);
+  /// Mint for text, links and icons in light mode (5.3:1 on white).
+  static const Color mintDeep = Color(0xFF007A6A);
 
-  /// Halo around the main action, in both modes: Paraíba at 35%, the same
+  /// Halo around the main action, in both modes: mint at 35%, the same
   /// glow as the balance card's shadow (brief, section 2.3).
   static const Color actionGlow = Color(0x5900FFC8);
 }
@@ -40,8 +40,8 @@ final class NbColors extends ThemeExtension<NbColors> {
     border: Color(0x14FFFFFF),
     text: Color(0xFFF2F6F8),
     textMuted: Color(0xFF8A97A3),
-    accent: NbBrand.paraiba,
-    primary: NbBrand.paraiba,
+    accent: NbBrand.mint,
+    primary: NbBrand.mint,
     onPrimary: Color(0xFF0A0F14),
     success: Color(0xFFC4F27A),
     danger: Color(0xFFFF6B6B),
@@ -55,9 +55,9 @@ final class NbColors extends ThemeExtension<NbColors> {
     border: Color(0x140A0F14),
     text: Color(0xFF0A0F14),
     textMuted: Color(0xFF4A5560),
-    accent: NbBrand.paraibaDeep,
+    accent: NbBrand.mintDeep,
     primary: Color(0xFF0A0F14),
-    onPrimary: NbBrand.paraiba,
+    onPrimary: NbBrand.mint,
     success: Color(0xFF3B6E0E),
     danger: Color(0xFFC62828),
   );

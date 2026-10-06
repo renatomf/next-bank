@@ -12,7 +12,7 @@ abstract final class NbTheme {
   static ThemeData _build(NbColors colors, Brightness brightness) {
     final scheme =
         ColorScheme.fromSeed(
-          seedColor: NbBrand.paraiba,
+          seedColor: NbBrand.mint,
           brightness: brightness,
         ).copyWith(
           primary: colors.primary,

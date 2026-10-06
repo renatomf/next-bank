@@ -2,7 +2,7 @@ import 'package:design_system/src/theme.dart';
 import 'package:design_system/src/tokens.dart';
 import 'package:flutter/material.dart';
 
-/// The "next" wordmark followed by a glowing Paraíba dot (brief, section 6).
+/// The "next" wordmark followed by a glowing mint dot (brief, section 6).
 class NextLogo extends StatelessWidget {
   /// Creates the logo at [size] (the wordmark's font size).
   const new({this.size = 36, super.key});
@@ -37,11 +37,11 @@ class NextLogo extends StatelessWidget {
             height: dot,
             margin: EdgeInsets.only(left: dot * 0.4, bottom: size * 0.2),
             decoration: BoxDecoration(
-              color: NbBrand.paraiba,
+              color: NbBrand.mint,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: NbBrand.paraiba.withValues(alpha: 0.7),
+                  color: NbBrand.mint.withValues(alpha: 0.7),
                   blurRadius: dot * 1.5,
                 ),
               ],

@@ -64,7 +64,7 @@ void main() {
       return (box.decoration as ShapeDecoration).shadows;
     }
 
-    testWidgets('glows in Paraíba while it can be pressed (mockups)', (
+    testWidgets('glows in mint while it can be pressed (mockups)', (
       tester,
     ) async {
       await tester.pumpWidget(
