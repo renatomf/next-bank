@@ -58,8 +58,8 @@
 | Controle | Status | Como / evidência | Sem. |
 |---|---|---|---|
 | Criptografia em trânsito (TLS) | 🟡 | App: tráfego em texto puro desligado no Android e bloqueado pelo ATS padrão do iOS, sem exceções (MOB-03). Publicado: HTTPS no Render e `sslmode=verify-full` no Neon. Localmente, o banco só aceita conexões da própria máquina (`127.0.0.1`). | 2, 8 |
-| Criptografia em repouso | 🟡 | Disco cifrado pelo provedor (Neon), mais CPF cifrado **na aplicação** com AES-256-GCM e índice cego HMAC (colunas e restrições prontas, #32; cifragem na semana 3, API-06). Chaves em KMS/HSM: 🔭. | 3 |
-| Senhas com Argon2id | 🟡 | Política de senha pronta (#33: 10 a 128 caracteres, lista de senhas comuns). Hash com Argon2id nos parâmetros da OWASP (`@node-rs/argon2`, D1). | 3 |
+| Criptografia em repouso | 🟡 | Disco cifrado pelo provedor (Neon), mais CPF cifrado **na aplicação** com AES-256-GCM e índice cego HMAC: colunas prontas (#32) e adaptador testado contra adulteração e chave errada (`aes-gcm-cpf-protector.test.ts`, API-06). Falta o cadastro usá-lo. Chaves em KMS/HSM: 🔭. | 3 |
+| Senhas com Argon2id | 🟡 | Política de senha (#33) e adaptador Argon2id com os parâmetros da OWASP testados (`argon2id-hasher.test.ts`, AUTH-08). Falta o caso de uso de cadastro usá-lo. | 3 |
 | Segredos fora do código | ✅ | Só variáveis de ambiente; configuração validada sem ecoar valores (`config.test.ts`); `.gitignore` cobre `.env`, chaves e keystores; gitleaks no CI e no `pre-commit` (#31). | 2 |
 | Privilégios mínimos no banco | ✅ | Ver seção 1. Ledger e auditoria só aceitam `INSERT`. | 2–4 |
 | Prepared statements / ORM seguro | ✅ | Ver SQL injection. | 2+ |
@@ -195,6 +195,7 @@ Achados das revisões de segurança e da construção, no formato de relatório 
 | F-05 | API | 🟡 Média | Rate limit global previsto na semana 2 (API-02) não foi implementado | Aberto (semana 3) |
 | F-06 | API | 🟢 Baixa | Respostas sem `Cache-Control: no-store` | Aberto (semana 3, com a autenticação) |
 | F-07 | Observabilidade | 🟢 Baixa | Sentry obrigatório pelo CLAUDE.md, mas sem semana no plano | Aberto (proposta: semana 8) |
+| F-08 | Criptografia | 🟠 Alta | Decifragem AES-GCM do CPF sem tamanho de tag fixado: o Node aceitaria tag truncada (ex.: 4 bytes), facilitando forjar valores. Apontado pelo Semgrep no CI (`gcm-no-tag-length`) | Corrigido antes do merge (#37): `authTagLength: 16` e recusa de valor curto, com teste do ataque |
 
 ## 11. Como manter este documento
 
