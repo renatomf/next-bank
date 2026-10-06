@@ -125,6 +125,8 @@ Também: TypeScript estrito (`strict`, `noUncheckedIndexedAccess`, `exactOptiona
 
 **Ameaças:** MOB-02, MOB-03.
 
+> **Resultado:** concluída em dois PRs. Contrato: OpenAPI gerado dos schemas Zod, cliente Dart em `packages/contracts` e job `Contracts` no CI barrando divergências. App: repositório e provider testados antes do código, Home com os estados verificando, disponível e indisponível (com nova tentativa), URL da API validada na inicialização e HTTP só para hosts locais em debug (MOB-03). Riverpod sem codegen por ora. Sentry e deploy ficaram para depois, como extras.
+
 - [ ] Notifier (Riverpod) consumindo o cliente gerado — teste antes do notifier
 - [ ] Home exibe o status da API (carregando, ok, erro)
 - [ ] URL da API por `--dart-define`; HTTP liberado só para o emulador em debug (`10.0.2.2`, `localhost`)
