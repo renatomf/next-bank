@@ -85,6 +85,8 @@ Aceitos os ajustes, o roadmap é atualizado no mesmo PR que fechar a semana.
 
 **Ameaças:** API-02, API-03, API-04, API-07, API-10.
 
+> **Resultado:** concluída. 23 testes (incluindo API-11, API-12 e T-DB-13). TypeScript 6.0 em vez do 7: o `typescript-eslint` suporta só até o 6.0. Node 24 executa o TypeScript direto, sem etapa de build. Padrão de `HOST` passou a ser `127.0.0.1`.
+
 Testes antes do código, contra Postgres real:
 - [ ] `GET /health` → 200 com o banco acessível; 503 sem banco, sem detalhes internos
 - [ ] Corpo acima de 16 KB → 413 (API-02)

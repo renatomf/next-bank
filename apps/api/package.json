@@ -3,11 +3,36 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "start": "node src/server.ts",
+    "dev": "node --env-file=.env --watch src/server.ts",
+    "test": "vitest run",
+    "typecheck": "tsc",
+    "lint": "eslint --max-warnings 0 .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "db:new": "dbmate -e MIGRATION_DATABASE_URL new",
     "db:migrate": "dbmate -e MIGRATION_DATABASE_URL --no-dump-schema up",
     "db:status": "dbmate -e MIGRATION_DATABASE_URL status"
   },
   "devDependencies": {
-    "dbmate": "^2.36.0"
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^24.19.1",
+    "@types/pg": "^8.23.1",
+    "dbmate": "^2.36.0",
+    "eslint": "^10.12.0",
+    "prettier": "^3.9.9",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.0",
+    "vitest": "^5.0.3"
+  },
+  "dependencies": {
+    "@fastify/helmet": "^13.1.1",
+    "fastify": "^5.12.5",
+    "fastify-type-provider-zod": "^7.0.0",
+    "pg": "^8.23.1",
+    "zod": "^4.6.5"
+  },
+  "engines": {
+    "node": ">=24 <25"
   }
 }
