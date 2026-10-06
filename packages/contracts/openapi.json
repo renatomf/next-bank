@@ -40,6 +40,19 @@
         ],
         "additionalProperties": false
       },
+      "CreatePinRequestInput": {
+        "type": "object",
+        "properties": {
+          "pin": {
+            "type": "string",
+            "maxLength": 8
+          }
+        },
+        "required": [
+          "pin"
+        ],
+        "additionalProperties": false
+      },
       "Health": {
         "type": "object",
         "properties": {
@@ -363,6 +376,61 @@
             "description": "Session ended"
           },
           "401": {
+            "description": "Default Response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/pin": {
+      "post": {
+        "operationId": "createPin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePinRequestInput"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "PIN created"
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Default Response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
             "description": "Default Response",
             "content": {
               "application/problem+json": {
