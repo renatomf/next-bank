@@ -13,6 +13,21 @@
 - **Ataque antes da defesa:** o teste de reuso de refresh, de força bruta ou de enumeração vem antes do código que o impede (CLAUDE.md, seção 5).
 - **Simplicidade:** cada peça entra com o código que a usa; nada de antecipar Accounts, Ledger ou Pix.
 
+## Critérios de engenharia (valem para toda tarefa)
+
+Uma tarefa só está pronta quando cumpre os princípios do CLAUDE.md, verificados por ferramenta sempre que possível:
+
+| Princípio | Como se verifica |
+|---|---|
+| **Clean Architecture** | dependency-cruiser (API) e teste de arquitetura (app) no CI: domínio sem framework, dependências só para dentro, raiz de composição única |
+| **DDD** | Nomes da linguagem ubíqua (`domain-model.md`); agregados (`User`, `Session`, `TransactionPin`) protegem as próprias invariantes; erros do catálogo como tipos |
+| **SOLID** | Casos de uso com uma responsabilidade; dependências por portas (interfaces) injetadas, nunca instanciadas dentro do domínio |
+| **TDD** | Commits `test:` antes de `feat:`; cobertura ≥ 90% em `domain/` e `application/` |
+| **Segurança** | Teste de ataque antes da defesa; `/security-review` antes do merge |
+| **Performance** | `EXPLAIN ANALYZE` e índice para cada query nova; Argon2id medido (custo por login) |
+| **Observabilidade** | `requestId` do app ao banco; eventos de auditoria; logs sem dados sensíveis |
+| **Legibilidade** | Código para humanos: nomes claros, funções curtas, comentários com o porquê |
+
 ## Decisões a confirmar (com padrão recomendado)
 
 Manutenção ativa, licença e tamanho de cada biblioteca são conferidos na Tarefa 1, antes da instalação (CLAUDE.md: dependência nova exige justificativa).
@@ -38,6 +53,7 @@ Manutenção ativa, licença e tamanho de cada biblioteca são conferidos na Tar
 
 ## Tarefa 1 — Fundação do módulo (dia 1)
 
+- [ ] **Refactor estrutural** (primeiro commit, sem mudar comportamento; os testes atuais provam isso): infraestrutura transversal vai para `src/shared/` (config, db, logs, erros, OpenAPI, health); `app.ts` vira a raiz de composição única
 - [ ] Estrutura `src/modules/identity/{domain,application,infrastructure,http}` e núcleo compartilhado mínimo: `Clock`, `IdGenerator`, transação (unidade de trabalho)
 - [ ] **dependency-cruiser no CI:** domínio sem framework; módulos só se falam pela API pública (`index.ts`)
 - [ ] **Gate de cobertura de 90%** em `domain/` e `application/` (Vitest)
