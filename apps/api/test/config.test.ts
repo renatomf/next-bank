@@ -11,7 +11,11 @@ describe('loadConfig', () => {
     const config = loadConfig(valid);
     expect(config.databaseUrl).toBe(valid.DATABASE_URL);
     expect(config.port).toBe(3000);
-    expect(config.host).toBe('0.0.0.0');
+    expect(config.host).toBe('127.0.0.1');
+  });
+
+  it('escuta só em localhost por padrão; o deploy define HOST explicitamente', () => {
+    expect(loadConfig({ DATABASE_URL: valid.DATABASE_URL }).host).toBe('127.0.0.1');
   });
 
   it('usa a porta 3000 por padrão', () => {
