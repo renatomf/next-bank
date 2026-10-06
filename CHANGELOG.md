@@ -26,6 +26,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Criação do PIN de transação (`POST /v1/me/pin`): uma vez só (`PinAlreadyCreated`), hash Argon2id com pepper do servidor contra quebra a partir de um dump (API-13, `PIN_PEPPER`), e verificação no banco de que a sessão segue ativa nas operações sensíveis (AUTH-04)
 - Revisão consolidada do Identity: e-mail e nome passam a ser redigidos nos logs (F-13); caso de uso de cadastro do Identity renomeado para `RegisterUser`
 - App: sessão guardada só no Keychain/Keystore, num único registro, sem iCloud e sem backup do Android (MOB-01); sessão restaurada ao abrir o app; `x-request-id` em toda requisição
+- App: cliente de autenticação (cadastro, login, PIN, logout), falhas da API como tipo fechado e interceptor que anexa o token só às operações protegidas e renova a sessão com um único refresh para chamadas simultâneas
 
 ### Adicionado — Semana 2: esqueleto ponta a ponta
 - Postgres 17 local (Docker Compose) com papéis de menor privilégio (`nextbank_migrator`, `nextbank_app`) e timeouts no papel da aplicação

@@ -97,10 +97,10 @@ Ordem das etapas, reorganizada para não criar telas provisórias: 1) fundação
 
 - [ ] GoRouter com redirect: sem sessão → login; sessão válida → Home
 - [x] Tokens só no Keychain/Keystore (`flutter_secure_storage`, MOB-01); verificação no CI contra `SharedPreferences`; sem iCloud nem backup do Android
-- [ ] Interceptor de refresh com **fila única** (TDD): várias requisições com 401 ao mesmo tempo disparam um só refresh; reuso detectado → volta ao login
+- [x] Interceptor de refresh com **fila única** (TDD): várias requisições com 401 ao mesmo tempo disparam um só refresh; reuso detectado → volta ao login
 - [x] `x-request-id` gerado no app e enviado em toda requisição
 - [ ] Telas: cadastro (com **CPF fictício gerado no app** e aviso de demo, DEMO-01), login e criação do PIN; restauração e expiração de sessão
-- [ ] Falhas como `sealed class`, mapeadas a partir do `code` do erro da API
+- [x] Falhas como `sealed class`, mapeadas a partir do `code` do erro da API
 - [ ] Primeiros componentes do `design_system` (botão, campo de texto) com as telas que os usam; pub workspace nasce com o pacote
 
 ## Tarefa 5 — Fechamento
