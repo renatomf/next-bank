@@ -29,7 +29,8 @@ describe('Password', () => {
     // 10 emoji are 20 UTF-16 units but 10 characters.
     expect(() => Password.create('🔒'.repeat(10), common)).not.toThrow();
     expect(() => Password.create('🔒'.repeat(9), common)).toThrow(WeakPassword);
-    expect(() => Password.create('🔒'.repeat(65), common)).toThrow(WeakPassword);
+    // 65 emoji are 130 UTF-16 units: counting units would wrongly reject them.
+    expect(() => Password.create('🔒'.repeat(65), common)).not.toThrow();
   });
 
   it('rejects a common password regardless of case (AUTH-07)', () => {
