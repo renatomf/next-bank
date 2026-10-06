@@ -13,6 +13,8 @@ O projeto é tratado como um **banco real em produção**. Nenhum padrão abaixo
 
 **Escopo da V1 congelado** (desde 2026-10-05): funcionalidade, ferramenta ou serviço novo não entra até a `v1.0.0`; vai para "Próximos passos" no roadmap. Exceção: correções de segurança ou de integridade financeira. Documento novo só quando o código precisar dele.
 
+**Simplicidade:** nenhuma estrutura, dependência ou configuração entra antes de existir código que precise dela. Na dúvida, a solução mais simples; o projeto evolui conforme a necessidade.
+
 ### 1. Segurança (prioridade máxima)
 
 - **Security by design:** toda feature começa revisando o threat model (`docs/security/threat-model.md`). Ameaça nova vira uma linha no threat model **e** um teste.
