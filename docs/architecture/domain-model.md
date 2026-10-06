@@ -272,6 +272,7 @@ O extrato não é um agregado: é uma consulta (lado de leitura do CQRS) que lê
 | `PinIncorrect` | 422 | Revisar Pix | "PIN incorreto. Restam N tentativas." |
 | `PinLocked` | 423 | Revisar Pix | "PIN bloqueado por 30 minutos." |
 | `PinResetRequired` | 423 | Revisar Pix, Desbloqueio | "PIN bloqueado por segurança. Redefina o PIN com sua senha em Perfil > Segurança." |
+| `PinAlreadyCreated` | 409 | Criar PIN | "Você já tem um PIN. Para trocar, use Perfil > Segurança." |
 | `PixKeyNotFound` | 404 | Pix | "Não encontramos essa chave Pix." |
 | `SamePayerAndPayee` | 422 | Pix | "Você não pode enviar Pix para a própria conta." |
 | `InvalidAmount` | 422 | Pix | "Informe um valor válido." |
