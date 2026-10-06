@@ -15,6 +15,9 @@ class FakeAuthRepository implements AuthRepository {
   Future<void> Function() answer = () async {};
 
   final List<({String email, String password})> logins = [];
+  final List<({String name, String email, String cpf, String password})>
+  registrations = [];
+  final List<String> pins = [];
   int logouts = 0;
 
   @override
@@ -41,8 +44,15 @@ class FakeAuthRepository implements AuthRepository {
     required String cpf,
     required String password,
     required String? deviceLabel,
-  }) => throw UnimplementedError();
+  }) async {
+    registrations.add((name: name, email: email, cpf: cpf, password: password));
+    await answer();
+    return tokens;
+  }
 
   @override
-  Future<void> createPin(String pin) => throw UnimplementedError();
+  Future<void> createPin(String pin) async {
+    pins.add(pin);
+    await answer();
+  }
 }
