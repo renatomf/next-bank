@@ -28,7 +28,7 @@
 - `PII_ENCRYPTION_KEY` (32 bytes): cifra AES-256-GCM. Cada valor cifrado guarda `key_version`, o que permite rotação gradual.
 - `PII_HMAC_KEY` (32 bytes): índice cego. Rotacionar exige recalcular os índices (procedimento documentado no runbook, fora da V1).
 
-**Risco aceito na V1 e caminho de evolução:** em bancos reais, essas chaves não ficam em variáveis de ambiente: ficam num **KMS/HSM**, com *envelope encryption* (uma chave mestra no KMS cifra as chaves de dados, e a aplicação nunca vê a chave mestra). Na V1, a criptografia é acessada por uma porta `KeyProvider`; trocar a implementação de "variável de ambiente" para KMS não muda o restante do código.
+**Risco aceito na V1 e caminho de evolução:** em bancos reais, essas chaves não ficam em variáveis de ambiente: ficam num **KMS/HSM**, com *envelope encryption* (uma chave mestra no KMS cifra as chaves de dados, e a aplicação nunca vê a chave mestra). Na V1, a criptografia fica atrás da porta `CpfProtector` (o token de acesso, atrás da `AccessTokenIssuer`). Com KMS, a chave nunca sai do serviço, então é a implementação dessas portas que muda; o restante do código não muda.
 
 ## 3. Convenções
 
@@ -385,7 +385,7 @@ O desenho segue os **mesmos princípios** de ledgers de bancos e fintechs (parti
 | Pix entre clientes de shards diferentes | Junto com o sharding | Transferência em duas etapas via conta transitória, como o Pix externo | **É o mesmo padrão da Fase 2** (`pix_clearing` + conciliação) |
 | Módulo precisa escalar sozinho | Times e cargas independentes | Extrair o contexto para um serviço com banco próprio | Um schema por contexto, comunicação por portas, Outbox |
 | Auditoria em volume regulatório | Anos de retenção | Armazenamento imutável dedicado (ex.: object storage com bloqueio de escrita) | Auditoria append-only e isolada no schema `audit` |
-| Chaves de criptografia | Produção real | KMS/HSM com envelope encryption | Porta `KeyProvider` (seção 2) |
+| Chaves de criptografia | Produção real | KMS/HSM com envelope encryption | Portas `CpfProtector` e `AccessTokenIssuer` (seção 2) |
 
 **O que não foi copiado de propósito:** bancos grandes operam com dezenas de serviços, mensageria (Kafka) e, nos tradicionais, núcleos legados em mainframe. Essa complexidade resolve problemas de escala e de organização que a V1 não tem. A V1 adota os princípios e deixa os pontos de extensão prontos, sem pagar o custo operacional antes da hora.
 
@@ -401,5 +401,5 @@ O desenho segue os **mesmos princípios** de ledgers de bancos e fintechs (parti
 | Extrato | Snapshot da contraparte nas partidas | Join entre schemas `ledger` e `payments` |
 | Paginação | Cursor `(created_at, id)` | `OFFSET` (lento e instável) |
 | Contas de sistema | Saldo não materializado, sem lock | Saldo atualizado a cada operação (gargalo de *hot account*) |
-| Chaves de criptografia | Variável de ambiente atrás da porta `KeyProvider` (risco aceito) | KMS já na V1 (custo e complexidade de infraestrutura sem ganho para a demo) |
+| Chaves de criptografia | Variável de ambiente, usada atrás das portas `CpfProtector` e `AccessTokenIssuer` (risco aceito) | KMS já na V1 (custo e complexidade de infraestrutura sem ganho para a demo) |
 | Isolamento por dono | Filtro por dono em toda query + teste de IDOR obrigatório | RLS (só a API acessa o banco; o Pix cruza donos na mesma transação, o que exigiria políticas permissivas no código mais crítico; o `neon_superuser` tem `BYPASSRLS`). Reavaliar se outro cliente acessar o banco diretamente |

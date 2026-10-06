@@ -265,6 +265,7 @@ O extrato não é um agregado: é uma consulta (lado de leitura do CQRS) que lê
 | `InvalidCpf` | 422 | Cadastro | "CPF inválido." |
 | `WeakPassword` | 422 | Cadastro | "Use pelo menos 10 caracteres e evite senhas comuns." |
 | `AlreadyRegistered` | 409 | Cadastro | "Não foi possível concluir o cadastro com esses dados." (genérica de propósito) |
+| `Unauthenticated` | 401 | Qualquer | Token de acesso ausente, inválido ou expirado: o app tenta o refresh uma vez; se falhar, volta ao login: "Faça login para continuar." |
 | `SessionExpired` | 401 | Qualquer | Volta para o login: "Sua sessão expirou." |
 | `RefreshTokenReuseDetected` | 401 | Qualquer | Volta para o login: "Por segurança, entre novamente." |
 | `InvalidPin` | 422 | Criar PIN | "Use 4 dígitos que não sejam repetidos nem em sequência." |

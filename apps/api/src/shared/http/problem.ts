@@ -32,6 +32,7 @@ const CATALOG_STATUS: Readonly<Record<string, number>> = {
   InvalidPin: 422,
   AlreadyRegistered: 409,
   SessionExpired: 401,
+  Unauthenticated: 401,
   PinLocked: 423,
   PinResetRequired: 423,
 };
