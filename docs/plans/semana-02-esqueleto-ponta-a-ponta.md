@@ -65,6 +65,8 @@ Aceitos os ajustes, o roadmap é atualizado no mesmo PR que fechar a semana.
 
 **Valida:** ADR 0008 (Zod → OpenAPI → cliente Dart).
 
+> **Resultado:** aprovado sem o plano B, com `openapi-generator` 7.25.0 (`dart-dio`); nenhuma edição manual no código gerado e regeneração determinística. Configuração e pontos de atenção no ADR 0008.
+
 - [ ] Rota de exemplo com schemas Zod cobrindo os casos difíceis: inteiro em centavos, enum, campo opcional, erro RFC 7807
 - [ ] OpenAPI gerado pela API (D5)
 - [ ] Cliente Dart gerado em `packages/contracts` (D6)
