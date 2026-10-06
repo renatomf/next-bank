@@ -27,6 +27,9 @@ void main() {
         for (final (ground, background) in [
           ('background', colors.background),
           ('surface', colors.surface),
+          ('surface2', colors.surface2),
+          // Where the ambient glow is strongest, at the top of the screen.
+          ('the glow', Color.alphaBlend(colors.glow, colors.background)),
         ]) {
           test('$name on $ground', () {
             expect(contrast(foreground, background), greaterThanOrEqualTo(4.5));
