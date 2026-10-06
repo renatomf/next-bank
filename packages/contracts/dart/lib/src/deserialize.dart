@@ -2,6 +2,7 @@ import 'package:nextbank_api/src/model/auth_tokens.dart';
 import 'package:nextbank_api/src/model/health.dart';
 import 'package:nextbank_api/src/model/login_request_input.dart';
 import 'package:nextbank_api/src/model/problem.dart';
+import 'package:nextbank_api/src/model/refresh_request_input.dart';
 import 'package:nextbank_api/src/model/register_request_input.dart';
 
 final _regList = RegExp(r'^List<(.*)>$');
@@ -30,6 +31,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return LoginRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Problem':
           return Problem.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'RefreshRequestInput':
+          return RefreshRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RegisterRequestInput':
           return RegisterRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
         default:

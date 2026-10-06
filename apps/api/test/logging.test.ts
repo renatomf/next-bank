@@ -26,7 +26,7 @@ describe('logs', () => {
       logStream: logs.stream,
       security: testSecurity(),
     });
-    app.post('/test/log', (request) => {
+    app.post('/test/log', { config: { public: true } }, (request) => {
       request.log.info({ ...SECRETS, payload: SECRETS }, 'event with sensitive data');
       return { ok: true };
     });
@@ -53,7 +53,7 @@ describe('logs', () => {
   });
 
   it('keeps one JSON line per event even with a newline in a value (API-10)', async () => {
-    app.get('/test/newline', (request) => {
+    app.get('/test/newline', { config: { public: true } }, (request) => {
       request.log.info({ note: 'line 1\n{"forged":true}' }, 'injection attempt');
       return { ok: true };
     });

@@ -9,6 +9,8 @@ export const healthRoutes: FastifyPluginAsyncZod<{ pool: pg.Pool }> = (app, { po
   app.get(
     '/health',
     {
+      // Probed by the platform without credentials.
+      config: { public: true },
       schema: {
         operationId: 'getHealth',
         response: {

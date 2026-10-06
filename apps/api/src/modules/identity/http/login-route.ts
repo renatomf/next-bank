@@ -27,7 +27,7 @@ export const loginRoutes: FastifyPluginAsyncZod<{ login: Login }> = (app, { logi
   app.post(
     '/v1/auth/login',
     {
-      config: { rateLimit: LOGINS_PER_IP },
+      config: { public: true, rateLimit: LOGINS_PER_IP },
       schema: {
         operationId: 'login',
         body: LoginRequestSchema,

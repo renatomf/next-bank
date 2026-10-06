@@ -84,3 +84,12 @@ export class TooManyAttempts extends DomainError {
     super('Too many login attempts for this account');
   }
 }
+
+/** A replaced refresh token came back: the session was revoked (AUTH-03). */
+export class RefreshTokenReuseDetected extends DomainError {
+  readonly code = 'RefreshTokenReuseDetected';
+
+  constructor() {
+    super('A replaced refresh token was presented; the session was revoked');
+  }
+}

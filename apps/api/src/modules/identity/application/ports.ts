@@ -1,6 +1,6 @@
 import type { AuditTrail, Transaction } from '../../../shared/application/ports.ts';
 import type { Cpf } from '../domain/cpf.ts';
-import type { SessionState } from '../domain/session.ts';
+import type { IssuedRefreshToken, SessionState } from '../domain/session.ts';
 import type { LoginAttemptsState } from '../domain/login-attempts.ts';
 import type { UserState, UserStatus } from '../domain/user.ts';
 
@@ -81,10 +81,20 @@ export interface UsersRepository {
 
 export interface SessionsRepository {
   insert(session: SessionState): Promise<void>;
+  /**
+   * Reads the session and locks it until the transaction ends, so refreshes and
+   * logouts of one session run one at a time.
+   */
+  lockById(id: string): Promise<SessionState | null>;
+  update(session: SessionState): Promise<void>;
 }
 
 export interface RefreshTokensRepository {
   insert(token: StoredRefreshToken): Promise<void>;
+  findByHash(tokenHash: Uint8Array): Promise<IssuedRefreshToken | null>;
+  /** Id of the session's token that can still be refreshed, if any. */
+  findActive(sessionId: string): Promise<string | null>;
+  markReplaced(id: string, replacedById: string, replacedAt: Date): Promise<void>;
 }
 
 /** The identity repositories and the audit trail, all bound to one transaction. */

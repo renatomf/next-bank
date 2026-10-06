@@ -17,9 +17,9 @@ describe('HTTP security', () => {
       logStream: logs.stream,
       security: testSecurity(),
     });
-    // Test-only routes to trigger the scenarios.
-    app.post('/test/echo', (request) => request.body);
-    app.get('/test/boom', () => {
+    // Test-only routes to trigger the scenarios, public so authentication does not interfere.
+    app.post('/test/echo', { config: { public: true } }, (request) => request.body);
+    app.get('/test/boom', { config: { public: true } }, () => {
       throw new Error('duplicate key value violates unique constraint "users_cpf_key"');
     });
   });

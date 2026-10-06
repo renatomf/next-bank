@@ -2,6 +2,9 @@
 // use only what is exported here (ADR 0002, ADR 0010).
 import type { Clock, IdGenerator, UnitOfWork } from '../../shared/application/ports.ts';
 import { Login } from './application/login.ts';
+import { Logout } from './application/logout.ts';
+import type { AccessTokenVerifier } from './application/ports.ts';
+import { RefreshSession } from './application/refresh-session.ts';
 import { UserRegistration } from './application/user-registration.ts';
 import { AesGcmCpfProtector, type CpfKeys } from './infrastructure/aes-gcm-cpf-protector.ts';
 import { Argon2idHasher } from './infrastructure/argon2id-hasher.ts';
@@ -12,7 +15,9 @@ import { PgIdentityRepositories } from './infrastructure/pg-identity-repositorie
 import { RandomRefreshTokens } from './infrastructure/random-refresh-tokens.ts';
 
 export { AuthTokensSchema, authTokensBody } from './http/auth-tokens.ts';
+export { registerAuthentication } from './http/authentication.ts';
 export { loginRoutes } from './http/login-route.ts';
+export { sessionRoutes } from './http/session-routes.ts';
 export type { CpfKeys } from './infrastructure/aes-gcm-cpf-protector.ts';
 export type { AccessTokenKeys } from './infrastructure/jose-access-tokens.ts';
 export type {
@@ -30,6 +35,9 @@ export type IdentityRegistration = Pick<
 export interface IdentityModule {
   registration: IdentityRegistration;
   login: Login;
+  refreshSession: RefreshSession;
+  logout: Logout;
+  accessTokenVerifier: AccessTokenVerifier;
 }
 
 export interface IdentitySettings {
@@ -67,5 +75,20 @@ export function createIdentityModule(settings: IdentitySettings): IdentityModule
       accessTokens,
       attempts: new InMemoryLoginAttempts(),
     }),
+    refreshSession: new RefreshSession({
+      unitOfWork: settings.unitOfWork,
+      repositories,
+      clock: settings.clock,
+      ids: settings.ids,
+      refreshTokens,
+      accessTokens,
+    }),
+    logout: new Logout({
+      unitOfWork: settings.unitOfWork,
+      repositories,
+      clock: settings.clock,
+      ids: settings.ids,
+    }),
+    accessTokenVerifier: accessTokens,
   };
 }

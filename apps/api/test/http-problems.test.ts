@@ -43,7 +43,7 @@ describe('error responses', () => {
   });
 
   function throwing(error: Error): void {
-    app.get('/test/fail', () => {
+    app.get('/test/fail', { config: { public: true } }, () => {
       throw error;
     });
   }
@@ -95,13 +95,14 @@ describe('error responses', () => {
 
   describe('invalid input', () => {
     beforeEach(() => {
-      app
-        .withTypeProvider<ZodTypeProvider>()
-        .post(
-          '/test/strict',
-          { schema: { body: z.strictObject({ name: z.string().min(2) }) } },
-          (request) => request.body,
-        );
+      app.withTypeProvider<ZodTypeProvider>().post(
+        '/test/strict',
+        {
+          config: { public: true },
+          schema: { body: z.strictObject({ name: z.string().min(2) }) },
+        },
+        (request) => request.body,
+      );
     });
 
     it('answers 422 InvalidRequest without echoing the input', async () => {
@@ -173,7 +174,7 @@ describe('global rate limit (API-02, F-05)', () => {
     });
     // Registered as a plugin, like every real route, so it loads after the limiter.
     void app.register((scope, _options, done) => {
-      scope.get('/test/ok', () => ({ ok: true }));
+      scope.get('/test/ok', { config: { public: true } }, () => ({ ok: true }));
       done();
     });
     try {
