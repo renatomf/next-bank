@@ -1,3 +1,4 @@
+import { generateKeyPairSync, type KeyObject, randomBytes } from 'node:crypto';
 import { Writable } from 'node:stream';
 
 export function testDatabaseUrl(): string {
@@ -36,5 +37,16 @@ export function captureLogs(): {
         .split('\n')
         .filter((line) => line.length > 0)
         .map((line) => JSON.parse(line) as Record<string, unknown>),
+  };
+}
+
+/** Throwaway keys for an app under test; production keys come from the environment. */
+export function testSecurity(): {
+  accessTokenKeys: { privateKey: KeyObject; keyId: string };
+  cpfKeys: { keyVersion: number; encryptionKey: Buffer; hmacKey: Buffer };
+} {
+  return {
+    accessTokenKeys: { privateKey: generateKeyPairSync('ed25519').privateKey, keyId: 'test-key' },
+    cpfKeys: { keyVersion: 1, encryptionKey: randomBytes(32), hmacKey: randomBytes(32) },
   };
 }
