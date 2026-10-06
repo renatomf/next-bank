@@ -1,0 +1,12 @@
+/// next bank design system: tokens, theme and components built from
+/// docs/design/brief.md. Components join only together with a screen that
+/// uses them.
+library;
+
+export 'src/components/demo_notice.dart';
+export 'src/components/nb_text_field.dart';
+export 'src/components/next_logo.dart';
+export 'src/components/pin_field.dart';
+export 'src/components/primary_button.dart';
+export 'src/theme.dart';
+export 'src/tokens.dart';

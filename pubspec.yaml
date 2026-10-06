@@ -1,0 +1,12 @@
+# Dart/Flutter workspace (ADR 0001): one resolution and one lockfile for the
+# app and its packages. The generated API client stays outside it, because the
+# generator rewrites its pubspec.
+name: nextbank_workspace
+publish_to: none
+
+environment:
+  sdk: ^3.13.4
+
+workspace:
+  - apps/mobile
+  - packages/design_system
