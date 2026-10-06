@@ -122,7 +122,7 @@ export function buildApp({ pool, logStream, security }: AppDependencies) {
   registerAuthentication(app, identity.accessTokenVerifier, identity.activeSessions, clock);
 
   void app.register(healthRoutes, { pool });
-  const registerCustomer = new RegisterCustomer({ unitOfWork, identity: identity.registration });
+  const registerCustomer = new RegisterCustomer({ unitOfWork, identity: identity.registerUser });
   void app.register(onboardingRoutes, { registerCustomer });
   void app.register(loginRoutes, { login: identity.login });
   void app.register(sessionRoutes, {

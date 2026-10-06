@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { afterAll, describe, expect, it } from 'vitest';
 import { RegisterCustomer } from '../../../../src/application/onboarding/register-customer.ts';
-import { UserRegistration } from '../../../../src/modules/identity/application/user-registration.ts';
+import { RegisterUser } from '../../../../src/modules/identity/application/register-user.ts';
 import { Cpf } from '../../../../src/modules/identity/domain/cpf.ts';
 import { AlreadyRegistered } from '../../../../src/modules/identity/domain/errors.ts';
 import { AesGcmCpfProtector } from '../../../../src/modules/identity/infrastructure/aes-gcm-cpf-protector.ts';
@@ -27,7 +27,7 @@ const unitOfWork = new PgUnitOfWork(pool);
 const repositories = new PgIdentityRepositories();
 
 function newRegister() {
-  const identity = new UserRegistration({
+  const identity = new RegisterUser({
     repositories,
     clock: new FixedClock(NOW),
     ids: new UuidV7Generator(),
