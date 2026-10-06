@@ -195,6 +195,7 @@ Achados das revisões de segurança e da construção, no formato de relatório 
 | F-05 | API | 🟡 Média | Rate limit global previsto na semana 2 (API-02) não foi implementado | Aberto (semana 3) |
 | F-06 | API | 🟢 Baixa | Respostas sem `Cache-Control: no-store` | Aberto (semana 3, com a autenticação) |
 | F-07 | Observabilidade | 🟢 Baixa | Sentry obrigatório pelo CLAUDE.md, mas sem semana no plano | Aberto (proposta: semana 8) |
+| F-08 | Criptografia | 🟠 Alta | Decifragem AES-GCM do CPF sem tamanho de tag fixado: o Node aceitaria tag truncada (ex.: 4 bytes), facilitando forjar valores. Apontado pelo Semgrep no CI (`gcm-no-tag-length`) | Corrigido antes do merge (#37): `authTagLength: 16` e recusa de valor curto, com teste do ataque |
 
 ## 11. Como manter este documento
 

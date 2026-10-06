@@ -31,7 +31,9 @@ export class AesGcmCpfProtector implements CpfProtector {
 
   encrypt(cpf: Cpf): EncryptedCpf {
     const nonce = randomBytes(NONCE_BYTES);
-    const cipher = createCipheriv('aes-256-gcm', this.#keys.encryptionKey, nonce);
+    const cipher = createCipheriv('aes-256-gcm', this.#keys.encryptionKey, nonce, {
+      authTagLength: TAG_BYTES,
+    });
     cipher.setAAD(this.#associatedData(this.#keys.keyVersion));
     const ciphertext = Buffer.concat([cipher.update(cpf.digits, 'utf8'), cipher.final()]);
     return {
@@ -44,9 +46,16 @@ export class AesGcmCpfProtector implements CpfProtector {
     if (keyVersion !== this.#keys.keyVersion) {
       throw new Error(`Unknown CPF key version ${String(keyVersion)}`);
     }
+    // A shorter value would yield a truncated tag, which is far easier to forge.
+    if (ciphertext.length <= NONCE_BYTES + TAG_BYTES) {
+      throw new Error('CPF ciphertext is too short');
+    }
     const nonce = ciphertext.subarray(0, NONCE_BYTES);
     const tag = ciphertext.subarray(NONCE_BYTES, NONCE_BYTES + TAG_BYTES);
-    const decipher = createDecipheriv('aes-256-gcm', this.#keys.encryptionKey, nonce);
+    // authTagLength makes Node refuse any tag that is not exactly 16 bytes.
+    const decipher = createDecipheriv('aes-256-gcm', this.#keys.encryptionKey, nonce, {
+      authTagLength: TAG_BYTES,
+    });
     decipher.setAAD(this.#associatedData(keyVersion));
     decipher.setAuthTag(tag);
     // final() throws if the ciphertext, tag or associated data was changed.
