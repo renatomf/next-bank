@@ -1,0 +1,2 @@
+# Known false positives (fictitious values in tests). One fingerprint per line.
+f65cbe7d986c2f24c23d1cbedc05041630c2256b:apps/api/test/logging.test.ts:generic-api-key:9

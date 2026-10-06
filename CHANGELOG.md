@@ -13,6 +13,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Spike do contrato: cliente Dart gerado a partir do OpenAPI validado (ADR 0008)
 - API base (Fastify 5, TypeScript 6 estrito): `/health`, erros RFC 9457 genéricos, limite de corpo, redação de dados sensíveis nos logs, `x-request-id` validado, headers de segurança e configuração validada na inicialização
 - Banco `nextbank_test` para os testes de integração
+- CI no GitHub Actions (API com Postgres real, mobile e gitleaks em todo o histórico), actions fixadas por SHA e Dependabot
 
 ### Adicionado — Semana 1: arquitetura e segurança
 - Roadmap e design de arquitetura (V1 Core, Pix assíncrono, backoffice)

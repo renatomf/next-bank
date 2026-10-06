@@ -107,6 +107,8 @@ Também: TypeScript estrito (`strict`, `noUncheckedIndexedAccess`, `exactOptiona
 
 **Ameaças:** API-08, API-09.
 
+> **Resultado:** workflow único com jobs API, Mobile e Secrets, todos rodando em toda PR (sem filtro de caminho; ver ADR 0001). gitleaks pela imagem fixada por digest, com um falso positivo registrado em `.gitleaksignore`. Dependabot para npm, pub e GitHub Actions.
+
 - [ ] Workflow com filtro de caminho: Flutter (`format`, `analyze`, `test`) e API (`format`, `lint`, `typecheck`, `test` com Postgres de serviço)
 - [ ] Gate do contrato: cliente regenerado ≠ commitado → falha
 - [ ] gitleaks

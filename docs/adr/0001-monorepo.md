@@ -23,6 +23,7 @@ No lado TypeScript, há dependências de build entre pacotes (os contratos preci
 - **TypeScript** (`api`, `bacen-sim`, `backoffice`, `contracts`): pnpm workspaces + Turborepo, com o pipeline declarado em `turbo.json` (`generate` → `build` → `lint`/`typecheck`/`test`).
 - **Dart/Flutter** (`mobile`, `design_system`): pub workspaces, nativo do Dart 3. **O Turborepo não orquestra o Flutter:** isso exigiria um `package.json` artificial dentro do projeto Dart só para chamar comandos `flutter`. Cada ecossistema fica com sua ferramenta nativa.
 - **CI:** filtros de caminho decidem quais fluxos rodam (TypeScript, Flutter ou ambos); no lado TypeScript, `turbo run … --filter=...[origin/main]` executa só os pacotes afetados pela PR.
+  - *Atualização (2026-10-06):* por enquanto todos os jobs rodam em toda PR. No GitHub, um check obrigatório de workflow que não rodou fica pendente e trava o merge; com o repositório pequeno, rodar tudo é mais simples que um job de detecção de mudanças. Filtros entram quando o tempo de CI pesar.
 - **Cache entre execuções do CI:** o diretório `.turbo` é guardado pelo cache do próprio GitHub Actions. O cache remoto da Vercel foi descartado: exigiria um fornecedor e um segredo a mais no CI, e o ganho extra (compartilhar cache com a máquina local) não compensa num time de uma pessoa.
 
 ## Consequências
