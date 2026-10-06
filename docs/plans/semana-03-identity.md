@@ -99,7 +99,7 @@ Ordem das etapas, reorganizada para não criar telas provisórias: 1) fundação
 - [x] Tokens só no Keychain/Keystore (`flutter_secure_storage`, MOB-01); verificação no CI contra `SharedPreferences`; sem iCloud nem backup do Android
 - [x] Interceptor de refresh com **fila única** (TDD): várias requisições com 401 ao mesmo tempo disparam um só refresh; reuso detectado → volta ao login
 - [x] `x-request-id` gerado no app e enviado em toda requisição
-- [ ] Telas: cadastro (com **CPF fictício gerado no app** e aviso de demo, DEMO-01), login e criação do PIN; restauração e expiração de sessão. Feito na 6b-1: Splash, Login, restauração e expiração de sessão, "Sair". Falta na 6b-2: cadastro e criação do PIN
+- [x] Telas: cadastro (com **CPF fictício gerado no app**, somente leitura, e aviso de demo, DEMO-01), login e criação do PIN em duas etapas; restauração e expiração de sessão; "Sair"
 - [x] Falhas como `sealed class`, mapeadas a partir do `code` do erro da API
 - [x] Primeiros componentes do `design_system` (botão, campo de texto, PIN, logo, aviso de demo), tokens do brief com contraste AA verificado em teste e fontes Sora e Manrope empacotadas (nunca baixadas em tempo de execução); pub workspace nasce com o pacote
 
