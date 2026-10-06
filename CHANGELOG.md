@@ -7,7 +7,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 ## [Não publicado]
 
 ### Adicionado — Semana 2: esqueleto ponta a ponta
-- Postgres 17 local (Docker Compose) com papéis de menor privilégio (`nextbank_migrator`, `nextbank_app`)
+- Postgres 17 local (Docker Compose) com papéis de menor privilégio (`nextbank_migrator`, `nextbank_app`) e timeouts no papel da aplicação
+- Threat model: API-11 (papel com privilégio do provedor) e API-12 (transação travando saldo)
 - Workspace pnpm e migrations SQL com dbmate em `apps/api`
 
 ### Adicionado — Semana 1: arquitetura e segurança

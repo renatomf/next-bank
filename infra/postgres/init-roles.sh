@@ -12,4 +12,8 @@ CREATE ROLE nextbank_app LOGIN PASSWORD :'app_password';
 ALTER DATABASE nextbank OWNER TO nextbank_migrator;
 REVOKE ALL ON DATABASE nextbank FROM PUBLIC;
 GRANT CONNECT ON DATABASE nextbank TO nextbank_app;
+-- Nenhuma transação da API segura locks por muito tempo (API-12).
+ALTER ROLE nextbank_app SET statement_timeout = '5s';
+ALTER ROLE nextbank_app SET lock_timeout = '3s';
+ALTER ROLE nextbank_app SET idle_in_transaction_session_timeout = '10s';
 SQL

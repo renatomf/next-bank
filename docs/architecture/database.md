@@ -284,7 +284,9 @@ erDiagram
 
 **Defesa em profundidade:** além dos `GRANT`s, triggers `BEFORE UPDATE OR DELETE` em `journal_entries`, `postings` e `audit_events` lançam erro. Assim, nem um acesso com papel errado altera o histórico.
 
-Conexões sempre com TLS (`sslmode=verify-full` no ambiente publicado), `statement_timeout = 5s` e `lock_timeout = 3s` para o papel da aplicação.
+Conexões sempre com TLS (`sslmode=verify-full` no ambiente publicado). O papel da aplicação tem `statement_timeout = 5s`, `lock_timeout = 3s` e `idle_in_transaction_session_timeout = 10s` (API-12), configurados na criação do papel, já que o migrator não pode alterar papéis.
+
+**Criação dos papéis:** sempre via SQL, nunca pelo painel do provedor. No Neon, papéis criados pelo painel ou pela API entram no `neon_superuser`, o que anularia o menor privilégio (API-11).
 
 ## 7. Concorrência
 
