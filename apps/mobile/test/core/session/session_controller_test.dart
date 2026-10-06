@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/session/session_controller.dart';
+import 'package:next_bank/core/session/session_end_reason.dart';
 import 'package:next_bank/core/session/session_tokens.dart';
 import 'package:next_bank/core/session/token_store.dart';
 
@@ -79,5 +80,29 @@ void main() {
         expect(container.read(sessionProvider).value, isA<SignedOut>());
       },
     );
+
+    test('a logout ends the session without a reason to report', () async {
+      final container = containerWith(FakeTokenStore(tokens));
+      await container.read(sessionProvider.future);
+
+      await container.read(sessionProvider.notifier).signOut();
+
+      final session = container.read(sessionProvider).value! as SignedOut;
+      expect(session.reason, isNull);
+    });
+
+    test('remembers why the server ended the session', () async {
+      final store = FakeTokenStore(tokens);
+      final container = containerWith(store);
+      await container.read(sessionProvider.future);
+
+      await container
+          .read(sessionProvider.notifier)
+          .signOut(SessionEndReason.revoked);
+
+      final session = container.read(sessionProvider).value! as SignedOut;
+      expect(session.reason, SessionEndReason.revoked);
+      expect(store.stored, isNull);
+    });
   });
 }

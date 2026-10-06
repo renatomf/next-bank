@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/session/api_session_tokens.dart';
+import 'package:next_bank/core/session/session_end_reason.dart';
 import 'package:next_bank/core/session/session_interceptor.dart';
 import 'package:next_bank/core/session/session_tokens.dart';
 import 'package:nextbank_api/nextbank_api.dart';
@@ -50,8 +51,9 @@ class Harness {
           )).data!,
         ),
         onRefreshed: (fresh) async => tokens = fresh,
-        onSessionEnded: () async {
+        onSessionEnded: (reason) async {
           ended++;
+          endedWith = reason;
           tokens = null;
         },
       ),
@@ -64,6 +66,7 @@ class Harness {
   late final DefaultApi client;
   SessionTokens? tokens = oldTokens;
   int ended = 0;
+  SessionEndReason? endedWith;
 
   Future<void> createPin() => client.createPin(
     createPinRequestInput: CreatePinRequestInput(pin: '2580'),
@@ -192,7 +195,12 @@ void main() {
       },
     );
 
-    for (final code in ['SessionExpired', 'RefreshTokenReuseDetected']) {
+    // The login screen tells which one happened (catalog, section 9).
+    for (final (code, reason) in [
+      ('SessionExpired', SessionEndReason.expired),
+      ('Unauthenticated', SessionEndReason.expired),
+      ('RefreshTokenReuseDetected', SessionEndReason.revoked),
+    ]) {
       test('ends the session when the refresh is refused ($code)', () async {
         final harness = Harness(
           pin: acceptOnly('new-access'),
@@ -202,6 +210,7 @@ void main() {
         final failure = await failureOf(harness.createPin());
 
         expect(harness.ended, 1);
+        expect(harness.endedWith, reason);
         expect(harness.tokens, isNull);
         expect(failure, isA<ApiRejected>());
       });
