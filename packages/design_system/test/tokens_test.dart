@@ -69,6 +69,20 @@ void main() {
     });
   }
 
+  test('text buttons use the accent of each mode, at touch size', () {
+    for (final (theme, colors) in [
+      (NbTheme.dark(), NbColors.dark),
+      (NbTheme.light(), NbColors.light),
+    ]) {
+      final style = theme.textButtonTheme.style!;
+      expect(style.foregroundColor?.resolve({}), colors.accent);
+      expect(
+        style.minimumSize?.resolve({}),
+        const Size(NbSize.touch, NbSize.touch),
+      );
+    }
+  });
+
   test('the theme exposes the token colors and the bundled fonts', () {
     final theme = NbTheme.dark();
 

@@ -115,6 +115,21 @@ void main() {
       expect(submitted, ['a long passphrase']);
     });
 
+    testWidgets('read-only shows its value but takes no typing', (
+      tester,
+    ) async {
+      final controller = TextEditingController(text: '123.456.789-09');
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        host(NbTextField(label: 'CPF', controller: controller, readOnly: true)),
+      );
+
+      await tester.enterText(find.byType(TextField), '000');
+
+      expect(tester.widget<TextField>(find.byType(TextField)).readOnly, isTrue);
+      expect(find.text('123.456.789-09'), findsOneWidget);
+    });
+
     testWidgets('never suggests or corrects hidden text', (tester) async {
       await tester.pumpWidget(
         host(const NbTextField(label: 'Senha', obscureText: true)),

@@ -40,6 +40,14 @@ abstract final class NbTheme {
         bodySmall: NbType.caption.copyWith(color: colors.textMuted),
         labelLarge: NbType.button,
       ),
+      // Links and secondary actions in the accent color of the mode.
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: colors.accent,
+          textStyle: NbType.bodyText,
+          minimumSize: const Size(NbSize.touch, NbSize.touch),
+        ),
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: colors.surface,
