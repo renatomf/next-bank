@@ -14,7 +14,7 @@ void main() {
       matches(
         RegExp(
           r'android:name="flutter_deeplinking_enabled"\s+'
-          r'android:value="false"',
+          'android:value="false"',
         ),
       ),
     );
