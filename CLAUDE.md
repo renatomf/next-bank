@@ -51,6 +51,7 @@ O projeto é tratado como um **banco real em produção**. Nenhum padrão abaixo
 - **Dart:** lints estritos (`very_good_analysis` ou equivalente); zero warnings no `flutter analyze`.
 - Sem `any`/`dynamic` sem justificativa em comentário; sem código morto; sem `print`/`console.log` (só o logger).
 - Nomes seguem a linguagem ubíqua do modelo de domínio.
+- **Idioma:** código em inglês (identificadores, comentários, nomes de testes, mensagens de erro e logs, configuração); documentação (`docs/`, README, CHANGELOG) e conversa em pt-BR.
 - Commits no padrão Conventional Commits; PRs pequenos e focados.
 
 ### 5. Testes
