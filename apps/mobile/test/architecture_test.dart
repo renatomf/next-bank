@@ -33,6 +33,20 @@ void main() {
     expect(violations, isEmpty, reason: violations.join('\n'));
   });
 
+  // core holds what every feature shares, so it depends on none of them;
+  // only app/ and main.dart compose the features.
+  test('core never imports a feature or the app', () {
+    final violations = [
+      for (final file in dartFiles('lib/core'))
+        for (final import in importsOf(file))
+          if (import.startsWith('package:next_bank/features/') ||
+              import.startsWith('package:next_bank/app/'))
+            '${file.path}: $import',
+    ];
+
+    expect(violations, isEmpty, reason: violations.join('\n'));
+  });
+
   // MOB-01: nothing sensitive in plain preferences; tokens live only in the
   // Keychain / Keystore. V1 has nothing else to store there either.
   test('the app never uses shared preferences', () {
