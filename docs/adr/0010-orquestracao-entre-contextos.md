@@ -1,6 +1,6 @@
 # 0010 — Orquestração entre contextos e transação compartilhada
 
-- **Status:** Proposto
+- **Status:** Aceito
 - **Data:** 2026-10-06
 
 ## Contexto

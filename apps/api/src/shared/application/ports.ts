@@ -28,3 +28,16 @@ export interface AuditEvent {
 export interface AuditTrail {
   record(event: AuditEvent): Promise<void>;
 }
+
+/**
+ * One database transaction, shared by every module that takes part in a use
+ * case (ADR 0010). Opaque on purpose: only infrastructure knows what is inside.
+ */
+export interface Transaction {
+  readonly kind: 'transaction';
+}
+
+/** Runs the work in a single transaction: every module's writes commit together, or none. */
+export interface UnitOfWork {
+  run<T>(work: (tx: Transaction) => Promise<T>): Promise<T>;
+}

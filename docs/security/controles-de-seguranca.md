@@ -38,8 +38,8 @@
 
 | Controle | Status | Como / evidência | Sem. |
 |---|---|---|---|
-| Validação rigorosa de entrada | 🟡 | Zod em toda rota (type provider), corpo máximo de 16 KB (`http-security.test.ts`), `x-request-id` validado. Schemas estritos (campo desconhecido → 422) entram com cada rota. | 2+ |
-| Rate limiting / throttling | 🟡 | Global: 100 requisições/min por IP, 429 no formato do catálogo (✅, F-05). Por rota: login, cadastro, PIN, consulta de chave Pix e comandos financeiros (AUTH-01, AUTH-09, PIX-07). Em memória na V1 (D3). | 3, 5 |
+| Validação rigorosa de entrada | 🟡 | Zod em toda rota (type provider), corpo máximo de 16 KB (`http-security.test.ts`), `x-request-id` validado. Schemas estritos (campo desconhecido → 422) em cada rota: cadastro ✅ (`register-route.test.ts`, inclusive nome com espaços nas pontas ou caracteres de controle). | 2+ |
+| Rate limiting / throttling | 🟡 | Global: 100 requisições/min por IP, 429 no formato do catálogo (✅, F-05). Cadastro: 3 tentativas por IP por hora, falhas incluídas (✅, AUTH-09). Login, PIN, consulta de chave Pix e comandos financeiros entram com as rotas (AUTH-01, PIX-07). Em memória na V1 (D3). | 3, 5 |
 | CORS | ✅ | Negado por padrão: a API não registra plugin de CORS, então o navegador bloqueia chamadas de outras origens (o app mobile não precisa de CORS). Falta um teste explícito, que entra na semana 3. | 2 |
 | CSRF | ➖ | A autenticação usa `Authorization: Bearer`, e não cookies, então o navegador não envia credenciais automaticamente. Reavaliar no backoffice (Fase 3) se ele usar cookies. | — |
 | SQL injection | ✅ | Só queries parametrizadas com `pg` (ADR 0009), sem ORM e sem SQL montado com strings; regra própria do Semgrep no CI (API-01). | 2+ |
@@ -58,8 +58,8 @@
 | Controle | Status | Como / evidência | Sem. |
 |---|---|---|---|
 | Criptografia em trânsito (TLS) | 🟡 | App: tráfego em texto puro desligado no Android e bloqueado pelo ATS padrão do iOS, sem exceções (MOB-03). Publicado: HTTPS no Render e `sslmode=verify-full` no Neon. Localmente, o banco só aceita conexões da própria máquina (`127.0.0.1`). | 2, 8 |
-| Criptografia em repouso | 🟡 | Disco cifrado pelo provedor (Neon), mais CPF cifrado **na aplicação** com AES-256-GCM e índice cego HMAC: colunas prontas (#32) e adaptador testado contra adulteração e chave errada (`aes-gcm-cpf-protector.test.ts`, API-06). Falta o cadastro usá-lo. Chaves em KMS/HSM: 🔭. | 3 |
-| Senhas com Argon2id | 🟡 | Política de senha (#33) e adaptador Argon2id com os parâmetros da OWASP testados (`argon2id-hasher.test.ts`, AUTH-08). Falta o caso de uso de cadastro usá-lo. | 3 |
+| Criptografia em repouso | 🟡 | Disco cifrado pelo provedor (Neon), mais CPF cifrado **na aplicação** com AES-256-GCM e índice cego HMAC: colunas prontas (#32) e adaptador testado contra adulteração e chave errada (`aes-gcm-cpf-protector.test.ts`); o cadastro grava só o CPF cifrado (`register-route.test.ts`, API-06). Chaves em KMS/HSM: 🔭. | 3 |
+| Senhas com Argon2id | ✅ | Política de senha (#33), Argon2id com os parâmetros da OWASP (`argon2id-hasher.test.ts`) e cadastro recusando senha comum (AUTH-07) e senha gigante na borda, antes do hash (AUTH-08) (`register-route.test.ts`). | 3 |
 | Segredos fora do código | ✅ | Só variáveis de ambiente; configuração validada sem ecoar valores (`config.test.ts`); `.gitignore` cobre `.env`, chaves e keystores; gitleaks no CI e no `pre-commit` (#31). | 2 |
 | Privilégios mínimos no banco | ✅ | Ver seção 1. Ledger e auditoria só aceitam `INSERT`. | 2–4 |
 | Prepared statements / ORM seguro | ✅ | Ver SQL injection. | 2+ |

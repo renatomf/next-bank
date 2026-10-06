@@ -1,3 +1,4 @@
+import { generateKeyPairSync, randomBytes } from 'node:crypto';
 import { writeFileSync } from 'node:fs';
 import { buildApp } from '../src/app.ts';
 import { createPool } from '../src/shared/db.ts';
@@ -10,6 +11,11 @@ if (!output) throw new Error('usage: generate-openapi.ts <output.json>');
 const app = buildApp({
   pool: createPool('postgres://unused@127.0.0.1/unused'),
   logStream: { write: () => undefined },
+  // Throwaway keys: they do not change the document, which only reads route schemas.
+  security: {
+    accessTokenKeys: { privateKey: generateKeyPairSync('ed25519').privateKey, keyId: 'contract' },
+    cpfKeys: { keyVersion: 1, encryptionKey: randomBytes(32), hmacKey: randomBytes(32) },
+  },
 });
 const document = await buildOpenApiDocument(app);
 await app.close();

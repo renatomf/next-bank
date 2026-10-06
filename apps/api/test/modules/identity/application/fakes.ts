@@ -1,15 +1,16 @@
 import type {
   AuditEvent,
-  AuditTrail,
   Clock,
   IdGenerator,
+  Transaction,
+  UnitOfWork,
 } from '../../../../src/shared/application/ports.ts';
 import type {
   AccessTokenIssuer,
   CpfProtector,
   EncryptedCpf,
-  IdentityTransaction,
-  IdentityUnitOfWork,
+  IdentityRepositories,
+  IdentityRepositoriesFactory,
   RefreshTokenGenerator,
   SecretHasher,
   StoredRefreshToken,
@@ -83,65 +84,88 @@ export interface StoredUser {
   cpf: { ciphertext: Uint8Array; blindIndex: Uint8Array; masked: string; keyVersion: number };
 }
 
+interface Tables {
+  users: StoredUser[];
+  sessions: SessionState[];
+  refreshTokens: StoredRefreshToken[];
+  auditEvents: AuditEvent[];
+}
+
+class InMemoryTransaction implements Transaction {
+  readonly kind = 'transaction';
+  readonly tables: Tables;
+  constructor(tables: Tables) {
+    this.tables = tables;
+  }
+}
+
 /**
- * In-memory unit of work: writes are staged and only become visible on
- * success, like a database transaction.
+ * In-memory database with transaction semantics: each run works on a staged
+ * copy that only becomes visible when the work succeeds.
  */
-export class InMemoryIdentityStore implements IdentityUnitOfWork {
+export class InMemoryDatabase implements UnitOfWork, IdentityRepositoriesFactory {
   users: StoredUser[] = [];
   sessions: SessionState[] = [];
   refreshTokens: StoredRefreshToken[] = [];
   auditEvents: AuditEvent[] = [];
+  /** How many transactions were opened. */
+  runs = 0;
   /** Makes the next audit write fail, to prove all writes roll back together. */
   failNextAudit = false;
 
-  async run<T>(work: (tx: IdentityTransaction) => Promise<T>): Promise<T> {
-    const staged = {
+  async run<T>(work: (tx: Transaction) => Promise<T>): Promise<T> {
+    this.runs += 1;
+    const tx = new InMemoryTransaction({
       users: [...this.users],
       sessions: [...this.sessions],
       refreshTokens: [...this.refreshTokens],
       auditEvents: [...this.auditEvents],
-    };
-    const audit: AuditTrail = {
-      record: (event) => {
-        if (this.failNextAudit) {
-          this.failNextAudit = false;
-          return Promise.reject(new Error('audit write failed'));
-        }
-        staged.auditEvents.push(event);
-        return Promise.resolve();
-      },
-    };
-    const result = await work({
+    });
+    const result = await work(tx);
+    Object.assign(this, tx.tables);
+    return result;
+  }
+
+  for(tx: Transaction): IdentityRepositories {
+    if (!(tx instanceof InMemoryTransaction)) throw new Error('Not an in-memory transaction');
+    const { tables } = tx;
+    return {
       users: {
         existsWithEmailOrCpf: (email, cpfBlindIndex) =>
           Promise.resolve(
-            staged.users.some(
+            tables.users.some(
               (u) =>
                 u.state.email === email ||
                 Buffer.from(u.cpf.blindIndex).equals(Buffer.from(cpfBlindIndex)),
             ),
           ),
         insert: (user, cpf) => {
-          staged.users.push({ state: user, cpf });
+          tables.users.push({ state: user, cpf });
           return Promise.resolve();
         },
       },
       sessions: {
         insert: (session) => {
-          staged.sessions.push(session);
+          tables.sessions.push(session);
           return Promise.resolve();
         },
       },
       refreshTokens: {
         insert: (token) => {
-          staged.refreshTokens.push(token);
+          tables.refreshTokens.push(token);
           return Promise.resolve();
         },
       },
-      audit,
-    });
-    Object.assign(this, staged);
-    return result;
+      audit: {
+        record: (event) => {
+          if (this.failNextAudit) {
+            this.failNextAudit = false;
+            return Promise.reject(new Error('audit write failed'));
+          }
+          tables.auditEvents.push(event);
+          return Promise.resolve();
+        },
+      },
+    };
   }
 }

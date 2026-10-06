@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { afterEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.ts';
 import { createPool } from '../src/shared/db.ts';
-import { captureLogs, testDatabaseUrl } from './helpers.ts';
+import { captureLogs, testDatabaseUrl, testSecurity } from './helpers.ts';
 
 describe('GET /health', () => {
   let app: FastifyInstance | undefined;
@@ -12,7 +12,11 @@ describe('GET /health', () => {
   });
 
   it('returns 200 when the database is reachable', async () => {
-    app = buildApp({ pool: createPool(testDatabaseUrl()), logStream: captureLogs().stream });
+    app = buildApp({
+      pool: createPool(testDatabaseUrl()),
+      logStream: captureLogs().stream,
+      security: testSecurity(),
+    });
 
     const response = await app.inject({ method: 'GET', url: '/health' });
 
@@ -25,6 +29,7 @@ describe('GET /health', () => {
     app = buildApp({
       pool: createPool('postgres://nextbank_app:x@127.0.0.1:1/nextbank'),
       logStream: logs.stream,
+      security: testSecurity(),
     });
 
     const response = await app.inject({ method: 'GET', url: '/health' });

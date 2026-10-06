@@ -14,7 +14,7 @@ import {
 } from '../src/modules/identity/domain/errors.ts';
 import { DomainError } from '../src/shared/domain/domain-error.ts';
 import { createPool } from '../src/shared/db.ts';
-import { captureLogs, testDatabaseUrl } from './helpers.ts';
+import { captureLogs, testDatabaseUrl, testSecurity } from './helpers.ts';
 
 // Error responses follow the catalog (domain-model.md, section 9): RFC 9457
 // with the error name in `code`, and never internal detail (API-03).
@@ -31,7 +31,11 @@ describe('error responses', () => {
 
   beforeEach(() => {
     logs = captureLogs();
-    app = buildApp({ pool: createPool(testDatabaseUrl()), logStream: logs.stream });
+    app = buildApp({
+      pool: createPool(testDatabaseUrl()),
+      logStream: logs.stream,
+      security: testSecurity(),
+    });
   });
 
   afterEach(async () => {
@@ -130,7 +134,11 @@ describe('error responses', () => {
 
 describe('caching', () => {
   it('tells every client and proxy not to store any response (F-06)', async () => {
-    const app = buildApp({ pool: createPool(testDatabaseUrl()), logStream: captureLogs().stream });
+    const app = buildApp({
+      pool: createPool(testDatabaseUrl()),
+      logStream: captureLogs().stream,
+      security: testSecurity(),
+    });
     try {
       for (const url of ['/health', '/nao-existe']) {
         const response = await app.inject({ method: 'GET', url });
@@ -144,7 +152,11 @@ describe('caching', () => {
 
 describe('global rate limit (API-02, F-05)', () => {
   it('covers the real routes', async () => {
-    const app = buildApp({ pool: createPool(testDatabaseUrl()), logStream: captureLogs().stream });
+    const app = buildApp({
+      pool: createPool(testDatabaseUrl()),
+      logStream: captureLogs().stream,
+      security: testSecurity(),
+    });
     try {
       const response = await app.inject({ method: 'GET', url: '/health' });
       expect(response.headers['x-ratelimit-limit']).toBe('100');
@@ -154,7 +166,11 @@ describe('global rate limit (API-02, F-05)', () => {
   });
 
   it('answers 429 TooManyAttempts after 100 requests per minute from one IP', async () => {
-    const app = buildApp({ pool: createPool(testDatabaseUrl()), logStream: captureLogs().stream });
+    const app = buildApp({
+      pool: createPool(testDatabaseUrl()),
+      logStream: captureLogs().stream,
+      security: testSecurity(),
+    });
     // Registered as a plugin, like every real route, so it loads after the limiter.
     void app.register((scope, _options, done) => {
       scope.get('/test/ok', () => ({ ok: true }));

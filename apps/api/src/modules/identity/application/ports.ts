@@ -1,4 +1,4 @@
-import type { AuditTrail } from '../../../shared/application/ports.ts';
+import type { AuditTrail, Transaction } from '../../../shared/application/ports.ts';
 import type { Cpf } from '../domain/cpf.ts';
 import type { SessionState } from '../domain/session.ts';
 import type { UserState } from '../domain/user.ts';
@@ -78,15 +78,15 @@ export interface RefreshTokensRepository {
   insert(token: StoredRefreshToken): Promise<void>;
 }
 
-/** Everything a use case reads or writes inside one database transaction. */
-export interface IdentityTransaction {
+/** The identity repositories and the audit trail, all bound to one transaction. */
+export interface IdentityRepositories {
   users: UsersRepository;
   sessions: SessionsRepository;
   refreshTokens: RefreshTokensRepository;
   audit: AuditTrail;
 }
 
-/** Runs the work in a single transaction: all writes are committed, or none. */
-export interface IdentityUnitOfWork {
-  run<T>(work: (tx: IdentityTransaction) => Promise<T>): Promise<T>;
+/** Binds the repositories to the shared transaction opened by the caller (ADR 0010). */
+export interface IdentityRepositoriesFactory {
+  for(tx: Transaction): IdentityRepositories;
 }

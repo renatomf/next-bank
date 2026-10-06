@@ -12,8 +12,17 @@ import {
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod';
 import type pg from 'pg';
+import { onboardingRoutes } from './application/onboarding/http.ts';
+import { RegisterCustomer } from './application/onboarding/register-customer.ts';
+import {
+  type AccessTokenKeys,
+  type CpfKeys,
+  createIdentityModule,
+} from './modules/identity/index.ts';
 import { healthRoutes } from './shared/http/health.ts';
 import { registerProblemHandlers } from './shared/http/problem.ts';
+import { PgUnitOfWork } from './shared/infrastructure/pg-unit-of-work.ts';
+import { SystemClock, UuidV7Generator } from './shared/infrastructure/system-ports.ts';
 import { REDACT_PATHS } from './shared/logging.ts';
 
 /** JSON log destination, one line per event. */
@@ -25,6 +34,8 @@ export interface AppDependencies {
   pool: pg.Pool;
   /** Log destination; defaults to stdout. */
   logStream?: LogDestination;
+  /** Signing and CPF keys: required, there is no insecure default. */
+  security: { accessTokenKeys: AccessTokenKeys; cpfKeys: CpfKeys };
 }
 
 // Per client IP (API-02). In memory: one instance in V1 (plan D3). Behind the
@@ -39,7 +50,8 @@ function requestId(request: IncomingMessage): string {
   return typeof received === 'string' && REQUEST_ID.test(received) ? received : randomUUID();
 }
 
-export function buildApp({ pool, logStream }: AppDependencies) {
+/** Composition root: the only place that connects ports to their implementations. */
+export function buildApp({ pool, logStream, security }: AppDependencies) {
   const app = Fastify({
     logger: {
       level: 'info',
@@ -86,6 +98,18 @@ export function buildApp({ pool, logStream }: AppDependencies) {
     transformObject: jsonSchemaTransformObject,
   });
   void app.register(healthRoutes, { pool });
+
+  const identity = createIdentityModule({
+    clock: new SystemClock(),
+    ids: new UuidV7Generator(),
+    accessTokenKeys: security.accessTokenKeys,
+    cpfKeys: security.cpfKeys,
+  });
+  const registerCustomer = new RegisterCustomer({
+    unitOfWork: new PgUnitOfWork(pool),
+    identity: identity.registration,
+  });
+  void app.register(onboardingRoutes, { registerCustomer });
 
   return app;
 }

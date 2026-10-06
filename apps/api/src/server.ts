@@ -3,7 +3,17 @@ import { loadConfig } from './shared/config.ts';
 import { createPool } from './shared/db.ts';
 
 const config = loadConfig(process.env);
-const app = buildApp({ pool: createPool(config.databaseUrl) });
+const app = buildApp({
+  pool: createPool(config.databaseUrl),
+  security: {
+    accessTokenKeys: config.jwt,
+    cpfKeys: {
+      keyVersion: config.pii.keyVersion,
+      encryptionKey: config.pii.encryptionKey,
+      hmacKey: config.pii.hmacKey,
+    },
+  },
+});
 
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.once(signal, () => {
