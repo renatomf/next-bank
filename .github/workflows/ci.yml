@@ -55,7 +55,8 @@ jobs:
       - run: pnpm --filter @nextbank/api format:check
       - run: pnpm --filter @nextbank/api lint
       - run: pnpm --filter @nextbank/api typecheck
-      - run: pnpm --filter @nextbank/api test
+      - run: pnpm --filter @nextbank/api arch
+      - run: pnpm --filter @nextbank/api test:coverage
 
   mobile:
     name: Mobile
