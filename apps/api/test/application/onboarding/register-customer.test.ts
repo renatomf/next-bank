@@ -1,22 +1,24 @@
 import { describe, expect, it } from 'vitest';
-import { RegisterCustomer } from '../../../../src/modules/identity/application/register-customer.ts';
+import { RegisterCustomer } from '../../../src/application/onboarding/register-customer.ts';
+import { UserRegistration } from '../../../src/modules/identity/application/user-registration.ts';
 import {
   AlreadyRegistered,
   InvalidCpf,
   WeakPassword,
-} from '../../../../src/modules/identity/domain/errors.ts';
+} from '../../../src/modules/identity/domain/errors.ts';
 import {
   FakeAccessTokens,
   FakeCpfProtector,
   FakeHasher,
   FakeRefreshTokens,
   FixedClock,
-  InMemoryIdentityStore,
+  InMemoryDatabase,
   SequentialIds,
-} from './fakes.ts';
+} from '../../modules/identity/application/fakes.ts';
 
-// Registration (domain-model.md, section 8): user, session and audit in one
-// transaction. Account, funding and the Pix key join this use case in weeks 4-5.
+// Registration (domain-model.md, section 8; ADR 0010): the orchestrator sequences
+// identity's steps around one shared transaction. Account, funding and the Pix
+// key join it in weeks 4-5.
 const NOW = new Date('2026-10-06T12:00:00.000Z');
 const INPUT = {
   name: 'Maria Teste',
@@ -28,10 +30,10 @@ const INPUT = {
 };
 
 function setup() {
-  const store = new InMemoryIdentityStore();
+  const store = new InMemoryDatabase();
   const hasher = new FakeHasher();
-  const register = new RegisterCustomer({
-    unitOfWork: store,
+  const identity = new UserRegistration({
+    repositories: store,
     clock: new FixedClock(NOW),
     ids: new SequentialIds(),
     hasher,
@@ -40,6 +42,7 @@ function setup() {
     refreshTokens: new FakeRefreshTokens(),
     accessTokens: new FakeAccessTokens(),
   });
+  const register = new RegisterCustomer({ unitOfWork: store, identity });
   return { store, hasher, register };
 }
 
@@ -124,6 +127,14 @@ describe('RegisterCustomer', () => {
     for (const personal of ['12345678909', 'maria@example.test', 'Maria Teste', INPUT.password]) {
       expect(serialized).not.toContain(personal);
     }
+  });
+
+  it('refuses invalid data before opening any transaction', async () => {
+    const { store, register } = setup();
+
+    await expect(register.execute({ ...INPUT, cpf: '123.456.789-00' })).rejects.toThrow(InvalidCpf);
+    await expect(register.execute({ ...INPUT, password: 'short' })).rejects.toThrow(WeakPassword);
+    expect(store.runs).toBe(0);
   });
 
   it('rejects an invalid CPF and stores nothing (InvalidCpf)', async () => {

@@ -19,6 +19,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Persistência do cadastro em Postgres: transação única com usuário, sessão, hash do refresh token e auditoria; corrida de cadastros simultâneos resolvida pelas restrições `UNIQUE`; consulta de existência servida pelos índices únicos
 - Respostas de erro com o `code` do catálogo (RFC 9457), validação com 422 `InvalidRequest`, `Cache-Control: no-store` em toda resposta e rate limit global por IP (100/min) com 429 `TooManyAttempts`
 - Tokens: JWT EdDSA de 15 min (`jose`) com validação completa (AUTH-05), refresh token opaco de 256 bits guardado só como hash, e chaves (JWT e CPF) validadas na inicialização; script para gerar as chaves locais
+- Orquestração entre contextos (ADR 0010): o cadastro passa para `src/application/onboarding/`, sobre uma unidade de trabalho compartilhada por todos os módulos, com as regras de dependência verificadas no CI
 
 ### Adicionado — Semana 2: esqueleto ponta a ponta
 - Postgres 17 local (Docker Compose) com papéis de menor privilégio (`nextbank_migrator`, `nextbank_app`) e timeouts no papel da aplicação

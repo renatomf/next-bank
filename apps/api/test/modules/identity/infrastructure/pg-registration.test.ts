@@ -1,12 +1,14 @@
 import { randomBytes } from 'node:crypto';
 import { afterAll, describe, expect, it } from 'vitest';
-import { RegisterCustomer } from '../../../../src/modules/identity/application/register-customer.ts';
+import { RegisterCustomer } from '../../../../src/application/onboarding/register-customer.ts';
+import { UserRegistration } from '../../../../src/modules/identity/application/user-registration.ts';
 import { Cpf } from '../../../../src/modules/identity/domain/cpf.ts';
 import { AlreadyRegistered } from '../../../../src/modules/identity/domain/errors.ts';
 import { AesGcmCpfProtector } from '../../../../src/modules/identity/infrastructure/aes-gcm-cpf-protector.ts';
-import { PgIdentityUnitOfWork } from '../../../../src/modules/identity/infrastructure/pg-identity-unit-of-work.ts';
+import { PgIdentityRepositories } from '../../../../src/modules/identity/infrastructure/pg-identity-repositories.ts';
 import { PgUsersRepository } from '../../../../src/modules/identity/infrastructure/pg-users-repository.ts';
 import { createPool } from '../../../../src/shared/db.ts';
+import { PgUnitOfWork } from '../../../../src/shared/infrastructure/pg-unit-of-work.ts';
 import { UuidV7Generator } from '../../../../src/shared/infrastructure/system-ports.ts';
 import { testDatabaseUrl } from '../../../helpers.ts';
 import {
@@ -21,11 +23,12 @@ import { fictitiousCpf, uniqueEmail } from '../fixtures.ts';
 // queries that do not match the schema, grants or constraints fail here.
 const NOW = new Date('2026-10-06T12:00:00.000Z');
 const pool = createPool(testDatabaseUrl());
-const unitOfWork = new PgIdentityUnitOfWork(pool);
+const unitOfWork = new PgUnitOfWork(pool);
+const repositories = new PgIdentityRepositories();
 
 function newRegister() {
-  return new RegisterCustomer({
-    unitOfWork,
+  const identity = new UserRegistration({
+    repositories,
     clock: new FixedClock(NOW),
     ids: new UuidV7Generator(),
     hasher: new FakeHasher(),
@@ -38,6 +41,7 @@ function newRegister() {
     refreshTokens: new FakeRefreshTokensWithUniqueHash(),
     accessTokens: new FakeAccessTokens(),
   });
+  return new RegisterCustomer({ unitOfWork, identity });
 }
 
 /** The real token hash is unique per token; the database enforces it. */
@@ -70,7 +74,7 @@ afterAll(async () => {
   await pool.end();
 });
 
-describe('PgIdentityUnitOfWork with RegisterCustomer', () => {
+describe('registration on Postgres through the shared unit of work', () => {
   it('stores the user with the CPF encrypted, the session, the token hash and the audit trail', async () => {
     const data = input();
     const result = await newRegister().execute(data);
@@ -113,7 +117,7 @@ describe('PgIdentityUnitOfWork with RegisterCustomer', () => {
 
     await expect(
       unitOfWork.run(async (tx) => {
-        await tx.users.insert(
+        await repositories.for(tx).users.insert(
           {
             id: '01990000-0000-7000-8000-000000000001',
             name: 'Maria Teste',

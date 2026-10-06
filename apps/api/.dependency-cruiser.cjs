@@ -50,6 +50,24 @@ module.exports = {
       to: { path: '^src/modules/', pathNot: ['^src/modules/$1/', '^src/modules/[^/]+/index\.ts$'] },
     },
     {
+      name: 'orchestration-uses-public-apis',
+      severity: 'error',
+      comment:
+        'Flows owned by no context (ADR 0010) only sequence calls to module public APIs and shared ports.',
+      from: { path: '^src/application/' },
+      to: {
+        path: '^src/(modules|shared)/',
+        pathNot: ['^src/modules/[^/]+/index\\.ts$', '^src/shared/(domain|application)/'],
+      },
+    },
+    {
+      name: 'modules-do-not-know-orchestration',
+      severity: 'error',
+      comment: 'Contexts never depend on the flows that orchestrate them (ADR 0010).',
+      from: { path: '^src/(modules|shared)/' },
+      to: { path: '^src/application/' },
+    },
+    {
       name: 'shared-does-not-know-modules',
       severity: 'error',
       comment: 'Cross-cutting code must not depend on a bounded context.',

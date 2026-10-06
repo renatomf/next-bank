@@ -15,7 +15,7 @@ Cada ADR registra **uma** decisão de arquitetura: o contexto, as alternativas c
 | [0007](0007-idempotencia-concorrencia.md) | Idempotência e controle de concorrência | Aceito |
 | [0008](0008-contrato-unico-openapi.md) | Contrato único: Zod → OpenAPI → clientes gerados | Aceito |
 | [0009](0009-sql-puro-tipado.md) | Acesso a dados com SQL puro tipado (sem ORM) | Aceito |
-| [0010](0010-orquestracao-entre-contextos.md) | Orquestração entre contextos e transação compartilhada | Proposto |
+| [0010](0010-orquestracao-entre-contextos.md) | Orquestração entre contextos e transação compartilhada | Aceito |
 
 ## Template
 
