@@ -1,16 +1,20 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import type pg from 'pg';
 import { z } from 'zod';
-import { PROBLEM_CONTENT_TYPE, problem } from './problem.ts';
+import { PROBLEM_CONTENT_TYPE, ProblemSchema, problem } from './problem.ts';
 
-const Problem = z.object({ type: z.literal('about:blank'), title: z.string(), status: z.int() });
+const HealthSchema = z.object({ status: z.literal('ok') }).meta({ id: 'Health' });
 
 export const healthRoutes: FastifyPluginAsyncZod<{ pool: pg.Pool }> = (app, { pool }) => {
   app.get(
     '/health',
     {
       schema: {
-        response: { 200: z.object({ status: z.literal('ok') }), 503: Problem },
+        operationId: 'getHealth',
+        response: {
+          200: HealthSchema,
+          503: { content: { [PROBLEM_CONTENT_TYPE]: { schema: ProblemSchema } } },
+        },
       },
     },
     async (request, reply) => {

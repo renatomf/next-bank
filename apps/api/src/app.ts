@@ -1,8 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import type { IncomingMessage } from 'node:http';
 import helmet from '@fastify/helmet';
+import swagger from '@fastify/swagger';
 import Fastify from 'fastify';
 import {
+  jsonSchemaTransform,
+  jsonSchemaTransformObject,
   serializerCompiler,
   validatorCompiler,
   type ZodTypeProvider,
@@ -60,6 +63,12 @@ export function buildApp({ pool, logStream }: AppDependencies) {
   });
 
   void app.register(helmet);
+  // Collects the route schemas into the OpenAPI contract (ADR 0008). Not served over HTTP.
+  void app.register(swagger, {
+    openapi: { openapi: '3.1.0', info: { title: 'next bank API', version: '0.1.0' } },
+    transform: jsonSchemaTransform,
+    transformObject: jsonSchemaTransformObject,
+  });
   void app.register(healthRoutes, { pool });
 
   return app;

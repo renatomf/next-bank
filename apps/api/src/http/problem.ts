@@ -1,5 +1,6 @@
 import { STATUS_CODES } from 'node:http';
 import type { FastifyInstance } from 'fastify';
+import { z } from 'zod';
 
 export interface Problem {
   type: 'about:blank';
@@ -8,6 +9,10 @@ export interface Problem {
 }
 
 export const PROBLEM_CONTENT_TYPE = 'application/problem+json';
+
+export const ProblemSchema = z
+  .object({ type: z.literal('about:blank'), title: z.string(), status: z.int() })
+  .meta({ id: 'Problem' });
 
 /** Generic RFC 9457 response: never carries stack, SQL or internal detail (API-03). */
 export function problem(status: number): Problem {
