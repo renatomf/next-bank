@@ -2,7 +2,7 @@
 
 - **Status:** Aprovado (2026-10-05), incluindo as decisões D4–D7
 - **Método:** STRIDE por fluxo, sobre um diagrama de fluxo de dados com fronteiras de confiança
-- **Referências:** OWASP ASVS (nível 2) para API, OWASP MASVS para o app — checklist em `checklist-asvs-masvs.md`
+- **Referências:** OWASP ASVS (nível 2) para API, OWASP MASVS para o app — checklist em `checklist-asvs-masvs.md`; status consolidado dos controles em `controles-de-seguranca.md`
 - **Base:** `docs/architecture/domain-model.md`, `docs/architecture/database.md`
 - **Regra viva:** toda feature nova revisa este documento; ameaça nova vira uma linha aqui **e** um teste.
 
@@ -174,8 +174,8 @@ A V1 fica publicada para avaliação por recrutadores. Uma demo aberta tem risco
 
 - [x] Ativar **secret scanning** e **push protection** no GitHub (2026-10-05)
 - [x] Ativar **Dependabot alerts** e atualizações de segurança (2026-10-05)
-- [ ] **Proteção da `main`:** PR obrigatório, CI verde, sem force push
-- [ ] Gitleaks também como hook local de pré-commit
+- [x] **Proteção da `main`:** PR obrigatório, 6 checks obrigatórios, branch atualizada, sem force push (ruleset `protect-main`)
+- [x] Gitleaks também como hook local de pré-commit (#31)
 
 ## 9. Testes de segurança: resumo
 
