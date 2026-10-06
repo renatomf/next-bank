@@ -32,37 +32,53 @@ class PrimaryButton extends StatelessWidget {
       enabled: enabled,
       label: label,
       excludeSemantics: true,
-      child: SizedBox(
-        height: NbSize.button,
-        width: double.infinity,
-        child: FilledButton(
-          onPressed: enabled ? onPressed : null,
-          style: FilledButton.styleFrom(
-            backgroundColor: colors.primary,
-            foregroundColor: colors.onPrimary,
-            disabledBackgroundColor: colors.primary.withValues(alpha: 0.4),
-            disabledForegroundColor: colors.onPrimary,
-            shape: const StadiumBorder(),
-            textStyle: NbType.button,
-          ),
-          child: loading
-              ? SizedBox.square(
-                  dimension: 22,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: colors.onPrimary,
+      child: DecoratedBox(
+        // The Paraíba halo marks the action that can be taken (mockups).
+        decoration: ShapeDecoration(
+          shape: const StadiumBorder(),
+          shadows: enabled
+              ? const [
+                  BoxShadow(
+                    color: NbBrand.actionGlow,
+                    offset: Offset(0, 10),
+                    blurRadius: 32,
+                    spreadRadius: -8,
                   ),
-                )
-              : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Flexible(
-                      child: Text(label, overflow: TextOverflow.ellipsis),
+                ]
+              : null,
+        ),
+        child: SizedBox(
+          height: NbSize.button,
+          width: double.infinity,
+          child: FilledButton(
+            onPressed: enabled ? onPressed : null,
+            style: FilledButton.styleFrom(
+              backgroundColor: colors.primary,
+              foregroundColor: colors.onPrimary,
+              disabledBackgroundColor: colors.primary.withValues(alpha: 0.4),
+              disabledForegroundColor: colors.onPrimary,
+              shape: const StadiumBorder(),
+              textStyle: NbType.button,
+            ),
+            child: loading
+                ? SizedBox.square(
+                    dimension: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: colors.onPrimary,
                     ),
-                    const SizedBox(width: NbSpace.sm),
-                    const Icon(Icons.north_east, size: 20),
-                  ],
-                ),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: Text(label, overflow: TextOverflow.ellipsis),
+                      ),
+                      const SizedBox(width: NbSpace.sm),
+                      const Icon(Icons.north_east, size: 20),
+                    ],
+                  ),
+          ),
         ),
       ),
     );

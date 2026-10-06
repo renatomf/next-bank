@@ -61,7 +61,7 @@ class NbTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: NbType.caption.copyWith(color: colors.textMuted)),
+        Text(label, style: NbType.bodyText.copyWith(color: colors.textMuted)),
         const SizedBox(height: NbSpace.sm),
         TextField(
           controller: controller,
