@@ -12,6 +12,7 @@ const app = buildApp({
       encryptionKey: config.pii.encryptionKey,
       hmacKey: config.pii.hmacKey,
     },
+    pinPepper: config.pinPepper,
   },
 });
 

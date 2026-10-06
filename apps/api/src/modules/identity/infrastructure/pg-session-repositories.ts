@@ -18,11 +18,32 @@ interface SessionRow {
   revoked_reason: RevokedReason | null;
 }
 
+function toSessionState(row: SessionRow | undefined): SessionState | null {
+  return row
+    ? {
+        id: row.id,
+        userId: row.user_id,
+        deviceLabel: row.device_label,
+        createdAt: row.created_at,
+        lastUsedAt: row.last_used_at,
+        idleExpiresAt: row.idle_expires_at,
+        absoluteExpiresAt: row.absolute_expires_at,
+        revokedAt: row.revoked_at,
+        revokedReason: row.revoked_reason,
+      }
+    : null;
+}
+
 export class PgSessionsRepository implements SessionsRepository {
   /** Served by sessions_pkey; the row stays locked until the transaction ends. */
   static readonly LOCK_SQL = `SELECT id, user_id, device_label, created_at, last_used_at,
       idle_expires_at, absolute_expires_at, revoked_at, revoked_reason
     FROM identity.sessions WHERE id = $1 FOR UPDATE`;
+
+  /** Served by sessions_pkey; a plain read that takes no lock. */
+  static readonly FIND_SQL = `SELECT id, user_id, device_label, created_at, last_used_at,
+      idle_expires_at, absolute_expires_at, revoked_at, revoked_reason
+    FROM identity.sessions WHERE id = $1`;
 
   readonly #client: pg.ClientBase;
 
@@ -50,22 +71,14 @@ export class PgSessionsRepository implements SessionsRepository {
     );
   }
 
+  async findById(id: string): Promise<SessionState | null> {
+    const { rows } = await this.#client.query<SessionRow>(PgSessionsRepository.FIND_SQL, [id]);
+    return toSessionState(rows[0]);
+  }
+
   async lockById(id: string): Promise<SessionState | null> {
     const { rows } = await this.#client.query<SessionRow>(PgSessionsRepository.LOCK_SQL, [id]);
-    const row = rows[0];
-    return row
-      ? {
-          id: row.id,
-          userId: row.user_id,
-          deviceLabel: row.device_label,
-          createdAt: row.created_at,
-          lastUsedAt: row.last_used_at,
-          idleExpiresAt: row.idle_expires_at,
-          absoluteExpiresAt: row.absolute_expires_at,
-          revokedAt: row.revoked_at,
-          revokedReason: row.revoked_reason,
-        }
-      : null;
+    return toSessionState(rows[0]);
   }
 
   /** Only what a session can change: its use, its expiration and its revocation. */

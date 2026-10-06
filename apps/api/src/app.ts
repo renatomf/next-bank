@@ -20,6 +20,7 @@ import {
   createIdentityModule,
   loginRoutes,
   registerAuthentication,
+  pinRoutes,
   sessionRoutes,
 } from './modules/identity/index.ts';
 import { healthRoutes } from './shared/http/health.ts';
@@ -38,7 +39,7 @@ export interface AppDependencies {
   /** Log destination; defaults to stdout. */
   logStream?: LogDestination;
   /** Signing and CPF keys: required, there is no insecure default. */
-  security: { accessTokenKeys: AccessTokenKeys; cpfKeys: CpfKeys };
+  security: { accessTokenKeys: AccessTokenKeys; cpfKeys: CpfKeys; pinPepper: Uint8Array };
 }
 
 // Per client IP (API-02). In memory: one instance in V1 (plan D3). Behind the
@@ -115,9 +116,10 @@ export function buildApp({ pool, logStream, security }: AppDependencies) {
     ids: new UuidV7Generator(),
     accessTokenKeys: security.accessTokenKeys,
     cpfKeys: security.cpfKeys,
+    pinPepper: security.pinPepper,
   });
   // Before any route: every route requires a token unless declared public.
-  registerAuthentication(app, identity.accessTokenVerifier, clock);
+  registerAuthentication(app, identity.accessTokenVerifier, identity.activeSessions, clock);
 
   void app.register(healthRoutes, { pool });
   const registerCustomer = new RegisterCustomer({ unitOfWork, identity: identity.registration });
@@ -127,6 +129,7 @@ export function buildApp({ pool, logStream, security }: AppDependencies) {
     refreshSession: identity.refreshSession,
     logout: identity.logout,
   });
+  void app.register(pinRoutes, { createPin: identity.createPin });
 
   return app;
 }

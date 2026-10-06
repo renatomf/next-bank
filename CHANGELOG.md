@@ -23,6 +23,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Rota `POST /v1/auth/register`: cadastro com tokens na resposta (só os 4 campos necessários), limite de 3 tentativas por IP por hora, schema estrito e erros do catálogo; contrato OpenAPI e cliente Dart atualizados
 - Login (`POST /v1/auth/login`): sessão nova a cada login, bloqueio progressivo por conta (1 a 15 min) e 10 tentativas por IP por minuto, mesma resposta e uma verificação Argon2id para e-mail inexistente, senha errada e conta bloqueada (hash fictício), e `LOGIN_FAILED` gravado na auditoria
 - Refresh (`POST /v1/auth/refresh`) com rotação, janela de 10 s e revogação da sessão no reuso, sob lock da sessão e com um só token ativo por sessão garantido no banco; logout (`POST /v1/auth/logout`) idempotente; autenticação negando por padrão (rotas só públicas quando declaradas)
+- Criação do PIN de transação (`POST /v1/me/pin`): uma vez só (`PinAlreadyCreated`), hash Argon2id com pepper do servidor contra quebra a partir de um dump (API-13, `PIN_PEPPER`), e verificação no banco de que a sessão segue ativa nas operações sensíveis (AUTH-04)
 
 ### Adicionado — Semana 2: esqueleto ponta a ponta
 - Postgres 17 local (Docker Compose) com papéis de menor privilégio (`nextbank_migrator`, `nextbank_app`) e timeouts no papel da aplicação

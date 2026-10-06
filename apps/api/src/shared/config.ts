@@ -47,12 +47,21 @@ const schema = z
     PII_ENCRYPTION_KEY: key32,
     PII_HMAC_KEY: key32,
     PII_KEY_VERSION: z.coerce.number().int().min(1).default(1),
+    // Server-side key mixed into the PIN hash (threat model API-13).
+    PIN_PEPPER: key32,
   })
   .refine((env) => env.PII_HMAC_KEY !== env.PII_ENCRYPTION_KEY, {
     // One key for two purposes would let a weakness in one use expose the other.
     message: 'must differ from PII_ENCRYPTION_KEY',
     path: ['PII_HMAC_KEY'],
-  });
+  })
+  .refine(
+    (env) => env.PIN_PEPPER !== env.PII_ENCRYPTION_KEY && env.PIN_PEPPER !== env.PII_HMAC_KEY,
+    {
+      message: 'must differ from the CPF keys',
+      path: ['PIN_PEPPER'],
+    },
+  );
 
 export interface Config {
   databaseUrl: string;
@@ -60,6 +69,7 @@ export interface Config {
   host: string;
   jwt: { privateKey: KeyObject; keyId: string };
   pii: { encryptionKey: Buffer; hmacKey: Buffer; keyVersion: number };
+  pinPepper: Buffer;
 }
 
 /** Validates the environment at boot. Error messages never include the received values. */
@@ -86,6 +96,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
       hmacKey: required(decodeBase64(data.PII_HMAC_KEY)),
       keyVersion: data.PII_KEY_VERSION,
     },
+    pinPepper: required(decodeBase64(data.PIN_PEPPER)),
   };
 }
 

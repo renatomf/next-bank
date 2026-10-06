@@ -44,9 +44,11 @@ export function captureLogs(): {
 export function testSecurity(): {
   accessTokenKeys: { privateKey: KeyObject; keyId: string };
   cpfKeys: { keyVersion: number; encryptionKey: Buffer; hmacKey: Buffer };
+  pinPepper: Buffer;
 } {
   return {
     accessTokenKeys: { privateKey: generateKeyPairSync('ed25519').privateKey, keyId: 'test-key' },
     cpfKeys: { keyVersion: 1, encryptionKey: randomBytes(32), hmacKey: randomBytes(32) },
+    pinPepper: randomBytes(32),
   };
 }

@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { Clock } from '../../../shared/application/ports.ts';
 import type { AccessTokenVerifier } from '../application/ports.ts';
-import { Unauthenticated } from '../domain/errors.ts';
+import { SessionExpired, Unauthenticated } from '../domain/errors.ts';
 
 export interface AuthenticatedCaller {
   userId: string;
@@ -12,6 +12,8 @@ declare module 'fastify' {
   interface FastifyContextConfig {
     /** A route is protected unless it declares itself public (deny by default). */
     public?: boolean;
+    /** Sensitive operation: the session must still be active in the database (AUTH-04). */
+    activeSession?: boolean;
   }
   interface FastifyRequest {
     /** Set only after the access token was verified; null on public routes. */
@@ -29,6 +31,7 @@ const BEARER = /^Bearer ([A-Za-z0-9._-]+)$/;
 export function registerAuthentication(
   app: FastifyInstance,
   verifier: AccessTokenVerifier,
+  sessions: { isActive(sessionId: string, now: Date): Promise<boolean> },
   clock: Clock,
 ): void {
   app.decorateRequest('auth', null);
@@ -40,7 +43,15 @@ export function registerAuthentication(
     void reply.header('www-authenticate', 'Bearer');
     const token = BEARER.exec(request.headers.authorization ?? '')?.[1];
     if (token === undefined) throw new Unauthenticated();
-    request.auth = await verifier.verify(token, clock.now());
+    const now = clock.now();
+    const caller = await verifier.verify(token, now);
+    if (
+      request.routeOptions.config.activeSession === true &&
+      !(await sessions.isActive(caller.sessionId, now))
+    ) {
+      throw new SessionExpired();
+    }
+    request.auth = caller;
     reply.removeHeader('www-authenticate');
   });
 }

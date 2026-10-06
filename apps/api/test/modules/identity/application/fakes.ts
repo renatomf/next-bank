@@ -18,7 +18,9 @@ import type {
 } from '../../../../src/modules/identity/application/ports.ts';
 import { Cpf } from '../../../../src/modules/identity/domain/cpf.ts';
 import type { LoginAttemptsState } from '../../../../src/modules/identity/domain/login-attempts.ts';
+import { PinAlreadyCreated } from '../../../../src/modules/identity/domain/errors.ts';
 import type { SessionState } from '../../../../src/modules/identity/domain/session.ts';
+import type { TransactionPinState } from '../../../../src/modules/identity/domain/transaction-pin.ts';
 import type { UserState } from '../../../../src/modules/identity/domain/user.ts';
 
 export class FixedClock implements Clock {
@@ -110,6 +112,7 @@ interface Tables {
   refreshTokens: StoredRefreshToken[];
   /** Token id -> when and by which token it was replaced (rotation). */
   replacements: Map<string, { replacedAt: Date; replacedById: string }>;
+  transactionPins: TransactionPinState[];
   auditEvents: AuditEvent[];
 }
 
@@ -130,6 +133,7 @@ export class InMemoryDatabase implements UnitOfWork, IdentityRepositoriesFactory
   sessions: SessionState[] = [];
   refreshTokens: StoredRefreshToken[] = [];
   replacements = new Map<string, { replacedAt: Date; replacedById: string }>();
+  transactionPins: TransactionPinState[] = [];
   auditEvents: AuditEvent[] = [];
   /** How many transactions were opened. */
   runs = 0;
@@ -143,6 +147,7 @@ export class InMemoryDatabase implements UnitOfWork, IdentityRepositoriesFactory
       sessions: [...this.sessions],
       refreshTokens: [...this.refreshTokens],
       replacements: new Map(this.replacements),
+      transactionPins: [...this.transactionPins],
       auditEvents: [...this.auditEvents],
     });
     const result = await work(tx);
@@ -185,6 +190,10 @@ export class InMemoryDatabase implements UnitOfWork, IdentityRepositoriesFactory
           tables.sessions.push(session);
           return Promise.resolve();
         },
+        findById: (id) => {
+          const found = tables.sessions.find((session) => session.id === id);
+          return Promise.resolve(found ? { ...found } : null);
+        },
         lockById: (id) => {
           const found = tables.sessions.find((session) => session.id === id);
           return Promise.resolve(found ? { ...found } : null);
@@ -225,6 +234,16 @@ export class InMemoryDatabase implements UnitOfWork, IdentityRepositoriesFactory
         },
         markReplaced: (id, replacedById, replacedAt) => {
           tables.replacements.set(id, { replacedAt, replacedById });
+          return Promise.resolve();
+        },
+      },
+      transactionPins: {
+        insert: (pin) => {
+          // Same rule as the primary key on user_id.
+          if (tables.transactionPins.some((existing) => existing.userId === pin.userId)) {
+            return Promise.reject(new PinAlreadyCreated());
+          }
+          tables.transactionPins.push(pin);
           return Promise.resolve();
         },
       },

@@ -15,6 +15,7 @@ const app = buildApp({
   security: {
     accessTokenKeys: { privateKey: generateKeyPairSync('ed25519').privateKey, keyId: 'contract' },
     cpfKeys: { keyVersion: 1, encryptionKey: randomBytes(32), hmacKey: randomBytes(32) },
+    pinPepper: randomBytes(32),
   },
 });
 const document = await buildOpenApiDocument(app);

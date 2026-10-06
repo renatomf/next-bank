@@ -136,6 +136,7 @@ Legenda STRIDE: **S** falsificação de identidade · **T** adulteração · **R
 | API-10 | Injeção em logs | T | A2 | Logs estruturados em JSON (o valor nunca vira linha nova) | Campo com `\n` não quebra o log | 2 |
 | API-11 | Papel da aplicação com privilégio excessivo no provedor (ex.: papel criado pelo painel do Neon entra no `neon_superuser`, com `pg_write_all_data`, e ignora os `GRANT`s) | E | A1, A2, A5 | `nextbank_app` criado via SQL, sem atributos especiais (`SUPERUSER`, `CREATEROLE`, `CREATEDB`, `REPLICATION`, `BYPASSRLS`) e sem associação a outros papéis | Teste lê `pg_roles` e `pg_auth_members` no ambiente e falha com qualquer atributo ou associação | 2 |
 | API-12 | Transação travada segurando o lock de um saldo (API presa no meio da transação ou query lenta) | D | A1, A2 | `statement_timeout = 5s`, `lock_timeout = 3s` e `idle_in_transaction_session_timeout = 10s` no papel da aplicação | Teste lê as configurações efetivas do papel; transação ociosa é encerrada pelo banco | 2 |
+| API-13 | Descobrir os PINs a partir de um dump do banco: com só 10 mil combinações, testar todas contra o hash Argon2id leva minutos por cliente, sem passar pelos bloqueios da API | I | A5 | Hash do PIN com **pepper** (chave secreta do servidor, `PIN_PEPPER`, 32 bytes, diferente das chaves do CPF, validada na inicialização); sem a chave, o dump não basta | Hash calculado sem o pepper ou com outro pepper não confere; configuração recusa pepper ausente, curto ou repetido | 3 |
 
 ### 5.6 Demo pública
 

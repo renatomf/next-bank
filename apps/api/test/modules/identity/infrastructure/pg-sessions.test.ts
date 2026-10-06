@@ -1,10 +1,12 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import type pg from 'pg';
 import { afterAll, describe, expect, it } from 'vitest';
+import { PinAlreadyCreated } from '../../../../src/modules/identity/domain/errors.ts';
 import {
   PgRefreshTokensRepository,
   PgSessionsRepository,
 } from '../../../../src/modules/identity/infrastructure/pg-session-repositories.ts';
+import { PgTransactionPinsRepository } from '../../../../src/modules/identity/infrastructure/pg-transaction-pins-repository.ts';
 import { createPool } from '../../../../src/shared/db.ts';
 import { testDatabaseUrl } from '../../../helpers.ts';
 import { uniqueEmail } from '../fixtures.ts';
@@ -172,5 +174,66 @@ describe('PgSessionsRepository', () => {
 
   it('locks by primary key', async () => {
     expect(await planOf(PgSessionsRepository.LOCK_SQL, [randomUUID()])).toContain('sessions_pkey');
+  });
+});
+
+describe('PgSessionsRepository.findById (active session check, AUTH-04)', () => {
+  it('reads a session without locking it', async () => {
+    const { sessionId } = await seed();
+    const holder = await pool.connect();
+    try {
+      await holder.query('BEGIN');
+      await new PgSessionsRepository(holder).lockById(sessionId);
+
+      // Answers even while another transaction holds the lock.
+      const state = await inTransaction((c) => new PgSessionsRepository(c).findById(sessionId));
+      expect(state?.id).toBe(sessionId);
+    } finally {
+      await holder.query('ROLLBACK');
+      holder.release();
+    }
+  });
+});
+
+describe('PgTransactionPinsRepository', () => {
+  async function userOf(sessionId: string): Promise<string> {
+    const { rows } = await pool.query<{ user_id: string }>(
+      'SELECT user_id FROM identity.sessions WHERE id = $1',
+      [sessionId],
+    );
+    return rows[0]?.user_id ?? '';
+  }
+
+  function pinOf(userId: string) {
+    return {
+      userId,
+      pinHash: '$argon2id$fake',
+      failedAttempts: 0,
+      lockedUntil: null,
+      recentLocks: [],
+      resetRequired: false,
+      updatedAt: NOW,
+    };
+  }
+
+  it('stores a new PIN', async () => {
+    const userId = await userOf((await seed()).sessionId);
+
+    await inTransaction((c) => new PgTransactionPinsRepository(c).insert(pinOf(userId)));
+
+    const { rows } = await pool.query<{ pin_hash: string; failed_attempts: number }>(
+      'SELECT pin_hash, failed_attempts FROM identity.transaction_pins WHERE user_id = $1',
+      [userId],
+    );
+    expect(rows).toEqual([{ pin_hash: '$argon2id$fake', failed_attempts: 0 }]);
+  });
+
+  it('turns a second PIN for the same user into PinAlreadyCreated', async () => {
+    const userId = await userOf((await seed()).sessionId);
+    await inTransaction((c) => new PgTransactionPinsRepository(c).insert(pinOf(userId)));
+
+    await expect(
+      inTransaction((c) => new PgTransactionPinsRepository(c).insert(pinOf(userId))),
+    ).rejects.toThrow(PinAlreadyCreated);
   });
 });
