@@ -101,14 +101,14 @@ O projeto é tratado como um **banco real em produção**. Nenhum padrão abaixo
 - **Uma branch por tarefa ou fatia**, de vida curta (até ~3 dias), criada a partir da `main` atualizada.
 - **Nome da branch:** `<tipo>/<descricao-curta>` em kebab-case. Ex.: `feat/pix-authorize`, `docs/database-design`, `fix/refresh-token-race`.
 - **Tipos** (branches e commits): `feat`, `fix`, `test`, `refactor`, `perf`, `security`, `docs`, `chore`, `ci`, `build`.
-- **Commits (Conventional Commits, em pt-BR):**
-  - Título: `tipo(escopo): resumo no imperativo`, até 72 caracteres. Ex.: `feat(payments): autoriza Pix com verificação de PIN`
+- **Commits (Conventional Commits, em inglês):**
+  - Título: `tipo(escopo): resumo no imperativo`, até 72 caracteres. Ex.: `feat(payments): authorize Pix with PIN check`
   - Escopos: `api`, `mobile`, `backoffice`, `contracts`, `design-system`, `identity`, `accounts`, `ledger`, `payments`, `audit`, `infra`, `ci`, `docs`, `security`
   - Corpo (quando não for trivial): **o porquê** da mudança, não só o quê.
   - Commits atômicos: uma mudança lógica por commit; nada de "ajustes diversos".
   - TDD: o commit `test:` (vermelho) pode vir antes do `feat:` dentro da branch; o PR só é mergeado com tudo verde.
 - **Pull Requests:**
-  - Título no mesmo padrão dos commits.
+  - Título no mesmo padrão dos commits; título e descrição em inglês.
   - Descrição: contexto, o que mudou, como testar, riscos/segurança e o checklist da Definition of Done.
   - Merge com **merge commit** (`--no-ff`), preservando a sequência de commits (inclusive o ciclo TDD).
 - **Nunca** `push --force` na `main`; nunca reescrever histórico já publicado.
