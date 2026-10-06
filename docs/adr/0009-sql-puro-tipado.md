@@ -12,29 +12,54 @@ O acesso a dados do next bank não é CRUD comum. O caso mais crítico, postar u
 1. **Prisma** — o ORM mais popular, ótima experiência no dia a dia; mas abstrai o SQL a ponto de locks e triggers exigirem SQL puro com frequência. É o menos adequado para um ledger.
 2. **Drizzle** — API próxima do SQL e boa tipagem; mas a versão 1.0 ainda está em beta, a linha 0.x muda com frequência, e o principal ganho (gerar migrations a partir do schema em TypeScript) seria pouco usado, já que as migrations críticas são escritas à mão.
 3. **Kysely** — construtor de SQL estável e bem tipado; mas o SQL é montado em TypeScript, uma camada a mais entre o revisor e o que roda no banco.
-4. **SQL puro tipado** — queries em SQL, executadas pelo driver `pg`, com tipos gerados a partir do banco real.
+4. **SQL puro tipado** — queries em SQL, executadas pelo driver `pg`, com tipos das linhas escritos à mão e verificados por testes de integração contra o banco real.
 
 ## Decisão
 
 **Opção 4.**
 
 - **Driver:** `pg` (node-postgres). Transações, locks e savepoints em SQL explícito.
-- **Tipagem:** **pgTyped**. Lê as queries e o schema do banco real e gera os tipos TypeScript de parâmetros e resultados. Uma query incompatível com o schema **quebra o build**. No CI, a geração roda contra um Postgres criado do zero pelas migrations.
+- **Tipagem:** tipos das linhas **escritos à mão** ao lado de cada query, no formato exato que o `pg` devolve (`bigint` chega como `string`), e convertidos para o domínio no repositório. Uma query incompatível com o schema **quebra o teste de integração**, que roda no CI contra um Postgres criado do zero pelas migrations. (Decisão revista após o spike; ver "Resultado do spike".)
 - **Migrations:** **dbmate**, com arquivos `.sql` puros, numerados, revisados à mão e só para frente. Executadas pelo papel `nextbank_migrator`, nunca pela API.
 - **Segurança:** só parâmetros (`$1`, `$2`…), nunca concatenação; uma regra do Semgrep no CI bloqueia SQL montado com interpolação de strings (ameaça API-01).
 - **Isolamento:** todo SQL fica na camada `infrastructure/` de cada módulo, atrás das portas dos repositórios. O domínio não sabe que existe SQL.
 
-Um spike curto no início da semana 2 valida a cadeia de ferramentas (pgTyped + dbmate + Neon) com o caso do ledger. Se pgTyped não atender, o plano B é **Kysely**, trocando só a camada de infraestrutura.
+## Resultado do spike (2026-10-06)
+
+Validado no Postgres 17 local (Docker), com o caso do ledger:
+
+| Critério | Resultado |
+|---|---|
+| Papéis `nextbank_migrator` (dono do banco) e `nextbank_app`, sem superusuário | ✅ |
+| Lançamento desbalanceado rejeitado no `COMMIT` (constraint trigger diferida) | ✅ |
+| `UPDATE`, `DELETE`, `TRUNCATE` e DDL negados ao `nextbank_app` | ✅ |
+| Trigger de imutabilidade barra alteração até pelo dono do schema | ✅ |
+| `SELECT … ORDER BY id FOR UPDATE` | ✅ |
+| dbmate aplica e reverte migrations como `nextbank_migrator` | ✅ |
+| Mesmo comportamento no Neon | ⏳ pendente |
+| pgTyped gera tipos confiáveis | ❌ |
+
+**pgTyped descartado:**
+- sem release desde março de 2025 e sem commits no código desde agosto de 2025 (o CLAUDE.md exige manutenção ativa);
+- aceita só TypeScript ≤ 5: a instalação com o TypeScript atual é recusada, o que prenderia o projeto numa versão antiga;
+- tipos gerados fracos: `bigint` vira `string`, centavos viram `NumberOrString`, colunas com `CHECK` viram `string` em vez de união, e o código gerado tem `any`. O mapeamento manual seria necessário de qualquer forma.
+
+**Alternativas avaliadas:** Kysely (SQL montado em TypeScript, contra o motivo central deste ADR), Drizzle (1.0 ainda em *release candidate*), sqlc (ferramenta em Go com plugin TypeScript imaturo), Slonik (camada extra de validação em tempo de execução). Escolhidos os tipos escritos à mão: nenhuma dependência a mais, e os testes de integração contra Postgres real já são obrigatórios.
+
+**Reavaliar quando:** a divergência entre SQL e tipos virar problema real. Primeira opção: SafeQL (plugin do ESLint que confere o SQL contra o banco), sem mudar os repositórios.
+
+**Observação:** o `schema.sql` do dbmate exige `pg_dump`; por ora as migrations rodam com `--no-dump-schema`.
 
 ## Consequências
 
 - ➕ O revisor lê exatamente o SQL que roda; `EXPLAIN ANALYZE` corresponde ao código
 - ➕ Locks, CTEs, triggers e `GRANT`s sem contorno nem abstração no meio
-- ➕ Tipagem vinda do banco real, não de uma descrição paralela do schema
-- ➕ Menos dependências e nenhuma em beta (menor superfície de cadeia de suprimentos)
+- ➕ Tipos de domínio precisos (uniões, `Money`), sem código gerado nem `any`
+- ➕ Só o driver `pg` e o dbmate: nenhuma dependência em beta ou sem manutenção
 - ➖ Mais código de mapeamento entre linhas do banco e objetos de domínio
 - ➖ Consultas dinâmicas (filtros do extrato) exigem cuidado para não concatenar SQL
-- ➖ A geração de tipos depende de um banco rodando no CI e em desenvolvimento
+- ➖ Divergência entre query e tipo aparece no teste de integração, não na compilação
+- ➖ Os testes de integração dependem de um Postgres rodando no CI e em desenvolvimento
 - ➖ Menos produtivo que um ORM para operações simples
 
 ## Referências
