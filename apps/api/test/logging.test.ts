@@ -13,6 +13,9 @@ const SECRETS = {
   accessToken: 'fake-access-token',
   refreshToken: 'fake-refresh-token',
   token: 'fake-token',
+  // Personal data never goes to logs either (database.md, section 2; F-13).
+  email: 'fake-person@example.test',
+  name: 'Fake Person Name',
 };
 
 describe('logs', () => {
