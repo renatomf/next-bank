@@ -1,6 +1,8 @@
 // Public API of the identity context: other modules and the application layer
 // use only what is exported here (ADR 0002, ADR 0010).
 import type { Clock, IdGenerator, UnitOfWork } from '../../shared/application/ports.ts';
+import { ActiveSessions } from './application/active-sessions.ts';
+import { CreatePin } from './application/create-pin.ts';
 import { Login } from './application/login.ts';
 import { Logout } from './application/logout.ts';
 import type { AccessTokenVerifier } from './application/ports.ts';
@@ -17,6 +19,7 @@ import { RandomRefreshTokens } from './infrastructure/random-refresh-tokens.ts';
 export { AuthTokensSchema, authTokensBody } from './http/auth-tokens.ts';
 export { registerAuthentication } from './http/authentication.ts';
 export { loginRoutes } from './http/login-route.ts';
+export { pinRoutes } from './http/pin-route.ts';
 export { sessionRoutes } from './http/session-routes.ts';
 export type { CpfKeys } from './infrastructure/aes-gcm-cpf-protector.ts';
 export type { AccessTokenKeys } from './infrastructure/jose-access-tokens.ts';
@@ -38,6 +41,8 @@ export interface IdentityModule {
   refreshSession: RefreshSession;
   logout: Logout;
   accessTokenVerifier: AccessTokenVerifier;
+  activeSessions: ActiveSessions;
+  createPin: CreatePin;
 }
 
 export interface IdentitySettings {
@@ -46,6 +51,8 @@ export interface IdentitySettings {
   ids: IdGenerator;
   accessTokenKeys: AccessTokenKeys;
   cpfKeys: CpfKeys;
+  /** Server-side key mixed into PIN hashes (API-13). */
+  pinPepper: Uint8Array;
 }
 
 /** Builds the identity context with its production adapters. */
@@ -90,5 +97,13 @@ export function createIdentityModule(settings: IdentitySettings): IdentityModule
       ids: settings.ids,
     }),
     accessTokenVerifier: accessTokens,
+    activeSessions: new ActiveSessions({ unitOfWork: settings.unitOfWork, repositories }),
+    createPin: new CreatePin({
+      unitOfWork: settings.unitOfWork,
+      repositories,
+      clock: settings.clock,
+      ids: settings.ids,
+      pinHasher: new Argon2idHasher({ pepper: settings.pinPepper }),
+    }),
   };
 }

@@ -2,6 +2,7 @@ import type { AuditTrail, Transaction } from '../../../shared/application/ports.
 import type { Cpf } from '../domain/cpf.ts';
 import type { IssuedRefreshToken, SessionState } from '../domain/session.ts';
 import type { LoginAttemptsState } from '../domain/login-attempts.ts';
+import type { TransactionPinState } from '../domain/transaction-pin.ts';
 import type { UserState, UserStatus } from '../domain/user.ts';
 
 /** One-way hashing for passwords and PINs. The secret itself is never stored. */
@@ -81,6 +82,8 @@ export interface UsersRepository {
 
 export interface SessionsRepository {
   insert(session: SessionState): Promise<void>;
+  /** Plain read, no lock: for checking that a session is still active (AUTH-04). */
+  findById(id: string): Promise<SessionState | null>;
   /**
    * Reads the session and locks it until the transaction ends, so refreshes and
    * logouts of one session run one at a time.
@@ -98,10 +101,16 @@ export interface RefreshTokensRepository {
 }
 
 /** The identity repositories and the audit trail, all bound to one transaction. */
+export interface TransactionPinsRepository {
+  /** Fails with PinAlreadyCreated when the user already has a PIN. */
+  insert(pin: TransactionPinState): Promise<void>;
+}
+
 export interface IdentityRepositories {
   users: UsersRepository;
   sessions: SessionsRepository;
   refreshTokens: RefreshTokensRepository;
+  transactionPins: TransactionPinsRepository;
   audit: AuditTrail;
 }
 

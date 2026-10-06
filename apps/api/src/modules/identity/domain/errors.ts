@@ -93,3 +93,12 @@ export class RefreshTokenReuseDetected extends DomainError {
     super('A replaced refresh token was presented; the session was revoked');
   }
 }
+
+/** The PIN is created once; changing it requires the password (threat model D7). */
+export class PinAlreadyCreated extends DomainError {
+  readonly code = 'PinAlreadyCreated';
+
+  constructor() {
+    super('Transaction PIN already created');
+  }
+}

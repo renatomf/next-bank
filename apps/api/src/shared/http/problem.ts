@@ -38,6 +38,7 @@ const CATALOG_STATUS: Readonly<Record<string, number>> = {
   TooManyAttempts: 429,
   PinLocked: 423,
   PinResetRequired: 423,
+  PinAlreadyCreated: 409,
 };
 
 /** Generic RFC 9457 response: never carries stack, SQL or internal detail (API-03). */

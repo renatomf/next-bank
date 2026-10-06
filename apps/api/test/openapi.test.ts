@@ -50,6 +50,7 @@ describe('OpenAPI document', () => {
   it('keeps only referenced schemas, without input duplicates', () => {
     expect(Object.keys(document.components.schemas).sort()).toEqual([
       'AuthTokens',
+      'CreatePinRequestInput',
       'Health',
       'LoginRequestInput',
       'Problem',
@@ -66,6 +67,8 @@ describe('OpenAPI document', () => {
     expect(document.paths['/v1/auth/logout']?.post?.operationId).toBe('logout');
     expect(document.paths['/v1/auth/refresh']?.post?.operationId).toBe('refreshSession');
     expect(document.paths['/v1/auth/refresh']?.post?.security).toBeUndefined();
+    expect(document.paths['/v1/me/pin']?.post?.operationId).toBe('createPin');
+    expect(document.paths['/v1/me/pin']?.post?.security).toEqual([{ bearerAuth: [] }]);
   });
 
   it('describes POST /v1/auth/login with the shared token answer', () => {

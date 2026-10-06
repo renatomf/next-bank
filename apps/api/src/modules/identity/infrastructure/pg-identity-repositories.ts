@@ -3,6 +3,7 @@ import { pgClientOf } from '../../../shared/infrastructure/pg-unit-of-work.ts';
 import { PgAuditTrail } from '../../audit/index.ts';
 import type { IdentityRepositories, IdentityRepositoriesFactory } from '../application/ports.ts';
 import { PgRefreshTokensRepository, PgSessionsRepository } from './pg-session-repositories.ts';
+import { PgTransactionPinsRepository } from './pg-transaction-pins-repository.ts';
 import { PgUsersRepository } from './pg-users-repository.ts';
 
 /** All identity repositories and the audit trail on the connection of the shared transaction. */
@@ -13,6 +14,7 @@ export class PgIdentityRepositories implements IdentityRepositoriesFactory {
       users: new PgUsersRepository(client),
       sessions: new PgSessionsRepository(client),
       refreshTokens: new PgRefreshTokensRepository(client),
+      transactionPins: new PgTransactionPinsRepository(client),
       audit: new PgAuditTrail(client),
     };
   }
