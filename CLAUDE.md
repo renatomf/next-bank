@@ -15,6 +15,8 @@ O projeto é tratado como um **banco real em produção**. Nenhum padrão abaixo
 
 **Simplicidade:** nenhuma estrutura, dependência ou configuração entra antes de existir código que precise dela. Na dúvida, a solução mais simples; o projeto evolui conforme a necessidade.
 
+**Legibilidade:** código escrito para humanos lerem: nomes que dizem o que a coisa é, funções curtas e diretas, comentários que explicam o porquê (não o quê). Sem abstração especulativa: uma interface ou camada só existe quando separa responsabilidades reais.
+
 ### 1. Segurança (prioridade máxima)
 
 - **Security by design:** toda feature começa revisando o threat model (`docs/security/threat-model.md`). Ameaça nova vira uma linha no threat model **e** um teste.
@@ -40,8 +42,10 @@ O projeto é tratado como um **banco real em produção**. Nenhum padrão abaixo
 
 ### 3. Arquitetura
 
-- Fronteiras hexagonais e regras de import verificadas no CI (dependency-cruiser no TS, lint de imports no Dart). Violação quebra o build.
+- Fronteiras hexagonais e regras de import verificadas no CI (dependency-cruiser no TS; teste de arquitetura no Dart, `apps/mobile/test/architecture_test.dart`). Violação quebra o build.
+- **App (Clean Architecture por feature):** `domain/` é Dart puro (entidades e interfaces de repositório); `data/` implementa as interfaces; `presentation/` (providers e widgets) depende só do domínio. Features não importam outras features. A raiz de composição (`main.dart`) é o único lugar que liga interfaces a implementações.
 - Domínio sem dependência de framework.
+- **Princípios de design:** Clean Architecture, DDD (linguagem ubíqua, agregados que protegem as próprias invariantes, contextos delimitados por módulo) e SOLID, aplicados com pragmatismo: cada princípio resolve um problema concreto do código, nunca vira cerimônia.
 - Toda decisão relevante vira ADR (`docs/adr/`), com alternativas e consequências negativas.
 - Atalho "temporário" só com issue aberta e prazo.
 

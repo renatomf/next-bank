@@ -1,12 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:next_bank/core/api_client.dart';
-import 'package:next_bank/features/home/data/http_api_status_repository.dart';
 import 'package:next_bank/features/home/domain/api_status.dart';
 
-/// Composition point: widgets depend on the domain interface,
-/// never on the data layer.
+/// Repository behind the API status.
+/// Bound to its implementation by the composition root (`main.dart`);
+/// tests override it with a fake.
 final Provider<ApiStatusRepository> apiStatusRepositoryProvider = Provider(
-  (ref) => HttpApiStatusRepository(ref.watch(apiProvider).getDefaultApi()),
+  (ref) => throw UnimplementedError('Bound in main.dart'),
 );
 
 /// Current API status; invalidate it to check again.
