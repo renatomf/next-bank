@@ -18,7 +18,7 @@ export const healthRoutes: FastifyPluginAsyncZod<{ pool: pg.Pool }> = (app, { po
         await pool.query('SELECT 1');
         return { status: 'ok' as const };
       } catch (err) {
-        request.log.error({ err }, 'banco indisponível');
+        request.log.error({ err }, 'database unavailable');
         return reply.status(503).type(PROBLEM_CONTENT_TYPE).send(problem(503));
       }
     },

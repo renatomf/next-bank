@@ -2,8 +2,8 @@ import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { testDatabaseUrl } from './helpers.ts';
 
-// O papel da API precisa de menor privilégio real (API-07, API-11, API-12, T-DB-13).
-describe('papel nextbank_app', () => {
+// The API role must have real least privilege (API-07, API-11, API-12, T-DB-13).
+describe('nextbank_app role', () => {
   const client = new pg.Client({ connectionString: testDatabaseUrl() });
 
   beforeAll(async () => {
@@ -13,12 +13,12 @@ describe('papel nextbank_app', () => {
     await client.end();
   });
 
-  it('é o papel usado pela API', async () => {
+  it('is the role used by the API', async () => {
     const { rows } = await client.query<{ current_user: string }>('SELECT current_user');
     expect(rows[0]?.current_user).toBe('nextbank_app');
   });
 
-  it('não tem atributos especiais (API-11)', async () => {
+  it('has no special attributes (API-11)', async () => {
     const { rows } = await client.query<Record<string, boolean>>(
       `SELECT rolsuper, rolcreaterole, rolcreatedb, rolreplication, rolbypassrls
        FROM pg_roles WHERE rolname = current_user`,
@@ -32,7 +32,7 @@ describe('papel nextbank_app', () => {
     });
   });
 
-  it('não é membro de nenhum outro papel (API-11)', async () => {
+  it('is not a member of any other role (API-11)', async () => {
     const { rows } = await client.query<{ roles: string[] }>(
       `SELECT coalesce(array_agg(roleid::regrole::text), '{}') AS roles
        FROM pg_auth_members WHERE member = current_user::regrole`,
@@ -40,7 +40,7 @@ describe('papel nextbank_app', () => {
     expect(rows[0]?.roles).toEqual([]);
   });
 
-  it('tem timeouts que impedem locks presos (API-12)', async () => {
+  it('has timeouts that prevent stuck locks (API-12)', async () => {
     const { rows } = await client.query<Record<string, string>>(
       `SELECT current_setting('statement_timeout') AS statement,
               current_setting('lock_timeout') AS lock,
@@ -49,7 +49,7 @@ describe('papel nextbank_app', () => {
     expect(rows[0]).toEqual({ statement: '5s', lock: '3s', idle: '10s' });
   });
 
-  it('não executa DDL (T-DB-13)', async () => {
+  it('cannot run DDL (T-DB-13)', async () => {
     await expect(client.query('CREATE TABLE public.intruder (id int)')).rejects.toThrow(
       /permission denied/,
     );

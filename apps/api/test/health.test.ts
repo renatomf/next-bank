@@ -11,7 +11,7 @@ describe('GET /health', () => {
     await app?.close();
   });
 
-  it('responde 200 quando o banco está acessível', async () => {
+  it('returns 200 when the database is reachable', async () => {
     app = buildApp({ pool: createPool(testDatabaseUrl()), logStream: captureLogs().stream });
 
     const response = await app.inject({ method: 'GET', url: '/health' });
@@ -20,7 +20,7 @@ describe('GET /health', () => {
     expect(response.json()).toEqual({ status: 'ok' });
   });
 
-  it('responde 503 sem detalhes internos quando o banco está fora', async () => {
+  it('returns 503 without internal details when the database is down', async () => {
     const logs = captureLogs();
     app = buildApp({
       pool: createPool('postgres://nextbank_app:x@127.0.0.1:1/nextbank'),
@@ -37,7 +37,7 @@ describe('GET /health', () => {
       status: 503,
     });
     expect(response.body).not.toMatch(/ECONNREFUSED|127\.0\.0\.1|postgres/i);
-    // O detalhe fica só no log interno.
+    // The detail goes only to the internal log.
     expect(logs.raw()).toMatch(/ECONNREFUSED/);
   });
 });

@@ -1,8 +1,8 @@
 #!/bin/sh
-# Papéis de menor privilégio (database.md, seção 6). Roda só na criação do volume.
-# nextbank_migrator: dono dos bancos, aplica as migrations (DDL).
-# nextbank_app: usado pela API; recebe permissões apenas pelas migrations.
-# nextbank_test: banco dos testes de integração, com as mesmas regras.
+# Least-privilege roles (database.md, section 6). Runs only when the volume is created.
+# nextbank_migrator: owns the databases, applies migrations (DDL).
+# nextbank_app: used by the API; gets privileges only through migrations.
+# nextbank_test: integration test database, with the same rules.
 set -eu
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" \
@@ -10,7 +10,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" \
   -v app_password="$NEXTBANK_APP_PASSWORD" <<'SQL'
 CREATE ROLE nextbank_migrator LOGIN PASSWORD :'migrator_password';
 CREATE ROLE nextbank_app LOGIN PASSWORD :'app_password';
--- Nenhuma transação da API segura locks por muito tempo (API-12).
+-- No API transaction may hold locks for long (API-12).
 ALTER ROLE nextbank_app SET statement_timeout = '5s';
 ALTER ROLE nextbank_app SET lock_timeout = '3s';
 ALTER ROLE nextbank_app SET idle_in_transaction_session_timeout = '10s';

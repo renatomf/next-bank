@@ -11,7 +11,7 @@ export default tseslint.config(
       parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
     },
     rules: {
-      // Só o logger (CLAUDE.md, seção 4).
+      // Use the logger only (CLAUDE.md, section 4).
       'no-console': 'error',
     },
   },

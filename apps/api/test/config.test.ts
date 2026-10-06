@@ -7,27 +7,27 @@ const valid = {
 };
 
 describe('loadConfig', () => {
-  it('lê uma configuração válida', () => {
+  it('reads a valid configuration', () => {
     const config = loadConfig(valid);
     expect(config.databaseUrl).toBe(valid.DATABASE_URL);
     expect(config.port).toBe(3000);
     expect(config.host).toBe('127.0.0.1');
   });
 
-  it('escuta só em localhost por padrão; o deploy define HOST explicitamente', () => {
+  it('listens on localhost only by default; the deploy sets HOST explicitly', () => {
     expect(loadConfig({ DATABASE_URL: valid.DATABASE_URL }).host).toBe('127.0.0.1');
   });
 
-  it('usa a porta 3000 por padrão', () => {
+  it('uses port 3000 by default', () => {
     expect(loadConfig({ DATABASE_URL: valid.DATABASE_URL }).port).toBe(3000);
   });
 
-  it('falha nomeando a variável ausente', () => {
+  it('fails naming the missing variable', () => {
     expect(() => loadConfig({})).toThrow(ConfigError);
     expect(() => loadConfig({})).toThrow(/DATABASE_URL/);
   });
 
-  it('nunca expõe o valor recebido na mensagem de erro', () => {
+  it('never exposes the received value in the error message', () => {
     const run = () => loadConfig({ DATABASE_URL: 'not-a-url-s3cr3t-value', PORT: 'abc' });
     expect(run).toThrow(/DATABASE_URL/);
     expect(run).toThrow(/PORT/);
@@ -35,7 +35,7 @@ describe('loadConfig', () => {
     expect(run).not.toThrow(/abc/);
   });
 
-  it('recusa a URL do papel de migração (API-07)', () => {
+  it('refuses the migration role URL (API-07)', () => {
     const run = () =>
       loadConfig({ DATABASE_URL: 'postgres://nextbank_migrator:x@127.0.0.1:5432/nextbank' });
     expect(run).toThrow(/nextbank_migrator/);
