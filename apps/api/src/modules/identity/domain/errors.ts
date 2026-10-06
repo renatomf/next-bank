@@ -15,3 +15,11 @@ export class WeakPassword extends DomainError {
     super('Password does not meet the policy');
   }
 }
+
+export class SessionExpired extends DomainError {
+  readonly code = 'SessionExpired';
+
+  constructor() {
+    super('Session is expired or revoked');
+  }
+}
