@@ -8,8 +8,12 @@ environment:
   sdk: ^3.13.4
 
 dependencies:
+  dio: ^5.11.1
   flutter:
     sdk: flutter
+  flutter_riverpod: ^3.4.3
+  nextbank_api:
+    path: ../../packages/contracts/dart
 
 dev_dependencies:
   flutter_test:
