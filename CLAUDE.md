@@ -24,7 +24,7 @@ O projeto é tratado como um **banco real em produção**. Nenhum padrão abaixo
 - **Entrada:** toda entrada validada na borda (Zod no backend, validação no app); sem SQL concatenado (só queries parametrizadas, com tipos verificados por testes de integração).
 - **Autorização:** negar por padrão; todo endpoint verifica dono do recurso; **todo recurso tem teste de IDOR** (usuário A acessando dado de B → 404).
 - **Autenticação e criptografia:** só bibliotecas consolidadas (argon2, jose); nunca criptografia caseira; comparação de segredos em tempo constante.
-- **Segredos:** só em variáveis de ambiente / secret store; nunca em código, teste, log ou mensagem de erro.
+- **Segredos:** só em variáveis de ambiente / secret store; nunca em código, teste, log ou mensagem de erro. Todo clone ativa o hook `pre-commit` com gitleaks (`git config core.hooksPath .githooks`), que barra o segredo antes de ele sair da máquina.
 - **Dados pessoais (LGPD):** redação automática de CPF, tokens, senhas e PIN nos logs (Pino `redact`) e no Sentry (`beforeSend`); minimização de dados em todas as respostas.
 - **Erros:** respostas nunca expõem stack trace, SQL ou detalhes internos.
 - **Headers e transporte:** HTTPS, HSTS, headers seguros, CORS restrito, rate limit em rotas sensíveis.
@@ -129,4 +129,5 @@ O repositório `renatomf/next-bank` é **público**. Antes de qualquer commit:
 - **Conferir o que vai ser commitado** (`git status` / `git diff --cached`) e procurar por segredos antes de cada commit.
 - **Nada de terceiros sem licença:** imagens de referência, marcas e assets de outros bancos ficam só localmente (`docs/design/references/` é ignorada).
 - **Dados de exemplo são fictícios:** nenhum CPF, e-mail ou telefone real em código, testes, seeds ou documentação.
+- **Segredo vazado é segredo comprometido:** revogar e rotacionar imediatamente no provedor. Apagar o commit não basta (o repositório é público e o histórico pode já ter sido copiado), e reescrever histórico publicado é proibido.
 - **Push só com confirmação do desenvolvedor.**
