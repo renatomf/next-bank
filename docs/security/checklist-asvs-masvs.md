@@ -1,7 +1,7 @@
 # next bank — Checklist OWASP ASVS e MASVS (V1)
 
 - **Status:** Aprovado (2026-10-05)
-- **Uso:** cada item tem a semana em que é implementado ou a justificativa de estar fora da V1. Os IDs entre parênteses apontam para as ameaças do `threat-model.md`.
+- **Uso:** status consolidado, com evidências e achados, em `controles-de-seguranca.md`. Cada item tem a semana em que é implementado ou a justificativa de estar fora da V1. Os IDs entre parênteses apontam para as ameaças do `threat-model.md`.
 - **Nota:** os itens estão organizados pelos capítulos do OWASP ASVS (nível 2) e pelas categorias do OWASP MASVS v2, descritos com palavras próprias. A verificação formal requisito a requisito é feita na semana 8, contra a versão vigente dos padrões.
 
 Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat model) · ➖ não se aplica
@@ -13,7 +13,7 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 |---|---|---|
 | Threat model mantido e revisado a cada feature | ⏳ | 1+ |
 | Controles de segurança centralizados (auth, autorização, validação) e não espalhados | ⏳ | 2 |
-| Fronteiras entre módulos verificadas automaticamente | ⏳ | 2 |
+| Fronteiras entre módulos verificadas automaticamente | ✅ | 2 |
 
 ### Autenticação
 | Item | Status | Sem. |
@@ -48,8 +48,8 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 |---|---|---|
 | Schemas estritos em toda entrada; campos desconhecidos recusados (PIX-04) | ⏳ | 2+ |
 | Valores monetários como inteiros validados (PIX-04) | ⏳ | 4–5 |
-| Só queries parametrizadas (API-01) | ⏳ | 2+ |
-| Limite de tamanho de corpo (API-02) | ⏳ | 2 |
+| Só queries parametrizadas (API-01) | ✅ | 2+ |
+| Limite de tamanho de corpo (API-02) | ✅ | 2 |
 
 ### Criptografia em repouso
 | Item | Status | Sem. |
@@ -62,8 +62,8 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 ### Erros, logs e auditoria
 | Item | Status | Sem. |
 |---|---|---|
-| Erros genéricos ao cliente (RFC 7807), sem detalhes internos (API-03) | ⏳ | 2 |
-| Logs estruturados sem dados sensíveis (API-04, API-10) | ⏳ | 2 |
+| Erros genéricos ao cliente (RFC 7807), sem detalhes internos (API-03) | ✅ | 2 |
+| Logs estruturados sem dados sensíveis (API-04, API-10) | ✅ | 2 |
 | Eventos de segurança auditados (login, falhas, PIN, sessões, Pix) (PIX-09) | ⏳ | 3–5 |
 | Auditoria imutável (API-05) | ⏳ | 4 |
 
@@ -78,7 +78,7 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 | Item | Status | Sem. |
 |---|---|---|
 | TLS em todas as conexões, inclusive com o banco (`verify-full`) (API-07) | ⏳ | 2 |
-| HSTS e headers de segurança | ⏳ | 2 |
+| HSTS e headers de segurança | ✅ | 2 |
 
 ### Lógica de negócio
 | Item | Status | Sem. |
@@ -91,15 +91,15 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 ### API e serviços web
 | Item | Status | Sem. |
 |---|---|---|
-| CORS negado por padrão (o app mobile não precisa) | ⏳ | 2 |
-| Documentação OpenAPI sem dados reais | ⏳ | 2 |
+| CORS negado por padrão (o app mobile não precisa) | ✅ | 2 |
+| Documentação OpenAPI sem dados reais | ✅ | 2 |
 
 ### Configuração e cadeia de suprimentos
 | Item | Status | Sem. |
 |---|---|---|
-| Dependências com lockfile e varredura de vulnerabilidades (API-09) | ⏳ | 2 |
-| Segredos fora do repositório; varredura de segredos (API-08) | ⏳ | 2 |
-| Pipeline com permissões mínimas e actions fixadas por SHA (API-09) | ⏳ | 2 |
+| Dependências com lockfile e varredura de vulnerabilidades (API-09) | ✅ | 2 |
+| Segredos fora do repositório; varredura de segredos (API-08) | ✅ | 2 |
+| Pipeline com permissões mínimas e actions fixadas por SHA (API-09) | ✅ | 2 |
 | Modo debug e endpoints de diagnóstico desligados em produção | ⏳ | 8 |
 
 ## OWASP MASVS v2 — App Flutter
@@ -112,12 +112,12 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 | **AUTH** | Autenticação e autorização decididas no servidor | ⏳ | 3 |
 | | PIN validado no servidor; biometria só como conveniência local (PIX-06) | ⏳ | 3, 6 |
 | | Desbloqueio após tempo em segundo plano (D5) | ⏳ | 3 |
-| **NETWORK** | Só HTTPS; tráfego em texto puro desabilitado (MOB-03) | ⏳ | 2 |
+| **NETWORK** | Só HTTPS; tráfego em texto puro desabilitado (MOB-03) | ✅ | 2 |
 | | Certificate pinning | 🚫 | — |
 | **PLATFORM** | Sem deep links na V1 | ➖ | — |
 | | Proteção de telas sensíveis contra captura | 🚫 | — |
 | | Opção de ocultar saldo (MOB-05) | ⏳ | 4 |
-| **CODE** | Dependências atualizadas e verificadas (API-09) | ⏳ | 2 |
+| **CODE** | Dependências atualizadas e verificadas (API-09) | ✅ | 2 |
 | | Validação de dados vindos da API antes do uso | ⏳ | 2+ |
 | **RESILIENCE** | Build de release ofuscado (MOB-04) | ⏳ | 8 |
 | | Verificação de integridade do app (Play Integrity / App Attest) | 🚫 | — |

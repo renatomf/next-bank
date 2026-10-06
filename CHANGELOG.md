@@ -9,6 +9,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 ### Adicionado — Semana 3: Identity
 - Primeiras migrations: schemas `identity` (usuários, sessões, refresh tokens, PIN) e `audit` (trilha append-only garantida por `GRANT` e trigger), com as invariantes também no banco
 - Testes de integração sempre contra o schema real: o banco de testes é recriado e migrado a cada execução
+- Matriz de controles de segurança (`docs/security/controles-de-seguranca.md`): o que está implementado, planejado ou descartado, com evidências e registro de achados
 - Domínio Identity: CPF (dígitos verificadores, exibição mascarada) e política de senha (10 a 128 caracteres, lista de senhas comuns)
 - Regras de arquitetura no CI (dependency-cruiser) e gate de cobertura de 90% em `domain/` e `application/`
 - Domínio Identity: sessão com rotação de refresh token, janela de 10 s para resposta perdida, revogação da sessão inteira no reuso e expiração por inatividade (7 dias) e absoluta (30 dias)
