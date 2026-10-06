@@ -4,9 +4,9 @@ void main() {
   runApp(const NextBankApp());
 }
 
-/// Raiz do app next bank.
+/// Root of the next bank app.
 class NextBankApp extends StatelessWidget {
-  /// Cria a raiz do app.
+  /// Creates the app root.
   const new({super.key});
 
   @override

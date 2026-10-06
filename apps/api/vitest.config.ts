@@ -1,13 +1,13 @@
 import { existsSync } from 'node:fs';
 import { defineConfig } from 'vitest/config';
 
-// Localmente, as URLs vêm do .env; no CI, de variáveis de ambiente.
+// Locally the URLs come from .env; in CI, from environment variables.
 if (existsSync('.env')) process.loadEnvFile('.env');
 
 export default defineConfig({
   test: {
     include: ['test/**/*.test.ts'],
-    // Os testes de integração compartilham o mesmo banco.
+    // Integration tests share the same database.
     fileParallelism: false,
   },
 });

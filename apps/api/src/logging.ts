@@ -1,4 +1,4 @@
-// Dados pessoais e segredos nunca chegam ao log (API-04).
+// Personal data and secrets never reach the log (API-04).
 const SENSITIVE_KEYS = [
   'password',
   'pin',

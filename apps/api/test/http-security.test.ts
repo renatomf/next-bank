@@ -6,14 +6,14 @@ import { captureLogs, testDatabaseUrl } from './helpers.ts';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
-describe('segurança HTTP', () => {
+describe('HTTP security', () => {
   let app: FastifyInstance;
   let logs: ReturnType<typeof captureLogs>;
 
   beforeEach(() => {
     logs = captureLogs();
     app = buildApp({ pool: createPool(testDatabaseUrl()), logStream: logs.stream });
-    // Rotas só de teste, para provocar os cenários.
+    // Test-only routes to trigger the scenarios.
     app.post('/test/echo', (request) => request.body);
     app.get('/test/boom', () => {
       throw new Error('duplicate key value violates unique constraint "users_cpf_key"');
@@ -24,7 +24,7 @@ describe('segurança HTTP', () => {
     await app.close();
   });
 
-  it('recusa corpo acima de 16 KB com 413 (API-02)', async () => {
+  it('rejects a body over 16 KB with 413 (API-02)', async () => {
     const response = await app.inject({
       method: 'POST',
       url: '/test/echo',
@@ -39,7 +39,7 @@ describe('segurança HTTP', () => {
     });
   });
 
-  it('aceita corpo dentro do limite', async () => {
+  it('accepts a body within the limit', async () => {
     const response = await app.inject({
       method: 'POST',
       url: '/test/echo',
@@ -48,7 +48,7 @@ describe('segurança HTTP', () => {
     expect(response.statusCode).toBe(200);
   });
 
-  it('responde erro inesperado com RFC 9457 genérico, sem stack nem SQL (API-03)', async () => {
+  it('answers an unexpected error with a generic RFC 9457 body, no stack or SQL (API-03)', async () => {
     const response = await app.inject({ method: 'GET', url: '/test/boom' });
 
     expect(response.statusCode).toBe(500);
@@ -59,18 +59,18 @@ describe('segurança HTTP', () => {
       status: 500,
     });
     expect(response.body).not.toMatch(/duplicate key|users_cpf_key|at .*\.ts/);
-    // O detalhe fica só no log interno.
+    // The detail goes only to the internal log.
     expect(logs.raw()).toMatch(/users_cpf_key/);
   });
 
-  it('responde rota inexistente com 404 no mesmo formato', async () => {
+  it('answers an unknown route with 404 in the same format', async () => {
     const response = await app.inject({ method: 'GET', url: '/nao-existe' });
 
     expect(response.statusCode).toBe(404);
     expect(response.json()).toEqual({ type: 'about:blank', title: 'Not Found', status: 404 });
   });
 
-  it('envia headers de segurança', async () => {
+  it('sends security headers', async () => {
     const response = await app.inject({ method: 'GET', url: '/health' });
 
     expect(response.headers['x-content-type-options']).toBe('nosniff');
@@ -79,7 +79,7 @@ describe('segurança HTTP', () => {
   });
 
   describe('x-request-id', () => {
-    it('propaga o id recebido para a resposta e para o log', async () => {
+    it('propagates the received id to the response and the log', async () => {
       const id = '0190f0f0-0000-7000-8000-000000000abc';
       const response = await app.inject({
         method: 'GET',
@@ -91,12 +91,12 @@ describe('segurança HTTP', () => {
       expect(logs.lines().some((line) => line.reqId === id)).toBe(true);
     });
 
-    it('gera um id quando não recebe', async () => {
+    it('generates an id when none is received', async () => {
       const response = await app.inject({ method: 'GET', url: '/health' });
       expect(response.headers['x-request-id']).toMatch(UUID);
     });
 
-    it('troca um id malformado por um gerado (API-10)', async () => {
+    it('replaces a malformed id with a generated one (API-10)', async () => {
       const response = await app.inject({
         method: 'GET',
         url: '/health',

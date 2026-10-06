@@ -4,15 +4,15 @@ import { buildApp } from '../src/app.ts';
 import { createPool } from '../src/db.ts';
 import { captureLogs, testDatabaseUrl } from './helpers.ts';
 
-// Dados fictícios: nenhum valor real.
+// Fictitious data only: no real values.
 const SECRETS = {
-  password: 'senha-ficticia-123',
+  password: 'fake-password',
   pin: '9876',
-  cpf: 'cpf-ficticio-000',
-  pixKey: 'ana@example.com',
-  accessToken: 'access-token-ficticio',
-  refreshToken: 'refresh-token-ficticio',
-  token: 'token-ficticio',
+  cpf: 'fake-cpf',
+  pixKey: 'fake-pix-key',
+  accessToken: 'fake-access-token',
+  refreshToken: 'fake-refresh-token',
+  token: 'fake-token',
 };
 
 describe('logs', () => {
@@ -23,7 +23,7 @@ describe('logs', () => {
     logs = captureLogs();
     app = buildApp({ pool: createPool(testDatabaseUrl()), logStream: logs.stream });
     app.post('/test/log', (request) => {
-      request.log.info({ ...SECRETS, payload: SECRETS }, 'evento com dados sensíveis');
+      request.log.info({ ...SECRETS, payload: SECRETS }, 'event with sensitive data');
       return { ok: true };
     });
   });
@@ -32,34 +32,34 @@ describe('logs', () => {
     await app.close();
   });
 
-  it('redige dados pessoais e segredos (API-04)', async () => {
+  it('redacts personal data and secrets (API-04)', async () => {
     await app.inject({
       method: 'POST',
       url: '/test/log',
-      headers: { authorization: 'Bearer token-do-header-ficticio' },
+      headers: { authorization: 'Bearer fake-header-token' },
       payload: {},
     });
 
     const output = logs.raw();
-    expect(output).toMatch(/evento com dados sensíveis/);
-    for (const value of [...Object.values(SECRETS), 'token-do-header-ficticio']) {
+    expect(output).toMatch(/event with sensitive data/);
+    for (const value of [...Object.values(SECRETS), 'fake-header-token']) {
       expect(output).not.toContain(value);
     }
     expect(output).toContain('[REDACTED]');
   });
 
-  it('mantém uma linha JSON por evento mesmo com quebra de linha no valor (API-10)', async () => {
+  it('keeps one JSON line per event even with a newline in a value (API-10)', async () => {
     app.get('/test/newline', (request) => {
-      request.log.info({ note: 'linha 1\n{"forjado":true}' }, 'tentativa de injeção');
+      request.log.info({ note: 'line 1\n{"forged":true}' }, 'injection attempt');
       return { ok: true };
     });
 
     await app.inject({ method: 'GET', url: '/test/newline' });
 
     const lines = logs.lines();
-    expect(lines.some((line) => 'forjado' in line)).toBe(false);
-    expect(lines.find((line) => line.msg === 'tentativa de injeção')?.note).toBe(
-      'linha 1\n{"forjado":true}',
+    expect(lines.some((line) => 'forged' in line)).toBe(false);
+    expect(lines.find((line) => line.msg === 'injection attempt')?.note).toBe(
+      'line 1\n{"forged":true}',
     );
   });
 });

@@ -9,12 +9,12 @@ export interface Problem {
 
 export const PROBLEM_CONTENT_TYPE = 'application/problem+json';
 
-/** Resposta RFC 9457 genérica: nunca carrega stack, SQL ou detalhe interno (API-03). */
+/** Generic RFC 9457 response: never carries stack, SQL or internal detail (API-03). */
 export function problem(status: number): Problem {
   return { type: 'about:blank', title: STATUS_CODES[status] ?? 'Error', status };
 }
 
-/** Status 4xx que o Fastify atribui (corpo grande, validação etc.); qualquer outro erro vira 500. */
+/** 4xx status set by Fastify (body too large, validation, etc.); any other error becomes 500. */
 function clientErrorStatus(error: unknown): number | undefined {
   if (typeof error !== 'object' || error === null || !('statusCode' in error)) return undefined;
   const { statusCode } = error;
@@ -27,9 +27,9 @@ export function registerProblemHandlers(app: FastifyInstance): void {
   app.setErrorHandler((error, request, reply) => {
     const status = clientErrorStatus(error) ?? 500;
     if (status >= 500) {
-      request.log.error({ err: error }, 'erro inesperado');
+      request.log.error({ err: error }, 'unexpected error');
     } else {
-      request.log.info({ err: error }, 'requisição recusada');
+      request.log.info({ err: error }, 'request rejected');
     }
     return reply.status(status).type(PROBLEM_CONTENT_TYPE).send(problem(status));
   });

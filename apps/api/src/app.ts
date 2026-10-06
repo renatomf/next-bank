@@ -12,18 +12,18 @@ import { healthRoutes } from './http/health.ts';
 import { registerProblemHandlers } from './http/problem.ts';
 import { REDACT_PATHS } from './logging.ts';
 
-/** Destino dos logs em JSON, uma linha por evento. */
+/** JSON log destination, one line per event. */
 export interface LogDestination {
   write(line: string): void;
 }
 
 export interface AppDependencies {
   pool: pg.Pool;
-  /** Destino dos logs; padrão: stdout. */
+  /** Log destination; defaults to stdout. */
   logStream?: LogDestination;
 }
 
-// Só aceita ids curtos e sem caracteres de controle (API-10).
+// Accept only short ids without control characters (API-10).
 const REQUEST_ID = /^[A-Za-z0-9-]{8,64}$/;
 
 function requestId(request: IncomingMessage): string {
@@ -53,7 +53,7 @@ export function buildApp({ pool, logStream }: AppDependencies) {
     done();
   });
   pool.on('error', (err) => {
-    app.log.error({ err }, 'erro em conexão ociosa do banco');
+    app.log.error({ err }, 'idle database connection error');
   });
   app.addHook('onClose', async () => {
     await pool.end();
