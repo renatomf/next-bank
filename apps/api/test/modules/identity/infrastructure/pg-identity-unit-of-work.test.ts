@@ -1,5 +1,4 @@
 import { randomBytes } from 'node:crypto';
-import pg from 'pg';
 import { afterAll, describe, expect, it } from 'vitest';
 import { RegisterCustomer } from '../../../../src/modules/identity/application/register-customer.ts';
 import { Cpf } from '../../../../src/modules/identity/domain/cpf.ts';
