@@ -143,9 +143,23 @@ describe('caching', () => {
 });
 
 describe('global rate limit (API-02, F-05)', () => {
+  it('covers the real routes', async () => {
+    const app = buildApp({ pool: createPool(testDatabaseUrl()), logStream: captureLogs().stream });
+    try {
+      const response = await app.inject({ method: 'GET', url: '/health' });
+      expect(response.headers['x-ratelimit-limit']).toBe('100');
+    } finally {
+      await app.close();
+    }
+  });
+
   it('answers 429 TooManyAttempts after 100 requests per minute from one IP', async () => {
     const app = buildApp({ pool: createPool(testDatabaseUrl()), logStream: captureLogs().stream });
-    app.get('/test/ok', () => ({ ok: true }));
+    // Registered as a plugin, like every real route, so it loads after the limiter.
+    void app.register((scope, _options, done) => {
+      scope.get('/test/ok', () => ({ ok: true }));
+      done();
+    });
     try {
       const fromAttacker = {
         method: 'GET',

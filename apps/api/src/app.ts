@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { IncomingMessage } from 'node:http';
 import helmet from '@fastify/helmet';
+import rateLimit from '@fastify/rate-limit';
 import swagger from '@fastify/swagger';
 import Fastify from 'fastify';
 import {
@@ -25,6 +26,10 @@ export interface AppDependencies {
   /** Log destination; defaults to stdout. */
   logStream?: LogDestination;
 }
+
+// Per client IP (API-02). In memory: one instance in V1 (plan D3). Behind the
+// deploy proxy, trustProxy must be set or every client shares one counter.
+const GLOBAL_RATE_LIMIT = { max: 100, timeWindow: '1 minute' };
 
 // Accept only short ids without control characters (API-10).
 const REQUEST_ID = /^[A-Za-z0-9-]{8,64}$/;
@@ -55,6 +60,11 @@ export function buildApp({ pool, logStream }: AppDependencies) {
     void reply.header('x-request-id', request.id);
     done();
   });
+  // Responses carry personal and financial data: no browser, proxy or CDN may keep them (F-06).
+  app.addHook('onSend', (_request, reply, payload, done) => {
+    void reply.header('cache-control', 'no-store');
+    done(null, payload);
+  });
   pool.on('error', (err) => {
     app.log.error({ err }, 'idle database connection error');
   });
@@ -63,6 +73,12 @@ export function buildApp({ pool, logStream }: AppDependencies) {
   });
 
   void app.register(helmet);
+  void app.register(rateLimit, {
+    ...GLOBAL_RATE_LIMIT,
+    // Thrown, so the error handler answers in the RFC 9457 format.
+    errorResponseBuilder: (_request, context) =>
+      Object.assign(new Error('rate limit exceeded'), { statusCode: context.statusCode }),
+  });
   // Collects the route schemas into the OpenAPI contract (ADR 0008). Not served over HTTP.
   void app.register(swagger, {
     openapi: { openapi: '3.1.0', info: { title: 'next bank API', version: '0.1.0' } },
