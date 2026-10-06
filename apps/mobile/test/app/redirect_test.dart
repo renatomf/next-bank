@@ -4,7 +4,7 @@ import 'package:next_bank/app/redirect.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/core/session/session_end_reason.dart';
 
-import '../core/session/session_controller_test.dart';
+import '../support/fake_token_store.dart';
 
 // Navigation rules (domain-model.md, section 10): the session decides where
 // the app can be; an ended session goes back to login from any screen.

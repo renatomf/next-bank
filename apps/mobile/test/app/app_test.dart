@@ -12,9 +12,9 @@ import 'package:next_bank/features/home/domain/api_status.dart';
 import 'package:next_bank/features/home/presentation/api_status_provider.dart';
 import 'package:next_bank/main.dart';
 
-import '../core/session/session_controller_test.dart';
-import '../features/auth/presentation/fake_auth_repository.dart';
-import '../features/home/presentation/api_status_provider_test.dart';
+import '../support/fake_api_status_repository.dart';
+import '../support/fake_auth_repository.dart';
+import '../support/fake_token_store.dart';
 
 /// A device whose keystore fails on the first read only.
 class FlakyTokenStore extends FakeTokenStore {
