@@ -26,7 +26,7 @@ O acesso a dados do next bank não é CRUD comum. O caso mais crítico, postar u
 
 ## Resultado do spike (2026-10-06)
 
-Validado no Postgres 17 local (Docker), com o caso do ledger:
+Validado no Postgres 17 local (Docker) e no Neon (Postgres 17, `sa-east-1`), com o caso do ledger:
 
 | Critério | Resultado |
 |---|---|
@@ -36,7 +36,7 @@ Validado no Postgres 17 local (Docker), com o caso do ledger:
 | Trigger de imutabilidade barra alteração até pelo dono do schema | ✅ |
 | `SELECT … ORDER BY id FOR UPDATE` | ✅ |
 | dbmate aplica e reverte migrations como `nextbank_migrator` | ✅ |
-| Mesmo comportamento no Neon | ⏳ pendente |
+| Mesmo comportamento no Neon (incluindo timeouts do papel da aplicação) | ✅ |
 | pgTyped gera tipos confiáveis | ❌ |
 
 **pgTyped descartado:**
@@ -47,6 +47,12 @@ Validado no Postgres 17 local (Docker), com o caso do ledger:
 **Alternativas avaliadas:** Kysely (SQL montado em TypeScript, contra o motivo central deste ADR), Drizzle (1.0 ainda em *release candidate*), sqlc (ferramenta em Go com plugin TypeScript imaturo), Slonik (camada extra de validação em tempo de execução). Escolhidos os tipos escritos à mão: nenhuma dependência a mais, e os testes de integração contra Postgres real já são obrigatórios.
 
 **Reavaliar quando:** a divergência entre SQL e tipos virar problema real. Primeira opção: SafeQL (plugin do ESLint que confere o SQL contra o banco), sem mudar os repositórios.
+
+**Achados no Neon:**
+- Papéis criados pelo painel ou pela API do Neon entram no `neon_superuser`, que tem `pg_write_all_data` e `BYPASSRLS`: **ignoram os `GRANT`s**. No teste, um papel assim leu o ledger e criou uma conta de cliente com saldo arbitrário sem nenhum `GRANT`; só o trigger de imutabilidade barrou a alteração de lançamentos. Por isso os papéis da aplicação são criados via SQL (API-11).
+- O `REVOKE ALL ON DATABASE nextbank FROM PUBLIC` impede até o papel administrativo do Neon de se conectar ao banco da aplicação.
+- No Postgres 16+, criar o banco com dono `nextbank_migrator` exige que o papel administrativo possa assumir esse papel: `GRANT … WITH SET TRUE` temporário, revogado logo depois. O bootstrap do Neon difere do local nesse passo.
+- Migrations pelo host direto; a API pode usar o *pooler*. `sslmode=require` funciona; `verify-full` fica para o deploy (semana 8).
 
 **Observação:** o `schema.sql` do dbmate exige `pg_dump`; por ora as migrations rodam com `--no-dump-schema`.
 

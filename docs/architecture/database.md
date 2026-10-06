@@ -286,7 +286,7 @@ erDiagram
 
 Conexões sempre com TLS (`sslmode=verify-full` no ambiente publicado). O papel da aplicação tem `statement_timeout = 5s`, `lock_timeout = 3s` e `idle_in_transaction_session_timeout = 10s` (API-12), configurados na criação do papel, já que o migrator não pode alterar papéis.
 
-**Criação dos papéis:** sempre via SQL, nunca pelo painel do provedor. No Neon, papéis criados pelo painel ou pela API entram no `neon_superuser`, o que anularia o menor privilégio (API-11).
+**Criação dos papéis:** sempre via SQL, nunca pelo painel do provedor. No Neon, papéis criados pelo painel ou pela API entram no `neon_superuser`, que tem `pg_write_all_data` e ignora os `GRANT`s, anulando o menor privilégio (API-11, demonstrado no spike; ver ADR 0009).
 
 ## 7. Concorrência
 
