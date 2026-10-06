@@ -7,3 +7,24 @@ export interface Clock {
 export interface IdGenerator {
   next(): string;
 }
+
+/**
+ * An append-only audit record (domain-model.md 3.5). Metadata never carries
+ * passwords, PINs, tokens, a full CPF or a full Pix key.
+ */
+export interface AuditEvent {
+  id: string;
+  occurredAt: Date;
+  actorType: 'USER' | 'SYSTEM' | 'STAFF';
+  actorId: string | null;
+  action: string;
+  subjectType: string;
+  subjectId: string;
+  requestId: string | null;
+  metadata: Record<string, string | number | boolean>;
+}
+
+/** Written in the same transaction as the operation it describes. */
+export interface AuditTrail {
+  record(event: AuditEvent): Promise<void>;
+}
