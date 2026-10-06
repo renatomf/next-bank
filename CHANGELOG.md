@@ -11,6 +11,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Threat model: API-11 (papel com privilégio do provedor) e API-12 (transação travando saldo)
 - Workspace pnpm e migrations SQL com dbmate em `apps/api`
 - Spike do contrato: cliente Dart gerado a partir do OpenAPI validado (ADR 0008)
+- API base (Fastify 5, TypeScript 6 estrito): `/health`, erros RFC 9457 genéricos, limite de corpo, redação de dados sensíveis nos logs, `x-request-id` validado, headers de segurança e configuração validada na inicialização
+- Banco `nextbank_test` para os testes de integração
 
 ### Adicionado — Semana 1: arquitetura e segurança
 - Roadmap e design de arquitetura (V1 Core, Pix assíncrono, backoffice)
