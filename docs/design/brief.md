@@ -23,8 +23,8 @@
 | Token | Valor | Uso |
 |---|---|---|
 | `brand.mint` | `#00FFC8` | Cor de marca: botões (dark), ação central, glow, logo |
-| `brand.mintDeep` | `#007A6A` | Menta para texto, links e ícones no light (5.3:1 sobre branco) |
-| `brand.mintInk` | `#006B5D` | Texto sobre chips Menta claros |
+| `brand.mintDeep` | `#007A6A` | Borda de item selecionado no light. Não serve para texto: fica abaixo do AA sobre `surface2` (4,47:1) e sob o brilho (4,46:1) |
+| `brand.mintInk` | `#006B5D` | Menta para texto, links e ícones no light (`accent`) e texto sobre chips Menta claros; AA em todos os fundos claros |
 
 ### 2.2 Tema
 
@@ -37,7 +37,7 @@
 | `divider` | `rgba(255,255,255,0.14)` | `rgba(10,15,20,0.16)` | Linhas tracejadas do comprovante |
 | `text` | `#F2F6F8` | `#0A0F14` | Texto principal |
 | `textMuted` | `#8A97A3` | `#4A5560` | Texto secundário (≥ 5.8:1 nos dois modos) |
-| `accent` | `#00FFC8` | `#007A6A` | Links, ícones e textos de destaque |
+| `accent` | `#00FFC8` | `#006B5D` | Links, ícones e textos de destaque |
 | `accentSoft` | `rgba(0,255,200,0.12)` | `rgba(0,255,200,0.22)` | Fundo de chips e ícones de entrada |
 | `selectedBorder` | `rgba(0,255,200,0.55)` | `#007A6A` | Borda de item selecionado |
 | `primary` | `#00FFC8` | `#0A0F14` | Fundo do botão primário e da ação central |
