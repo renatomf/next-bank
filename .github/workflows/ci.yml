@@ -78,6 +78,12 @@ jobs:
       - run: dart format --set-exit-if-changed lib test
       - run: flutter analyze --fatal-infos
       - run: flutter test
+      - name: Design system
+        working-directory: packages/design_system
+        run: |
+          dart format --set-exit-if-changed lib test
+          flutter analyze --fatal-infos
+          flutter test
       # Also validates the merged Android manifests and the network security config (MOB-03).
       - run: flutter build apk --debug
 
