@@ -18,8 +18,8 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 ### Autenticação
 | Item | Status | Sem. |
 |---|---|---|
-| Senha com mínimo de 10 e máximo de 128 caracteres; lista de senhas comuns; sem regras de composição (AUTH-07) | ⏳ | 3 |
-| Hash de senha com Argon2id nos parâmetros recomendados (AUTH-08) | ⏳ | 3 |
+| Senha com mínimo de 10 e máximo de 128 caracteres; lista de senhas comuns; sem regras de composição (AUTH-07) | ✅ | 3 |
+| Hash de senha com Argon2id nos parâmetros recomendados (AUTH-08) | ✅ | 3 |
 | Proteção contra força bruta e credential stuffing (AUTH-01) | ⏳ | 3 |
 | Mesma resposta e tempo para usuário inexistente e senha errada (AUTH-02) | ⏳ | 3 |
 | Troca de senha exige a senha atual e encerra as outras sessões (AUTH-06) | ⏳ | 7 |
@@ -54,7 +54,7 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 ### Criptografia em repouso
 | Item | Status | Sem. |
 |---|---|---|
-| Dados pessoais sensíveis cifrados com AES-256-GCM (API-06) | ⏳ | 3 |
+| Dados pessoais sensíveis cifrados com AES-256-GCM (API-06) | ✅ | 3 |
 | Chaves fora do código e com versão para rotação | ⏳ | 3 |
 | Chaves em KMS/HSM | 🚫 | — |
 | Só bibliotecas criptográficas consolidadas; geração de aleatórios segura | ⏳ | 3 |
