@@ -15,6 +15,7 @@ const valid = {
   JWT_KEY_ID: 'key-2026-10',
   PII_ENCRYPTION_KEY: randomBytes(32).toString('base64'),
   PII_HMAC_KEY: randomBytes(32).toString('base64'),
+  PIN_PEPPER: randomBytes(32).toString('base64'),
 };
 
 function withEnv(change: Record<string, string | undefined>) {
@@ -45,6 +46,7 @@ describe('loadConfig', () => {
       'JWT_KEY_ID',
       'PII_ENCRYPTION_KEY',
       'PII_HMAC_KEY',
+      'PIN_PEPPER',
     ]) {
       expect(() => loadConfig({})).toThrow(new RegExp(name));
     }
@@ -117,6 +119,27 @@ describe('loadConfig', () => {
 
     it('refuses a key version below 1', () => {
       expect(withEnv({ PII_KEY_VERSION: '0' })).toThrow(/PII_KEY_VERSION/);
+    });
+  });
+
+  describe('PIN pepper (API-13)', () => {
+    it('loads the 32-byte pepper', () => {
+      expect(loadConfig(valid).pinPepper).toHaveLength(32);
+    });
+
+    it('refuses a pepper that is not 32 bytes', () => {
+      expect(withEnv({ PIN_PEPPER: randomBytes(16).toString('base64') })).toThrow(
+        /PIN_PEPPER: must be 32 bytes in base64/,
+      );
+    });
+
+    it('refuses reusing a CPF key as the pepper', () => {
+      expect(withEnv({ PIN_PEPPER: valid.PII_ENCRYPTION_KEY })).toThrow(
+        /PIN_PEPPER: must differ from the CPF keys/,
+      );
+      expect(withEnv({ PIN_PEPPER: valid.PII_HMAC_KEY })).toThrow(
+        /PIN_PEPPER: must differ from the CPF keys/,
+      );
     });
   });
 });
