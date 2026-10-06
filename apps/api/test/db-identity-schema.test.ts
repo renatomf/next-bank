@@ -200,6 +200,65 @@ describe('identity schema', () => {
       const result = await app.query('DELETE FROM identity.refresh_tokens WHERE id = $1', [token]);
       expect(result.rowCount).toBe(1);
     });
+
+    // Last barrier for rotation (AUTH-03): whatever the code does, a session never
+    // has two tokens that can be refreshed.
+    it('allows only one active token per session', async () => {
+      const sessionId = await insertSession(await insertUser());
+      await insertRefreshToken(sessionId);
+
+      await expect(insertRefreshToken(sessionId)).rejects.toThrow(
+        /refresh_tokens_one_active_per_session/,
+      );
+    });
+
+    it('rotates in one transaction: replace the old token, then insert its successor', async () => {
+      const sessionId = await insertSession(await insertUser());
+      const oldToken = await insertRefreshToken(sessionId);
+      const newToken = randomUUID();
+
+      await app.query('BEGIN');
+      try {
+        // The successor does not exist yet: the reference is checked at commit.
+        await app.query(
+          'UPDATE identity.refresh_tokens SET replaced_at = now(), replaced_by_id = $2 WHERE id = $1',
+          [oldToken, newToken],
+        );
+        await app.query(
+          `INSERT INTO identity.refresh_tokens (id, session_id, token_hash, created_at)
+           VALUES ($1, $2, $3, now())`,
+          [newToken, sessionId, randomBytes(32)],
+        );
+        await app.query('COMMIT');
+      } catch (error) {
+        await app.query('ROLLBACK');
+        throw error;
+      }
+
+      const { rows } = await app.query<{ n: number }>(
+        `SELECT count(*)::int AS n FROM identity.refresh_tokens
+         WHERE session_id = $1 AND replaced_at IS NULL`,
+        [sessionId],
+      );
+      expect(rows[0]?.n).toBe(1);
+    });
+
+    it('still refuses a replacement pointing to a token that never appears', async () => {
+      const sessionId = await insertSession(await insertUser());
+      const oldToken = await insertRefreshToken(sessionId);
+
+      await app.query('BEGIN');
+      try {
+        await app.query(
+          'UPDATE identity.refresh_tokens SET replaced_at = now(), replaced_by_id = $2 WHERE id = $1',
+          [oldToken, randomUUID()],
+        );
+        await expect(app.query('COMMIT')).rejects.toThrow(/refresh_tokens_replaced_by_id_fkey/);
+      } finally {
+        // Leaves the shared connection clean whatever happened above.
+        await app.query('ROLLBACK');
+      }
+    });
   });
 
   describe('transaction_pins', () => {

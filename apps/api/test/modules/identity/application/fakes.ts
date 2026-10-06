@@ -108,6 +108,8 @@ interface Tables {
   users: StoredUser[];
   sessions: SessionState[];
   refreshTokens: StoredRefreshToken[];
+  /** Token id -> when and by which token it was replaced (rotation). */
+  replacements: Map<string, { replacedAt: Date; replacedById: string }>;
   auditEvents: AuditEvent[];
 }
 
@@ -127,6 +129,7 @@ export class InMemoryDatabase implements UnitOfWork, IdentityRepositoriesFactory
   users: StoredUser[] = [];
   sessions: SessionState[] = [];
   refreshTokens: StoredRefreshToken[] = [];
+  replacements = new Map<string, { replacedAt: Date; replacedById: string }>();
   auditEvents: AuditEvent[] = [];
   /** How many transactions were opened. */
   runs = 0;
@@ -139,6 +142,7 @@ export class InMemoryDatabase implements UnitOfWork, IdentityRepositoriesFactory
       users: [...this.users],
       sessions: [...this.sessions],
       refreshTokens: [...this.refreshTokens],
+      replacements: new Map(this.replacements),
       auditEvents: [...this.auditEvents],
     });
     const result = await work(tx);
@@ -181,10 +185,46 @@ export class InMemoryDatabase implements UnitOfWork, IdentityRepositoriesFactory
           tables.sessions.push(session);
           return Promise.resolve();
         },
+        lockById: (id) => {
+          const found = tables.sessions.find((session) => session.id === id);
+          return Promise.resolve(found ? { ...found } : null);
+        },
+        update: (state) => {
+          tables.sessions = tables.sessions.map((session) =>
+            session.id === state.id ? { ...state } : session,
+          );
+          return Promise.resolve();
+        },
       },
       refreshTokens: {
         insert: (token) => {
           tables.refreshTokens.push(token);
+          return Promise.resolve();
+        },
+        findByHash: (hash) => {
+          const found = tables.refreshTokens.find((token) =>
+            Buffer.from(token.tokenHash).equals(Buffer.from(hash)),
+          );
+          const replacement = found ? tables.replacements.get(found.id) : undefined;
+          return Promise.resolve(
+            found
+              ? {
+                  id: found.id,
+                  sessionId: found.sessionId,
+                  replacedAt: replacement?.replacedAt ?? null,
+                  replacedById: replacement?.replacedById ?? null,
+                }
+              : null,
+          );
+        },
+        findActive: (sessionId) => {
+          const active = tables.refreshTokens.find(
+            (token) => token.sessionId === sessionId && !tables.replacements.has(token.id),
+          );
+          return Promise.resolve(active ? active.id : null);
+        },
+        markReplaced: (id, replacedById, replacedAt) => {
+          tables.replacements.set(id, { replacedAt, replacedById });
           return Promise.resolve();
         },
       },
@@ -200,4 +240,20 @@ export class InMemoryDatabase implements UnitOfWork, IdentityRepositoriesFactory
       },
     };
   }
+}
+
+/** A different token on every call, so rotations can be told apart. */
+export class SequentialRefreshTokens implements RefreshTokenGenerator {
+  #next = 1;
+  generate() {
+    const token = `refresh-${String(this.#next++)}`;
+    return { token, hash: hashOf(token) };
+  }
+  hash(token: string): Uint8Array | null {
+    return token.startsWith('refresh-') ? hashOf(token) : null;
+  }
+}
+
+function hashOf(token: string): Uint8Array {
+  return new TextEncoder().encode(`hash-of-${token}`);
 }
