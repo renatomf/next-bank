@@ -1,0 +1,14 @@
+#!/bin/sh
+# Blocks a commit that contains a secret before it leaves this machine (API-08).
+# The repository is public: once pushed, a secret is leaked even if CI fails.
+# Enable once per clone:  git config core.hooksPath .githooks
+set -eu
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "pre-commit: gitleaks is not installed, so this commit cannot be checked." >&2
+  echo "Install it (Windows: winget install gitleaks, macOS: brew install gitleaks) and commit again." >&2
+  exit 1
+fi
+
+# Same scanner and allowlist (.gitleaksignore) as the CI job, on staged changes only.
+exec gitleaks git --pre-commit --staged --redact --no-banner
