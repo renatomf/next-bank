@@ -210,6 +210,18 @@ abstract final class NbType {
     letterSpacing: letterSpacing,
   );
 
+  /// Second line of a display title: Sora 400, same size, shown muted.
+  static final TextStyle displaySoft = _style(
+    display,
+    30,
+    400,
+    height: 1.15,
+    letterSpacing: -0.9,
+  );
+
+  /// Section title: Sora 600, 17.
+  static final TextStyle sectionTitle = _style(display, 17, 600);
+
   /// Screen title: Sora 600, 22.
   static final TextStyle screenTitle = _style(display, 22, 600);
 

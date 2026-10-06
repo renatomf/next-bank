@@ -30,10 +30,15 @@ abstract final class NbTheme {
       scaffoldBackgroundColor: colors.background,
       fontFamily: NbType.body,
       extensions: [colors],
+      // Every text style the app uses, so screens read them from the theme
+      // instead of combining tokens themselves.
       textTheme: TextTheme(
+        displayLarge: NbType.displayLarge.copyWith(color: colors.text),
         headlineSmall: NbType.screenTitle.copyWith(color: colors.text),
+        titleMedium: NbType.sectionTitle.copyWith(color: colors.text),
         bodyMedium: NbType.bodyText.copyWith(color: colors.text),
         bodySmall: NbType.caption.copyWith(color: colors.textMuted),
+        labelLarge: NbType.button,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,

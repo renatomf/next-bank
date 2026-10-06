@@ -17,6 +17,7 @@ class NbTextField extends StatelessWidget {
     this.textInputAction,
     this.inputFormatters,
     this.onChanged,
+    this.onSubmitted,
     this.enabled = true,
     this.suffix,
     super.key,
@@ -49,6 +50,10 @@ class NbTextField extends StatelessWidget {
   /// Called on every change.
   final ValueChanged<String>? onChanged;
 
+  /// Called when the keyboard's action key is pressed (for example, "done"
+  /// on the last field submits the form).
+  final ValueChanged<String>? onSubmitted;
+
   /// False while the form is sending.
   final bool enabled;
 
@@ -73,6 +78,7 @@ class NbTextField extends StatelessWidget {
           textInputAction: textInputAction,
           inputFormatters: inputFormatters,
           onChanged: onChanged,
+          onSubmitted: onSubmitted,
           enabled: enabled,
           style: NbType.bodyText.copyWith(color: colors.text),
           decoration: InputDecoration(

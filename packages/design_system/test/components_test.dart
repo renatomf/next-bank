@@ -103,6 +103,18 @@ void main() {
       expect(style.color, NbColors.dark.textMuted);
     });
 
+    testWidgets("submits with the keyboard's action key", (tester) async {
+      final submitted = <String>[];
+      await tester.pumpWidget(
+        host(NbTextField(label: 'Senha', onSubmitted: submitted.add)),
+      );
+
+      await tester.enterText(find.byType(TextField), 'a long passphrase');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+
+      expect(submitted, ['a long passphrase']);
+    });
+
     testWidgets('never suggests or corrects hidden text', (tester) async {
       await tester.pumpWidget(
         host(const NbTextField(label: 'Senha', obscureText: true)),
@@ -177,6 +189,24 @@ void main() {
       expect(find.text('Conteúdo'), findsOneWidget);
     });
   }
+
+  testWidgets('DisplayTitle reads as one heading with a muted second line', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(
+        const DisplayTitle(lead: 'Seu dinheiro,', trail: 'um passo à frente.'),
+      ),
+    );
+
+    final semantics = tester.getSemantics(find.byType(DisplayTitle));
+    expect(semantics.label, 'Seu dinheiro,\num passo à frente.');
+    expect(semantics.flagsCollection.isHeader, isTrue);
+    final rich = tester.widget<Text>(find.byType(Text)).textSpan! as TextSpan;
+    final trail = rich.children!.single as TextSpan;
+    expect(trail.style?.color, NbColors.dark.textMuted);
+    expect(trail.style?.fontWeight, FontWeight.w400);
+  });
 
   testWidgets('NextLogo reads as "next bank"', (tester) async {
     await tester.pumpWidget(host(const NextLogo()));
