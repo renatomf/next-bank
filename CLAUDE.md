@@ -20,7 +20,8 @@ O projeto é tratado como um **banco real em produção**. Nenhum padrão abaixo
 **Desenho antes do código (obrigatório):** nenhuma fatia é implementada por tentativa e erro. Antes da primeira linha de teste, o desenho da fatia é escrito e aprovado pelo desenvolvedor, cobrindo:
 - **Fontes conferidas:** cada linha do threat model, ADR, regra do modelo de domínio e item do checklist ASVS/MASVS que a fatia toca, cada uma mapeada para o teste que a prova.
 - **Estrutura:** onde cada peça fica (módulo, camada, porta, adaptador) e com quem conversa, conforme as regras de arquitetura.
-- **Contratos:** entradas, saídas, erros do catálogo, mudanças no OpenAPI, no schema do banco (queries e índices) e na configuração.
+- **Concorrência:** o que acontece com requisições simultâneas sobre o mesmo recurso (contadores, saldos, tokens), e o teste que prova.
+- **Contratos:** entradas, saídas, erros do catálogo, schemas OpenAPI novos pelo nome, schema do banco (queries e índices) e configuração.
 - **Dependências novas:** manutenção, licença, tamanho e data de publicação conferidas.
 - **Fora do escopo:** o que fica para depois, e por quê.
 
