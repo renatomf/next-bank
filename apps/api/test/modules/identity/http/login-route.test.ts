@@ -141,6 +141,17 @@ describe('POST /v1/auth/login', () => {
     expect(blocked.json<{ code: string }>().code).toBe('TooManyAttempts');
   });
 
+  it('holds the per-account limit against a simultaneous burst from many IPs (F-11)', async () => {
+    const email = await registeredEmail();
+
+    const responses = await Promise.all(
+      Array.from({ length: 10 }, () => login({ email, password: 'wrong password here' })),
+    );
+
+    const statuses = responses.map((r) => r.statusCode).sort();
+    expect(statuses).toEqual([401, 401, 401, 401, 401, 429, 429, 429, 429, 429]);
+  });
+
   it('blocks the 11th attempt from one IP within a minute, across accounts (AUTH-01)', async () => {
     const ip = newIp();
     for (let i = 0; i < 10; i++) {

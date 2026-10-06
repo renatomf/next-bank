@@ -161,6 +161,21 @@ describe('Login', () => {
       expect(hasher.verified).toHaveLength(5);
     });
 
+    it('lets at most 5 of 10 simultaneous wrong attempts verify a password (F-11)', async () => {
+      const { hasher, login } = setup();
+
+      const results = await Promise.allSettled(
+        Array.from({ length: 10 }, () => login.execute(attempt(WRONG_PASSWORD))),
+      );
+
+      // Each attempt is counted before its verification, so a burst cannot
+      // slip past the per-account limit while the first ones are hashing.
+      expect(hasher.verified).toHaveLength(5);
+      const reasons = results.map((r) => (r.status === 'rejected' ? r.reason : null));
+      expect(reasons.filter((r) => r instanceof InvalidCredentials)).toHaveLength(5);
+      expect(reasons.filter((r) => r instanceof TooManyAttempts)).toHaveLength(5);
+    });
+
     it('counts attempts on unknown e-mails too, so blocking reveals nothing', async () => {
       const { login } = setup();
       for (let i = 0; i < 5; i++) {
