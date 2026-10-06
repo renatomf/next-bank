@@ -171,7 +171,7 @@ describe('Login', () => {
       // Each attempt is counted before its verification, so a burst cannot
       // slip past the per-account limit while the first ones are hashing.
       expect(hasher.verified).toHaveLength(5);
-      const reasons = results.map((r) => (r.status === 'rejected' ? r.reason : null));
+      const reasons = results.map((r): unknown => (r.status === 'rejected' ? r.reason : null));
       expect(reasons.filter((r) => r instanceof InvalidCredentials)).toHaveLength(5);
       expect(reasons.filter((r) => r instanceof TooManyAttempts)).toHaveLength(5);
     });

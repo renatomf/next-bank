@@ -65,6 +65,11 @@ export class Login {
     const stored = store.get(email);
     const attempts = stored ? LoginAttempts.restore(stored) : LoginAttempts.none();
     attempts.assertAllowed(now);
+    // Counted as a failure before any await (F-11): check and reservation run
+    // without interruption, so a burst cannot slip past the limit while earlier
+    // attempts are still hashing. A correct password clears it below.
+    attempts.recordFailure(now);
+    store.set(email, attempts.state);
 
     const account = await this.#deps.unitOfWork.run((tx) =>
       this.#deps.repositories.for(tx).users.findByEmail(email),
@@ -77,8 +82,7 @@ export class Login {
 
     const failure = this.#failureReason(account, passwordMatches);
     if (account === null || failure !== null) {
-      attempts.recordFailure(now);
-      store.set(email, attempts.state);
+      // Already counted before the verification.
       if (account !== null && failure !== null) {
         // Persisted before the error is thrown (ADR 0010, rule 3).
         await this.#deps.unitOfWork.run((tx) =>
