@@ -17,6 +17,15 @@ O projeto é tratado como um **banco real em produção**. Nenhum padrão abaixo
 
 **Legibilidade:** código escrito para humanos lerem: nomes que dizem o que a coisa é, funções curtas e diretas, comentários que explicam o porquê (não o quê). Sem abstração especulativa: uma interface ou camada só existe quando separa responsabilidades reais.
 
+**Desenho antes do código (obrigatório):** nenhuma fatia é implementada por tentativa e erro. Antes da primeira linha de teste, o desenho da fatia é escrito e aprovado pelo desenvolvedor, cobrindo:
+- **Fontes conferidas:** cada linha do threat model, ADR, regra do modelo de domínio e item do checklist ASVS/MASVS que a fatia toca, cada uma mapeada para o teste que a prova.
+- **Estrutura:** onde cada peça fica (módulo, camada, porta, adaptador) e com quem conversa, conforme as regras de arquitetura.
+- **Contratos:** entradas, saídas, erros do catálogo, mudanças no OpenAPI, no schema do banco (queries e índices) e na configuração.
+- **Dependências novas:** manutenção, licença, tamanho e data de publicação conferidas.
+- **Fora do escopo:** o que fica para depois, e por quê.
+
+Achado de revisão, de ferramenta (Semgrep, lint) ou de CI que uma regra já documentada previa é **falha de desenho**: registra-se no log de achados (`docs/security/controles-de-seguranca.md`) e revisa-se o processo, não só o código.
+
 ### 1. Segurança (prioridade máxima)
 
 - **Security by design:** toda feature começa revisando o threat model (`docs/security/threat-model.md`). Ameaça nova vira uma linha no threat model **e** um teste.
