@@ -23,8 +23,8 @@
 | Controle | Status | Como / evidência | Sem. |
 |---|---|---|---|
 | OAuth 2.0 / OIDC | ➖ | Não há terceiros nem login delegado: o app é o único cliente da própria API (ADR 0004). Os mecanismos de token seguem as boas práticas do OAuth 2.0 (token de acesso curto, refresh rotativo com detecção de reuso). Reavaliar se houver login social ou integração com parceiros. | — |
-| Access token curto + refresh token | 🟡 | Agregado `Session` (#34); JWT EdDSA de 15 min com `kid` e `typ: at+jwt`, recusando `alg: none`, troca de algoritmo, outra chave, adulteração e claims ausentes (`jose-access-tokens.test.ts`, AUTH-05); refresh opaco de 256 bits guardado só como SHA-256 (`random-refresh-tokens.test.ts`). Falta ligar às rotas. | 3 |
-| Rotação e revogação de tokens | 🟡 | Rotação a cada uso, janela de 10 s e revogação da sessão inteira no reuso: domínio pronto e testado (#34, AUTH-03). Falta o caso de uso com `SELECT … FOR UPDATE` e o endpoint. | 3 |
+| Access token curto + refresh token | 🟡 | Agregado `Session` (#34); JWT EdDSA de 15 min com `kid` e `typ: at+jwt`, recusando `alg: none`, troca de algoritmo, outra chave, adulteração e claims ausentes (`jose-access-tokens.test.ts`, AUTH-05); refresh opaco de 256 bits guardado só como SHA-256 (`random-refresh-tokens.test.ts`); emitidos no cadastro, no login e no refresh. | 3 |
+| Rotação e revogação de tokens | ✅ | `POST /v1/auth/refresh`: rotação a cada uso, janela de 10 s e revogação da sessão inteira no reuso, com `REFRESH_REUSE_DETECTED` e `SESSION_REVOKED` commitados antes do erro (AUTH-03). Concorrência: a sessão é travada (`FOR UPDATE`) e o token relido sob o lock; o banco garante um token ativo por sessão (índice único parcial). Refreshes simultâneos testados (`session-routes.test.ts`). | 3 |
 | MFA / 2FA no login | 🔭 | Risco aceito no threat model (seção 7). Evolução: OTP por e-mail em dispositivo novo. | — |
 | Segundo fator nas operações (step-up) | 🟡 | PIN de transação verificado **no servidor** em todo Pix (ADR 0004). Domínio do PIN pronto (#35). A integração com o Pix vem na semana 5. | 3, 5 |
 | RBAC / ABAC | ⏳ | V1 tem um único papel (cliente): a autorização é por **dono do recurso** (conta derivada do token, recurso alheio → 404). RBAC com perfis de equipe chega com o backoffice (Fase 3). | 4–6 |
@@ -32,7 +32,8 @@
 | Força bruta e credential stuffing | ✅ | PIN: 5 erros → 30 min, e o 3º bloqueio em 24 h exige redefinir com a senha (#35, `CHECK` no banco). Login: 5 erros por conta em 1 min bloqueiam a conta por 1, 2, 4, 8 e até 15 min, de qualquer IP, contando também e-mails inexistentes; 10 tentativas por IP por minuto contra credential stuffing (`login-attempts.test.ts`, `login-route.test.ts`, AUTH-01). Mesmo corpo 401 e uma verificação Argon2id em todo caminho, com hash fictício para e-mail inexistente (AUTH-02). | 3 |
 | Session fixation | ✅ | Impossível por desenho: a sessão e os tokens são sempre criados pelo servidor no login, nunca aceitos do cliente; cada login abre uma sessão nova (`login.test.ts`, `login-route.test.ts`). | 3 |
 | Session hijacking | 🟡 | Access token de 15 min, reuso de refresh detectado (#34), tokens só no Keychain/Keystore (MOB-01, semana 3), só HTTPS (MOB-03). Vínculo do aparelho (device binding): 🔭. | 3 |
-| Logout e invalidação de sessão | 🟡 | `Session.revoke` pronto (#34). Endpoint de logout na semana 3; troca de senha revogando todas as sessões na semana 7 (AUTH-06). | 3, 7 |
+| Logout e invalidação de sessão | 🟡 | `POST /v1/auth/logout` (autenticado): revoga a sessão, idempotente, e o refresh token deixa de valer na hora (✅, AUTH-06). O access token expira em até 15 min (risco aceito, ADR 0004). Troca de senha revogando todas as sessões: semana 7. | 3, 7 |
+| Autenticação por padrão | ✅ | Toda rota exige `Authorization: Bearer` válido, salvo as declaradas públicas (`/health`, cadastro, login, refresh); esquecer a marcação fecha a rota. 401 `Unauthenticated` com `WWW-Authenticate: Bearer` (`session-routes.test.ts`). | 3 |
 
 ## 2. Segurança da API
 

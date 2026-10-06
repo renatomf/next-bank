@@ -28,17 +28,17 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 ### Sessão
 | Item | Status | Sem. |
 |---|---|---|
-| Tokens com alta entropia; refresh guardado como hash (AUTH-03) | ⏳ | 3 |
-| Rotação de refresh token com detecção de reuso (AUTH-03) | ⏳ | 3 |
-| Expiração por inatividade e absoluta (D5) | ⏳ | 3 |
-| Logout e revogação efetivos no servidor (AUTH-06) | ⏳ | 3 |
+| Tokens com alta entropia; refresh guardado como hash (AUTH-03) | ✅ | 3 |
+| Rotação de refresh token com detecção de reuso (AUTH-03) | ✅ | 3 |
+| Expiração por inatividade e absoluta (D5) | ✅ | 3 |
+| Logout e revogação efetivos no servidor (AUTH-06) | ✅ | 3 |
 | Cliente vê e encerra as próprias sessões | ⏳ | 7 |
-| JWT com algoritmo fixo e validação completa de claims (AUTH-05) | ⏳ | 3 |
+| JWT com algoritmo fixo e validação completa de claims (AUTH-05) | ✅ | 3 |
 
 ### Controle de acesso
 | Item | Status | Sem. |
 |---|---|---|
-| Negar por padrão; toda rota declara sua regra de acesso | ⏳ | 2 |
+| Negar por padrão; toda rota declara sua regra de acesso | ✅ | 2 |
 | Verificação de dono em todo recurso; recurso alheio → 404 (PIX-01, READ-01) | ⏳ | 4–6 |
 | Identificadores de conta nunca vêm do cliente (PIX-04, READ-01) | ⏳ | 4–6 |
 | Operações sensíveis exigem nova verificação (PIN no servidor) (PIX-05, PIX-06) | ⏳ | 3, 5 |
