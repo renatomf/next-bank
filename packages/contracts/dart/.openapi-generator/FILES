@@ -1,0 +1,12 @@
+build.yaml
+lib/nextbank_api.dart
+lib/src/api.dart
+lib/src/api/default_api.dart
+lib/src/auth/api_key_auth.dart
+lib/src/auth/auth.dart
+lib/src/auth/basic_auth.dart
+lib/src/auth/bearer_auth.dart
+lib/src/auth/oauth.dart
+lib/src/deserialize.dart
+lib/src/model/health.dart
+lib/src/model/problem.dart

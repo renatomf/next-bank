@@ -12,7 +12,8 @@
     "format:check": "prettier --check .",
     "db:new": "dbmate -e MIGRATION_DATABASE_URL new",
     "db:migrate": "dbmate -e MIGRATION_DATABASE_URL --no-dump-schema up",
-    "db:status": "dbmate -e MIGRATION_DATABASE_URL status"
+    "db:status": "dbmate -e MIGRATION_DATABASE_URL status",
+    "contract": "node scripts/generate-openapi.ts ../../packages/contracts/openapi.json"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

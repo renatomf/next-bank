@@ -1,0 +1,4 @@
+# Generated code is not ours to lint; strict lints apply to hand-written code.
+analyzer:
+  exclude:
+    - lib/**
