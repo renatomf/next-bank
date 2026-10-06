@@ -1,0 +1,83 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:next_bank/core/session/session_controller.dart';
+import 'package:next_bank/core/session/session_tokens.dart';
+import 'package:next_bank/core/session/token_store.dart';
+
+class FakeTokenStore implements TokenStore {
+  new([this.stored]);
+
+  SessionTokens? stored;
+  int clears = 0;
+
+  @override
+  Future<SessionTokens?> read() async => stored;
+
+  @override
+  Future<void> write(SessionTokens tokens) async => stored = tokens;
+
+  @override
+  Future<void> clear() async {
+    clears++;
+    stored = null;
+  }
+}
+
+final SessionTokens tokens = SessionTokens(
+  accessToken: 'access-token-value',
+  accessTokenExpiresAt: DateTime.utc(2026, 10, 6, 12, 15),
+  refreshToken: 'refresh-token-value',
+);
+
+ProviderContainer containerWith(FakeTokenStore store) {
+  final container = ProviderContainer(
+    overrides: [tokenStoreProvider.overrideWithValue(store)],
+  );
+  addTearDown(container.dispose);
+  return container;
+}
+
+void main() {
+  group('sessionProvider', () {
+    test('restores a signed-in session from the device on start', () async {
+      final container = containerWith(FakeTokenStore(tokens));
+
+      final session = await container.read(sessionProvider.future);
+
+      expect(session, isA<SignedIn>());
+      expect((session as SignedIn).tokens.refreshToken, 'refresh-token-value');
+    });
+
+    test('starts signed out when the device holds no session', () async {
+      final container = containerWith(FakeTokenStore());
+
+      expect(await container.read(sessionProvider.future), isA<SignedOut>());
+    });
+
+    test('keeps the tokens on the device when signing in', () async {
+      final store = FakeTokenStore();
+      final container = containerWith(store);
+      await container.read(sessionProvider.future);
+
+      await container.read(sessionProvider.notifier).signIn(tokens);
+
+      expect(store.stored, same(tokens));
+      expect(container.read(sessionProvider).value, isA<SignedIn>());
+    });
+
+    test(
+      'removes the tokens from the device when signing out (AUTH-06)',
+      () async {
+        final store = FakeTokenStore(tokens);
+        final container = containerWith(store);
+        await container.read(sessionProvider.future);
+
+        await container.read(sessionProvider.notifier).signOut();
+
+        expect(store.stored, isNull);
+        expect(store.clears, 1);
+        expect(container.read(sessionProvider).value, isA<SignedOut>());
+      },
+    );
+  });
+}
