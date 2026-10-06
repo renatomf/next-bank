@@ -1,0 +1,13 @@
+{
+  "name": "@nextbank/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "db:new": "dbmate -e MIGRATION_DATABASE_URL new",
+    "db:migrate": "dbmate -e MIGRATION_DATABASE_URL --no-dump-schema up",
+    "db:status": "dbmate -e MIGRATION_DATABASE_URL status"
+  },
+  "devDependencies": {
+    "dbmate": "^2.36.0"
+  }
+}
