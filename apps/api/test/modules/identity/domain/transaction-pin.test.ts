@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { PinLocked } from '../../../../src/modules/identity/domain/errors.ts';
+import { PinLocked, PinResetRequired } from '../../../../src/modules/identity/domain/errors.ts';
 import { TransactionPin } from '../../../../src/modules/identity/domain/transaction-pin.ts';
 
 // Brute force protection (ADR 0004, domain-model.md 3.1): 5 wrong PINs in a row
 // lock verification for 30 minutes; a correct PIN resets the count.
 const START = new Date('2026-10-06T12:00:00.000Z');
 const MINUTE = 60_000;
+const HOUR = 60 * MINUTE;
 
 function at(offsetMs: number): Date {
   return new Date(START.getTime() + offsetMs);
@@ -28,6 +29,8 @@ describe('TransactionPin', () => {
       pinHash: '$argon2id$fake',
       failedAttempts: 0,
       lockedUntil: null,
+      recentLocks: [],
+      resetRequired: false,
       updatedAt: START,
     });
   });
@@ -107,6 +110,76 @@ describe('TransactionPin', () => {
     fail(pin, 5);
 
     expect(() => pin.recordVerification(true, at(MINUTE))).toThrow(/locked/);
+  });
+
+  describe('repeated locks (D7, PIX-05)', () => {
+    /** Five wrong PINs at the given time, after any previous lock has expired. */
+    function lockAt(pin: TransactionPin, now: Date) {
+      pin.assertCanVerify(now);
+      return fail(pin, 5, now);
+    }
+
+    it('requires a reset with the password on the 3rd lock within 24 h', () => {
+      const pin = newPin();
+      lockAt(pin, START);
+      lockAt(pin, at(HOUR));
+
+      const result = lockAt(pin, at(2 * HOUR));
+
+      expect(result).toEqual({ outcome: 'RESET_REQUIRED' });
+      expect(pin.state).toMatchObject({ resetRequired: true, lockedUntil: null });
+    });
+
+    it('stays blocked after any amount of time until reset (PinResetRequired)', () => {
+      const pin = newPin();
+      for (const hour of [0, 1, 2]) lockAt(pin, at(hour * HOUR));
+
+      expect(() => {
+        pin.assertCanVerify(at(30 * 24 * HOUR));
+      }).toThrow(PinResetRequired);
+    });
+
+    it('does not count locks older than 24 h', () => {
+      const pin = newPin();
+      lockAt(pin, START);
+      lockAt(pin, at(12 * HOUR));
+
+      // The first lock is now 25 h old: only two locks fall within 24 h.
+      expect(lockAt(pin, at(25 * HOUR))).toMatchObject({ outcome: 'LOCKED' });
+    });
+
+    it('uses a sliding 24 h window, not a fixed one', () => {
+      const pin = newPin();
+      lockAt(pin, START);
+      lockAt(pin, at(20 * HOUR));
+      expect(lockAt(pin, at(30 * HOUR))).toMatchObject({ outcome: 'LOCKED' });
+
+      // 20 h, 30 h and 40 h are three locks within 24 h.
+      expect(lockAt(pin, at(40 * HOUR))).toEqual({ outcome: 'RESET_REQUIRED' });
+    });
+
+    it('keeps only the two most recent locks', () => {
+      const pin = newPin();
+      for (const hour of [0, 25, 50]) lockAt(pin, at(hour * HOUR));
+
+      expect(pin.state.recentLocks).toEqual([at(25 * HOUR), at(50 * HOUR)]);
+    });
+
+    it('refuses to record an attempt once a reset is required, as a programming error', () => {
+      const pin = newPin();
+      for (const hour of [0, 1, 2]) lockAt(pin, at(hour * HOUR));
+
+      expect(() => pin.recordVerification(true, at(3 * HOUR))).toThrow(/reset/);
+    });
+
+    it('carries the catalog code', () => {
+      const pin = newPin();
+      for (const hour of [0, 1, 2]) lockAt(pin, at(hour * HOUR));
+
+      expect(() => {
+        pin.assertCanVerify(at(3 * HOUR));
+      }).toThrow(expect.objectContaining({ code: 'PinResetRequired' }));
+    });
   });
 
   it('can be restored from storage with the same state', () => {
