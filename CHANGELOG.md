@@ -25,6 +25,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Acesso a dados com SQL puro tipado (`pg` + pgTyped + dbmate) no lugar do Drizzle
 - Escopo da V1 congelado até a `v1.0.0`
 - App mobile sem o código de exemplo do template do Flutter
+- Lints estritos no app mobile (`very_good_analysis`)
 
 ### Segurança
 - `.gitignore` cobrindo segredos, chaves, certificados, credenciais e dumps
