@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ConfigError, loadConfig } from '../src/config.ts';
+import { ConfigError, loadConfig } from '../src/shared/config.ts';
 
 const valid = {
   DATABASE_URL: 'postgres://nextbank_app:s3cr3t-value@127.0.0.1:5432/nextbank',

@@ -1,6 +1,6 @@
 import { buildApp } from './app.ts';
-import { loadConfig } from './config.ts';
-import { createPool } from './db.ts';
+import { loadConfig } from './shared/config.ts';
+import { createPool } from './shared/db.ts';
 
 const config = loadConfig(process.env);
 const app = buildApp({ pool: createPool(config.databaseUrl) });
