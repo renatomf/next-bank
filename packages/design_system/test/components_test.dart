@@ -51,6 +51,36 @@ void main() {
       expect(tester.getSize(find.byType(PrimaryButton)).height, NbSize.button);
       expect(find.bySemanticsLabel('Entrar'), findsOneWidget);
     });
+
+    List<BoxShadow>? glowOf(WidgetTester tester) {
+      final box = tester.widget<DecoratedBox>(
+        find
+            .descendant(
+              of: find.byType(PrimaryButton),
+              matching: find.byType(DecoratedBox),
+            )
+            .first,
+      );
+      return (box.decoration as ShapeDecoration).shadows;
+    }
+
+    testWidgets('glows in Paraíba while it can be pressed (mockups)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(PrimaryButton(label: 'Entrar', onPressed: () {})),
+      );
+
+      expect(glowOf(tester)?.single.color, NbBrand.actionGlow);
+    });
+
+    testWidgets('does not glow when disabled', (tester) async {
+      await tester.pumpWidget(
+        host(const PrimaryButton(label: 'Entrar', onPressed: null)),
+      );
+
+      expect(glowOf(tester), isNull);
+    });
   });
 
   group('NbTextField', () {
@@ -61,6 +91,16 @@ void main() {
 
       expect(find.text('E-mail'), findsOneWidget);
       expect(find.text('E-mail inválido.'), findsOneWidget);
+    });
+
+    testWidgets('labels the field in the muted body style (mockups)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(host(const NbTextField(label: 'E-mail')));
+
+      final style = tester.widget<Text>(find.text('E-mail')).style!;
+      expect(style.fontSize, NbType.bodyText.fontSize);
+      expect(style.color, NbColors.dark.textMuted);
     });
 
     testWidgets('never suggests or corrects hidden text', (tester) async {

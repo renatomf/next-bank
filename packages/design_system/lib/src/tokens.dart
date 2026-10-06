@@ -7,6 +7,10 @@ abstract final class NbBrand {
 
   /// Paraíba for text, links and icons in light mode (5.3:1 on white).
   static const Color paraibaDeep = Color(0xFF007A6A);
+
+  /// Halo around the main action, in both modes: Paraíba at 35%, the same
+  /// glow as the balance card's shadow (brief, section 2.3).
+  static const Color actionGlow = Color(0x5900FFC8);
 }
 
 /// Theme colors for one mode (brief, section 2.2), read with
