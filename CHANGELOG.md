@@ -10,6 +10,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Postgres 17 local (Docker Compose) com papéis de menor privilégio (`nextbank_migrator`, `nextbank_app`) e timeouts no papel da aplicação
 - Threat model: API-11 (papel com privilégio do provedor) e API-12 (transação travando saldo)
 - Workspace pnpm e migrations SQL com dbmate em `apps/api`
+- Spike do contrato: cliente Dart gerado a partir do OpenAPI validado (ADR 0008)
 
 ### Adicionado — Semana 1: arquitetura e segurança
 - Roadmap e design de arquitetura (V1 Core, Pix assíncrono, backoffice)
