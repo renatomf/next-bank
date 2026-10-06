@@ -114,7 +114,7 @@ Legenda STRIDE: **S** falsificação de identidade · **T** adulteração · **R
 
 | ID | Ameaça | STRIDE | Ator | Mitigação | Teste | Sem. |
 |---|---|---|---|---|---|---|
-| MOB-01 | Tokens extraídos do armazenamento do aparelho | I | A4 | Só Keychain/Keystore (`flutter_secure_storage`); nada sensível em `SharedPreferences` ou arquivos | Lint/verificação no CI proibindo `SharedPreferences` para tokens | 3 |
+| MOB-01 | Tokens extraídos do armazenamento do aparelho | I | A4 | Só Keychain/Keystore (`flutter_secure_storage`); nada sensível em `SharedPreferences` ou arquivos; iOS `first_unlock_this_device`, sem sincronizar com o iCloud; Android sem backup na nuvem nem transferência entre aparelhos (`allowBackup="false"` e regras de extração) | Teste de arquitetura proíbe `shared_preferences` no app; testes conferem as opções do Keychain e o manifesto do Android | 3 |
 | MOB-02 | Dados sensíveis em logs ou relatórios de crash | I | A5 | Sem `print`; logger com filtro; Sentry com limpeza de PII antes do envio | Teste do filtro do Sentry com CPF e token no evento | 2 |
 | MOB-03 | Interceptação do tráfego (MITM) | T, I | A4 | Só HTTPS; tráfego em texto puro desabilitado (Android e iOS) | Build não aceita `http://` | 2 |
 | MOB-04 | App descompilado em busca de segredos | I | A4 | Nenhum segredo no app; release ofuscado; servidor é a única autoridade | Busca por chaves no binário de release | 8 |

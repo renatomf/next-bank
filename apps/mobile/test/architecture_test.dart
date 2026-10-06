@@ -32,6 +32,18 @@ void main() {
 
     expect(violations, isEmpty, reason: violations.join('\n'));
   });
+
+  // MOB-01: nothing sensitive in plain preferences; tokens live only in the
+  // Keychain / Keystore. V1 has nothing else to store there either.
+  test('the app never uses shared preferences', () {
+    final users = [
+      for (final file in dartFiles('lib'))
+        if (importsOf(file).any((i) => i.startsWith('package:shared_prefer')))
+          file.path,
+    ];
+
+    expect(users, isEmpty, reason: users.join('\n'));
+  });
 }
 
 typedef Layer = ({String feature, String layer});

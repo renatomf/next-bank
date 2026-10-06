@@ -93,10 +93,12 @@ O teste HTTP (Postgres real) vem antes da rota. Testes de segurança antes das d
 
 ## Tarefa 4 — App (dia 4–5)
 
+Ordem das etapas, reorganizada para não criar telas provisórias: 1) fundação da sessão (armazenamento seguro, estado da sessão, `x-request-id`); 2) cliente de autenticação (API, interceptor de refresh, falhas); 3) `design_system`, GoRouter e telas.
+
 - [ ] GoRouter com redirect: sem sessão → login; sessão válida → Home
-- [ ] Tokens só no Keychain/Keystore (`flutter_secure_storage`, MOB-01); verificação no CI contra `SharedPreferences` para tokens
+- [x] Tokens só no Keychain/Keystore (`flutter_secure_storage`, MOB-01); verificação no CI contra `SharedPreferences`; sem iCloud nem backup do Android
 - [ ] Interceptor de refresh com **fila única** (TDD): várias requisições com 401 ao mesmo tempo disparam um só refresh; reuso detectado → volta ao login
-- [ ] `x-request-id` gerado no app e enviado em toda requisição
+- [x] `x-request-id` gerado no app e enviado em toda requisição
 - [ ] Telas: cadastro (com **CPF fictício gerado no app** e aviso de demo, DEMO-01), login e criação do PIN; restauração e expiração de sessão
 - [ ] Falhas como `sealed class`, mapeadas a partir do `code` do erro da API
 - [ ] Primeiros componentes do `design_system` (botão, campo de texto) com as telas que os usam; pub workspace nasce com o pacote
@@ -130,4 +132,4 @@ O teste HTTP (Postgres real) vem antes da rota. Testes de segurança antes das d
 - [ ] Cobertura ≥ 90% em `domain/` e `application/`
 - [ ] App: cadastro, login, restauração de sessão e criação do PIN no emulador
 - [ ] Se a semana estourar: telas do app passam para o início da semana 4; backend e segurança não são cortados
-- [ ] Próximo passo: plano da semana 4 (Accounts + Ledger)
+- [ ] Próximo passo: plano da semana 4 (Accounts + Ledger), começando por `GET /v1/me` (`name`, `hasPin`): hoje o app não sabe se o PIN já foi criado quando o cadastro é interrompido antes da tela do PIN
