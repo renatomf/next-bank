@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:next_bank/core/session/session_end_reason.dart';
 import 'package:next_bank/core/session/session_tokens.dart';
 import 'package:next_bank/core/session/token_store.dart';
 
@@ -25,7 +26,11 @@ final class SignedIn extends Session {
 /// No session: the app asks for login.
 final class SignedOut extends Session {
   /// Creates the signed-out state.
-  const new();
+  const new([this.reason]);
+
+  /// Why the server ended the session; null after a logout or when there
+  /// was no session.
+  final SessionEndReason? reason;
 }
 
 /// The current session. While it is loading, the app is restoring it from the
@@ -47,9 +52,10 @@ class SessionController extends AsyncNotifier<Session> {
     state = AsyncData(SignedIn(tokens));
   }
 
-  /// Removes the tokens from the device (AUTH-06, app side).
-  Future<void> signOut() async {
+  /// Removes the tokens from the device (AUTH-06, app side), keeping the
+  /// [reason] when the server ended the session.
+  Future<void> signOut([SessionEndReason? reason]) async {
     await ref.read(tokenStoreProvider).clear();
-    state = const AsyncData(SignedOut());
+    state = AsyncData(SignedOut(reason));
   }
 }
