@@ -52,7 +52,7 @@ next bank é um banco fictício construído como **projeto de portfólio para va
 
 | Camada | Tecnologias |
 |---|---|
-| Mobile | Flutter/Dart, Riverpod (codegen), GoRouter, Dio, Freezed, flutter_secure_storage, local_auth, Sentry |
+| Mobile | Flutter/Dart, Riverpod (codegen quando houver ganho), GoRouter, Dio, Freezed, flutter_secure_storage, local_auth, Sentry |
 | API | Node.js, TypeScript, Fastify, Zod, PostgreSQL com SQL puro (`pg`, migrations com dbmate), Pino, Sentry |
 | Backoffice | Next.js (App Router), TypeScript, Server Components/Actions, Tailwind, Playwright |
 | Simulador Bacen | Fastify + TypeScript (serviço separado) |
@@ -181,7 +181,7 @@ apps/mobile/lib/
 └── features/<feature>/
     ├── domain/        # entidades, contratos de repositório
     ├── data/          # DTOs do cliente gerado, implementações de repositório
-    └── presentation/  # AsyncNotifier (Riverpod codegen), telas, widgets
+    └── presentation/  # providers Riverpod (codegen quando houver ganho), telas, widgets
 ```
 
 - Features não importam outras features; regras de import verificadas por lint no CI.
@@ -221,7 +221,7 @@ Schemas Zod da API → OpenAPI → cliente Dart (mobile) + cliente TS (backoffic
 1. ✅ Referência visual em `docs/design/references/` (layout dark com card de saldo em efeito de seda, atalhos em blocos, navegação flutuante).
 2. ✅ Mockups de Home, Pix e Comprovante, nos modos dark e light, aprovados. Canvas: https://claude.ai/artifact/4PEwqAQm3w1pfLKW8TBa6F
 3. ✅ Tokens e brief visual em `docs/design/brief.md`, com contraste verificado (WCAG AA).
-4. ⏭️ Semana 2: tokens → `ThemeExtension` no pacote `design_system`.
+4. ⏭️ Semana 3 em diante: tokens → `ThemeExtension` no pacote `design_system`, junto com o primeiro componente que os usa.
 5. ⏭️ Semanas 3–7: as demais telas nascem direto em Flutter, seguindo o brief.
 
 **Regras:** identidade própria (sem cores, logos ou ativos de bancos reais); fontes do Google Fonts (Sora + Manrope + JetBrains Mono); ícones open source (Lucide).
@@ -249,7 +249,7 @@ As telas são construídas **direto no Flutter**, dentro de cada fatia (sem mock
 | 15 | *Extra:* Minhas chaves Pix (aba "Receber") | 7 |
 
 - **Chave CPF automática:** todo cadastro cria uma chave Pix do tipo CPF, para a demo funcionar sem a tela 15.
-- **Semana 2:** navegação completa no GoRouter (todas as rotas, com telas vazias) + componentes base do `design_system`.
+- **Navegação e Design System:** cada rota do GoRouter nasce com a sua tela, e cada componente do `design_system` nasce com a primeira tela que o usa (a partir da semana 3).
 - Os estados de cada tela (vazio, erro, carregando, regras de negócio) são listados no modelo de domínio.
 
 ### 7.2 Componentes do Design System (V1)
@@ -266,7 +266,7 @@ Cada semana tem itens **obrigatórios** e **extras**. Se a semana estourar, os e
 | Sem. | Fatia | Obrigatório | Extra | Pronto quando |
 |---|---|---|---|---|
 | 1 | Arquitetura + Segurança | *(Design já concluído: identidade, tokens e 3 mockups.)* Modelo de domínio (contextos, agregados, máquina de estados, plano de contas); threat model (Auth, PIX); ADRs 001–008; C4 (contexto e containers); ERD inicial; mapa de navegação e estados das telas | — | ADRs, threat model e diagramas commitados e revisados |
-| 2 | Esqueleto ponta a ponta | **Spikes (dias 1–2):** gerador de cliente Dart, SQL puro (`pg`) + migrations dbmate com triggers/`GRANT`s no Neon, no caso do ledger, serviço privado no Render. Monorepo (pnpm + Turborepo + pub workspaces); app movido para `apps/mobile`, **sem as plataformas não usadas** (linux, macos, windows, web) e com **identificador único** (`dev.renatomf.nextbank`); Fastify + Postgres com SQL tipado e migrations dbmate (Docker Compose); CI (format, lint, typecheck, testes, build) nos dois apps; dependency-cruiser; gitleaks (CI e pré-commit); proteção da `main`; Pino + requestId; Sentry; Home exibe saldo vindo da API | Geração de contratos; osv-scanner + Semgrep; deploy no Render + Neon | PR verde; app conversa com a API |
+| 2 | Esqueleto ponta a ponta | **Spikes:** SQL puro (`pg`) + migrations dbmate com triggers/`GRANT`s no Neon, no caso do ledger; gerador de cliente Dart (ADRs 0008 e 0009). Monorepo (pnpm workspaces; Turborepo quando houver o segundo pacote TypeScript e pub workspaces quando houver o segundo pacote Dart do app); app em `apps/mobile`, **sem as plataformas não usadas** e com **identificador único** (`dev.renatomf.nextbank`); Fastify + Postgres com papéis de menor privilégio e migrations dbmate (Docker Compose); CI (format, lint, typecheck, testes, contrato) nos dois apps; gitleaks no CI; proteção da `main`; Pino + requestId; **Home exibe o status da API** pelo cliente gerado (o saldo chega na semana 4, com autenticação e ledger) | Deploy no Render + Neon e spike do serviço privado no Render (movidos para a semana 8); osv-scanner + Semgrep; Sentry; dependency-cruiser (com o primeiro módulo) | PR verde; app conversa com a API |
 | 3 | Identity | Cadastro, login, logout; Argon2id; JWT + refresh rotativo com detecção de reuso; sessões; rate limit; auditoria de auth. Mobile: login e cadastro, secure storage, interceptor de refresh com fila única, restauração e expiração de sessão; PIN de transação validado no servidor; **cadastro da demo com CPF fictício gerado no app** (nunca dados reais) | Desbloqueio por biometria no app | Testes de domínio e de API verdes; itens de auth do threat model mitigados |
 | 4 | Accounts + Ledger | `Money`; `Account`; plano de contas; `JournalEntry` em partidas dobradas; saldos posted/available com versão; funding pela conta de sistema; authorization por dono. Mobile: Home (saldo, ações rápidas, recentes, estados de loading, vazio e erro) | Job de reconciliação interna | Σ débitos = Σ créditos garantido por teste; "usuário A → conta B = 404" |
 | 5 | PIX — backend | Chaves PIX; máquina de estados; idempotência (escopo + validade); locks ordenados; `CHECK` de saldo; auditoria na transação; teste de concorrência (2 × R$80 sobre R$100) | Limites por transação e noturno | Todos os testes de integridade financeira verdes |
