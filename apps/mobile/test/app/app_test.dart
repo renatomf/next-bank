@@ -83,6 +83,19 @@ void main() {
     expect(find.text('API disponível'), findsOneWidget);
   });
 
+  testWidgets("logs in with the keyboard's done key", (tester) async {
+    final repository = FakeAuthRepository(tokens);
+    await pumpApp(tester, store: FakeTokenStore(), repository: repository);
+
+    await tester.enterText(find.byType(TextField).at(0), 'ana@example.test');
+    await tester.enterText(find.byType(TextField).at(1), 'a long passphrase');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    expect(repository.logins, hasLength(1));
+    expect(find.text('API disponível'), findsOneWidget);
+  });
+
   testWidgets('shows the refusal of the API on the login screen', (
     tester,
   ) async {
