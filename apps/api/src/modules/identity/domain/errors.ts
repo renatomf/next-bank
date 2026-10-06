@@ -41,3 +41,11 @@ export class PinLocked extends DomainError {
     this.lockedUntil = lockedUntil;
   }
 }
+
+export class PinResetRequired extends DomainError {
+  readonly code = 'PinResetRequired';
+
+  constructor() {
+    super('PIN was locked too many times and must be reset with the password');
+  }
+}

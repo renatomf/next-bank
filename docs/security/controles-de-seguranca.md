@@ -29,7 +29,7 @@
 | Segundo fator nas operações (step-up) | 🟡 | PIN de transação verificado **no servidor** em todo Pix (ADR 0004). Domínio do PIN pronto (#35). A integração com o Pix vem na semana 5. | 3, 5 |
 | RBAC / ABAC | ⏳ | V1 tem um único papel (cliente): a autorização é por **dono do recurso** (conta derivada do token, recurso alheio → 404). RBAC com perfis de equipe chega com o backoffice (Fase 3). | 4–6 |
 | Princípio do menor privilégio | ✅ | Banco: papel `nextbank_app` sem atributos especiais, sem DDL, só os `GRANT`s necessários (`db-roles.test.ts`, `db-*-schema.test.ts`, API-11, T-DB-13). CI: `GITHUB_TOKEN` só com leitura. | 2–3 |
-| Força bruta e credential stuffing | 🟡 | PIN: 5 erros → 30 min, contado no domínio (#35) e limitado no banco (`CHECK`). Login: rate limit por IP e por conta, mensagem genérica e hash fictício contra enumeração (AUTH-01, AUTH-02). | 3 |
+| Força bruta e credential stuffing | 🟡 | PIN: 5 erros → 30 min, e o 3º bloqueio em 24 h exige redefinir com a senha; contado no domínio (#35) e limitado no banco (`CHECK`). Login: rate limit por IP e por conta, mensagem genérica e hash fictício contra enumeração (AUTH-01, AUTH-02). | 3 |
 | Session fixation | ✅ | Impossível por desenho: a sessão e os tokens são sempre criados pelo servidor no login, nunca aceitos do cliente. O teste do endpoint de login confirmará que cada login cria uma sessão nova. | 3 |
 | Session hijacking | 🟡 | Access token de 15 min, reuso de refresh detectado (#34), tokens só no Keychain/Keystore (MOB-01, semana 3), só HTTPS (MOB-03). Vínculo do aparelho (device binding): 🔭. | 3 |
 | Logout e invalidação de sessão | 🟡 | `Session.revoke` pronto (#34). Endpoint de logout na semana 3; troca de senha revogando todas as sessões na semana 7 (AUTH-06). | 3, 7 |
@@ -188,7 +188,7 @@ Achados das revisões de segurança e da construção, no formato de relatório 
 
 | # | Área | Severidade | Achado | Status |
 |---|---|---|---|---|
-| F-01 | Autenticação | 🟠 Alta | O PIN não implementa o **3º bloqueio em 24 h → PIN bloqueado até redefinir com a senha** (D7, PIX-05). O PR #35 só tem o bloqueio de 30 min | Aberto (corrigir no #35 antes do merge) |
+| F-01 | Autenticação | 🟠 Alta | O PIN não implementava o **3º bloqueio em 24 h → PIN bloqueado até redefinir com a senha** (D7, PIX-05). A primeira versão do #35 só tinha o bloqueio de 30 min | Corrigido antes do merge (#35), com janela deslizante, erro `PinResetRequired` e `CHECK`s no banco |
 | F-02 | Banco | 🟡 Média | `CHECK` de revogação da sessão aceitava sessão revogada sem motivo (um `CHECK` que dá `NULL` passa) | Corrigido antes do merge (#32), com teste |
 | F-03 | CI/CD | 🟡 Média | Checks `Contracts`, `osv-scanner` e `Semgrep` rodavam, mas não eram obrigatórios para o merge | Corrigido (ruleset atualizado, 2026-10-06) |
 | F-04 | Segredos | 🟢 Baixa | gitleaks só rodava depois do push, num repositório público | Corrigido (#31, hook `pre-commit`) |

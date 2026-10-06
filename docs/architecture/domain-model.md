@@ -70,8 +70,8 @@ flowchart LR
 - Eventos: `SessionCreated`, `SessionRefreshed`, `RefreshTokenReuseDetected`, `SessionRevoked`
 
 **`TransactionPin`**
-- Atributos: `userId`, `pinHash`, `failedAttempts`, `lockedUntil`
-- Invariantes: 4 dígitos, sem sequências triviais (`1234`, `0000`); 5 erros seguidos bloqueiam por 30 minutos; acerto zera as tentativas
+- Atributos: `userId`, `pinHash`, `failedAttempts`, `lockedUntil`, `recentLocks` (os 2 últimos bloqueios), `resetRequired`
+- Invariantes: 4 dígitos, sem sequências triviais (`1234`, `0000`); 5 erros seguidos bloqueiam por 30 minutos; acerto zera as tentativas; o 3º bloqueio em 24 h (janela deslizante) exige redefinir o PIN com a senha (D7)
 - Comandos: `Create`, `Verify`, `Change` (exige senha)
 - Eventos: `PinCreated`, `PinVerificationFailed`, `PinLocked`, `PinChanged`
 
@@ -269,6 +269,7 @@ O extrato não é um agregado: é uma consulta (lado de leitura do CQRS) que lê
 | `InvalidPin` | 422 | Criar PIN | "Use 4 dígitos que não sejam repetidos nem em sequência." |
 | `PinIncorrect` | 422 | Revisar Pix | "PIN incorreto. Restam N tentativas." |
 | `PinLocked` | 423 | Revisar Pix | "PIN bloqueado por 30 minutos." |
+| `PinResetRequired` | 423 | Revisar Pix, Desbloqueio | "PIN bloqueado por segurança. Redefina o PIN com sua senha em Perfil > Segurança." |
 | `PixKeyNotFound` | 404 | Pix | "Não encontramos essa chave Pix." |
 | `SamePayerAndPayee` | 422 | Pix | "Você não pode enviar Pix para a própria conta." |
 | `InvalidAmount` | 422 | Pix | "Informe um valor válido." |
