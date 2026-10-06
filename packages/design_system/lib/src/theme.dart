@@ -30,10 +30,23 @@ abstract final class NbTheme {
       scaffoldBackgroundColor: colors.background,
       fontFamily: NbType.body,
       extensions: [colors],
+      // Every text style the app uses, so screens read them from the theme
+      // instead of combining tokens themselves.
       textTheme: TextTheme(
+        displayLarge: NbType.displayLarge.copyWith(color: colors.text),
         headlineSmall: NbType.screenTitle.copyWith(color: colors.text),
+        titleMedium: NbType.sectionTitle.copyWith(color: colors.text),
         bodyMedium: NbType.bodyText.copyWith(color: colors.text),
         bodySmall: NbType.caption.copyWith(color: colors.textMuted),
+        labelLarge: NbType.button,
+      ),
+      // Links and secondary actions in the accent color of the mode.
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: colors.accent,
+          textStyle: NbType.bodyText,
+          minimumSize: const Size(NbSize.touch, NbSize.touch),
+        ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,

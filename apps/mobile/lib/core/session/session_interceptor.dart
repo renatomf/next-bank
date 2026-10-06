@@ -1,4 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:next_bank/core/api_failure.dart';
+import 'package:next_bank/core/session/session_end_reason.dart';
 import 'package:next_bank/core/session/session_tokens.dart';
 
 /// Marks a call already repeated after a refresh, so a second 401 just fails.
@@ -25,7 +27,7 @@ class SessionInterceptor extends Interceptor {
   final SessionTokens? Function() _currentTokens;
   final Future<SessionTokens> Function(String refreshToken) _refresh;
   final Future<void> Function(SessionTokens tokens) _onRefreshed;
-  final Future<void> Function() _onSessionEnded;
+  final Future<void> Function(SessionEndReason reason) _onSessionEnded;
 
   /// The refresh in progress, shared by every call waiting for it.
   Future<SessionTokens?>? _refreshing;
@@ -91,7 +93,9 @@ class SessionInterceptor extends Interceptor {
     } on DioException catch (error) {
       // Refused (expired, revoked, reuse): the session is over. A network
       // failure keeps it: being offline must not log the user out.
-      if (error.response?.statusCode == 401) await _onSessionEnded();
+      if (error.response?.statusCode == 401) {
+        await _onSessionEnded(_endReasonOf(error));
+      }
       rethrow;
     }
     // Signed out while the refresh was running: never sign back in.
@@ -99,6 +103,15 @@ class SessionInterceptor extends Interceptor {
     await _onRefreshed(fresh);
     return fresh;
   }
+
+  /// Only a detected reuse is reported as revoked; any other refusal reads
+  /// as an expired session.
+  static SessionEndReason _endReasonOf(DioException error) =>
+      switch (apiFailureOf(error)) {
+        ApiRejected(code: ApiErrorCode.refreshTokenReuseDetected) =>
+          SessionEndReason.revoked,
+        _ => SessionEndReason.expired,
+      };
 
   /// Calls the generated client marks with the bearerAuth security scheme.
   static bool _isProtected(RequestOptions options) {

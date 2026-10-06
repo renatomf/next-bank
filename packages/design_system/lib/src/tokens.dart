@@ -5,8 +5,9 @@ abstract final class NbBrand {
   /// Mint: buttons in dark mode, central action, glow, logo.
   static const Color mint = Color(0xFF00FFC8);
 
-  /// Mint for text, links and icons in light mode (5.3:1 on white).
-  static const Color mintDeep = Color(0xFF007A6A);
+  /// Mint for text, links and icons in light mode: at least AA on every
+  /// light background, including surface2 and the glow.
+  static const Color mintInk = Color(0xFF006B5D);
 
   /// Halo around the main action, in both modes: mint at 35%, the same
   /// glow as the balance card's shadow (brief, section 2.3).
@@ -30,6 +31,7 @@ final class NbColors extends ThemeExtension<NbColors> {
     required this.onPrimary,
     required this.success,
     required this.danger,
+    required this.glow,
   });
 
   /// Dark mode, the app's default look.
@@ -45,6 +47,7 @@ final class NbColors extends ThemeExtension<NbColors> {
     onPrimary: Color(0xFF0A0F14),
     success: Color(0xFFC4F27A),
     danger: Color(0xFFFF6B6B),
+    glow: Color(0x1A00FFC8),
   );
 
   /// Light mode.
@@ -55,11 +58,12 @@ final class NbColors extends ThemeExtension<NbColors> {
     border: Color(0x140A0F14),
     text: Color(0xFF0A0F14),
     textMuted: Color(0xFF4A5560),
-    accent: NbBrand.mintDeep,
+    accent: NbBrand.mintInk,
     primary: Color(0xFF0A0F14),
     onPrimary: NbBrand.mint,
     success: Color(0xFF3B6E0E),
     danger: Color(0xFFC62828),
+    glow: Color(0x3800FFC8),
   );
 
   /// Screen background.
@@ -95,6 +99,10 @@ final class NbColors extends ThemeExtension<NbColors> {
   /// Errors and failures.
   final Color danger;
 
+  /// Ambient mint light at the top of the screen: 10% in dark mode, 22% in
+  /// light mode (brief, section 2.2).
+  final Color glow;
+
   @override
   NbColors copyWith({
     Color? background,
@@ -108,6 +116,7 @@ final class NbColors extends ThemeExtension<NbColors> {
     Color? onPrimary,
     Color? success,
     Color? danger,
+    Color? glow,
   }) => NbColors(
     background: background ?? this.background,
     surface: surface ?? this.surface,
@@ -120,6 +129,7 @@ final class NbColors extends ThemeExtension<NbColors> {
     onPrimary: onPrimary ?? this.onPrimary,
     success: success ?? this.success,
     danger: danger ?? this.danger,
+    glow: glow ?? this.glow,
   );
 
   @override
@@ -199,6 +209,18 @@ abstract final class NbType {
     height: height,
     letterSpacing: letterSpacing,
   );
+
+  /// Second line of a display title: Sora 400, same size, shown muted.
+  static final TextStyle displaySoft = _style(
+    display,
+    30,
+    400,
+    height: 1.15,
+    letterSpacing: -0.9,
+  );
+
+  /// Section title: Sora 600, 17.
+  static final TextStyle sectionTitle = _style(display, 17, 600);
 
   /// Screen title: Sora 600, 22.
   static final TextStyle screenTitle = _style(display, 22, 600);

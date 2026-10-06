@@ -27,6 +27,9 @@ void main() {
         for (final (ground, background) in [
           ('background', colors.background),
           ('surface', colors.surface),
+          ('surface2', colors.surface2),
+          // Where the ambient glow is strongest, at the top of the screen.
+          ('the glow', Color.alphaBlend(colors.glow, colors.background)),
         ]) {
           test('$name on $ground', () {
             expect(contrast(foreground, background), greaterThanOrEqualTo(4.5));
@@ -42,6 +45,43 @@ void main() {
       });
     });
   }
+
+  for (final (mode, theme, colors) in [
+    ('dark', NbTheme.dark(), NbColors.dark),
+    ('light', NbTheme.light(), NbColors.light),
+  ]) {
+    test('the $mode theme defines every text style screens use', () {
+      final text = theme.textTheme;
+      for (final (role, style, family, color) in [
+        ('display', text.displayLarge, 'Sora', colors.text),
+        ('screen title', text.headlineSmall, 'Sora', colors.text),
+        ('section title', text.titleMedium, 'Sora', colors.text),
+        ('body', text.bodyMedium, 'Manrope', colors.text),
+        ('caption', text.bodySmall, 'Manrope', colors.textMuted),
+      ]) {
+        expect(
+          style?.fontFamily,
+          'packages/design_system/$family',
+          reason: role,
+        );
+        expect(style?.color, color, reason: role);
+      }
+    });
+  }
+
+  test('text buttons use the accent of each mode, at touch size', () {
+    for (final (theme, colors) in [
+      (NbTheme.dark(), NbColors.dark),
+      (NbTheme.light(), NbColors.light),
+    ]) {
+      final style = theme.textButtonTheme.style!;
+      expect(style.foregroundColor?.resolve({}), colors.accent);
+      expect(
+        style.minimumSize?.resolve({}),
+        const Size(NbSize.touch, NbSize.touch),
+      );
+    }
+  });
 
   test('the theme exposes the token colors and the bundled fonts', () {
     final theme = NbTheme.dark();

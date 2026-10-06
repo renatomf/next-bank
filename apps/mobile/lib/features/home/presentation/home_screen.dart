@@ -6,14 +6,17 @@ import 'package:next_bank/features/home/presentation/api_status_provider.dart';
 /// Home screen. For now it shows whether the API is reachable;
 /// the balance arrives in week 4.
 class HomeScreen extends ConsumerWidget {
-  /// Creates the home screen.
-  const new({super.key});
+  /// Creates the home screen with the app bar [actions] the app provides.
+  const new({this.actions = const [], super.key});
+
+  /// Buttons on the app bar, such as sign-out.
+  final List<Widget> actions;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final status = ref.watch(apiStatusProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('next bank')),
+      appBar: AppBar(title: const Text('next bank'), actions: actions),
       body: Center(
         child: switch (status) {
           AsyncData(value: ApiStatus.available) => const _StatusMessage(

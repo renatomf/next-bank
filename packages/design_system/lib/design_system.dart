@@ -3,7 +3,10 @@
 /// uses them.
 library;
 
-export 'src/components/demo_notice.dart';
+export 'src/components/display_title.dart';
+export 'src/components/form_error_text.dart';
+export 'src/components/glow_background.dart';
+export 'src/components/info_notice.dart';
 export 'src/components/nb_text_field.dart';
 export 'src/components/next_logo.dart';
 export 'src/components/pin_field.dart';

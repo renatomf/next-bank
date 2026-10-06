@@ -91,7 +91,7 @@
 | Proteção contra captura de tela | 🔭 | Risco aceito (baixo impacto na demo); há a opção de ocultar o saldo (MOB-05). | — |
 | Ofuscação | ⏳ | Build de release ofuscado; busca por segredos no binário (MOB-04). | 8 |
 | Integridade do app (Play Integrity / App Attest) | 🔭 | Risco aceito: exige contas de loja e configuração de backend. | — |
-| Deep links seguros | ➖ | Não há deep links na V1. | — |
+| Deep links seguros | ✅ | Não há deep links na V1, e o padrão do Flutter (ligado) foi desligado no Android e no iOS; o app sempre abre pela Splash e o redirect decide a tela pela sessão (MOB-06, `deep_links_test.dart`). | 3 |
 | Biometria integrada corretamente | ⏳ | Só uma conveniência local que libera o PIN guardado no secure storage. O servidor nunca confia na biometria (ADR 0004). É item extra do roadmap. | 3, 6 |
 | Comunicação só via TLS | ✅ | Texto puro desligado no release; no debug, liberado só para hosts locais (MOB-03, build do APK no CI valida o manifesto). | 2 |
 
@@ -203,6 +203,7 @@ Achados das revisões de segurança e da construção, no formato de relatório 
 | F-12 | Autenticação | 🟡 Média | Uma conta `LOCKED` continua renovando a sessão pelo refresh e passando pelas operações sensíveis: só o login confere o status. Apontado no `/security-review` do refresh | Aberto, condicionado: hoje não existe como bloquear uma conta pela aplicação. Quando o bloqueio pela equipe existir (Fase 3), bloquear deve revogar todas as sessões, com teste |
 | F-13 | Dados pessoais | 🟢 Baixa | E-mail e nome, classificados como dados pessoais que nunca vão para logs (`database.md`, seção 2), não estavam na redação automática; nenhum log atual os incluía, mas um log futuro vazaria. Apontado na revisão consolidada do Identity | Corrigido no fechamento da semana 3: `email` e `name` redigidos, com teste; os logs de erro mantêm a classe em `err.type` |
 | F-14 | Processo | 🟢 Baixa | O desenho do `design_system` foi conferido contra as tabelas do brief, mas não contra as imagens dos mockups: o botão principal saiu sem o halo Menta e o rótulo do campo saiu menor que o do mockup. Apontado na conferência visual pedida pelo desenvolvedor, antes do PR | Corrigido antes do PR da 6a, com teste para cada ponto. Falha de desenho: a seção "Fontes conferidas" de todo desenho visual passa a listar os mockups e o que cada componente reproduz deles |
+| F-15 | Acessibilidade | 🟢 Baixa | O `accent` do modo claro (mintDeep `#007A6A`) ficava abaixo do AA como texto sobre `surface2` (4,47:1) e sob o brilho do topo da tela (4,46:1). O brief só tinha conferido o contraste sobre o branco, e o teste da 6a cobria só `background` e `surface`. Apontado pelo teste de contraste ampliado na 6b-1, antes de qualquer tela usar a cor | Corrigido antes do PR: o `accent` claro passa a ser o mintInk `#006B5D`, que já existia no brief, com AA em todos os fundos claros. O teste de contraste cobre todo fundo onde há texto. Falha de desenho: a regra "AA em todo texto" (brief §8) passa a ser provada sobre cada fundo do tema, não só sobre o principal |
 
 ## 11. Como manter este documento
 

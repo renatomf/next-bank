@@ -114,7 +114,7 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 | | Desbloqueio após tempo em segundo plano (D5) | ⏳ | 3 |
 | **NETWORK** | Só HTTPS; tráfego em texto puro desabilitado (MOB-03) | ✅ | 2 |
 | | Certificate pinning | 🚫 | — |
-| **PLATFORM** | Sem deep links na V1 | ➖ | — |
+| **PLATFORM** | Sem deep links na V1: desligados no Android e no iOS (MOB-06) | ✅ | 3 |
 | | Proteção de telas sensíveis contra captura | 🚫 | — |
 | | Opção de ocultar saldo (MOB-05) | ⏳ | 4 |
 | **CODE** | Dependências atualizadas e verificadas (API-09) | ✅ | 2 |

@@ -103,6 +103,33 @@ void main() {
       expect(style.color, NbColors.dark.textMuted);
     });
 
+    testWidgets("submits with the keyboard's action key", (tester) async {
+      final submitted = <String>[];
+      await tester.pumpWidget(
+        host(NbTextField(label: 'Senha', onSubmitted: submitted.add)),
+      );
+
+      await tester.enterText(find.byType(TextField), 'a long passphrase');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+
+      expect(submitted, ['a long passphrase']);
+    });
+
+    testWidgets('read-only shows its value but takes no typing', (
+      tester,
+    ) async {
+      final controller = TextEditingController(text: '123.456.789-09');
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        host(NbTextField(label: 'CPF', controller: controller, readOnly: true)),
+      );
+
+      await tester.enterText(find.byType(TextField), '000');
+
+      expect(tester.widget<TextField>(find.byType(TextField)).readOnly, isTrue);
+      expect(find.text('123.456.789-09'), findsOneWidget);
+    });
+
     testWidgets('never suggests or corrects hidden text', (tester) async {
       await tester.pumpWidget(
         host(const NbTextField(label: 'Senha', obscureText: true)),
@@ -143,15 +170,79 @@ void main() {
     });
   });
 
+  for (final (mode, theme, colors) in [
+    ('dark', NbTheme.dark(), NbColors.dark),
+    ('light', NbTheme.light(), NbColors.light),
+  ]) {
+    testWidgets('GlowBackground lights the top in $mode mode', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: theme,
+          home: const GlowBackground(child: Text('Conteúdo')),
+        ),
+      );
+
+      final ground = tester.widget<ColoredBox>(
+        find
+            .descendant(
+              of: find.byType(GlowBackground),
+              matching: find.byType(ColoredBox),
+            )
+            .first,
+      );
+      final glow = tester.widget<DecoratedBox>(
+        find
+            .descendant(
+              of: find.byType(GlowBackground),
+              matching: find.byType(DecoratedBox),
+            )
+            .first,
+      );
+      final gradient = (glow.decoration as BoxDecoration).gradient!;
+      expect(ground.color, colors.background);
+      expect(gradient.colors.first, colors.glow);
+      expect(find.text('Conteúdo'), findsOneWidget);
+    });
+  }
+
+  testWidgets('DisplayTitle reads as one heading with a muted second line', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(
+        const DisplayTitle(lead: 'Seu dinheiro,', trail: 'um passo à frente.'),
+      ),
+    );
+
+    final semantics = tester.getSemantics(find.byType(DisplayTitle));
+    expect(semantics.label, 'Seu dinheiro,\num passo à frente.');
+    expect(semantics.flagsCollection.isHeader, isTrue);
+    final rich = tester.widget<Text>(find.byType(Text)).textSpan! as TextSpan;
+    final trail = rich.children!.single as TextSpan;
+    expect(trail.style?.color, NbColors.dark.textMuted);
+    expect(trail.style?.fontWeight, FontWeight.w400);
+  });
+
+  testWidgets('FormErrorText is announced and shown in the danger color', (
+    tester,
+  ) async {
+    await tester.pumpWidget(host(const FormErrorText('Sem conexão.')));
+
+    final semantics = tester.getSemantics(find.byType(FormErrorText));
+    expect(semantics.flagsCollection.isLiveRegion, isTrue);
+    final text = tester.widget<Text>(find.text('Sem conexão.'));
+    expect(text.style?.color, NbColors.dark.danger);
+  });
+
   testWidgets('NextLogo reads as "next bank"', (tester) async {
     await tester.pumpWidget(host(const NextLogo()));
 
     expect(find.bySemanticsLabel('next bank'), findsOneWidget);
   });
 
-  testWidgets('DemoNotice shows its message with an icon', (tester) async {
+  testWidgets('InfoNotice shows its message with an icon', (tester) async {
     await tester.pumpWidget(
-      host(const DemoNotice(message: 'Demonstração: não use dados reais.')),
+      host(const InfoNotice(message: 'Demonstração: não use dados reais.')),
     );
 
     expect(find.text('Demonstração: não use dados reais.'), findsOneWidget);

@@ -119,6 +119,7 @@ Legenda STRIDE: **S** falsificação de identidade · **T** adulteração · **R
 | MOB-03 | Interceptação do tráfego (MITM) | T, I | A4 | Só HTTPS; tráfego em texto puro desabilitado (Android e iOS) | Build não aceita `http://` | 2 |
 | MOB-04 | App descompilado em busca de segredos | I | A4 | Nenhum segredo no app; release ofuscado; servidor é a única autoridade | Busca por chaves no binário de release | 8 |
 | MOB-05 | Pessoa ao lado vê o saldo | I | A3 | Opção de ocultar saldo; desbloqueio após 5 min em segundo plano | Teste de widget do saldo oculto | 4, 7 |
+| MOB-06 | Link externo ou intent abre uma tela interna direto, pulando o fluxo (o Flutter liga deep links por padrão) | T, E | A1, A4 | Deep links desligados no Android (`flutter_deeplinking_enabled`) e no iOS (`FlutterDeepLinkingEnabled`); o app sempre abre pela Splash e um redirect central decide a tela pela sessão | `deep_links_test.dart` confere o manifesto e o `Info.plist`; `redirect_test.dart` cobre cada estado de sessão × rota | 3 |
 
 ### 5.5 API, dados e infraestrutura
 
@@ -144,7 +145,7 @@ A V1 fica publicada para avaliação por recrutadores. Uma demo aberta tem risco
 
 | ID | Ameaça | STRIDE | Ator | Mitigação | Teste | Sem. |
 |---|---|---|---|---|---|---|
-| DEMO-01 | Visitantes cadastram **dados pessoais reais** (CPF, nome, e-mail) numa demo pública | I | Visitante | O app gera um CPF fictício válido no cadastro; aviso explícito para não usar dados reais; contas de demonstração prontas dispensam o cadastro | Fluxo de cadastro oferece o CPF gerado por padrão | 3 |
+| DEMO-01 | Visitantes cadastram **dados pessoais reais** (CPF, nome, e-mail) numa demo pública | I | Visitante | O app gera um CPF fictício válido no cadastro, num campo **somente leitura** (o visitante não consegue digitar o próprio), com "Gerar outro"; aviso explícito para usar nome e e-mail fictícios; contas de demonstração prontas dispensam o cadastro | `cpf_test.dart` (gerador sempre válido), `registration_flow_test.dart` (campo somente leitura, aviso, "Gerar outro", a requisição leva o CPF da tela) | 3 |
 | DEMO-02 | Dados de visitantes acumulados indefinidamente | I | A5 | Reset semanal do banco da demo (apaga contas de visitantes, recria as de demonstração); retenção documentada no README | Job de reset em ambiente de teste deixa só as contas de demonstração | 8 |
 | DEMO-03 | Contas de demonstração alteradas para prejudicar a experiência de outros visitantes (trocar PIN, encerrar sessões, zerar saldo) | T, D | Visitante | Contas de demonstração não podem trocar senha ou PIN; saldo recomposto no reset; rate limit normal | Troca de PIN numa conta de demonstração → 403 | 7 |
 | DEMO-04 | Uso da demo para hospedar conteúdo ofensivo (nomes, descrições de Pix) | T | Visitante | Limite de tamanho nos campos; reset semanal | Descrição acima de 140 caracteres → 422 | 5 |

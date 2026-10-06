@@ -28,6 +28,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - App: sessão guardada só no Keychain/Keystore, num único registro, sem iCloud e sem backup do Android (MOB-01); sessão restaurada ao abrir o app; `x-request-id` em toda requisição
 - App: cliente de autenticação (cadastro, login, PIN, logout), falhas da API como tipo fechado e interceptor que anexa o token só às operações protegidas e renova a sessão com um único refresh para chamadas simultâneas
 - App: pacote `design_system` (tokens do brief, temas claro e escuro, botão principal, campo de texto, campo de PIN, logo e aviso de demonstração) com contraste AA verificado em teste e fontes empacotadas; app e pacote num pub workspace com um único lockfile
+- App: navegação com GoRouter e redirect pela sessão (sessão expirada ou revogada volta ao login de qualquer tela, dizendo o motivo), telas de Splash e Login, "Sair" na Home (revoga na API e apaga o token mesmo sem conexão), deep links desligados (MOB-06) e `accent` do modo claro trocado para o mintInk, com AA em todos os fundos (F-15)
+- App: cadastro com CPF fictício somente leitura e "Gerar outro" (DEMO-01) e criação do PIN em duas etapas, com as regras da API espelhadas no app; tema com todos os estilos de texto, `DisplayTitle`, `FormErrorText`, campo somente leitura e envio pelo teclado; teste de arquitetura passa a proibir `core/` de importar features
 
 ### Adicionado — Semana 2: esqueleto ponta a ponta
 - Postgres 17 local (Docker Compose) com papéis de menor privilégio (`nextbank_migrator`, `nextbank_app`) e timeouts no papel da aplicação
