@@ -51,9 +51,24 @@ describe('OpenAPI document', () => {
     expect(Object.keys(document.components.schemas).sort()).toEqual([
       'AuthTokens',
       'Health',
+      'LoginRequestInput',
       'Problem',
       'RegisterRequestInput',
     ]);
+  });
+
+  it('describes POST /v1/auth/login with the shared token answer', () => {
+    const operation = document.paths['/v1/auth/login']?.post;
+
+    expect(operation?.operationId).toBe('login');
+    expect(operation?.responses['200']?.content?.['application/json']?.schema).toEqual({
+      $ref: '#/components/schemas/AuthTokens',
+    });
+    for (const status of ['401', '422', '429']) {
+      expect(operation?.responses[status]?.content?.['application/problem+json']?.schema).toEqual({
+        $ref: '#/components/schemas/Problem',
+      });
+    }
   });
 
   it('is deterministic', async () => {
