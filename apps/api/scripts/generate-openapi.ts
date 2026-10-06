@@ -1,7 +1,7 @@
 import { writeFileSync } from 'node:fs';
 import { buildApp } from '../src/app.ts';
-import { createPool } from '../src/db.ts';
-import { buildOpenApiDocument } from '../src/openapi.ts';
+import { createPool } from '../src/shared/db.ts';
+import { buildOpenApiDocument } from '../src/shared/openapi.ts';
 
 const output = process.argv[2];
 if (!output) throw new Error('usage: generate-openapi.ts <output.json>');

@@ -11,9 +11,9 @@ import {
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod';
 import type pg from 'pg';
-import { healthRoutes } from './http/health.ts';
-import { registerProblemHandlers } from './http/problem.ts';
-import { REDACT_PATHS } from './logging.ts';
+import { healthRoutes } from './shared/http/health.ts';
+import { registerProblemHandlers } from './shared/http/problem.ts';
+import { REDACT_PATHS } from './shared/logging.ts';
 
 /** JSON log destination, one line per event. */
 export interface LogDestination {

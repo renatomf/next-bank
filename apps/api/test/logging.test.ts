@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.ts';
-import { createPool } from '../src/db.ts';
+import { createPool } from '../src/shared/db.ts';
 import { captureLogs, testDatabaseUrl } from './helpers.ts';
 
 // Fictitious data only: no real values.

@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.ts';
-import { createPool } from '../src/db.ts';
-import { buildOpenApiDocument, type OpenApiDocument } from '../src/openapi.ts';
+import { createPool } from '../src/shared/db.ts';
+import { buildOpenApiDocument, type OpenApiDocument } from '../src/shared/openapi.ts';
 import { captureLogs, testDatabaseUrl } from './helpers.ts';
 
 // The OpenAPI document is the contract the Dart client is generated from (ADR 0008).
