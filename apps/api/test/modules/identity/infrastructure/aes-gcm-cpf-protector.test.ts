@@ -52,6 +52,15 @@ describe('AesGcmCpfProtector', () => {
     expect(() => protector.decrypt({ ...encrypted, ciphertext: tampered })).toThrow();
   });
 
+  it('refuses a stored value too short to hold the full 16-byte tag (truncated tag forgery)', () => {
+    const protector = newProtector();
+    const encrypted = protector.encrypt(CPF);
+    // Nonce plus only 4 bytes of tag: a short tag is far easier to guess.
+    const truncated = encrypted.ciphertext.subarray(0, 12 + 4);
+
+    expect(() => protector.decrypt({ ...encrypted, ciphertext: truncated })).toThrow(/too short/);
+  });
+
   it('cannot decrypt with another key', () => {
     const encrypted = newProtector().encrypt(CPF);
 
