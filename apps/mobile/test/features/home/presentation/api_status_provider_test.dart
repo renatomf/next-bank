@@ -4,7 +4,7 @@ import 'package:next_bank/features/home/domain/api_status.dart';
 import 'package:next_bank/features/home/presentation/api_status_provider.dart';
 
 class FakeApiStatusRepository implements ApiStatusRepository {
-  FakeApiStatusRepository(this.status);
+  new(this.status);
 
   ApiStatus status;
   int calls = 0;

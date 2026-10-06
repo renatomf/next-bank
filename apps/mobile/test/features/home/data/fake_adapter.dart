@@ -5,14 +5,14 @@ import 'package:dio/dio.dart';
 
 /// Answers every request with a fixed response, or fails like a network error.
 class FakeAdapter implements HttpClientAdapter {
-  FakeAdapter.respond(
+  new respond(
     this.statusCode,
     Map<String, Object?> body, {
     this.contentType = 'application/json',
   }) : body = jsonEncode(body),
        networkError = false;
 
-  FakeAdapter.networkError()
+  new networkError()
     : statusCode = 0,
       body = '',
       contentType = 'application/json',
