@@ -217,6 +217,26 @@ describe('identity schema', () => {
         ]),
       ).rejects.toThrow(/transaction_pins_failed_attempts_check/);
     });
+
+    it('keeps at most the two most recent locks and no timed lock once a reset is required', async () => {
+      const userId = await insertUser();
+      const insertPin = (recentLocks: Date[], resetRequired: boolean, lockedUntil: Date | null) =>
+        app.query(
+          `INSERT INTO identity.transaction_pins
+             (user_id, pin_hash, failed_attempts, locked_until, recent_locks, reset_required, updated_at)
+           VALUES ($1, '$argon2id$fake', 5, $2, $3, $4, now())`,
+          [userId, lockedUntil, recentLocks, resetRequired],
+        );
+      const now = new Date('2026-10-06T12:00:00Z');
+
+      await expect(insertPin([now, now, now], false, null)).rejects.toThrow(
+        /transaction_pins_recent_locks_check/,
+      );
+      await expect(insertPin([now, now], true, now)).rejects.toThrow(
+        /transaction_pins_reset_required_check/,
+      );
+      await expect(insertPin([now, now], true, null)).resolves.toBeDefined();
+    });
   });
 
   it('keeps trigger and helper functions out of reach of the API role', async () => {
