@@ -1,0 +1,28 @@
+name: design_system
+description: "next bank design system: tokens, theme and components (docs/design/brief.md)."
+publish_to: none
+
+environment:
+  sdk: ^3.13.4
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  very_good_analysis: ^11.0.0
+
+flutter:
+  # Bundled, never fetched at runtime: no network call to third parties and
+  # the same rendering offline. SIL Open Font License, files in fonts/.
+  fonts:
+    - family: Sora
+      fonts:
+        - asset: fonts/Sora-Variable.ttf
+    - family: Manrope
+      fonts:
+        - asset: fonts/Manrope-Variable.ttf
