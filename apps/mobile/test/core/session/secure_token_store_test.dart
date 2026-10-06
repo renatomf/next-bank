@@ -24,6 +24,33 @@ void main() {
       expect(read?.accessTokenExpiresAt, DateTime.utc(2026, 10, 6, 12, 15));
     });
 
+    test('never reads a mixed pair while another pair is written', () async {
+      final store = SecureTokenStore();
+      await store.write(tokens);
+      final next = SessionTokens(
+        accessToken: 'next-access',
+        accessTokenExpiresAt: DateTime.utc(2026, 10, 6, 12, 30),
+        refreshToken: 'next-refresh',
+      );
+
+      final results = await Future.wait<Object?>([
+        for (var i = 0; i < 20; i++)
+          if (i.isEven) store.read() else store.write(next),
+      ]);
+
+      // One record holds the whole session: whatever is read is one pair.
+      for (final read in results.whereType<SessionTokens>()) {
+        final pair = (read.accessToken, read.refreshToken);
+        expect(
+          pair,
+          anyOf(
+            ('access-token-value', 'refresh-token-value'),
+            ('next-access', 'next-refresh'),
+          ),
+        );
+      }
+    });
+
     test('has no session before anything is written', () async {
       expect(await SecureTokenStore().read(), isNull);
     });

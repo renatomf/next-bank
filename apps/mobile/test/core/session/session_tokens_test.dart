@@ -37,7 +37,8 @@ void main() {
       ),
       (
         'a non-text token',
-        '{"accessToken":1,"accessTokenExpiresAt":"2026-10-06T12:15:00Z","refreshToken":"r"}',
+        '{"accessToken":1,"accessTokenExpiresAt":"2026-10-06T12:15:00Z",'
+            '"refreshToken":"r"}',
       ),
     ]) {
       test('reads $description as no session', () {
