@@ -41,6 +41,8 @@ Aceitos os ajustes, o roadmap é atualizado no mesmo PR que fechar a semana.
 
 **Valida:** ADR 0009 (pgTyped + dbmate + Neon) com o caso do ledger.
 
+> **Resultado:** banco e dbmate aprovados; pgTyped descartado em favor de tipos escritos à mão (ver ADR 0009, "Resultado do spike"). Neon validado; achados no ADR 0009.
+
 - [ ] `infra/docker-compose.yml` com Postgres (D3)
 - [ ] `pnpm-workspace.yaml`, `package.json` raiz e `apps/api` mínimo (só o necessário para o spike)
 - [ ] Migration dbmate: papéis `nextbank_migrator` e `nextbank_app`; `journal_entries` e `postings` mínimas; constraint trigger diferido (Σ postings = 0); `GRANT` só de `INSERT`/`SELECT` para `nextbank_app`

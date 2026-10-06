@@ -53,7 +53,7 @@ next bank é um banco fictício construído como **projeto de portfólio para va
 | Camada | Tecnologias |
 |---|---|
 | Mobile | Flutter/Dart, Riverpod (codegen), GoRouter, Dio, Freezed, flutter_secure_storage, local_auth, Sentry |
-| API | Node.js, TypeScript, Fastify, Zod, PostgreSQL com SQL puro (`pg` + pgTyped, migrations com dbmate), Pino, Sentry |
+| API | Node.js, TypeScript, Fastify, Zod, PostgreSQL com SQL puro (`pg`, migrations com dbmate), Pino, Sentry |
 | Backoffice | Next.js (App Router), TypeScript, Server Components/Actions, Tailwind, Playwright |
 | Simulador Bacen | Fastify + TypeScript (serviço separado) |
 | Contratos | Zod → OpenAPI → cliente Dart + cliente TS gerados |
@@ -133,7 +133,7 @@ O Pix nasce em `AWAITING_AUTH`; "criado" é só o evento `PixTransferCreated`. D
 apps/api/src/modules/<modulo>/
 ├── domain/          # entidades, VOs, eventos, erros — sem imports de framework
 ├── application/     # use cases (commands/queries) + portas (Repo, UnitOfWork, Clock, IdGenerator)
-├── infrastructure/  # repositórios em SQL tipado (pgTyped), adapters
+├── infrastructure/  # repositórios em SQL puro (`pg`), adapters
 ├── http/            # rotas Fastify, schemas Zod, mappers
 └── index.ts         # API pública do módulo
 ```
@@ -266,7 +266,7 @@ Cada semana tem itens **obrigatórios** e **extras**. Se a semana estourar, os e
 | Sem. | Fatia | Obrigatório | Extra | Pronto quando |
 |---|---|---|---|---|
 | 1 | Arquitetura + Segurança | *(Design já concluído: identidade, tokens e 3 mockups.)* Modelo de domínio (contextos, agregados, máquina de estados, plano de contas); threat model (Auth, PIX); ADRs 001–008; C4 (contexto e containers); ERD inicial; mapa de navegação e estados das telas | — | ADRs, threat model e diagramas commitados e revisados |
-| 2 | Esqueleto ponta a ponta | **Spikes (dias 1–2):** gerador de cliente Dart, SQL tipado (pgTyped) + migrations dbmate com triggers/`GRANT`s no Neon, no caso do ledger, serviço privado no Render. Monorepo (pnpm + Turborepo + pub workspaces); app movido para `apps/mobile`, **sem as plataformas não usadas** (linux, macos, windows, web) e com **identificador único** (`dev.renatomf.nextbank`); Fastify + Postgres com SQL tipado e migrations dbmate (Docker Compose); CI (format, lint, typecheck, testes, build) nos dois apps; dependency-cruiser; gitleaks (CI e pré-commit); proteção da `main`; Pino + requestId; Sentry; Home exibe saldo vindo da API | Geração de contratos; osv-scanner + Semgrep; deploy no Render + Neon | PR verde; app conversa com a API |
+| 2 | Esqueleto ponta a ponta | **Spikes (dias 1–2):** gerador de cliente Dart, SQL puro (`pg`) + migrations dbmate com triggers/`GRANT`s no Neon, no caso do ledger, serviço privado no Render. Monorepo (pnpm + Turborepo + pub workspaces); app movido para `apps/mobile`, **sem as plataformas não usadas** (linux, macos, windows, web) e com **identificador único** (`dev.renatomf.nextbank`); Fastify + Postgres com SQL tipado e migrations dbmate (Docker Compose); CI (format, lint, typecheck, testes, build) nos dois apps; dependency-cruiser; gitleaks (CI e pré-commit); proteção da `main`; Pino + requestId; Sentry; Home exibe saldo vindo da API | Geração de contratos; osv-scanner + Semgrep; deploy no Render + Neon | PR verde; app conversa com a API |
 | 3 | Identity | Cadastro, login, logout; Argon2id; JWT + refresh rotativo com detecção de reuso; sessões; rate limit; auditoria de auth. Mobile: login e cadastro, secure storage, interceptor de refresh com fila única, restauração e expiração de sessão; PIN de transação validado no servidor; **cadastro da demo com CPF fictício gerado no app** (nunca dados reais) | Desbloqueio por biometria no app | Testes de domínio e de API verdes; itens de auth do threat model mitigados |
 | 4 | Accounts + Ledger | `Money`; `Account`; plano de contas; `JournalEntry` em partidas dobradas; saldos posted/available com versão; funding pela conta de sistema; authorization por dono. Mobile: Home (saldo, ações rápidas, recentes, estados de loading, vazio e erro) | Job de reconciliação interna | Σ débitos = Σ créditos garantido por teste; "usuário A → conta B = 404" |
 | 5 | PIX — backend | Chaves PIX; máquina de estados; idempotência (escopo + validade); locks ordenados; `CHECK` de saldo; auditoria na transação; teste de concorrência (2 × R$80 sobre R$100) | Limites por transação e noturno | Todos os testes de integridade financeira verdes |

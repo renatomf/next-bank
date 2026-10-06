@@ -284,7 +284,9 @@ erDiagram
 
 **Defesa em profundidade:** além dos `GRANT`s, triggers `BEFORE UPDATE OR DELETE` em `journal_entries`, `postings` e `audit_events` lançam erro. Assim, nem um acesso com papel errado altera o histórico.
 
-Conexões sempre com TLS (`sslmode=verify-full` no ambiente publicado), `statement_timeout = 5s` e `lock_timeout = 3s` para o papel da aplicação.
+Conexões sempre com TLS (`sslmode=verify-full` no ambiente publicado). O papel da aplicação tem `statement_timeout = 5s`, `lock_timeout = 3s` e `idle_in_transaction_session_timeout = 10s` (API-12), configurados na criação do papel, já que o migrator não pode alterar papéis.
+
+**Criação dos papéis:** sempre via SQL, nunca pelo painel do provedor. No Neon, papéis criados pelo painel ou pela API entram no `neon_superuser`, que tem `pg_write_all_data` e ignora os `GRANT`s, anulando o menor privilégio (API-11, demonstrado no spike; ver ADR 0009).
 
 ## 7. Concorrência
 
@@ -331,7 +333,7 @@ LIMIT 21;                                      -- 20 itens + 1 para saber se há
 - **Só para frente:** nenhuma migration é editada depois de publicada; correção é uma nova migration.
 - **Expand/contract** para mudanças incompatíveis: adiciona o novo → migra os dados → passa a usar → remove o antigo (em migrations separadas).
 - Executadas pelo papel `nextbank_migrator` no pipeline, nunca pela API em execução.
-- CI: sobe Postgres limpo, aplica todas as migrations, **gera os tipos das queries com pgTyped** (falha se alguma query não bater com o schema) e roda os testes de integração.
+- CI: sobe Postgres limpo, aplica todas as migrations e roda os testes de integração com o papel `nextbank_app` (falham se alguma query não bater com o schema).
 
 ## 10. Invariantes: onde cada uma é garantida
 
@@ -400,3 +402,4 @@ O desenho segue os **mesmos princípios** de ledgers de bancos e fintechs (parti
 | Paginação | Cursor `(created_at, id)` | `OFFSET` (lento e instável) |
 | Contas de sistema | Saldo não materializado, sem lock | Saldo atualizado a cada operação (gargalo de *hot account*) |
 | Chaves de criptografia | Variável de ambiente atrás da porta `KeyProvider` (risco aceito) | KMS já na V1 (custo e complexidade de infraestrutura sem ganho para a demo) |
+| Isolamento por dono | Filtro por dono em toda query + teste de IDOR obrigatório | RLS (só a API acessa o banco; o Pix cruza donos na mesma transação, o que exigiria políticas permissivas no código mais crítico; o `neon_superuser` tem `BYPASSRLS`). Reavaliar se outro cliente acessar o banco diretamente |

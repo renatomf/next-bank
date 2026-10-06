@@ -40,7 +40,7 @@ O next bank é construído com as práticas de um banco em produção:
 | Camada | Tecnologias |
 |---|---|
 | Mobile | Flutter, Riverpod, GoRouter, Dio, Freezed |
-| API | Node.js, TypeScript, Fastify, Zod, PostgreSQL (SQL tipado com pgTyped) |
+| API | Node.js, TypeScript, Fastify, Zod, PostgreSQL (SQL puro com `pg` e dbmate) |
 | Backoffice | Next.js, TypeScript |
 | Infra | Docker, GitHub Actions, Turborepo, Sentry |
 
