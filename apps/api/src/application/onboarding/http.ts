@@ -1,5 +1,6 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
+import { AuthTokensSchema, authTokensBody } from '../../modules/identity/index.ts';
 import { PROBLEM_CONTENT_TYPE, ProblemSchema } from '../../shared/http/problem.ts';
 import type { RegisterCustomer } from './register-customer.ts';
 
@@ -19,15 +20,6 @@ const RegisterRequestSchema = z
     deviceLabel: z.string().trim().min(1).max(100).regex(NO_CONTROL_CHARACTERS).optional(),
   })
   .meta({ id: 'RegisterRequest' });
-
-const AuthTokensSchema = z
-  .object({
-    tokenType: z.literal('Bearer'),
-    accessToken: z.string(),
-    accessTokenExpiresAt: z.iso.datetime(),
-    refreshToken: z.string(),
-  })
-  .meta({ id: 'AuthTokens' });
 
 const problem = { content: { [PROBLEM_CONTENT_TYPE]: { schema: ProblemSchema } } };
 
@@ -54,13 +46,7 @@ export const onboardingRoutes: FastifyPluginAsyncZod<{ registerCustomer: Registe
         deviceLabel: request.body.deviceLabel ?? null,
         requestId: request.id,
       });
-      // Only what the app needs to start the session; no ids or personal data (READ-02).
-      return reply.status(201).send({
-        tokenType: 'Bearer' as const,
-        accessToken: result.accessToken,
-        accessTokenExpiresAt: result.accessTokenExpiresAt.toISOString(),
-        refreshToken: result.refreshToken,
-      });
+      return reply.status(201).send(authTokensBody(result));
     },
   );
   return Promise.resolve();

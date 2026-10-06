@@ -20,8 +20,8 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 |---|---|---|
 | Senha com mínimo de 10 e máximo de 128 caracteres; lista de senhas comuns; sem regras de composição (AUTH-07) | ✅ | 3 |
 | Hash de senha com Argon2id nos parâmetros recomendados (AUTH-08) | ✅ | 3 |
-| Proteção contra força bruta e credential stuffing (AUTH-01) | ⏳ | 3 |
-| Mesma resposta e tempo para usuário inexistente e senha errada (AUTH-02) | ⏳ | 3 |
+| Proteção contra força bruta e credential stuffing (AUTH-01) | ✅ | 3 |
+| Mesma resposta e tempo para usuário inexistente e senha errada (AUTH-02) | ✅ | 3 |
 | Troca de senha exige a senha atual e encerra as outras sessões (AUTH-06) | ⏳ | 7 |
 | Segundo fator de autenticação | 🚫 | — |
 

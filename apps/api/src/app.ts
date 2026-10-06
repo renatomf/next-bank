@@ -18,6 +18,7 @@ import {
   type AccessTokenKeys,
   type CpfKeys,
   createIdentityModule,
+  loginRoutes,
 } from './modules/identity/index.ts';
 import { healthRoutes } from './shared/http/health.ts';
 import { registerProblemHandlers } from './shared/http/problem.ts';
@@ -99,17 +100,17 @@ export function buildApp({ pool, logStream, security }: AppDependencies) {
   });
   void app.register(healthRoutes, { pool });
 
+  const unitOfWork = new PgUnitOfWork(pool);
   const identity = createIdentityModule({
+    unitOfWork,
     clock: new SystemClock(),
     ids: new UuidV7Generator(),
     accessTokenKeys: security.accessTokenKeys,
     cpfKeys: security.cpfKeys,
   });
-  const registerCustomer = new RegisterCustomer({
-    unitOfWork: new PgUnitOfWork(pool),
-    identity: identity.registration,
-  });
+  const registerCustomer = new RegisterCustomer({ unitOfWork, identity: identity.registration });
   void app.register(onboardingRoutes, { registerCustomer });
+  void app.register(loginRoutes, { login: identity.login });
 
   return app;
 }

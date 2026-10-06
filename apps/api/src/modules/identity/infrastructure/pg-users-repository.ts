@@ -1,7 +1,7 @@
 import pg from 'pg';
-import type { StoredCpf, UsersRepository } from '../application/ports.ts';
+import type { LoginAccount, StoredCpf, UsersRepository } from '../application/ports.ts';
 import { AlreadyRegistered } from '../domain/errors.ts';
-import type { UserState } from '../domain/user.ts';
+import type { UserState, UserStatus } from '../domain/user.ts';
 
 const UNIQUE_VIOLATION = '23505';
 const IDENTITY_CONSTRAINTS = new Set(['users_email_key', 'users_cpf_hmac_key']);
@@ -11,6 +11,10 @@ export class PgUsersRepository implements UsersRepository {
   static readonly EXISTS_SQL = `SELECT EXISTS (
       SELECT 1 FROM identity.users WHERE email = $1 OR cpf_hmac = $2
     ) AS exists`;
+
+  /** Served by the users_email_key unique index. */
+  static readonly FIND_BY_EMAIL_SQL =
+    'SELECT id, password_hash, status FROM identity.users WHERE email = $1';
 
   readonly #client: pg.ClientBase;
 
@@ -24,6 +28,16 @@ export class PgUsersRepository implements UsersRepository {
       Buffer.from(cpfBlindIndex),
     ]);
     return rows[0]?.exists ?? false;
+  }
+
+  async findByEmail(email: string): Promise<LoginAccount | null> {
+    const { rows } = await this.#client.query<{
+      id: string;
+      password_hash: string;
+      status: UserStatus;
+    }>(PgUsersRepository.FIND_BY_EMAIL_SQL, [email]);
+    const row = rows[0];
+    return row ? { id: row.id, passwordHash: row.password_hash, status: row.status } : null;
   }
 
   async insert(user: UserState, cpf: StoredCpf): Promise<void> {

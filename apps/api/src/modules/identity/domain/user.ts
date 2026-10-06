@@ -13,6 +13,11 @@ export interface UserState {
   createdAt: Date;
 }
 
+/** The single e-mail normalization, shared by registration and login so they never disagree. */
+export function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
 /** A registered customer (domain-model.md 3.1). Format checks happen at the HTTP border. */
 export class User {
   readonly #state: UserState;
@@ -32,7 +37,7 @@ export class User {
     return new User({
       id: input.id,
       name: input.name.trim(),
-      email: input.email.trim().toLowerCase(),
+      email: normalizeEmail(input.email),
       cpf: input.cpf,
       passwordHash: input.passwordHash,
       status: 'ACTIVE',

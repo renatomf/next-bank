@@ -21,6 +21,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Tokens: JWT EdDSA de 15 min (`jose`) com validação completa (AUTH-05), refresh token opaco de 256 bits guardado só como hash, e chaves (JWT e CPF) validadas na inicialização; script para gerar as chaves locais
 - Orquestração entre contextos (ADR 0010): o cadastro passa para `src/application/onboarding/`, sobre uma unidade de trabalho compartilhada por todos os módulos, com as regras de dependência verificadas no CI
 - Rota `POST /v1/auth/register`: cadastro com tokens na resposta (só os 4 campos necessários), limite de 3 tentativas por IP por hora, schema estrito e erros do catálogo; contrato OpenAPI e cliente Dart atualizados
+- Login (`POST /v1/auth/login`): sessão nova a cada login, bloqueio progressivo por conta (1 a 15 min) e 10 tentativas por IP por minuto, mesma resposta e uma verificação Argon2id para e-mail inexistente, senha errada e conta bloqueada (hash fictício), e `LOGIN_FAILED` gravado na auditoria
 
 ### Adicionado — Semana 2: esqueleto ponta a ponta
 - Postgres 17 local (Docker Compose) com papéis de menor privilégio (`nextbank_migrator`, `nextbank_app`) e timeouts no papel da aplicação

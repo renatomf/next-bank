@@ -67,3 +67,20 @@ export class Unauthenticated extends DomainError {
     super('Access token is missing, invalid or expired');
   }
 }
+
+/** Same answer for an unknown e-mail, a wrong password and a locked account (AUTH-02). */
+export class InvalidCredentials extends DomainError {
+  readonly code = 'InvalidCredentials';
+
+  constructor() {
+    super('Login refused');
+  }
+}
+
+export class TooManyAttempts extends DomainError {
+  readonly code = 'TooManyAttempts';
+
+  constructor() {
+    super('Too many login attempts for this account');
+  }
+}

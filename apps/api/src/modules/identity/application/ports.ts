@@ -1,7 +1,8 @@
 import type { AuditTrail, Transaction } from '../../../shared/application/ports.ts';
 import type { Cpf } from '../domain/cpf.ts';
 import type { SessionState } from '../domain/session.ts';
-import type { UserState } from '../domain/user.ts';
+import type { LoginAttemptsState } from '../domain/login-attempts.ts';
+import type { UserState, UserStatus } from '../domain/user.ts';
 
 /** One-way hashing for passwords and PINs. The secret itself is never stored. */
 export interface SecretHasher {
@@ -65,8 +66,16 @@ export interface StoredRefreshToken {
   createdAt: Date;
 }
 
+/** What login needs about an account; never the CPF or other personal data. */
+export interface LoginAccount {
+  id: string;
+  passwordHash: string;
+  status: UserStatus;
+}
+
 export interface UsersRepository {
   existsWithEmailOrCpf(email: string, cpfBlindIndex: Uint8Array): Promise<boolean>;
+  findByEmail(email: string): Promise<LoginAccount | null>;
   insert(user: UserState, cpf: StoredCpf): Promise<void>;
 }
 
@@ -89,4 +98,11 @@ export interface IdentityRepositories {
 /** Binds the repositories to the shared transaction opened by the caller (ADR 0010). */
 export interface IdentityRepositoriesFactory {
   for(tx: Transaction): IdentityRepositories;
+}
+
+/** Login attempt counters per account (AUTH-01), keyed by the normalized e-mail. */
+export interface LoginAttemptsStore {
+  get(key: string): LoginAttemptsState | undefined;
+  set(key: string, state: LoginAttemptsState): void;
+  delete(key: string): void;
 }

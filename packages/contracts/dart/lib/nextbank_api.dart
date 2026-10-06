@@ -13,6 +13,7 @@ export 'package:nextbank_api/src/api/default_api.dart';
 
 export 'package:nextbank_api/src/model/auth_tokens.dart';
 export 'package:nextbank_api/src/model/health.dart';
+export 'package:nextbank_api/src/model/login_request_input.dart';
 export 'package:nextbank_api/src/model/problem.dart';
 export 'package:nextbank_api/src/model/register_request_input.dart';
 
