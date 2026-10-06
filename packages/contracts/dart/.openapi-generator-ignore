@@ -1,0 +1,7 @@
+# Files owned by us, not by the generator.
+pubspec.yaml
+analysis_options.yaml
+README.md
+.gitignore
+doc/**
+test/**
