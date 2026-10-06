@@ -24,6 +24,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Monorepo com Turborepo no lado TypeScript; backoffice no Render com API administrativa privada
 - Acesso a dados com SQL puro tipado (`pg` + pgTyped + dbmate) no lugar do Drizzle
 - Escopo da V1 congelado até a `v1.0.0`
+- App mobile sem o código de exemplo do template do Flutter
 
 ### Segurança
 - `.gitignore` cobrindo segredos, chaves, certificados, credenciais e dumps
