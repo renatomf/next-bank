@@ -53,6 +53,13 @@ class MoneyText extends StatelessWidget {
     final part = NbType.moneyLargePart.copyWith(
       color: mutedColor ?? colors.textMuted,
     );
+    // Sora has no "•" glyph: the mask uses Manrope, at the integer's size.
+    final mask = main.copyWith(
+      fontFamily: NbType.body,
+      package: 'design_system',
+      fontVariations: const [FontVariation.weight(800)],
+      letterSpacing: 2,
+    );
     final parts = hidden ? null : formatReais(cents);
     // Its own node: inside a list or a card it must not merge with siblings.
     return Semantics(
@@ -64,7 +71,10 @@ class MoneyText extends StatelessWidget {
         text: TextSpan(
           children: [
             TextSpan(text: r'R$ ', style: part),
-            TextSpan(text: parts?.integer ?? '••••••', style: main),
+            if (parts == null)
+              TextSpan(text: '••••••', style: mask)
+            else
+              TextSpan(text: parts.integer, style: main),
             TextSpan(text: parts?.cents ?? '', style: part),
           ],
         ),
