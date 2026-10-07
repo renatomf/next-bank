@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:next_bank/core/amount_integrity_interceptor.dart';
 import 'package:next_bank/core/api_config.dart';
 import 'package:next_bank/core/request_id_interceptor.dart';
 import 'package:next_bank/core/session/api_session_tokens.dart';
@@ -30,6 +31,7 @@ final apiProvider = Provider<NextbankApi>((ref) {
   final dio = _newDio();
   dio.interceptors.addAll([
     RequestIdInterceptor(),
+    AmountIntegrityInterceptor(),
     SessionInterceptor(
       dio: dio,
       currentTokens: () => switch (ref.read(sessionProvider).value) {
