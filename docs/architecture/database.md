@@ -216,8 +216,10 @@ erDiagram
 
 **`accounts`**
 - `holder_user_id`: `UNIQUE` (uma conta por cliente na V1)
-- `UNIQUE (branch, number)`; `number` com dígito verificador (módulo 11)
+- `UNIQUE (branch, number)`; `number` no formato `NNNNNN-D`, com dígito verificador módulo 11 calculado no domínio
+- Número vindo da sequência `accounts.account_number_seq` (100000 a 999999): segura sob concorrência sem lock; um número perdido num rollback só deixa um buraco
 - `status`: `CHECK (status IN ('ACTIVE','BLOCKED','CLOSED'))`
+- O papel da API só pode alterar `status` e `updated_at` (`GRANT UPDATE` por coluna)
 
 ### 5.3 `ledger`
 
@@ -227,7 +229,10 @@ erDiagram
 - **`CHECK (kind = 'SYSTEM' OR available_balance >= 0)`** — saldo de cliente nunca negativo
 - **`CHECK (kind = 'SYSTEM' OR available_balance <= posted_balance)`** — reservas nunca criam saldo
 - `version` incrementado a cada atualização de saldo
-- **Contas `SYSTEM` não têm saldo materializado** (as colunas ficam em zero e não são atualizadas). O saldo delas é calculado pela soma dos lançamentos, no job de reconciliação ou sob demanda. Motivo: contas como `system:funding` e `system:pix_clearing` participam de **todas** as operações do seu tipo. Se cada operação travasse e atualizasse essa linha, ela viraria um gargalo único (*hot account*) e todas as operações fariam fila nela. Contas de cliente continuam materializadas, porque o saldo disponível precisa ser verificado com lock antes de cada débito.
+- `CHECK` de coerência entre `code` e `kind` (`customer:` ↔ `CUSTOMER`); só `BRL`
+- O papel da API só pode alterar `posted_balance`, `available_balance` e `version` (`GRANT UPDATE` por coluna)
+- `system:funding` é criada pela própria migration, com UUID fixo
+- **Contas `SYSTEM` não têm saldo materializado**, garantido por **`CHECK (kind = 'CUSTOMER' OR (posted_balance = 0 AND available_balance = 0))`** (as colunas ficam em zero e não são atualizadas). O saldo delas é calculado pela soma dos lançamentos, no job de reconciliação ou sob demanda. Motivo: contas como `system:funding` e `system:pix_clearing` participam de **todas** as operações do seu tipo. Se cada operação travasse e atualizasse essa linha, ela viraria um gargalo único (*hot account*) e todas as operações fariam fila nela. Contas de cliente continuam materializadas, porque o saldo disponível precisa ser verificado com lock antes de cada débito.
 
 **`journal_entries`** (append-only)
 - `kind`: `CHECK (kind IN ('FUNDING','PIX_INTERNAL'))` na V1 (ampliado por migration nas fases seguintes)
@@ -236,9 +241,10 @@ erDiagram
 **`postings`** (append-only)
 - `CHECK (amount > 0)`; `CHECK (direction IN ('D','C'))`
 - FK para `journal_entries` e `ledger_accounts` (mesmo schema)
-- **Constraint trigger `DEFERRABLE INITIALLY DEFERRED`:** no commit, cada lançamento tem pelo menos 2 partidas, Σ débitos = Σ créditos e moeda única. Rodar no commit (e não a cada linha) permite inserir as partidas uma a uma dentro da transação
+- **Constraint triggers `DEFERRABLE INITIALLY DEFERRED`:** no commit, cada lançamento tem pelo menos 2 partidas, Σ débitos = Σ créditos e moeda única. Rodar no commit (e não a cada linha) permite inserir as partidas uma a uma dentro da transação. Há um trigger em `postings` **e outro em `journal_entries`**: sem o segundo, um lançamento sem nenhuma partida passaria, porque o trigger de `postings` nunca dispararia (T-DB-02b)
+- Índice `(journal_entry_id)`: sustenta a soma das partidas na verificação do commit
 - `counterparty_name` / `counterparty_document_masked`: snapshot de quem está do outro lado, para o extrato não precisar ler o schema `payments`
-- Índice do extrato: `(ledger_account_id, created_at DESC, id DESC)`
+- Índice do extrato: `(ledger_account_id, created_at DESC, id DESC)`, criado na semana 6 com a consulta que o usa
 
 **Saldo projetado × lançamentos:** `posted_balance` é atualizado na mesma transação dos lançamentos. O job de reconciliação compara com `SUM(CASE direction WHEN 'C' THEN amount ELSE -amount END)` por conta e registra qualquer divergência como incidente.
 
@@ -340,7 +346,8 @@ LIMIT 21;                                      -- 20 itens + 1 para saber se há
 | Invariante | Domínio | Banco | Teste |
 |---|---|---|---|
 | Saldo de cliente nunca negativo | ✅ | `CHECK available_balance >= 0` | T-DB-01, T-DB-08 |
-| Σ débitos = Σ créditos por lançamento | ✅ | constraint trigger diferida | T-DB-02 |
+| Σ débitos = Σ créditos por lançamento | ✅ | constraint triggers diferidas (partidas e lançamento) | T-DB-02, T-DB-02b |
+| Conta de sistema sem saldo materializado | — | `CHECK` de saldo zero em conta `SYSTEM` | `db-ledger-schema.test.ts` |
 | Lançamentos e auditoria imutáveis | ✅ | `GRANT` + trigger | T-DB-03, T-DB-04 |
 | Um Pix gera no máximo um lançamento | ✅ (máquina de estados) | `UNIQUE (reference_type, reference_id, kind)` | T-DB-05 |
 | Requisição repetida não repete a operação | ✅ (aplicação) | PK `(user_id, key)` | T-DB-06 |
@@ -359,6 +366,7 @@ Todos rodam contra **Postgres real** (Docker), com o papel `nextbank_app`.
 |---|---|---|
 | T-DB-01 | Atualizar saldo de cliente para valor negativo | Recusado pelo `CHECK` |
 | T-DB-02 | Gravar lançamento com débitos ≠ créditos | Recusado no `COMMIT` |
+| T-DB-02b | Gravar lançamento sem nenhuma partida | Recusado no `COMMIT` |
 | T-DB-03 | `UPDATE` ou `DELETE` em `postings` | Recusado (permissão e trigger) |
 | T-DB-04 | `UPDATE` ou `DELETE` em `audit_events` | Recusado (permissão e trigger) |
 | T-DB-05 | Dois lançamentos `PIX_INTERNAL` para o mesmo Pix | O segundo é recusado |
