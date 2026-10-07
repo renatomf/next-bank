@@ -19,6 +19,7 @@ import {
   type CpfKeys,
   createIdentityModule,
   loginRoutes,
+  meRoutes,
   registerAuthentication,
   pinRoutes,
   sessionRoutes,
@@ -130,6 +131,7 @@ export function buildApp({ pool, logStream, security }: AppDependencies) {
     logout: identity.logout,
   });
   void app.register(pinRoutes, { createPin: identity.createPin });
+  void app.register(meRoutes, { getProfile: identity.getProfile });
 
   return app;
 }

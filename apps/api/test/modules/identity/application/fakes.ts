@@ -184,6 +184,17 @@ export class InMemoryDatabase implements UnitOfWork, IdentityRepositoriesFactory
           tables.users.push({ state: user, cpf });
           return Promise.resolve();
         },
+        findProfile: (id) => {
+          const found = tables.users.find((u) => u.state.id === id);
+          return Promise.resolve(
+            found
+              ? {
+                  name: found.state.name,
+                  hasPin: tables.transactionPins.some((pin) => pin.userId === id),
+                }
+              : null,
+          );
+        },
       },
       sessions: {
         insert: (session) => {

@@ -53,6 +53,7 @@ describe('OpenAPI document', () => {
       'CreatePinRequestInput',
       'Health',
       'LoginRequestInput',
+      'Me',
       'Problem',
       'RefreshRequestInput',
       'RegisterRequestInput',
@@ -79,6 +80,21 @@ describe('OpenAPI document', () => {
       $ref: '#/components/schemas/AuthTokens',
     });
     for (const status of ['401', '422', '429']) {
+      expect(operation?.responses[status]?.content?.['application/problem+json']?.schema).toEqual({
+        $ref: '#/components/schemas/Problem',
+      });
+    }
+  });
+
+  it('describes GET /v1/me as a protected read of the caller profile', () => {
+    const operation = document.paths['/v1/me']?.get;
+
+    expect(operation?.operationId).toBe('getMe');
+    expect(operation?.security).toEqual([{ bearerAuth: [] }]);
+    expect(operation?.responses['200']?.content?.['application/json']?.schema).toEqual({
+      $ref: '#/components/schemas/Me',
+    });
+    for (const status of ['401', '422']) {
       expect(operation?.responses[status]?.content?.['application/problem+json']?.schema).toEqual({
         $ref: '#/components/schemas/Problem',
       });

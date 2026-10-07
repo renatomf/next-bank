@@ -74,10 +74,17 @@ export interface LoginAccount {
   status: UserStatus;
 }
 
+/** What the customer sees about themselves; never the CPF, e-mail or hashes. */
+export interface Profile {
+  name: string;
+  hasPin: boolean;
+}
+
 export interface UsersRepository {
   existsWithEmailOrCpf(email: string, cpfBlindIndex: Uint8Array): Promise<boolean>;
   findByEmail(email: string): Promise<LoginAccount | null>;
   insert(user: UserState, cpf: StoredCpf): Promise<void>;
+  findProfile(id: string): Promise<Profile | null>;
 }
 
 export interface SessionsRepository {

@@ -3,6 +3,7 @@
 import type { Clock, IdGenerator, UnitOfWork } from '../../shared/application/ports.ts';
 import { ActiveSessions } from './application/active-sessions.ts';
 import { CreatePin } from './application/create-pin.ts';
+import { GetProfile } from './application/get-profile.ts';
 import { Login } from './application/login.ts';
 import { Logout } from './application/logout.ts';
 import type { AccessTokenVerifier } from './application/ports.ts';
@@ -19,6 +20,7 @@ import { RandomRefreshTokens } from './infrastructure/random-refresh-tokens.ts';
 export { AuthTokensSchema, authTokensBody } from './http/auth-tokens.ts';
 export { registerAuthentication } from './http/authentication.ts';
 export { loginRoutes } from './http/login-route.ts';
+export { meRoutes } from './http/me-route.ts';
 export { pinRoutes } from './http/pin-route.ts';
 export { sessionRoutes } from './http/session-routes.ts';
 export type { CpfKeys } from './infrastructure/aes-gcm-cpf-protector.ts';
@@ -40,6 +42,7 @@ export interface IdentityModule {
   accessTokenVerifier: AccessTokenVerifier;
   activeSessions: ActiveSessions;
   createPin: CreatePin;
+  getProfile: GetProfile;
 }
 
 export interface IdentitySettings {
@@ -102,5 +105,6 @@ export function createIdentityModule(settings: IdentitySettings): IdentityModule
       ids: settings.ids,
       pinHasher: new Argon2idHasher({ pepper: settings.pinPepper }),
     }),
+    getProfile: new GetProfile({ unitOfWork: settings.unitOfWork, repositories }),
   };
 }
