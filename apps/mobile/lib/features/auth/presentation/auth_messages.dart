@@ -34,4 +34,5 @@ String _catalogText(ApiErrorCode code) => switch (code) {
     'Use 4 dígitos que não sejam repetidos nem em sequência.',
   ApiErrorCode.pinAlreadyCreated =>
     'Você já tem um PIN. Para trocar, use Perfil > Segurança.',
+  ApiErrorCode.notFound => 'Não encontrado.',
 };

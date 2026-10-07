@@ -9,8 +9,8 @@ import 'package:next_bank/core/session/secure_token_store.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/features/auth/data/http_auth_repository.dart';
 import 'package:next_bank/features/auth/presentation/auth_providers.dart';
-import 'package:next_bank/features/home/data/http_api_status_repository.dart';
-import 'package:next_bank/features/home/presentation/api_status_provider.dart';
+import 'package:next_bank/features/home/data/http_account_repository.dart';
+import 'package:next_bank/features/home/presentation/home_providers.dart';
 
 /// Composition root: the only place that binds domain interfaces
 /// to their implementations.
@@ -26,9 +26,9 @@ void main() {
         authRepositoryProvider.overrideWith(
           (ref) => HttpAuthRepository(ref.watch(apiProvider).getDefaultApi()),
         ),
-        apiStatusRepositoryProvider.overrideWith(
+        accountRepositoryProvider.overrideWith(
           (ref) =>
-              HttpApiStatusRepository(ref.watch(apiProvider).getDefaultApi()),
+              HttpAccountRepository(ref.watch(apiProvider).getDefaultApi()),
         ),
       ],
       child: const NextBankApp(),
