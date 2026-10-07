@@ -4,8 +4,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/features/auth/domain/cpf.dart';
 
 import '../support/fake_auth_repository.dart';
+import '../support/fake_profile_repository.dart';
 import '../support/fake_token_store.dart';
 import '../support/pump_app.dart';
+
+/// An account just registered: the server holds no PIN for it yet.
+FakeProfileRepository newAccount() => FakeProfileRepository(hasPin: false);
 
 final Finder createAccountButton = find.widgetWithText(
   FilledButton,
@@ -74,7 +78,7 @@ void main() {
   testWidgets('opens the registration from login and goes back', (
     tester,
   ) async {
-    await pumpApp(tester, store: FakeTokenStore());
+    await pumpApp(tester, store: FakeTokenStore(), profile: newAccount());
 
     await openRegistration(tester);
     await reveal(tester, createAccountButton);
@@ -88,7 +92,7 @@ void main() {
 
   // DEMO-01: a valid CPF drawn by the app, which nobody can type over.
   testWidgets('shows a fictitious CPF and the demo notice', (tester) async {
-    await pumpApp(tester, store: FakeTokenStore());
+    await pumpApp(tester, store: FakeTokenStore(), profile: newAccount());
     await openRegistration(tester);
     await reveal(tester, find.text('Gerar outro'));
 
@@ -102,7 +106,7 @@ void main() {
   });
 
   testWidgets('draws another CPF on "Gerar outro"', (tester) async {
-    await pumpApp(tester, store: FakeTokenStore());
+    await pumpApp(tester, store: FakeTokenStore(), profile: newAccount());
     await openRegistration(tester);
     await reveal(tester, find.text('Gerar outro'));
     final first = shownCpf(tester);
@@ -118,7 +122,12 @@ void main() {
     tester,
   ) async {
     final repository = FakeAuthRepository(tokens);
-    await pumpApp(tester, store: FakeTokenStore(), repository: repository);
+    await pumpApp(
+      tester,
+      store: FakeTokenStore(),
+      repository: repository,
+      profile: newAccount(),
+    );
     await openRegistration(tester);
     await reveal(tester, find.text('Gerar outro'));
     final cpf = shownCpf(tester);
@@ -133,7 +142,12 @@ void main() {
     tester,
   ) async {
     final repository = FakeAuthRepository(tokens);
-    await pumpApp(tester, store: FakeTokenStore(), repository: repository);
+    await pumpApp(
+      tester,
+      store: FakeTokenStore(),
+      repository: repository,
+      profile: newAccount(),
+    );
     await openRegistration(tester);
     await fillAndSubmitRegistration(tester);
 
@@ -147,7 +161,12 @@ void main() {
 
   testWidgets('refuses a trivial PIN at the first step', (tester) async {
     final repository = FakeAuthRepository(tokens);
-    await pumpApp(tester, store: FakeTokenStore(), repository: repository);
+    await pumpApp(
+      tester,
+      store: FakeTokenStore(),
+      repository: repository,
+      profile: newAccount(),
+    );
     await openRegistration(tester);
     await fillAndSubmitRegistration(tester);
 
@@ -163,7 +182,12 @@ void main() {
 
   testWidgets('starts over when the confirmation differs', (tester) async {
     final repository = FakeAuthRepository(tokens);
-    await pumpApp(tester, store: FakeTokenStore(), repository: repository);
+    await pumpApp(
+      tester,
+      store: FakeTokenStore(),
+      repository: repository,
+      profile: newAccount(),
+    );
     await openRegistration(tester);
     await fillAndSubmitRegistration(tester);
 
@@ -193,7 +217,7 @@ void main() {
       tester.platformDispatcher.textScaleFactorTestValue = 1.3;
       addTearDown(tester.view.reset);
       addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-      await pumpApp(tester, store: FakeTokenStore());
+      await pumpApp(tester, store: FakeTokenStore(), profile: newAccount());
 
       await open(tester);
 
