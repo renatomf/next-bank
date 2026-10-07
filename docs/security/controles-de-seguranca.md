@@ -143,8 +143,8 @@
 | Controle | Status | Como / evidência | Sem. |
 |---|---|---|---|
 | Idempotency-Key | ⏳ | ADR 0007; T-DB-06. | 5 |
-| Controle de concorrência | ⏳ | `SELECT … FOR UPDATE` em ordem fixa por ID; `lock_timeout` e `statement_timeout` no papel da API (✅, API-12). | 5 |
-| Prevenção de gasto duplo | ⏳ | Locks + `CHECK (available_balance >= 0)`; teste de 2 Pix de R$ 80 sobre R$ 100 (T-DB-08). | 5 |
+| Controle de concorrência | ⏳ | `SELECT … FOR UPDATE` em ordem fixa por ID; `lock_timeout` e `statement_timeout` no papel da API (✅, API-12). No ledger já provado: 50 lançamentos A→B e 50 B→A simultâneos sem deadlock (T-DB-09, `pg-ledger.test.ts`), e o teste falha se a ordem dos locks for removida. Falta o Pix (semana 5). | 4, 5 |
+| Prevenção de gasto duplo | ⏳ | Locks + `CHECK (available_balance >= 0)`. No ledger já provado: dois lançamentos de R$ 80 sobre R$ 100 em paralelo gastam o saldo uma vez (T-DB-08, `pg-ledger.test.ts`). Falta o mesmo teste pelo Pix (semana 5). | 4, 5 |
 | Transações ACID | ⏳ | Uma transação Postgres por caso de uso (Unit of Work), inclusive a auditoria. | 3+ |
 | Ledger imutável | ✅ | Partidas dobradas; `journal_entries` e `postings` só com `SELECT, INSERT` para a API e triggers que recusam alteração até do dono (T-DB-03, `db-ledger-schema.test.ts`). | 4 |
 | Reconciliação | ⏳ | Σ débitos = Σ créditos por lançamento (constraint diferida, T-DB-02) e reconciliação de saldos (T-DB-14). O job periódico é extra. | 4, 8 |

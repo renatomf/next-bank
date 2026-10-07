@@ -4,6 +4,11 @@ import { InsufficientFunds } from './errors.ts';
 export type LedgerAccountKind = 'CUSTOMER' | 'SYSTEM';
 export type Direction = 'DEBIT' | 'CREDIT';
 
+/** The ledger account of a current account, in the chart of accounts. */
+export function customerCodeOf(accountId: string): string {
+  return `customer:${accountId}`;
+}
+
 export interface LedgerAccountState {
   id: string;
   /** `customer:<accountId>` or `system:<name>` (domain-model.md, section 5). */
@@ -32,7 +37,7 @@ export class LedgerAccount {
   static openCustomer(input: { id: string; accountId: string; now: Date }): LedgerAccount {
     return new LedgerAccount({
       id: input.id,
-      code: `customer:${input.accountId}`,
+      code: customerCodeOf(input.accountId),
       kind: 'CUSTOMER',
       postedBalance: Money.zero(),
       availableBalance: Money.zero(),
