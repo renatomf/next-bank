@@ -1,61 +1,133 @@
 import 'dart:async';
 
+import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:next_bank/features/home/domain/api_status.dart';
-import 'package:next_bank/features/home/presentation/api_status_provider.dart';
+import 'package:next_bank/core/api_failure.dart';
+import 'package:next_bank/core/profile/profile_controller.dart';
+import 'package:next_bank/core/session/session_controller.dart';
+import 'package:next_bank/features/home/presentation/home_providers.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
 
-import '../../../support/fake_api_status_repository.dart';
+import '../../../support/fake_account_repository.dart';
+import '../../../support/fake_profile_repository.dart';
+import '../../../support/fake_token_store.dart';
 
-class _PendingRepository implements ApiStatusRepository {
-  final completer = Completer<ApiStatus>();
-
-  @override
-  Future<ApiStatus> check() => completer.future;
-}
-
-Future<void> pumpHome(WidgetTester tester, ApiStatusRepository repository) {
-  return tester.pumpWidget(
+Future<void> pumpHome(
+  WidgetTester tester, {
+  FakeAccountRepository? account,
+  DateTime? now,
+}) async {
+  await tester.pumpWidget(
     ProviderScope(
-      overrides: [apiStatusRepositoryProvider.overrideWithValue(repository)],
-      child: const MaterialApp(home: HomeScreen()),
+      overrides: [
+        tokenStoreProvider.overrideWithValue(FakeTokenStore(tokens)),
+        profileRepositoryProvider.overrideWithValue(FakeProfileRepository()),
+        accountRepositoryProvider.overrideWithValue(
+          account ?? FakeAccountRepository(),
+        ),
+        nowProvider.overrideWithValue(() => now ?? DateTime(2026, 10, 7, 9)),
+      ],
+      child: MaterialApp(theme: NbTheme.dark(), home: const HomeScreen()),
     ),
   );
 }
 
+// Screen 6, Home (domain-model.md, section 11): skeleton, ready, hidden
+// balance and error; mockups home-dark and home-light.
 void main() {
-  testWidgets('shows progress while checking', (tester) async {
-    final repository = _PendingRepository();
-    await pumpHome(tester, repository);
+  testWidgets('shows placeholders while the balance loads', (tester) async {
+    final account = FakeAccountRepository();
+    final gate = Completer<void>();
+    account.answer = () => gate.future;
+    await pumpHome(tester, account: account);
+    await tester.pump();
 
-    expect(find.bySemanticsLabel('Verificando a API'), findsOneWidget);
+    expect(find.bySemanticsLabel('Carregando saldo'), findsOneWidget);
 
-    repository.completer.complete(ApiStatus.available);
+    gate.complete();
     await tester.pumpAndSettle();
   });
 
-  testWidgets('shows that the API is available', (tester) async {
-    await pumpHome(tester, FakeApiStatusRepository(ApiStatus.available));
+  testWidgets('greets the customer and shows the available balance', (
+    tester,
+  ) async {
+    await pumpHome(tester);
     await tester.pumpAndSettle();
 
-    expect(find.text('API disponível'), findsOneWidget);
-    expect(find.text('Tentar novamente'), findsNothing);
+    expect(find.text('Bom dia,'), findsOneWidget);
+    expect(find.text('Ana Souza'), findsOneWidget);
+    expect(find.byType(DisplayTitle), findsOneWidget);
+    expect(find.text('Saldo disponível · Conta •••• 0004'), findsOneWidget);
+    expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
   });
 
-  testWidgets('shows unavailable and checks again on retry', (tester) async {
-    final repository = FakeApiStatusRepository(ApiStatus.unavailable);
-    await pumpHome(tester, repository);
+  // MOB-05: the customer can hide the balance from someone beside them.
+  testWidgets('hides the balance and shows it again', (tester) async {
+    await pumpHome(tester);
     await tester.pumpAndSettle();
 
-    expect(find.text('API indisponível'), findsOneWidget);
+    await tester.tap(find.bySemanticsLabel('Ocultar saldo'));
+    await tester.pump();
 
-    repository.status = ApiStatus.available;
-    await tester.tap(find.widgetWithText(FilledButton, 'Tentar novamente'));
+    expect(find.bySemanticsLabel('Saldo oculto'), findsOneWidget);
+    expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsNothing);
+
+    await tester.tap(find.bySemanticsLabel('Mostrar saldo'));
+    await tester.pump();
+
+    expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
+  });
+
+  testWidgets('says the balance could not load and tries again', (
+    tester,
+  ) async {
+    final account = FakeAccountRepository();
+    var calls = 0;
+    account.answer = () async {
+      if (calls++ == 0) throw const ApiUnreachable();
+    };
+    await pumpHome(tester, account: account);
     await tester.pumpAndSettle();
 
-    expect(find.text('API disponível'), findsOneWidget);
-    expect(repository.calls, 2);
+    expect(find.text('Não foi possível carregar seu saldo.'), findsOneWidget);
+
+    await tester.tap(find.text('Tentar de novo'));
+    await tester.pumpAndSettle();
+
+    expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
+    expect(account.fetches, 2);
+  });
+
+  for (final (hour, greeting) in [
+    (5, 'Bom dia,'),
+    (11, 'Bom dia,'),
+    (12, 'Boa tarde,'),
+    (17, 'Boa tarde,'),
+    (18, 'Boa noite,'),
+    (23, 'Boa noite,'),
+    (0, 'Boa noite,'),
+  ]) {
+    testWidgets('says "$greeting" at $hour h', (tester) async {
+      await pumpHome(tester, now: DateTime(2026, 10, 7, hour));
+      await tester.pumpAndSettle();
+
+      expect(find.text(greeting), findsOneWidget);
+    });
+  }
+
+  testWidgets('fits a small phone at 1.3x text', (tester) async {
+    tester.view
+      ..physicalSize = const Size(320 * 3, 568 * 3)
+      ..devicePixelRatio = 3;
+    tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    await pumpHome(tester);
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
   });
 }

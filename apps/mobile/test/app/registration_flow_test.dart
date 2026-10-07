@@ -156,7 +156,7 @@ void main() {
     await enterPin(tester, '2580');
 
     expect(repository.pins, ['2580']);
-    expect(find.text('API disponível'), findsOneWidget);
+    expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
   });
 
   testWidgets('refuses a trivial PIN at the first step', (tester) async {

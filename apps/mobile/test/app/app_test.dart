@@ -27,7 +27,7 @@ class FlakyTokenStore extends FakeTokenStore {
 }
 
 final Finder loginButton = find.widgetWithText(FilledButton, 'Entrar');
-final Finder signOutButton = find.byTooltip('Sair');
+final Finder signOutButton = find.bySemanticsLabel('Sair');
 
 // Navigation rules (domain-model.md, section 10) through the real router.
 void main() {
@@ -41,7 +41,7 @@ void main() {
   testWidgets('opens on home with a stored session', (tester) async {
     await pumpApp(tester, store: FakeTokenStore(tokens));
 
-    expect(find.text('API disponível'), findsOneWidget);
+    expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
     expect(signOutButton, findsOneWidget);
   });
 
@@ -55,7 +55,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.logins.single.email, 'ana@example.test');
-    expect(find.text('API disponível'), findsOneWidget);
+    expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
   });
 
   testWidgets("logs in with the keyboard's done key", (tester) async {
@@ -68,7 +68,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.logins, hasLength(1));
-    expect(find.text('API disponível'), findsOneWidget);
+    expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
   });
 
   testWidgets('shows the refusal of the API on the login screen', (
@@ -160,7 +160,7 @@ void main() {
     await tester.tap(find.text('Tentar de novo'));
     await tester.pumpAndSettle();
 
-    expect(find.text('API disponível'), findsOneWidget);
+    expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
     expect(profile.fetches, 2);
   });
 
