@@ -1,5 +1,9 @@
-import type { UnitOfWork } from '../../shared/application/ports.ts';
+import type { Transaction, UnitOfWork } from '../../shared/application/ports.ts';
+import { Money } from '../../shared/domain/money.ts';
 import type { RegisterUserSteps, RegistrationInput } from '../../modules/identity/index.ts';
+
+/** Demo balance every new customer receives (domain-model.md, decision D3). */
+const DEMO_FUNDING = Money.of(1_000_000n);
 
 export interface RegisterCustomerInput extends RegistrationInput {
   requestId: string | null;
@@ -13,25 +17,54 @@ export interface RegisterCustomerResult {
   refreshToken: string;
 }
 
+/** Accounts' step: opens the current account and returns its id. */
+export interface OpenAccountStep {
+  execute(
+    tx: Transaction,
+    input: { holderUserId: string; requestId: string | null },
+  ): Promise<string>;
+}
+
+/** Ledger's step: credits the demo balance to the account. */
+export interface FundAccountStep {
+  fund(tx: Transaction, input: { accountId: string; amount: Money }): Promise<void>;
+}
+
 /**
  * Registration across contexts (domain-model.md, section 8; ADR 0010). It only
- * sequences module calls: business rules live in the modules. Accounts, the
- * initial funding and the CPF Pix key join the same transaction in weeks 4 and 5.
+ * sequences module calls: business rules live in the modules. User, account,
+ * ledger account and funding commit together or not at all; the CPF Pix key
+ * joins the same transaction in week 5.
  */
 export class RegisterCustomer {
   readonly #unitOfWork: UnitOfWork;
   readonly #identity: RegisterUserSteps;
+  readonly #accounts: OpenAccountStep;
+  readonly #ledger: FundAccountStep;
 
-  constructor(deps: { unitOfWork: UnitOfWork; identity: RegisterUserSteps }) {
+  constructor(deps: {
+    unitOfWork: UnitOfWork;
+    identity: RegisterUserSteps;
+    accounts: OpenAccountStep;
+    ledger: FundAccountStep;
+  }) {
     this.#unitOfWork = deps.unitOfWork;
     this.#identity = deps.identity;
+    this.#accounts = deps.accounts;
+    this.#ledger = deps.ledger;
   }
 
   async execute(input: RegisterCustomerInput): Promise<RegisterCustomerResult> {
     const prepared = await this.#identity.prepare(input);
-    const registered = await this.#unitOfWork.run((tx) =>
-      this.#identity.register(tx, prepared, { requestId: input.requestId }),
-    );
+    const registered = await this.#unitOfWork.run(async (tx) => {
+      const user = await this.#identity.register(tx, prepared, { requestId: input.requestId });
+      const accountId = await this.#accounts.execute(tx, {
+        holderUserId: user.userId,
+        requestId: input.requestId,
+      });
+      await this.#ledger.fund(tx, { accountId, amount: DEMO_FUNDING });
+      return user;
+    });
     const access = await this.#identity.issueAccessToken(registered);
     return {
       userId: registered.userId,
