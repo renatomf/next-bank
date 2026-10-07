@@ -5,10 +5,14 @@ import 'package:flutter/material.dart';
 /// The "next" wordmark followed by a glowing mint dot (brief, section 6).
 class NextLogo extends StatelessWidget {
   /// Creates the logo at [size] (the wordmark's font size).
-  const new({this.size = 36, super.key});
+  const new({this.size = 36, this.color, super.key});
 
   /// Font size of the wordmark.
   final double size;
+
+  /// Wordmark color; defaults to the theme's text. The balance card, always
+  /// dark, sets its own.
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +33,7 @@ class NextLogo extends StatelessWidget {
               fontWeight: FontWeight.w700,
               fontVariations: const [FontVariation.weight(700)],
               letterSpacing: -0.04 * size,
-              color: context.nbColors.text,
+              color: color ?? context.nbColors.text,
             ),
           ),
           Container(

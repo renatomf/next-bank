@@ -14,6 +14,42 @@ abstract final class NbBrand {
   static const Color actionGlow = Color(0x5900FFC8);
 }
 
+/// The balance card's own palette (brief, section 2.3): the card is always
+/// dark, in both modes, so its colors do not come from the theme.
+abstract final class NbBalanceCardColors {
+  /// Top of the base gradient.
+  static const Color baseTop = Color(0xFF0B2A26);
+
+  /// Bottom of the base gradient.
+  static const Color baseBottom = Color(0xFF06110F);
+
+  /// Light in the bottom-left corner; the mint one sits top-right.
+  static const Color glowBottom = Color(0xFF00BEA0);
+
+  /// The diagonal silk sheen: white at 16%.
+  static const Color sheen = Color(0x29FFFFFF);
+
+  /// Card border: mint at 22%.
+  static const Color border = Color(0x3800FFC8);
+
+  /// Card shadow: mint at 35%.
+  static const Color shadow = Color(0x5900FFC8);
+
+  /// Glass panel under the balance: it keeps the text readable over the
+  /// lights.
+  static const Color glass = Color(0x9E060C0E);
+
+  /// Balance and logo.
+  static const Color text = Color(0xFFF2F6F8);
+
+  /// Labels, "R$" and cents. Lighter than the theme's muted text: AA holds
+  /// even on the glass over the brightest mint light.
+  static const Color textMuted = Color(0xFFD2DCE2);
+
+  /// Background of the eye button on the card.
+  static const Color button = Color(0x33000000);
+}
+
 /// Theme colors for one mode (brief, section 2.2), read with
 /// `Theme.of(context).extension<NbColors>()`.
 @immutable
@@ -233,6 +269,17 @@ abstract final class NbType {
     height: 1.15,
     letterSpacing: -0.9,
   );
+
+  /// Large amount, the integer part: Sora 600, 40, tracking -3%.
+  static final TextStyle moneyLarge = _style(
+    display,
+    40,
+    600,
+    letterSpacing: -1.2,
+  );
+
+  /// "R$" and cents beside a large amount: Sora 500, smaller (brief, 3).
+  static final TextStyle moneyLargePart = _style(display, 22, 500);
 
   /// Body: Manrope 600, 15.
   static final TextStyle bodyText = _style(body, 15, 600);
