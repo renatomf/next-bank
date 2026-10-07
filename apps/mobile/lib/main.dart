@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/app/router.dart';
 import 'package:next_bank/core/api_client.dart';
+import 'package:next_bank/core/profile/http_profile_repository.dart';
+import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/secure_token_store.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/features/auth/data/http_auth_repository.dart';
@@ -17,6 +19,10 @@ void main() {
     ProviderScope(
       overrides: [
         tokenStoreProvider.overrideWithValue(SecureTokenStore()),
+        profileRepositoryProvider.overrideWith(
+          (ref) =>
+              HttpProfileRepository(ref.watch(apiProvider).getDefaultApi()),
+        ),
         authRepositoryProvider.overrideWith(
           (ref) => HttpAuthRepository(ref.watch(apiProvider).getDefaultApi()),
         ),

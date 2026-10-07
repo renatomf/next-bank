@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/api_failure.dart';
+import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/features/auth/domain/pin_rules.dart';
 import 'package:next_bank/features/auth/presentation/auth_messages.dart';
 import 'package:next_bank/features/auth/presentation/auth_providers.dart';
@@ -68,15 +69,24 @@ class CreatePinController extends Notifier<CreatePinState> {
     final repository = ref.read(authRepositoryProvider);
     try {
       await repository.createPin(pin);
-      if (ref.mounted) state = const CreatePinState(created: true);
+      _created();
     } on ApiFailure catch (failure) {
       if (!ref.mounted) return;
-      state = switch (failure) {
+      switch (failure) {
         // The account already has a PIN: what this screen is for is done.
-        ApiRejected(code: ApiErrorCode.pinAlreadyCreated) =>
-          const CreatePinState(created: true),
-        _ => CreatePinState(error: messageFor(failure)),
-      };
+        case ApiRejected(code: ApiErrorCode.pinAlreadyCreated):
+          _created();
+        case _:
+          state = CreatePinState(error: messageFor(failure));
+      }
     }
+  }
+
+  // The profile learns it too, or the navigation would bring the account
+  // back to this screen.
+  void _created() {
+    if (!ref.mounted) return;
+    ref.read(profileProvider.notifier).pinCreated();
+    state = const CreatePinState(created: true);
   }
 }
