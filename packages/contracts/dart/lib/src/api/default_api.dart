@@ -14,6 +14,7 @@ import 'package:nextbank_api/src/model/create_pin_request_input.dart';
 import 'package:nextbank_api/src/model/health.dart';
 import 'package:nextbank_api/src/model/login_request_input.dart';
 import 'package:nextbank_api/src/model/me.dart';
+import 'package:nextbank_api/src/model/my_account.dart';
 import 'package:nextbank_api/src/model/problem.dart';
 import 'package:nextbank_api/src/model/refresh_request_input.dart';
 import 'package:nextbank_api/src/model/register_request_input.dart';
@@ -231,6 +232,82 @@ _responseData = rawData == null ? null : deserialize<Me, Me>(rawData, 'Me', grow
     }
 
     return Response<Me>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// getMyAccount
+  /// 
+  ///
+  /// Parameters:
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [MyAccount] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<MyAccount>> getMyAccount({ 
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/v1/me/account';
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    MyAccount? _responseData;
+
+    try {
+final rawData = _response.data;
+_responseData = rawData == null ? null : deserialize<MyAccount, MyAccount>(rawData, 'MyAccount', growable: true);
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<MyAccount>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,

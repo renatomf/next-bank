@@ -7,9 +7,24 @@ import type {
   AccountsRepositoriesFactory,
   AccountsRepository,
 } from '../application/ports.ts';
-import type { AccountState } from '../domain/account.ts';
+import type { AccountState, AccountStatus } from '../domain/account.ts';
+
+interface AccountRow {
+  id: string;
+  holder_user_id: string;
+  branch: string;
+  number: string;
+  status: AccountStatus;
+  opened_at: Date;
+  updated_at: Date;
+}
 
 export class PgAccountsRepository implements AccountsRepository {
+  /** Served by the accounts_holder_user_id_key unique index. */
+  static readonly FIND_BY_HOLDER_SQL = `SELECT id, holder_user_id, branch, number, status,
+      opened_at, updated_at
+    FROM accounts.accounts WHERE holder_user_id = $1`;
+
   readonly #client: pg.ClientBase;
 
   constructor(client: pg.ClientBase) {
@@ -23,6 +38,24 @@ export class PgAccountsRepository implements AccountsRepository {
     const sequence = rows[0]?.sequence;
     if (sequence === undefined) throw new Error('The account number sequence returned nothing');
     return sequence;
+  }
+
+  async findByHolder(userId: string): Promise<AccountState | null> {
+    const { rows } = await this.#client.query<AccountRow>(PgAccountsRepository.FIND_BY_HOLDER_SQL, [
+      userId,
+    ]);
+    const row = rows[0];
+    return row
+      ? {
+          id: row.id,
+          holderUserId: row.holder_user_id,
+          branch: row.branch,
+          number: row.number,
+          status: row.status,
+          openedAt: row.opened_at,
+          updatedAt: row.updated_at,
+        }
+      : null;
   }
 
   async insert(account: AccountState): Promise<void> {

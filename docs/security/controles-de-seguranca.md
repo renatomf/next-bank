@@ -46,7 +46,7 @@
 | SQL injection | ✅ | Só queries parametrizadas com `pg` (ADR 0009), sem ORM e sem SQL montado com strings; regra própria do Semgrep no CI (API-01). | 2+ |
 | XSS | ➖ | A API só responde JSON (`Content-Type` explícito, com CSP do helmet), e o app Flutter não renderiza HTML. Reavaliar no backoffice web (Fase 3). | — |
 | SSRF | ➖ | A API não faz requisições para URLs vindas do cliente. Regra: se isso surgir, só com lista de destinos permitidos. | — |
-| IDOR / BOLA | ⏳ | Conta sempre derivada do token; **todo recurso tem teste de IDOR** (CLAUDE.md, READ-01, PIX-01). | 4–6 |
+| IDOR / BOLA | ⏳ | Conta sempre derivada do token; **todo recurso tem teste de IDOR** (CLAUDE.md, READ-01, PIX-01). Feito para `GET /v1/me` e `GET /v1/me/account` (dois clientes, cada token só alcança a própria conta; ID ou número de outra conta → 422, READ-05) e garantido no contrato: nenhuma rota tem ID no caminho. Faltam extrato e Pix. | 4–6 |
 | Command injection | ➖ | A API não executa comandos do sistema. O único uso (`execFileSync` no setup dos testes) tem argumentos fixos e não usa shell. | — |
 | Path traversal | ➖ | Nenhuma leitura ou escrita de arquivo a partir de entrada do cliente. | — |
 | Headers de segurança | 🟡 | helmet (HSTS, CSP, `nosniff`…). `http-security.test.ts` verifica HSTS, `nosniff` e a ausência de `x-powered-by`. `Cache-Control: no-store` em toda resposta (✅, F-06). | 2, 3 |

@@ -14,7 +14,7 @@ import {
 import type pg from 'pg';
 import { onboardingRoutes } from './application/onboarding/http.ts';
 import { RegisterCustomer } from './application/onboarding/register-customer.ts';
-import { createAccountsModule } from './modules/accounts/index.ts';
+import { createAccountsModule, myAccountRoutes } from './modules/accounts/index.ts';
 import {
   type AccessTokenKeys,
   type CpfKeys,
@@ -116,7 +116,12 @@ export function buildApp({ pool, logStream, security }: AppDependencies) {
   const unitOfWork = new PgUnitOfWork(pool);
   const ledger = createLedgerModule({ clock, ids });
   // Accounts reaches the ledger only through the port it defines (D2).
-  const accounts = createAccountsModule({ clock, ids, ledger: ledger.customerAccounts });
+  const accounts = createAccountsModule({
+    unitOfWork,
+    clock,
+    ids,
+    ledger: ledger.customerAccounts,
+  });
   const identity = createIdentityModule({
     unitOfWork,
     clock,
@@ -143,6 +148,7 @@ export function buildApp({ pool, logStream, security }: AppDependencies) {
   });
   void app.register(pinRoutes, { createPin: identity.createPin });
   void app.register(meRoutes, { getProfile: identity.getProfile });
+  void app.register(myAccountRoutes, { getMyAccount: accounts.getMyAccount });
 
   return app;
 }
