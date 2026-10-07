@@ -1,5 +1,5 @@
 import pg from 'pg';
-import type { LoginAccount, StoredCpf, UsersRepository } from '../application/ports.ts';
+import type { LoginAccount, Profile, StoredCpf, UsersRepository } from '../application/ports.ts';
 import { AlreadyRegistered } from '../domain/errors.ts';
 import type { UserState, UserStatus } from '../domain/user.ts';
 
@@ -15,6 +15,11 @@ export class PgUsersRepository implements UsersRepository {
   /** Served by the users_email_key unique index. */
   static readonly FIND_BY_EMAIL_SQL =
     'SELECT id, password_hash, status FROM identity.users WHERE email = $1';
+
+  /** Served by the primary keys of users and transaction_pins. */
+  static readonly FIND_PROFILE_SQL = `SELECT u.name,
+      EXISTS (SELECT 1 FROM identity.transaction_pins p WHERE p.user_id = u.id) AS has_pin
+    FROM identity.users u WHERE u.id = $1`;
 
   readonly #client: pg.ClientBase;
 
@@ -38,6 +43,15 @@ export class PgUsersRepository implements UsersRepository {
     }>(PgUsersRepository.FIND_BY_EMAIL_SQL, [email]);
     const row = rows[0];
     return row ? { id: row.id, passwordHash: row.password_hash, status: row.status } : null;
+  }
+
+  async findProfile(id: string): Promise<Profile | null> {
+    const { rows } = await this.#client.query<{ name: string; has_pin: boolean }>(
+      PgUsersRepository.FIND_PROFILE_SQL,
+      [id],
+    );
+    const row = rows[0];
+    return row ? { name: row.name, hasPin: row.has_pin } : null;
   }
 
   async insert(user: UserState, cpf: StoredCpf): Promise<void> {
