@@ -35,7 +35,7 @@ flowchart LR
     PA -- "verifica PIN (porta)" --> ID
     PA -- "consulta conta e status (porta)" --> AC
     PA -- "registra lançamento (porta, mesma transação)" --> LE
-    AC -- "abre conta contábil (porta)" --> LE
+    AC -- "abre conta contábil e lê saldo (porta)" --> LE
     ID -. eventos .-> AU
     AC -. eventos .-> AU
     PA -. eventos .-> AU

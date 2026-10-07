@@ -109,6 +109,7 @@ Legenda STRIDE: **S** falsificação de identidade · **T** adulteração · **R
 | READ-02 | Resposta expõe dados demais | I | A2 | DTOs com lista de campos permitidos; documentos sempre mascarados | Teste de contrato falha se surgir campo novo não aprovado | 4, 6 |
 | READ-03 | Cursor de paginação adulterado | T | A2 | Formato validado; filtro por conta feito no servidor | Cursor inválido → 422; cursor de outra conta não retorna dados alheios | 6 |
 | READ-04 | Consultas caras para derrubar a API | D | A1, A2 | Página máxima de 20; índices; `statement_timeout` | Pedido de 10.000 itens → limitado a 20 | 6 |
+| READ-05 | Números de conta sequenciais permitem adivinhar contas de outros clientes | I, E | A2 | Nenhuma rota aceita número ou ID de conta: a conta vem sempre do token; parâmetros desconhecidos → 422 | `my-account-route.test.ts` (ID e número de outra conta → 422); `openapi.test.ts` (nenhuma rota com ID no caminho) | 4 |
 
 ### 5.4 App mobile
 
