@@ -1,22 +1,14 @@
 import { randomBytes } from 'node:crypto';
 import { afterAll, describe, expect, it } from 'vitest';
-import { RegisterCustomer } from '../../../../src/application/onboarding/register-customer.ts';
-import { RegisterUser } from '../../../../src/modules/identity/application/register-user.ts';
 import { Cpf } from '../../../../src/modules/identity/domain/cpf.ts';
 import { AlreadyRegistered } from '../../../../src/modules/identity/domain/errors.ts';
-import { AesGcmCpfProtector } from '../../../../src/modules/identity/infrastructure/aes-gcm-cpf-protector.ts';
 import { PgIdentityRepositories } from '../../../../src/modules/identity/infrastructure/pg-identity-repositories.ts';
 import { PgUsersRepository } from '../../../../src/modules/identity/infrastructure/pg-users-repository.ts';
 import { createPool } from '../../../../src/shared/db.ts';
 import { PgUnitOfWork } from '../../../../src/shared/infrastructure/pg-unit-of-work.ts';
-import { UuidV7Generator } from '../../../../src/shared/infrastructure/system-ports.ts';
+import { pgRegisterCustomer } from '../../../application/onboarding/pg-register-customer-stack.ts';
 import { testDatabaseUrl } from '../../../helpers.ts';
-import {
-  FakeAccessTokens,
-  FakeHasher,
-  FakeRefreshTokens,
-  FixedClock,
-} from '../application/fakes.ts';
+import { FixedClock } from '../application/fakes.ts';
 import { fictitiousCpf, uniqueEmail } from '../fixtures.ts';
 
 // Registration against the real schema and the API role (CLAUDE.md, section 5):
@@ -27,28 +19,7 @@ const unitOfWork = new PgUnitOfWork(pool);
 const repositories = new PgIdentityRepositories();
 
 function newRegister() {
-  const identity = new RegisterUser({
-    repositories,
-    clock: new FixedClock(NOW),
-    ids: new UuidV7Generator(),
-    hasher: new FakeHasher(),
-    cpfProtector: new AesGcmCpfProtector({
-      keyVersion: 1,
-      encryptionKey: randomBytes(32),
-      hmacKey: Buffer.alloc(32, 7),
-    }),
-    commonPasswords: { contains: () => false },
-    refreshTokens: new FakeRefreshTokensWithUniqueHash(),
-    accessTokens: new FakeAccessTokens(),
-  });
-  return new RegisterCustomer({ unitOfWork, identity });
-}
-
-/** The real token hash is unique per token; the database enforces it. */
-class FakeRefreshTokensWithUniqueHash extends FakeRefreshTokens {
-  override generate() {
-    return { token: 'refresh-token-value', hash: randomBytes(32) };
-  }
+  return pgRegisterCustomer(pool, new FixedClock(NOW));
 }
 
 function input(overrides: { email?: string; cpf?: string } = {}) {

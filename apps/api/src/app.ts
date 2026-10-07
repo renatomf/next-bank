@@ -14,6 +14,7 @@ import {
 import type pg from 'pg';
 import { onboardingRoutes } from './application/onboarding/http.ts';
 import { RegisterCustomer } from './application/onboarding/register-customer.ts';
+import { createAccountsModule } from './modules/accounts/index.ts';
 import {
   type AccessTokenKeys,
   type CpfKeys,
@@ -24,6 +25,7 @@ import {
   pinRoutes,
   sessionRoutes,
 } from './modules/identity/index.ts';
+import { createLedgerModule } from './modules/ledger/index.ts';
 import { healthRoutes } from './shared/http/health.ts';
 import { registerProblemHandlers } from './shared/http/problem.ts';
 import { PgUnitOfWork } from './shared/infrastructure/pg-unit-of-work.ts';
@@ -110,11 +112,15 @@ export function buildApp({ pool, logStream, security }: AppDependencies) {
   });
 
   const clock = new SystemClock();
+  const ids = new UuidV7Generator();
   const unitOfWork = new PgUnitOfWork(pool);
+  const ledger = createLedgerModule({ clock, ids });
+  // Accounts reaches the ledger only through the port it defines (D2).
+  const accounts = createAccountsModule({ clock, ids, ledger: ledger.customerAccounts });
   const identity = createIdentityModule({
     unitOfWork,
     clock,
-    ids: new UuidV7Generator(),
+    ids,
     accessTokenKeys: security.accessTokenKeys,
     cpfKeys: security.cpfKeys,
     pinPepper: security.pinPepper,
@@ -123,7 +129,12 @@ export function buildApp({ pool, logStream, security }: AppDependencies) {
   registerAuthentication(app, identity.accessTokenVerifier, identity.activeSessions, clock);
 
   void app.register(healthRoutes, { pool });
-  const registerCustomer = new RegisterCustomer({ unitOfWork, identity: identity.registerUser });
+  const registerCustomer = new RegisterCustomer({
+    unitOfWork,
+    identity: identity.registerUser,
+    accounts: accounts.openAccount,
+    ledger: ledger.customerAccounts,
+  });
   void app.register(onboardingRoutes, { registerCustomer });
   void app.register(loginRoutes, { login: identity.login });
   void app.register(sessionRoutes, {
