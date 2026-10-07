@@ -12,7 +12,9 @@ class FormErrorText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Its own node: the announcement carries only the error.
     return Semantics(
+      container: true,
       liveRegion: true,
       child: Text(
         message,

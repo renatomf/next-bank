@@ -18,6 +18,7 @@ class NextLogo extends StatelessWidget {
   Widget build(BuildContext context) {
     final dot = size * 0.22;
     return Semantics(
+      container: true,
       label: 'next bank',
       excludeSemantics: true,
       child: Row(

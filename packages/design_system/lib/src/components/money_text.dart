@@ -54,7 +54,9 @@ class MoneyText extends StatelessWidget {
       color: mutedColor ?? colors.textMuted,
     );
     final parts = hidden ? null : formatReais(cents);
+    // Its own node: inside a list or a card it must not merge with siblings.
     return Semantics(
+      container: true,
       label: parts?.full ?? 'Saldo oculto',
       excludeSemantics: true,
       child: RichText(

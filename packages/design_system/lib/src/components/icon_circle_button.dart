@@ -33,7 +33,10 @@ class IconCircleButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.nbColors;
+    // Its own node: otherwise the button merges with its neighbours and a
+    // screen reader announces them all as one button.
     return Semantics(
+      container: true,
       button: true,
       enabled: onPressed != null,
       label: label,

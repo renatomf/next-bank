@@ -17,7 +17,9 @@ class DisplayTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.nbColors;
+    // Its own node, or the heading flag spreads to the texts around it.
     return Semantics(
+      container: true,
       header: true,
       child: Text.rich(
         TextSpan(
