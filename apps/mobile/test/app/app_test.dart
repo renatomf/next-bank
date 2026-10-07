@@ -11,6 +11,7 @@ import 'package:next_bank/features/auth/presentation/auth_providers.dart';
 import 'package:next_bank/main.dart';
 
 import '../support/fake_auth_repository.dart';
+import '../support/fake_profile_repository.dart';
 import '../support/fake_token_store.dart';
 import '../support/pump_app.dart';
 
@@ -113,6 +114,54 @@ void main() {
 
     expect(loginButton, findsOneWidget);
     expect(find.text('Por segurança, entre novamente.'), findsOneWidget);
+  });
+
+  // Registration that stopped before the PIN: the account resumes there,
+  // whether the session is restored or started by a new login.
+  testWidgets('resumes a stored session without PIN at the PIN creation', (
+    tester,
+  ) async {
+    await pumpApp(
+      tester,
+      store: FakeTokenStore(tokens),
+      profile: FakeProfileRepository(hasPin: false),
+    );
+
+    expect(find.text('Crie seu PIN'), findsOneWidget);
+  });
+
+  testWidgets('sends a login without PIN to the PIN creation', (tester) async {
+    await pumpApp(
+      tester,
+      store: FakeTokenStore(),
+      profile: FakeProfileRepository(hasPin: false),
+    );
+
+    await tester.enterText(find.byType(TextField).at(0), 'ana@example.test');
+    await tester.enterText(find.byType(TextField).at(1), 'a long passphrase');
+    await tester.tap(loginButton);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Crie seu PIN'), findsOneWidget);
+  });
+
+  testWidgets('offers a retry when the profile cannot be loaded', (
+    tester,
+  ) async {
+    final profile = FakeProfileRepository();
+    var calls = 0;
+    profile.answer = () async {
+      if (calls++ == 0) throw const ApiUnreachable();
+    };
+    await pumpApp(tester, store: FakeTokenStore(tokens), profile: profile);
+
+    expect(find.text('Sem conexão. Tente de novo.'), findsOneWidget);
+
+    await tester.tap(find.text('Tentar de novo'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('API disponível'), findsOneWidget);
+    expect(profile.fetches, 2);
   });
 
   testWidgets('offers a retry when the device storage fails', (tester) async {

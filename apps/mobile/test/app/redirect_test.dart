@@ -1,13 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/app/redirect.dart';
+import 'package:next_bank/core/profile/profile.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/core/session/session_end_reason.dart';
 
 import '../support/fake_token_store.dart';
 
 // Navigation rules (domain-model.md, section 10): the session decides where
-// the app can be; an ended session goes back to login from any screen.
+// the app can be; an ended session goes back to login from any screen; a
+// signed-in account without its PIN always resumes at the PIN creation.
 void main() {
   const loading = AsyncLoading<Session>();
   final failed = AsyncError<Session>(StateError('keystore'), StackTrace.empty);
@@ -15,36 +17,138 @@ void main() {
   const revoked = AsyncData<Session>(SignedOut(SessionEndReason.revoked));
   final signedIn = AsyncData<Session>(SignedIn(tokens));
 
-  for (final (name, session, location, expected) in [
-    ('restoring the session', loading, AppRoutes.home, AppRoutes.splash),
-    ('restoring, already on splash', loading, AppRoutes.splash, null),
-    ('the device storage failed', failed, AppRoutes.login, AppRoutes.splash),
-    ('signed out, on home', signedOut, AppRoutes.home, AppRoutes.login),
-    ('signed out, on splash', signedOut, AppRoutes.splash, AppRoutes.login),
-    ('signed out, on login', signedOut, AppRoutes.login, null),
-    ('session revoked, on home', revoked, AppRoutes.home, AppRoutes.login),
-    ('signed in, on splash', signedIn, AppRoutes.splash, AppRoutes.home),
-    ('signed in, on login', signedIn, AppRoutes.login, AppRoutes.home),
-    ('signed in, on home', signedIn, AppRoutes.home, null),
-    ('restoring, on register', loading, AppRoutes.register, AppRoutes.splash),
-    ('signed out, on register', signedOut, AppRoutes.register, null),
+  const noProfile = AsyncData<Profile?>(null);
+  const profileLoading = AsyncLoading<Profile?>();
+  final profileFailed = AsyncError<Profile?>(
+    StateError('offline'),
+    StackTrace.empty,
+  );
+  const withPin = AsyncData<Profile?>(Profile(name: 'Ana', hasPin: true));
+  const withoutPin = AsyncData<Profile?>(Profile(name: 'Ana', hasPin: false));
+
+  for (final (name, session, profile, location, expected) in [
+    // Session not known yet.
+    ('restoring', loading, noProfile, AppRoutes.home, AppRoutes.splash),
+    ('restoring, on splash', loading, noProfile, AppRoutes.splash, null),
+    (
+      'restoring, on register',
+      loading,
+      noProfile,
+      AppRoutes.register,
+      AppRoutes.splash,
+    ),
+    ('storage failed', failed, noProfile, AppRoutes.login, AppRoutes.splash),
+    // Signed out.
+    (
+      'signed out, on home',
+      signedOut,
+      noProfile,
+      AppRoutes.home,
+      AppRoutes.login,
+    ),
+    (
+      'signed out, on splash',
+      signedOut,
+      noProfile,
+      AppRoutes.splash,
+      AppRoutes.login,
+    ),
+    ('signed out, on login', signedOut, noProfile, AppRoutes.login, null),
+    ('signed out, on register', signedOut, noProfile, AppRoutes.register, null),
     (
       'signed out, on create-pin',
       signedOut,
+      noProfile,
       AppRoutes.createPin,
       AppRoutes.login,
     ),
-    // A finished registration always continues to the PIN.
+    ('revoked, on home', revoked, noProfile, AppRoutes.home, AppRoutes.login),
+    // Signed in, profile not known yet: splash says it is opening, or retries.
     (
-      'signed in, on register',
+      'profile loading, on login',
       signedIn,
+      profileLoading,
+      AppRoutes.login,
+      AppRoutes.splash,
+    ),
+    (
+      'profile loading, on register',
+      signedIn,
+      profileLoading,
+      AppRoutes.register,
+      AppRoutes.splash,
+    ),
+    (
+      'profile loading, on splash',
+      signedIn,
+      profileLoading,
+      AppRoutes.splash,
+      null,
+    ),
+    (
+      'profile failed, on home',
+      signedIn,
+      profileFailed,
+      AppRoutes.home,
+      AppRoutes.splash,
+    ),
+    // Signed in without the PIN: always back to the PIN creation.
+    (
+      'no PIN, on splash',
+      signedIn,
+      withoutPin,
+      AppRoutes.splash,
+      AppRoutes.createPin,
+    ),
+    (
+      'no PIN, on login',
+      signedIn,
+      withoutPin,
+      AppRoutes.login,
+      AppRoutes.createPin,
+    ),
+    (
+      'no PIN, on register',
+      signedIn,
+      withoutPin,
       AppRoutes.register,
       AppRoutes.createPin,
     ),
-    ('signed in, on create-pin', signedIn, AppRoutes.createPin, null),
+    (
+      'no PIN, on home',
+      signedIn,
+      withoutPin,
+      AppRoutes.home,
+      AppRoutes.createPin,
+    ),
+    ('no PIN, on create-pin', signedIn, withoutPin, AppRoutes.createPin, null),
+    // Signed in with the PIN: entry screens lead to the home.
+    (
+      'with PIN, on splash',
+      signedIn,
+      withPin,
+      AppRoutes.splash,
+      AppRoutes.home,
+    ),
+    ('with PIN, on login', signedIn, withPin, AppRoutes.login, AppRoutes.home),
+    (
+      'with PIN, on register',
+      signedIn,
+      withPin,
+      AppRoutes.register,
+      AppRoutes.home,
+    ),
+    (
+      'with PIN, on create-pin',
+      signedIn,
+      withPin,
+      AppRoutes.createPin,
+      AppRoutes.home,
+    ),
+    ('with PIN, on home', signedIn, withPin, AppRoutes.home, null),
   ]) {
     test('$name → ${expected ?? 'stays'}', () {
-      expect(redirectFor(session, location), expected);
+      expect(redirectFor(session, profile, location), expected);
     });
   }
 }
