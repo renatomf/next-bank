@@ -29,7 +29,13 @@ class FakeRefreshTokensWithUniqueHash extends FakeRefreshTokens {
 export function pgRegisterCustomer(pool: pg.Pool, clock: Clock): RegisterCustomer {
   const ids = new UuidV7Generator();
   const ledger = createLedgerModule({ clock, ids });
-  const accounts = createAccountsModule({ clock, ids, ledger: ledger.customerAccounts });
+  const unitOfWork = new PgUnitOfWork(pool);
+  const accounts = createAccountsModule({
+    unitOfWork,
+    clock,
+    ids,
+    ledger: ledger.customerAccounts,
+  });
   const identity = new RegisterUser({
     repositories: new PgIdentityRepositories(),
     clock,
@@ -45,7 +51,7 @@ export function pgRegisterCustomer(pool: pg.Pool, clock: Clock): RegisterCustome
     accessTokens: new FakeAccessTokens(),
   });
   return new RegisterCustomer({
-    unitOfWork: new PgUnitOfWork(pool),
+    unitOfWork,
     identity,
     accounts: accounts.openAccount,
     ledger: ledger.customerAccounts,

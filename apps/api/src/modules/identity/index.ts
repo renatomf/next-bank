@@ -18,7 +18,7 @@ import { PgIdentityRepositories } from './infrastructure/pg-identity-repositorie
 import { RandomRefreshTokens } from './infrastructure/random-refresh-tokens.ts';
 
 export { AuthTokensSchema, authTokensBody } from './http/auth-tokens.ts';
-export { registerAuthentication } from './http/authentication.ts';
+export { callerOf, registerAuthentication } from './http/authentication.ts';
 export { loginRoutes } from './http/login-route.ts';
 export { meRoutes } from './http/me-route.ts';
 export { pinRoutes } from './http/pin-route.ts';
