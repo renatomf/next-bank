@@ -3,6 +3,8 @@ import 'package:nextbank_api/src/model/create_pin_request_input.dart';
 import 'package:nextbank_api/src/model/health.dart';
 import 'package:nextbank_api/src/model/login_request_input.dart';
 import 'package:nextbank_api/src/model/me.dart';
+import 'package:nextbank_api/src/model/money.dart';
+import 'package:nextbank_api/src/model/my_account.dart';
 import 'package:nextbank_api/src/model/problem.dart';
 import 'package:nextbank_api/src/model/refresh_request_input.dart';
 import 'package:nextbank_api/src/model/register_request_input.dart';
@@ -35,6 +37,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return LoginRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Me':
           return Me.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'Money':
+          return Money.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'MyAccount':
+          return MyAccount.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Problem':
           return Problem.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RefreshRequestInput':
