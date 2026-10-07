@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:next_bank/core/amount_integrity_interceptor.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/features/home/data/http_account_repository.dart';
 import 'package:nextbank_api/nextbank_api.dart';
@@ -9,8 +10,12 @@ import '../../../support/scripted_server.dart';
 HttpAccountRepository repositoryFor(ScriptedServer server) {
   final dio = Dio(BaseOptions(baseUrl: 'https://api.example.test'))
     ..httpClientAdapter = server;
+  // As the app builds it: money is checked before the client reads it.
   return HttpAccountRepository(
-    NextbankApi(dio: dio, interceptors: []).getDefaultApi(),
+    NextbankApi(
+      dio: dio,
+      interceptors: [AmountIntegrityInterceptor()],
+    ).getDefaultApi(),
   );
 }
 
