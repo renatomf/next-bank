@@ -126,10 +126,10 @@ Ordem das etapas, reorganizada para não criar telas provisórias: 1) fundação
 
 ---
 
-## Checkpoint de fim de semana
+## Checkpoint de fim de semana (concluído em 2026-10-06)
 
-- [ ] Ameaças AUTH-01 a 09, API-06, MOB-01 e DEMO-01 com teste verde
-- [ ] Cobertura ≥ 90% em `domain/` e `application/`
-- [ ] App: cadastro, login, restauração de sessão e criação do PIN no emulador
-- [ ] Se a semana estourar: telas do app passam para o início da semana 4; backend e segurança não são cortados
+- [x] Ameaças AUTH-01 a 09, API-06, MOB-01 e DEMO-01 com teste verde: cada uma citada nos testes que a provam (346 testes da API, 197 do app e 55 do `design_system`), e CI da `main` verde
+- [x] Cobertura ≥ 90% em `domain/` e `application/`: 100% em instruções, ramos, funções e linhas
+- [x] App: cadastro, login, restauração de sessão e criação do PIN no emulador Android, conferidos na auditoria e nas sessões do banco (logout revoga a sessão; reabrir o app restaura a sessão sem criar outra)
+- [x] A semana não estourou: as telas do app entraram na semana 3
 - [ ] Próximo passo: plano da semana 4 (Accounts + Ledger), começando por `GET /v1/me` (`name`, `hasPin`): hoje o app não sabe se o PIN já foi criado quando o cadastro é interrompido antes da tela do PIN
