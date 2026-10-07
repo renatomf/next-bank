@@ -61,6 +61,29 @@ void main() {
       expect(cents.style!.color, NbColors.dark.textMuted);
     });
 
+    // Found on the emulator: Sora has no "•" glyph, so the hidden balance
+    // showed empty squares. Widget tests draw a test font and cannot see it,
+    // so the mask must come from a family that has the glyph: Manrope, which
+    // already draws "•••• 0004" on the card.
+    testWidgets('draws the hidden mask in a font that has the bullet', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(const MoneyText(cents: 1000000, hidden: true)),
+      );
+
+      final text = tester.widget<RichText>(
+        find.descendant(
+          of: find.byType(MoneyText),
+          matching: find.byType(RichText),
+        ),
+      );
+      final mask = (text.text as TextSpan).children!
+          .cast<TextSpan>()
+          .singleWhere((span) => span.text!.contains('•'));
+      expect(mask.style!.fontFamily, 'packages/design_system/${NbType.body}');
+    });
+
     // MOB-05: someone beside the customer must not read the balance.
     testWidgets('hides every digit when hidden', (tester) async {
       await tester.pumpWidget(
