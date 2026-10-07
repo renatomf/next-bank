@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { RegisterCustomer } from '../../../src/application/onboarding/register-customer.ts';
+import type { Transaction } from '../../../src/shared/application/ports.ts';
+import { Money } from '../../../src/shared/domain/money.ts';
 import { RegisterUser } from '../../../src/modules/identity/application/register-user.ts';
 import {
   AlreadyRegistered,
@@ -17,9 +19,34 @@ import {
 } from '../../modules/identity/application/fakes.ts';
 
 // Registration (domain-model.md, section 8; ADR 0010): the orchestrator sequences
-// identity's steps around one shared transaction. Account, funding and the Pix
-// key join it in weeks 4-5.
+// identity, accounts and ledger around one shared transaction. The Pix key
+// joins it in week 5.
 const NOW = new Date('2026-10-06T12:00:00.000Z');
+
+/** Accounts' step: records what it was asked to open, and in which transaction. */
+class FakeAccountsStep {
+  opened: { tx: Transaction; holderUserId: string; requestId: string | null }[] = [];
+
+  execute(
+    tx: Transaction,
+    input: { holderUserId: string; requestId: string | null },
+  ): Promise<string> {
+    this.opened.push({ tx, ...input });
+    return Promise.resolve(`account-of-${input.holderUserId}`);
+  }
+}
+
+/** Ledger's step: records each funding; can fail to prove the rollback. */
+class FakeFundingStep {
+  funded: { tx: Transaction; accountId: string; amount: Money }[] = [];
+  fail = false;
+
+  fund(tx: Transaction, input: { accountId: string; amount: Money }): Promise<void> {
+    if (this.fail) return Promise.reject(new Error('ledger write failed'));
+    this.funded.push({ tx, ...input });
+    return Promise.resolve();
+  }
+}
 const INPUT = {
   name: 'Maria Teste',
   email: 'Maria@Example.test',
@@ -42,8 +69,10 @@ function setup() {
     refreshTokens: new FakeRefreshTokens(),
     accessTokens: new FakeAccessTokens(),
   });
-  const register = new RegisterCustomer({ unitOfWork: store, identity });
-  return { store, hasher, register };
+  const accounts = new FakeAccountsStep();
+  const ledger = new FakeFundingStep();
+  const register = new RegisterCustomer({ unitOfWork: store, identity, accounts, ledger });
+  return { store, hasher, accounts, ledger, register };
 }
 
 describe('RegisterCustomer', () => {
@@ -170,6 +199,39 @@ describe('RegisterCustomer', () => {
 
     await expect(register.execute(INPUT)).rejects.toThrow(AlreadyRegistered);
     expect(hasher.hashed).toHaveLength(2);
+  });
+
+  it('opens the account of the new user and funds it with R$ 10.000,00 (D3)', async () => {
+    const { accounts, ledger, register } = setup();
+
+    await register.execute(INPUT);
+
+    expect(accounts.opened).toEqual([
+      expect.objectContaining({ holderUserId: 'id-1', requestId: 'req-12345678' }),
+    ]);
+    expect(ledger.funded).toEqual([
+      expect.objectContaining({ accountId: 'account-of-id-1', amount: Money.of(1_000_000n) }),
+    ]);
+  });
+
+  it('runs user, account and funding in one transaction', async () => {
+    const { store, accounts, ledger, register } = setup();
+
+    await register.execute(INPUT);
+
+    expect(store.runs).toBe(1);
+    expect(accounts.opened).toHaveLength(1);
+    expect(ledger.funded[0]?.tx).toBe(accounts.opened[0]?.tx);
+  });
+
+  it('writes nothing of the user if the funding fails', async () => {
+    const { store, ledger, register } = setup();
+    ledger.fail = true;
+
+    await expect(register.execute(INPUT)).rejects.toThrow('ledger write failed');
+    expect(store.users).toEqual([]);
+    expect(store.sessions).toEqual([]);
+    expect(store.auditEvents).toEqual([]);
   });
 
   it('writes nothing if any step of the transaction fails', async () => {
