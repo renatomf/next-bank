@@ -110,7 +110,7 @@ O **extrato** é um read model sobre Ledger + Payments, não um contexto. Na V1,
 - **Dois saldos por conta**, modelados desde a V1 para que reservas (Cards) não exijam migração no núcleo:
   - `posted_balance`: soma dos lançamentos contabilizados
   - `available_balance`: `posted_balance` − reservas ativas
-- A projeção de saldo tem coluna `version` (lock otimista) e é atualizada na mesma transação dos lançamentos.
+- A projeção de saldo tem coluna `version` (contador de alterações) e é atualizada na mesma transação dos lançamentos. A concorrência é resolvida por `SELECT … FOR UPDATE` em ordem de ID (ADR 0007), não por lock otimista.
 - Um job de **reconciliação interna** compara a projeção com Σ lançamentos e registra divergências.
 - O saldo de demonstração entra por `JournalEntry` a partir de `system:funding`. Nunca por `UPDATE`.
 
@@ -236,7 +236,7 @@ As telas são construídas **direto no Flutter**, dentro de cada fatia (sem mock
 | 2 | Login | 3 |
 | 3 | Cadastro (nome, CPF, e-mail, senha) | 3 |
 | 4 | Criar PIN de transação | 3 |
-| 5 | Desbloqueio do app (PIN/biometria) | 3 |
+| 5 | Desbloqueio do app (PIN/biometria) | 6 (era 3; achado F-16) |
 | 6 | Home | 2 (simples) → 4 |
 | 7 | Pix: enviar (chave + valor) | 6 |
 | 8 | Revisar Pix + PIN (bottom sheet) | 6 |
@@ -268,10 +268,10 @@ Cada semana tem itens **obrigatórios** e **extras**. Se a semana estourar, os e
 | 1 | Arquitetura + Segurança | *(Design já concluído: identidade, tokens e 3 mockups.)* Modelo de domínio (contextos, agregados, máquina de estados, plano de contas); threat model (Auth, PIX); ADRs 001–008; C4 (contexto e containers); ERD inicial; mapa de navegação e estados das telas | — | ADRs, threat model e diagramas commitados e revisados |
 | 2 | Esqueleto ponta a ponta | **Spikes:** SQL puro (`pg`) + migrations dbmate com triggers/`GRANT`s no Neon, no caso do ledger; gerador de cliente Dart (ADRs 0008 e 0009). Monorepo (pnpm workspaces; Turborepo quando houver o segundo pacote TypeScript e pub workspaces quando nascer o `design_system`; o cliente gerado entra no app por caminho); app em `apps/mobile`, **sem as plataformas não usadas** e com **identificador único** (`dev.renatomf.nextbank`); Fastify + Postgres com papéis de menor privilégio e migrations dbmate (Docker Compose); CI (format, lint, typecheck, testes, contrato) nos dois apps; gitleaks no CI; proteção da `main`; Pino + requestId; **Home exibe o status da API** pelo cliente gerado (o saldo chega na semana 4, com autenticação e ledger) | Deploy no Render + Neon e spike do serviço privado no Render (movidos para a semana 8); osv-scanner + Semgrep; Sentry; dependency-cruiser (com o primeiro módulo) | PR verde; app conversa com a API |
 | 3 | Identity | Cadastro, login, logout; Argon2id; JWT + refresh rotativo com detecção de reuso; sessões; rate limit; auditoria de auth. Mobile: login e cadastro, secure storage, interceptor de refresh com fila única, restauração e expiração de sessão; PIN de transação validado no servidor; **cadastro da demo com CPF fictício gerado no app** (nunca dados reais) | Desbloqueio por biometria no app | Testes de domínio e de API verdes; itens de auth do threat model mitigados |
-| 4 | Accounts + Ledger | `Money`; `Account`; plano de contas; `JournalEntry` em partidas dobradas; saldos posted/available com versão; funding pela conta de sistema; authorization por dono. Mobile: Home (saldo, ações rápidas, recentes, estados de loading, vazio e erro) | Job de reconciliação interna | Σ débitos = Σ créditos garantido por teste; "usuário A → conta B = 404" |
-| 5 | PIX — backend | Chaves PIX; máquina de estados; idempotência (escopo + validade); locks ordenados; `CHECK` de saldo; auditoria na transação; teste de concorrência (2 × R$80 sobre R$100) | Limites por transação e noturno | Todos os testes de integridade financeira verdes |
-| 6 | PIX — mobile + Extrato | Fluxo do PIX; confirmação com PIN/biometria; comprovante; extrato com paginação por cursor; detalhe da transação | Filtros do extrato (período, tipo) | **PIX funcionando de ponta a ponta** |
-| 7 | Perfil + Polimento | Perfil; segurança (sessões ativas, encerrar sessão); acessibilidade (semântica, contraste, escala de fonte); estados de erro revisados | Animações; ocultar saldo | As 14 telas implementadas |
+| 4 | Accounts + Ledger | `Money`; `Account`; plano de contas; `JournalEntry` em partidas dobradas; saldos posted/available com versão; funding pela conta de sistema; authorization por dono. `GET /v1/me`. Mobile: Home (saldo com ocultar saldo, estados de loading e erro); "últimas movimentações" e atalhos entram com o extrato e o Pix, na semana 6 | Job de reconciliação interna | Σ débitos = Σ créditos garantido por teste; usuário A nunca lê a conta de B |
+| 5 | PIX — backend | Chaves PIX; máquina de estados; idempotência (escopo + validade); locks ordenados; `CHECK` de saldo; auditoria na transação; teste de concorrência (2 × R$80 sobre R$100); rota de verificação do PIN para o Desbloqueio (F-16) | Limites por transação e noturno | Todos os testes de integridade financeira verdes |
+| 6 | PIX — mobile + Extrato | Desbloqueio do app com PIN (F-16); fluxo do PIX; confirmação com PIN/biometria; comprovante; extrato com paginação por cursor; detalhe da transação | Filtros do extrato (período, tipo) | **PIX funcionando de ponta a ponta** |
+| 7 | Perfil + Polimento | Perfil; segurança (sessões ativas, encerrar sessão); acessibilidade (semântica, contraste, escala de fonte); estados de erro revisados | Animações | As 14 telas implementadas |
 | 8 | Qualidade + Produção | E2E Login → PIX → Comprovante → Extrato; testes de segurança (authz, rate limit, idempotência, reuso de refresh, bloqueio do PIN); deploy; README com diagramas; **demo acessível** (seção 8.2) | Profiling básico (startup, rebuilds, queries lentas); app em emulador no navegador | **Tag `v1.0.0`** |
 
 ### 8.0 Congelamento de escopo

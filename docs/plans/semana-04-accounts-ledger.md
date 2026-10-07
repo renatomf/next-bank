@@ -1,5 +1,6 @@
 # Plano — Semana 4: Accounts + Ledger
 
+- **Status:** Aprovado (2026-10-07), com as decisões D1–D10 nos padrões recomendados
 - **Roadmap:** `docs/roadmap.md` (seção 8, semana 4)
 - **Base:** ADRs 0005 (ledger), 0006 (`Money`), 0007 (concorrência) e 0010 (orquestração); `domain-model.md` (3.2, 3.3, 5, 6, 8, 9 e 11); `database.md` (5.2, 5.3, 6, 7, 10 e 11); threat model (READ-01, READ-02, API-05, MOB-05); brief (2.3, 3 e 7) e mockup `home-dark.png`
 - **Carga:** ~30h (5 dias × 6h)
@@ -166,8 +167,8 @@ Nenhuma. A formatação de dinheiro no `design_system` é escrita no próprio pa
 
 ## Tarefa 0 — Registro da lacuna (antes do código)
 
-- [ ] F-16 no log de achados: o plano da semana 3 não incluiu a tela 5 (Desbloqueio), prevista no roadmap, no MASVS ("desbloqueio após tempo em segundo plano", semana 3) e no PIX-06. Falha de desenho: o plano de cada semana passa a conferir a tabela de telas do roadmap (seção 7.1)
-- [ ] Roadmap: Desbloqueio e ocultar saldo nas semanas da D8 e D10; "lock otimista" da seção 6.2 corrigido para o que o `database.md` e o ADR 0007 decidiram (`version` é contador; a concorrência é por `FOR UPDATE`)
+- [x] F-16 no log de achados: o plano da semana 3 não incluiu a tela 5 (Desbloqueio), prevista no roadmap, no MASVS ("desbloqueio após tempo em segundo plano", semana 3) e no PIX-06. Falha de desenho: o plano de cada semana passa a conferir a tabela de telas do roadmap (seção 7.1)
+- [x] Roadmap, threat model (PIX-06) e checklist: Desbloqueio, ocultar saldo e itens da Home nas semanas da D7, D8 e D10; "lock otimista" da seção 6.2 corrigido para o que o `database.md` e o ADR 0007 decidiram (`version` é contador; a concorrência é por `FOR UPDATE`)
 
 ## Tarefa 1 — `GET /v1/me` (dia 1)
 

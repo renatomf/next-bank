@@ -111,7 +111,7 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 | **CRYPTO** | Nenhuma criptografia caseira; nenhuma chave embutida no app (MOB-04) | ⏳ | 2+ |
 | **AUTH** | Autenticação e autorização decididas no servidor | ⏳ | 3 |
 | | PIN validado no servidor; biometria só como conveniência local (PIX-06) | ⏳ | 3, 6 |
-| | Desbloqueio após tempo em segundo plano (D5) | ⏳ | 3 |
+| | Desbloqueio após tempo em segundo plano (D5) | ⏳ | 5, 6 (F-16) |
 | **NETWORK** | Só HTTPS; tráfego em texto puro desabilitado (MOB-03) | ✅ | 2 |
 | | Certificate pinning | 🚫 | — |
 | **PLATFORM** | Sem deep links na V1: desligados no Android e no iOS (MOB-06) | ✅ | 3 |
