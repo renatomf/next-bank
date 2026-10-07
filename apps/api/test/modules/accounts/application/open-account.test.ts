@@ -1,53 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import type { AuditEvent, Transaction } from '../../../../src/shared/application/ports.ts';
 import { OpenAccount } from '../../../../src/modules/accounts/application/open-account.ts';
-import type {
-  AccountsRepositories,
-  AccountsRepositoriesFactory,
-  LedgerPort,
-} from '../../../../src/modules/accounts/application/ports.ts';
-import type { AccountState } from '../../../../src/modules/accounts/domain/account.ts';
 import { FixedClock, SequentialIds } from '../../identity/application/fakes.ts';
+import { FakeLedger, InMemoryAccounts, tx } from './fakes.ts';
 
 // Opening the current account (domain-model.md 3.2 and 8; decision D2): the
 // account, its ledger account and the audit event, all in the caller's
 // transaction.
 const NOW = new Date('2026-10-07T12:00:00.000Z');
-const tx: Transaction = { kind: 'transaction' };
-
-class InMemoryAccounts implements AccountsRepositoriesFactory {
-  accounts: AccountState[] = [];
-  auditEvents: AuditEvent[] = [];
-  nextSequence = 100000;
-
-  for(): AccountsRepositories {
-    return {
-      accounts: {
-        nextSequence: () => Promise.resolve(this.nextSequence++),
-        insert: (account) => {
-          this.accounts.push(account);
-          return Promise.resolve();
-        },
-      },
-      audit: {
-        record: (event) => {
-          this.auditEvents.push(event);
-          return Promise.resolve();
-        },
-      },
-    };
-  }
-}
-
-/** Records which accounts the ledger was asked to open, and in which transaction. */
-class FakeLedger implements LedgerPort {
-  opened: { tx: Transaction; accountId: string }[] = [];
-
-  open(transaction: Transaction, accountId: string): Promise<void> {
-    this.opened.push({ tx: transaction, accountId });
-    return Promise.resolve();
-  }
-}
 
 function setup() {
   const store = new InMemoryAccounts();

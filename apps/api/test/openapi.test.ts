@@ -54,6 +54,8 @@ describe('OpenAPI document', () => {
       'Health',
       'LoginRequestInput',
       'Me',
+      'Money',
+      'MyAccount',
       'Problem',
       'RefreshRequestInput',
       'RegisterRequestInput',
@@ -99,6 +101,26 @@ describe('OpenAPI document', () => {
         $ref: '#/components/schemas/Problem',
       });
     }
+  });
+
+  it('describes GET /v1/me/account as a protected read of the caller account', () => {
+    const operation = document.paths['/v1/me/account']?.get;
+
+    expect(operation?.operationId).toBe('getMyAccount');
+    expect(operation?.security).toEqual([{ bearerAuth: [] }]);
+    expect(operation?.responses['200']?.content?.['application/json']?.schema).toEqual({
+      $ref: '#/components/schemas/MyAccount',
+    });
+    for (const status of ['401', '404', '422']) {
+      expect(operation?.responses[status]?.content?.['application/problem+json']?.schema).toEqual({
+        $ref: '#/components/schemas/Problem',
+      });
+    }
+  });
+
+  // READ-01, READ-05: resources come from the token; no route names one by id or number.
+  it('has no route that takes a resource id in the path', () => {
+    expect(Object.keys(document.paths).filter((path) => path.includes('{'))).toEqual([]);
   });
 
   it('is deterministic', async () => {
