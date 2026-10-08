@@ -1,4 +1,4 @@
-import { randomBytes } from 'node:crypto';
+import { createCipheriv, createHmac, randomBytes } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { Cpf } from '../../../../src/modules/identity/domain/cpf.ts';
 import { AesGcmCpfProtector } from '../../../../src/modules/identity/infrastructure/aes-gcm-cpf-protector.ts';
@@ -85,6 +85,26 @@ describe('AesGcmCpfProtector', () => {
 
   it('gives a different blind index under another key, so it cannot be precomputed', () => {
     expect(same(newProtector().blindIndex(CPF), newProtector().blindIndex(CPF))).toBe(false);
+  });
+
+  // Users registered before the Pix keys must stay readable and unique.
+  it('keeps the stored layout of the users CPF: same index and associated data', () => {
+    const encryptionKey = randomBytes(32);
+    const hmacKey = randomBytes(32);
+    const protector = newProtector({ encryptionKey, hmacKey });
+    const nonce = randomBytes(12);
+    const cipher = createCipheriv('aes-256-gcm', encryptionKey, nonce, { authTagLength: 16 });
+    cipher.setAAD(Buffer.from('identity.users.cpf:v1'));
+    const body = Buffer.concat([cipher.update(CPF.digits, 'utf8'), cipher.final()]);
+    const stored = Buffer.concat([nonce, cipher.getAuthTag(), body]);
+
+    expect(protector.decrypt({ ciphertext: stored, keyVersion: 1 }).digits).toBe(CPF.digits);
+    expect(
+      same(
+        protector.blindIndex(CPF),
+        createHmac('sha256', hmacKey).update(`cpf:${CPF.digits}`).digest(),
+      ),
+    ).toBe(true);
   });
 
   it('refuses keys that are not 32 bytes', () => {
