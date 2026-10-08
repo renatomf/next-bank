@@ -1,6 +1,30 @@
 import type { Transaction } from '../../../shared/application/ports.ts';
-import type { JournalEntryState } from '../domain/journal-entry.ts';
-import type { LedgerAccountState } from '../domain/ledger-account.ts';
+import type { Money } from '../../../shared/domain/money.ts';
+import type { JournalEntryKind, JournalEntryState } from '../domain/journal-entry.ts';
+import type { Direction, LedgerAccountState } from '../domain/ledger-account.ts';
+
+/**
+ * Where a statement page ends: the posting's time as the database wrote it,
+ * with microseconds (a JavaScript Date would round them away), and its id.
+ */
+export interface StatementPosition {
+  createdAt: string;
+  postingId: string;
+}
+
+/** One posting of a customer account, with the entry it belongs to. */
+export interface StatementRow {
+  postingId: string;
+  /** createdAt as text, exact: what the next page continues from. */
+  position: string;
+  occurredAt: Date;
+  direction: Direction;
+  amount: Money;
+  counterpartyName: string | null;
+  counterpartyDocumentMasked: string | null;
+  entryKind: JournalEntryKind;
+  referenceId: string;
+}
 
 export interface LedgerRepository {
   findByCode(code: string): Promise<LedgerAccountState | null>;
@@ -15,6 +39,15 @@ export interface LedgerRepository {
   /** The entry and its postings. */
   insertEntry(entry: JournalEntryState): Promise<void>;
   updateBalance(account: LedgerAccountState): Promise<void>;
+  /**
+   * The postings of one account, newest first by (created_at, id), after the
+   * given position (database.md, section 8). A plain read, without locks.
+   */
+  statementPage(
+    ledgerAccountId: string,
+    after: StatementPosition | null,
+    limit: number,
+  ): Promise<StatementRow[]>;
 }
 
 /** Binds the repository to the shared transaction opened by the caller (ADR 0010). */

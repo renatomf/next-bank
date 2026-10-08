@@ -32,4 +32,31 @@ export interface LedgerPort {
   open(tx: Transaction, accountId: string): Promise<void>;
   /** The money lives in the ledger: an account never holds a balance. */
   availableBalance(tx: Transaction, accountId: string): Promise<Money | null>;
+  /** One page of the account's statement, newest first (domain-model.md 8.1). */
+  statement(
+    tx: Transaction,
+    accountId: string,
+    after: StatementPosition | null,
+  ): Promise<StatementPage>;
+}
+
+/** Where a statement page ends; opaque to Accounts, which only passes it back. */
+export interface StatementPosition {
+  createdAt: string;
+  postingId: string;
+}
+
+export interface StatementItem {
+  id: string;
+  occurredAt: Date;
+  kind: 'PIX_SENT' | 'PIX_RECEIVED' | 'DEMO_FUNDING';
+  direction: 'IN' | 'OUT';
+  amount: Money;
+  counterparty: { name: string; documentMasked: string | null } | null;
+  transferId: string | null;
+}
+
+export interface StatementPage {
+  items: StatementItem[];
+  next: StatementPosition | null;
 }

@@ -125,11 +125,27 @@ describe('ledger on Postgres', () => {
     const a = await customer(10_000n);
     const b = await customer(10_000n);
 
-    const transfers = Array.from({ length: 100 }, (_, i) =>
-      i % 2 === 0 ? transfer(a.ledgerId, b.ledgerId, 100n) : transfer(b.ledgerId, a.ledgerId, 100n),
+    // Alternated directions, as many at a time as the pool has connections (10):
+    // more at once would only wait for a connection and time out under load.
+    const tasks = Array.from(
+      { length: 100 },
+      (_, i) => () =>
+        i % 2 === 0
+          ? transfer(a.ledgerId, b.ledgerId, 100n)
+          : transfer(b.ledgerId, a.ledgerId, 100n),
     );
-    const results = await Promise.allSettled(transfers);
+    const results: PromiseSettledResult<unknown>[] = [];
+    let next = 0;
+    await Promise.all(
+      Array.from({ length: 10 }, async () => {
+        while (next < tasks.length) {
+          const task = tasks[next++];
+          if (task) results.push(...(await Promise.allSettled([task()])));
+        }
+      }),
+    );
 
+    expect(results).toHaveLength(100);
     expect(results.filter((r) => r.status === 'rejected')).toEqual([]);
     expect(await balanceOf(a.accountId)).toEqual(Money.of(10_000n));
     expect(await balanceOf(b.accountId)).toEqual(Money.of(10_000n));

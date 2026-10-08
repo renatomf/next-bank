@@ -29,5 +29,8 @@ export 'package:nextbank_api/src/model/pix_transfer.dart';
 export 'package:nextbank_api/src/model/problem.dart';
 export 'package:nextbank_api/src/model/refresh_request_input.dart';
 export 'package:nextbank_api/src/model/register_request_input.dart';
+export 'package:nextbank_api/src/model/statement.dart';
+export 'package:nextbank_api/src/model/statement_counterparty.dart';
+export 'package:nextbank_api/src/model/statement_item.dart';
 export 'package:nextbank_api/src/model/verify_pin_request_input.dart';
 
