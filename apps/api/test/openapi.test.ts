@@ -51,13 +51,18 @@ describe('OpenAPI document', () => {
     expect(Object.keys(document.components.schemas).sort()).toEqual([
       'AuthTokens',
       'CreatePinRequestInput',
+      'CreatePixTransferRequestInput',
       'Health',
       'LoginRequestInput',
       'Me',
       'Money',
+      // The amount the client sends in a Pix: the input variant of Money.
+      'MoneyInput',
       'MyAccount',
       'PixKeyLookup',
       'PixKeyLookupRequestInput',
+      'PixPayee',
+      'PixTransfer',
       'Problem',
       'RefreshRequestInput',
       'RegisterRequestInput',
@@ -151,6 +156,28 @@ describe('OpenAPI document', () => {
         $ref: '#/components/schemas/Problem',
       });
     }
+  });
+
+  // ADR 0007: a financial command needs an Idempotency-Key; PIX-02, PIX-04.
+  it('describes POST /v1/pix/transfers as a protected, idempotent command', () => {
+    const operation = document.paths['/v1/pix/transfers']?.post;
+
+    expect(operation?.operationId).toBe('createPixTransfer');
+    expect(operation?.security).toEqual([{ bearerAuth: [] }]);
+    expect(operation?.parameters).toEqual([
+      expect.objectContaining({ in: 'header', name: 'idempotency-key', required: true }),
+    ]);
+    expect(operation?.responses['201']?.content?.['application/json']?.schema).toEqual({
+      $ref: '#/components/schemas/PixTransfer',
+    });
+    for (const status of ['401', '404', '409', '422', '429']) {
+      expect(operation?.responses[status]?.content?.['application/problem+json']?.schema).toEqual({
+        $ref: '#/components/schemas/Problem',
+      });
+    }
+    expect(document.components.schemas.Problem).toMatchObject({
+      properties: { limit: { $ref: '#/components/schemas/Money' } },
+    });
   });
 
   // READ-01, READ-05: resources come from the token; no route names one by id or number.
