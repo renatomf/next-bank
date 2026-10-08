@@ -2,6 +2,8 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/app/router.dart';
+import 'package:next_bank/core/account/account_providers.dart';
+import 'package:next_bank/core/account/http_account_repository.dart';
 import 'package:next_bank/core/api_client.dart';
 import 'package:next_bank/core/profile/http_profile_repository.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
@@ -10,8 +12,6 @@ import 'package:next_bank/core/session/secure_token_store.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/features/auth/data/http_auth_repository.dart';
 import 'package:next_bank/features/auth/presentation/auth_providers.dart';
-import 'package:next_bank/features/home/data/http_account_repository.dart';
-import 'package:next_bank/features/home/presentation/home_providers.dart';
 import 'package:next_bank/features/unlock/data/http_unlock_repository.dart';
 import 'package:next_bank/features/unlock/presentation/unlock_providers.dart';
 

@@ -1,4 +1,4 @@
-import 'package:next_bank/features/home/domain/account_summary.dart';
+import 'package:next_bank/core/account/account_summary.dart';
 
 /// Reads the signed-in customer's account from the API.
 /// Failures are reported as `ApiFailure` with the catalog code.

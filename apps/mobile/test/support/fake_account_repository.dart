@@ -1,5 +1,5 @@
-import 'package:next_bank/features/home/domain/account_repository.dart';
-import 'package:next_bank/features/home/domain/account_summary.dart';
+import 'package:next_bank/core/account/account_repository.dart';
+import 'package:next_bank/core/account/account_summary.dart';
 
 /// Fake [AccountRepository]: a funded demo account by default; [answer] can
 /// hold a call open or make it fail.
