@@ -4,7 +4,7 @@ import type { Transaction } from '../../../src/shared/application/ports.ts';
 import { Money } from '../../../src/shared/domain/money.ts';
 import { RegisterUser } from '../../../src/modules/identity/application/register-user.ts';
 import { AlreadyRegistered, WeakPassword } from '../../../src/modules/identity/domain/errors.ts';
-import { InvalidCpf } from '../../../src/shared/domain/cpf.ts';
+import { type Cpf, InvalidCpf } from '../../../src/shared/domain/cpf.ts';
 import {
   FakeAccessTokens,
   FakeCpfProtector,
@@ -16,8 +16,7 @@ import {
 } from '../../modules/identity/application/fakes.ts';
 
 // Registration (domain-model.md, section 8; ADR 0010): the orchestrator sequences
-// identity, accounts and ledger around one shared transaction. The Pix key
-// joins it in week 5.
+// identity, accounts, ledger and payments around one shared transaction.
 const NOW = new Date('2026-10-06T12:00:00.000Z');
 
 /** Accounts' step: records what it was asked to open, and in which transaction. */
@@ -44,6 +43,18 @@ class FakeFundingStep {
     return Promise.resolve();
   }
 }
+/** Payments' step: records each CPF key; can fail to prove the rollback. */
+class FakePixKeyStep {
+  created: { tx: Transaction; accountId: string; cpf: Cpf }[] = [];
+  fail = false;
+
+  execute(tx: Transaction, input: { accountId: string; cpf: Cpf }): Promise<void> {
+    if (this.fail) return Promise.reject(new Error('pix key write failed'));
+    this.created.push({ tx, ...input });
+    return Promise.resolve();
+  }
+}
+
 const INPUT = {
   name: 'Maria Teste',
   email: 'Maria@Example.test',
@@ -68,8 +79,15 @@ function setup() {
   });
   const accounts = new FakeAccountsStep();
   const ledger = new FakeFundingStep();
-  const register = new RegisterCustomer({ unitOfWork: store, identity, accounts, ledger });
-  return { store, hasher, accounts, ledger, register };
+  const payments = new FakePixKeyStep();
+  const register = new RegisterCustomer({
+    unitOfWork: store,
+    identity,
+    accounts,
+    ledger,
+    payments,
+  });
+  return { store, hasher, accounts, ledger, payments, register };
 }
 
 describe('RegisterCustomer', () => {
@@ -211,14 +229,36 @@ describe('RegisterCustomer', () => {
     ]);
   });
 
-  it('runs user, account and funding in one transaction', async () => {
-    const { store, accounts, ledger, register } = setup();
+  // domain-model.md 3.4: a CPF key is the CPF of the account holder.
+  it("registers the holder's CPF as the Pix key of the new account", async () => {
+    const { payments, register } = setup();
+
+    await register.execute(INPUT);
+
+    expect(payments.created).toHaveLength(1);
+    expect(payments.created[0]?.accountId).toBe('account-of-id-1');
+    expect(payments.created[0]?.cpf.digits).toBe('12345678909');
+  });
+
+  it('runs user, account, funding and Pix key in one transaction', async () => {
+    const { store, accounts, ledger, payments, register } = setup();
 
     await register.execute(INPUT);
 
     expect(store.runs).toBe(1);
     expect(accounts.opened).toHaveLength(1);
     expect(ledger.funded[0]?.tx).toBe(accounts.opened[0]?.tx);
+    expect(payments.created[0]?.tx).toBe(accounts.opened[0]?.tx);
+  });
+
+  it('writes nothing of the user if the Pix key cannot be created', async () => {
+    const { store, payments, register } = setup();
+    payments.fail = true;
+
+    await expect(register.execute(INPUT)).rejects.toThrow('pix key write failed');
+    expect(store.users).toEqual([]);
+    expect(store.sessions).toEqual([]);
+    expect(store.auditEvents).toEqual([]);
   });
 
   it('writes nothing of the user if the funding fails', async () => {
