@@ -59,6 +59,7 @@ describe('OpenAPI document', () => {
       'Problem',
       'RefreshRequestInput',
       'RegisterRequestInput',
+      'VerifyPinRequestInput',
     ]);
   });
 
@@ -116,6 +117,22 @@ describe('OpenAPI document', () => {
         $ref: '#/components/schemas/Problem',
       });
     }
+  });
+
+  // F-16: the Unlock screen checks the PIN; the same counter as the Pix (PIX-05).
+  it('describes POST /v1/me/pin/verify as a protected check with the attempts left', () => {
+    const operation = document.paths['/v1/me/pin/verify']?.post;
+
+    expect(operation?.operationId).toBe('verifyPin');
+    expect(operation?.security).toEqual([{ bearerAuth: [] }]);
+    for (const status of ['401', '409', '422', '423']) {
+      expect(operation?.responses[status]?.content?.['application/problem+json']?.schema).toEqual({
+        $ref: '#/components/schemas/Problem',
+      });
+    }
+    expect(document.components.schemas.Problem).toMatchObject({
+      properties: { remainingAttempts: { type: 'integer' } },
+    });
   });
 
   // READ-01, READ-05: resources come from the token; no route names one by id or number.
