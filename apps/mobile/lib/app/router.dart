@@ -6,11 +6,11 @@ import 'package:next_bank/core/profile/profile.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/app_lock.dart';
 import 'package:next_bank/core/session/session_controller.dart';
-import 'package:next_bank/features/auth/presentation/create_pin_screen.dart';
-import 'package:next_bank/features/auth/presentation/login_screen.dart';
-import 'package:next_bank/features/auth/presentation/register_screen.dart';
-import 'package:next_bank/features/auth/presentation/sign_out_button.dart';
-import 'package:next_bank/features/auth/presentation/splash_screen.dart';
+import 'package:next_bank/features/auth/presentation/create_pin/create_pin_screen.dart';
+import 'package:next_bank/features/auth/presentation/login/login_screen.dart';
+import 'package:next_bank/features/auth/presentation/register/register_screen.dart';
+import 'package:next_bank/features/auth/presentation/sign_out/sign_out_button.dart';
+import 'package:next_bank/features/auth/presentation/splash/splash_screen.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
 import 'package:next_bank/features/unlock/presentation/unlock_screen.dart';
 

@@ -7,10 +7,10 @@ import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/features/auth/domain/cpf.dart';
 import 'package:next_bank/features/auth/presentation/auth_providers.dart';
-import 'package:next_bank/features/auth/presentation/register_controller.dart';
+import 'package:next_bank/features/auth/presentation/register/register_controller.dart';
 
-import '../../../support/fake_auth_repository.dart';
-import '../../../support/fake_token_store.dart';
+import '../../../../support/fake_auth_repository.dart';
+import '../../../../support/fake_token_store.dart';
 
 typedef Register = ({
   ProviderContainer container,

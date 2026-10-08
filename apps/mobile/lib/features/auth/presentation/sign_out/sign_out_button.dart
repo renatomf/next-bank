@@ -1,7 +1,7 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:next_bank/features/auth/presentation/sign_out_controller.dart';
+import 'package:next_bank/features/auth/presentation/sign_out/sign_out_controller.dart';
 
 /// "Sair": ends the session (AUTH-06); the router then shows the login.
 /// Disabled while leaving, so a double tap ends the session once.
