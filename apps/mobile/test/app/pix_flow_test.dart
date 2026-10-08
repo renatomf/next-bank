@@ -178,8 +178,8 @@ void main() {
   // MOB-07 end to end: the lost answer is asked again with the same key and
   // PIN, and only "Tentar de novo" is offered meanwhile.
   testWidgets('repeats an authorization whose answer was lost', (tester) async {
-    final pix = FakePixRepository();
-    pix.authorizeAnswer = () async => throw const ApiUnreachable();
+    final pix = FakePixRepository()
+      ..authorizeAnswer = () async => throw const ApiUnreachable();
     await openHome(tester, pix);
     await fillInPix(tester);
     await reviewPix(tester);
@@ -200,11 +200,11 @@ void main() {
   testWidgets('says how many attempts are left after a wrong PIN', (
     tester,
   ) async {
-    final pix = FakePixRepository();
-    pix.authorizeAnswer = () async => throw const ApiRejected(
-      ApiErrorCode.pinIncorrect,
-      remainingAttempts: 4,
-    );
+    final pix = FakePixRepository()
+      ..authorizeAnswer = () async => throw const ApiRejected(
+        ApiErrorCode.pinIncorrect,
+        remainingAttempts: 4,
+      );
     await openHome(tester, pix);
     await fillInPix(tester);
     await reviewPix(tester);
@@ -215,9 +215,9 @@ void main() {
   });
 
   testWidgets('offers only to leave when the PIN is locked', (tester) async {
-    final pix = FakePixRepository();
-    pix.authorizeAnswer = () async =>
-        throw const ApiRejected(ApiErrorCode.pinLocked);
+    final pix = FakePixRepository()
+      ..authorizeAnswer = () async =>
+          throw const ApiRejected(ApiErrorCode.pinLocked);
     await openHome(tester, pix);
     await fillInPix(tester);
     await reviewPix(tester);
@@ -231,9 +231,9 @@ void main() {
   testWidgets('asks to start again when the time to confirm is over', (
     tester,
   ) async {
-    final pix = FakePixRepository();
-    pix.authorizeAnswer = () async =>
-        throw const ApiRejected(ApiErrorCode.transferExpired);
+    final pix = FakePixRepository()
+      ..authorizeAnswer = () async =>
+          throw const ApiRejected(ApiErrorCode.transferExpired);
     await openHome(tester, pix);
     await fillInPix(tester);
     await reviewPix(tester);
