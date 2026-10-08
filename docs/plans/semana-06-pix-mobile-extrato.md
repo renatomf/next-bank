@@ -177,6 +177,104 @@ Nenhuma. A UUID da `Idempotency-Key` sai de `Random.secure` (D11). Biometria (`l
 - [ ] Telas 7, 8, 9 e 10 com todos os estados da seção 11; voltar do comprovante leva à Home
 - [ ] Atalho "Pix" na Home
 
+### Desenho da tarefa 3
+
+**Fontes conferidas**
+
+| Fonte | Regra | Teste |
+|---|---|---|
+| PIX-02 / MOB-07 / D11 | A chave nasce com cada tentativa e é reaproveitada em toda repetição dela | `review_controller_test`: a rede cai depois de o servidor processar → a repetição usa a mesma chave e recebe o Pix concluído; PIN novo após `PinIncorrect` → chave nova. `send_pix_controller_test`: a criação repetida usa a mesma chave; mudar valor, chave ou descrição gera chave nova |
+| PIX-04 / ADR 0006 | O valor digitado vira centavos `int`, nunca `double` | `pix_amount_test`: dígitos → centavos, teto de dígitos, zero não envia |
+| PIX-06 | O PIN é conferido no servidor em todo Pix | O repositório envia o PIN só no corpo da autorização (`http_pix_repository_test`, chaves exatas) |
+| PIX-07 | Varredura de chaves | A busca só acontece por ação do cliente e com CPF válido no app; CPF inválido não chama a API (`send_pix_controller_test`) |
+| PIX-08 | Toque duplo em "Confirmar" | O controller ignora o segundo envio enquanto o primeiro não volta; o botão fica desabilitado (teste de widget) |
+| MOB-02 | O PIN e os dados do Pix não ficam guardados nem aparecem em log | O estado dos controllers não tem campo de PIN. O PIN fica só em memória, na tentativa em andamento, e é descartado na resposta definitiva ou ao sair da tela (teste) |
+| MOB-05 | O saldo da tela do Pix respeita o "ocultar saldo" | Teste de widget do `AmountCard` com o saldo oculto |
+| `domain-model.md` 9 | Textos do Pix e do `LimitExceeded` com o valor do limite | `api_messages_test`: cada código novo, e `limit` lido só quando é inteiro (F-18) |
+| `domain-model.md` 4 e 9 | A autorização devolve 200 com `FAILED` e um motivo | Tela 9 com o texto de cada `failureReason` (`processing_controller_test`) |
+| `domain-model.md` 10 | Voltar do comprovante leva à Home, nunca ao PIN | `app_test`: o botão voltar do sistema no comprovante leva à Home |
+| `domain-model.md` 11 | Estados das telas 7 a 10 | Testes de widget de cada estado |
+| Brief e mockups (F-14) | `AmountCard`, `ContactCard`, `SecureHint`, `ActionTile`, `ReceiptCard`, `StatusBadge` | Testes de widget de cada ponto conferido contra `pix-dark.png`, `comprovante-dark.png` e `home-dark.png` |
+
+**Estrutura**
+
+```
+apps/mobile/lib/
+├── core/account/            # vem de features/home: o Pix precisa do saldo, do "ocultar" e da conta (D10)
+├── core/cpf.dart            # vem de features/auth/domain: o Pix valida a chave CPF
+├── core/idempotency_key.dart
+├── core/api_failure.dart    # + códigos do Pix e `limitCents`
+├── core/api_messages.dart   # + textos do Pix e dos motivos de falha
+└── features/pix/
+    ├── domain/   pix_amount.dart, pix_transfer.dart, pix_payee.dart, pix_repository.dart
+    ├── data/     http_pix_repository.dart (cliente gerado)
+    └── presentation/
+        ├── pix_providers.dart
+        ├── send/        tela 7: SendPixController
+        ├── review/      tela 8: ReviewPixController
+        ├── processing/  tela 9: ProcessingController
+        └── receipt/     tela 10
+```
+
+- **Itens movidos antes (commits `refactor:` sem mudar comportamento):**
+  - a conta: repositório, `accountProvider` e `balanceHiddenProvider`;
+  - o `Cpf`.
+  - Hoje os dois vivem em features que o Pix não pode importar.
+- **Rotas:**
+  - `/pix`, aberta por `push` da Home;
+  - `/pix/review/:transferId`, por `push` sobre `/pix`, para o voltar retornar ao formulário;
+  - `/pix/processing/:transferId` e `/pix/receipt/:transferId`, por `go`.
+  - Nas telas 9 e 10, o voltar leva à Home (`PopScope`).
+- **A revisão lê o Pix do servidor:** a tela 8 busca o Pix pelo id (`GET /v1/pix/transfers/:id`). O cliente confirma o que o servidor gravou, não o que o app tem na memória.
+
+**Concorrência**
+
+| Cenário | O que acontece | Teste |
+|---|---|---|
+| Resposta da autorização perdida | A tela diz que não foi possível confirmar e oferece "Tentar de novo". A repetição envia a mesma chave e o mesmo PIN, ainda em memória, e o servidor devolve a resposta guardada | `review_controller_test` |
+| `RequestInProgress` (409) | Tratado como resultado desconhecido: "Tentar de novo" com a mesma chave | `review_controller_test` |
+| Resposta da criação perdida | "Revisar Pix" de novo com o mesmo rascunho usa a mesma chave: o servidor devolve o mesmo Pix, sem criar outro | `send_pix_controller_test` |
+| Toque duplo em "Revisar Pix" ou "Confirmar" | O segundo envio é ignorado; no servidor, a autorização dupla dá 409 | Controllers + teste de widget |
+| App bloqueado no meio da revisão | O redirect leva ao Desbloqueio; o controller é descartado e o PIN some junto. O Pix pendente expira em 10 min | `app_test` |
+| `PROCESSING` na volta da autorização | A tela 9 consulta o Pix a cada 1 s, até 10 vezes. Se não terminar, diz "Ainda processando" e leva à Home | `processing_controller_test` |
+
+**Contratos**
+
+- **Nada muda na API.** As rotas usadas (`lookupPixKey`, `createPixTransfer`, `getPixTransfer` e `authorizePixTransfer`) e os schemas vêm do cliente gerado.
+- **`PixRepository`:**
+  - `lookup(cpf)` → `PixPayee`;
+  - `create(cpf, amountCents, description, idempotencyKey)` → `PixTransfer`;
+  - `fetch(id)` → `PixTransfer`;
+  - `authorize(id, pin, idempotencyKey)` → `PixTransfer`.
+  - Status ou motivo de falha desconhecido → `ApiUnexpected`.
+- **Catálogo novo no app:**
+  - `PixKeyNotFound`, `SamePayerAndPayee`, `InvalidAmount`, `InsufficientFunds`;
+  - `LimitExceeded` (com `limitCents`, de `limit.amount`);
+  - `AccountBlocked`, `TransferExpired`, `InvalidTransferState`, `IdempotencyKeyReused`, `RequestInProgress`.
+- **Valor:**
+  - digitado da direita para a esquerda (`3` → R$ 0,03; `35000` → R$ 350,00);
+  - no máximo 9 dígitos;
+  - zero não envia;
+  - os limites de valor e de horário ficam só no servidor (PIX-10).
+- **Chave:** só CPF (D8).
+
+**Dependências novas:** nenhuma.
+
+**Decisões da tarefa 3**
+
+| # | Decisão | Padrão recomendado |
+|---|---|---|
+| T1 | O PIN na repetição da autorização | Fica em memória só na tentativa em andamento e é descartado na resposta definitiva ou ao sair da tela. Pedir o PIN de novo transformaria a repetição numa tentativa nova (MOB-07) |
+| T2 | Cancelar o Pix ao sair da revisão | Fica fora: o Pix pendente expira em 10 min, e a autorização confere `expires_at` (PIX-08) |
+| T3 | Tamanho da entrega | Dois PRs: (a) `core`, domínio, dados e controllers; (b) `design_system`, telas, rotas e atalho na Home |
+
+**Fora da tarefa 3:**
+- cancelar ao sair (T2);
+- compartilhar comprovante (D9);
+- abas, "Recentes" e atendimento (D8);
+- outras chaves além de CPF;
+- biometria (D4).
+
 ## Tarefa 4 — Extrato no app (dia 4–5)
 
 - [ ] `design_system`: `TransactionItem`, `EmptyState`
