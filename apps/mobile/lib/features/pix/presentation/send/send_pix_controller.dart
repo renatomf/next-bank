@@ -92,7 +92,11 @@ class SendPixController extends Notifier<SendPixState> {
   ({_Draft draft, String key})? _unanswered;
 
   @override
-  SendPixState build() => const SendPixState();
+  SendPixState build() {
+    // A rebuild keeps this instance: the key belongs to the draft it drops.
+    _unanswered = null;
+    return const SendPixState();
+  }
 
   /// The amount field changed; anything but up to nine digits is ignored.
   void typeAmount(String digits) {
