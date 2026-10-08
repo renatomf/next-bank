@@ -57,6 +57,16 @@ export class PgAccountsRepository implements AccountsRepository {
     return stateOf(rows[0]);
   }
 
+  /** Served by the primary key; FOR SHARE holds the status until the commit. */
+  async lockForShare(ids: string[]): Promise<AccountState[]> {
+    const { rows } = await this.#client.query<AccountRow>(
+      `SELECT id, holder_user_id, branch, number, status, opened_at, updated_at
+       FROM accounts.accounts WHERE id = ANY($1::uuid[]) ORDER BY id FOR SHARE`,
+      [ids],
+    );
+    return rows.flatMap((row) => stateOf(row) ?? []);
+  }
+
   async insert(account: AccountState): Promise<void> {
     await this.#client.query(
       `INSERT INTO accounts.accounts

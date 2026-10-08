@@ -9,6 +9,7 @@ lib/src/auth/bearer_auth.dart
 lib/src/auth/oauth.dart
 lib/src/deserialize.dart
 lib/src/model/auth_tokens.dart
+lib/src/model/authorize_pix_transfer_request_input.dart
 lib/src/model/create_pin_request_input.dart
 lib/src/model/create_pix_transfer_request_input.dart
 lib/src/model/create_pix_transfer_request_input_key.dart

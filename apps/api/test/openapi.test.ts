@@ -50,6 +50,7 @@ describe('OpenAPI document', () => {
   it('keeps only referenced schemas, without input duplicates', () => {
     expect(Object.keys(document.components.schemas).sort()).toEqual([
       'AuthTokens',
+      'AuthorizePixTransferRequestInput',
       'CreatePinRequestInput',
       'CreatePixTransferRequestInput',
       'Health',
@@ -186,8 +187,30 @@ describe('OpenAPI document', () => {
   it('takes an id in the path only on the approved Pix routes', () => {
     expect(Object.keys(document.paths).filter((path) => path.includes('{'))).toEqual([
       '/v1/pix/transfers/{transferId}',
+      '/v1/pix/transfers/{transferId}/authorize',
       '/v1/pix/transfers/{transferId}/cancel',
     ]);
+  });
+
+  // PIX-05, PIX-06: no Pix moves without the PIN, checked on the server.
+  it('describes the authorization of a Pix as a protected, idempotent command', () => {
+    const operation = document.paths['/v1/pix/transfers/{transferId}/authorize']?.post;
+
+    expect(operation?.operationId).toBe('authorizePixTransfer');
+    expect(operation?.security).toEqual([{ bearerAuth: [] }]);
+    expect(operation?.parameters).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ in: 'header', name: 'idempotency-key', required: true }),
+      ]),
+    );
+    expect(operation?.responses['200']?.content?.['application/json']?.schema).toEqual({
+      $ref: '#/components/schemas/PixTransfer',
+    });
+    for (const status of ['401', '404', '409', '422', '423']) {
+      expect(operation?.responses[status]?.content?.['application/problem+json']?.schema).toEqual({
+        $ref: '#/components/schemas/Problem',
+      });
+    }
   });
 
   it('describes the receipt and the cancel of a Pix as protected operations', () => {

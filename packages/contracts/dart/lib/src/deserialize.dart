@@ -1,4 +1,5 @@
 import 'package:nextbank_api/src/model/auth_tokens.dart';
+import 'package:nextbank_api/src/model/authorize_pix_transfer_request_input.dart';
 import 'package:nextbank_api/src/model/create_pin_request_input.dart';
 import 'package:nextbank_api/src/model/create_pix_transfer_request_input.dart';
 import 'package:nextbank_api/src/model/create_pix_transfer_request_input_key.dart';
@@ -37,6 +38,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return (value is double ? value : double.parse('$value')) as ReturnType;
         case 'AuthTokens':
           return AuthTokens.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AuthorizePixTransferRequestInput':
+          return AuthorizePixTransferRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreatePinRequestInput':
           return CreatePinRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreatePixTransferRequestInput':

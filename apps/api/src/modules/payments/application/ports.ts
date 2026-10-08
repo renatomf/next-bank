@@ -97,19 +97,65 @@ export interface AccountsPort {
   findById(tx: Transaction, accountId: string): Promise<PayeeAccount | null>;
   /** The payer's account always comes from the token's user (PIX-01). */
   findByHolder(tx: Transaction, userId: string): Promise<PayeeAccount | null>;
+  /**
+   * Reads the accounts locked for share: their status cannot change until the
+   * transaction ends (database.md 7). Accounts that do not exist are left out.
+   */
+  lockForShare(tx: Transaction, accountIds: string[]): Promise<PayeeAccount[]>;
 }
 
-/** What Payments needs from Identity: who the payee is, for the snapshot (D6). */
+/** The outcome of a PIN check, as a value the Pix can record (ADR 0010, rule 3). */
+export type PinCheck =
+  | { outcome: 'VERIFIED' }
+  | { outcome: 'INCORRECT'; remainingAttempts: number }
+  | { outcome: 'LOCKED'; lockedUntil: Date }
+  | { outcome: 'RESET_REQUIRED' };
+
+/** What Payments needs from Identity (context map, domain-model.md section 2). */
 export interface IdentityPort {
+  /** Who the payee is, for the snapshot (D6). */
   payeeOf(
     tx: Transaction,
     userId: string,
   ): Promise<{ name: string; documentMasked: string } | null>;
+  /**
+   * Checks the PIN on the server in the Pix transaction, with the PIN locked
+   * until it commits (PIX-05); fails with PinNotCreated when there is none.
+   */
+  verifyPin(
+    tx: Transaction,
+    input: { userId: string; pin: string; requestId: string | null },
+  ): Promise<PinCheck>;
+}
+
+/** One side of a Pix, as the other side's statement shows it. */
+export interface PixParty {
+  name: string;
+  documentMasked: string;
+}
+
+export interface PixPosting {
+  transferId: string;
+  payerAccountId: string;
+  payeeAccountId: string;
+  amount: Money;
+  payer: PixParty;
+  payee: PixParty;
 }
 
 /** What Payments needs from the Ledger (context map, domain-model.md section 2). */
 export interface LedgerPort {
   availableBalance(tx: Transaction, accountId: string): Promise<Money | null>;
+  /**
+   * Posts the Pix in the same transaction (ADR 0005). Fails with the catalog's
+   * InsufficientFunds before writing anything when the balance does not cover it.
+   */
+  postPixTransfer(tx: Transaction, posting: PixPosting): Promise<void>;
+}
+
+/** The end-to-end id of a completed Pix (D10); random, so it comes from outside the domain. */
+export interface EndToEndIds {
+  next(completedAt: Date): string;
 }
 
 /**

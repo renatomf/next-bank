@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Money } from '../../../../src/shared/domain/money.ts';
 import { CustomerLedgerAccounts } from '../../../../src/modules/ledger/application/customer-ledger-accounts.ts';
 import { PostJournalEntry } from '../../../../src/modules/ledger/application/post-journal-entry.ts';
+import { InsufficientFunds } from '../../../../src/modules/ledger/domain/errors.ts';
 import { FixedClock, SequentialIds } from '../../identity/application/fakes.ts';
 import { FUNDING_ID, InMemoryLedger, tx } from './fakes.ts';
 
@@ -82,6 +83,65 @@ describe('CustomerLedgerAccounts', () => {
     const { accounts } = setup();
 
     expect(await accounts.availableBalance(tx, 'account-unknown')).toBeNull();
+  });
+
+  // domain-model.md 6: debit the payer, credit the payee; each side keeps who was on
+  // the other, which is what the statement shows (section 8.1).
+  it('posts an internal Pix from payer to payee, referencing the transfer', async () => {
+    const { ledger, accounts } = setup();
+    await accounts.open(tx, 'account-a');
+    await accounts.open(tx, 'account-b');
+    await accounts.fund(tx, { accountId: 'account-a', amount: Money.of(10_000n) });
+
+    await accounts.transferPix(tx, {
+      transferId: 'pix-1',
+      payerAccountId: 'account-a',
+      payeeAccountId: 'account-b',
+      amount: Money.of(8_000n),
+      payer: { name: 'Ana Souza', documentMasked: '***.444.777-**' },
+      payee: { name: 'Marina Costa', documentMasked: '***.456.789-**' },
+    });
+
+    expect(ledger.balanceOf('id-1')).toBe(2_000n);
+    expect(ledger.balanceOf('id-2')).toBe(8_000n);
+    const pix = ledger.entries.find((entry) => entry.kind === 'PIX_INTERNAL');
+    expect(pix).toMatchObject({ referenceType: 'PIX_TRANSFER', referenceId: 'pix-1' });
+    expect(pix?.postings).toEqual([
+      expect.objectContaining({
+        ledgerAccountId: 'id-1',
+        direction: 'DEBIT',
+        amount: Money.of(8_000n),
+        counterpartyName: 'Marina Costa',
+        counterpartyDocumentMasked: '***.456.789-**',
+      }),
+      expect.objectContaining({
+        ledgerAccountId: 'id-2',
+        direction: 'CREDIT',
+        amount: Money.of(8_000n),
+        counterpartyName: 'Ana Souza',
+        counterpartyDocumentMasked: '***.444.777-**',
+      }),
+    ]);
+  });
+
+  it('refuses a Pix above the available balance and writes nothing (InsufficientFunds)', async () => {
+    const { ledger, accounts } = setup();
+    await accounts.open(tx, 'account-a');
+    await accounts.open(tx, 'account-b');
+    await accounts.fund(tx, { accountId: 'account-a', amount: Money.of(5_000n) });
+
+    await expect(
+      accounts.transferPix(tx, {
+        transferId: 'pix-1',
+        payerAccountId: 'account-a',
+        payeeAccountId: 'account-b',
+        amount: Money.of(8_000n),
+        payer: { name: 'Ana Souza', documentMasked: '***.444.777-**' },
+        payee: { name: 'Marina Costa', documentMasked: '***.456.789-**' },
+      }),
+    ).rejects.toThrow(InsufficientFunds);
+    expect(ledger.entries.filter((entry) => entry.kind === 'PIX_INTERNAL')).toEqual([]);
+    expect(ledger.balanceOf('id-1')).toBe(5_000n);
   });
 
   it('fails to fund an account that was never opened, a bug in the caller', async () => {

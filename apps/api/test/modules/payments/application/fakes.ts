@@ -1,5 +1,9 @@
+import { DomainError } from '../../../../src/shared/domain/domain-error.ts';
 import type {
   AccountsPort,
+  EndToEndIds,
+  PinCheck,
+  PixPosting,
   ClaimResult,
   IdempotencyClaim,
   IdempotencyRepository,
@@ -141,6 +145,16 @@ export class FakeAccounts implements AccountsPort {
   findById(_tx: Transaction, accountId: string): Promise<PayeeAccount | null> {
     return Promise.resolve(this.accounts.get(accountId) ?? null);
   }
+  lockForShare(_tx: Transaction, accountIds: string[]): Promise<PayeeAccount[]> {
+    this.sharedLocks.push([...accountIds]);
+    return Promise.resolve(
+      accountIds.flatMap((id) => {
+        const account = this.accounts.get(id);
+        return account ? [account] : [];
+      }),
+    );
+  }
+  sharedLocks: string[][] = [];
   findByHolder(_tx: Transaction, userId: string): Promise<PayeeAccount | null> {
     return Promise.resolve(
       [...this.accounts.values()].find((account) => account.holderUserId === userId) ?? null,
@@ -150,15 +164,44 @@ export class FakeAccounts implements AccountsPort {
 
 export class FakeIdentity implements IdentityPort {
   readonly people = new Map<string, { name: string; documentMasked: string }>();
+  /** The outcome of the next PIN checks, in order; then the PIN is right. */
+  pinOutcomes: PinCheck[] = [];
+  pinsChecked: string[] = [];
+  verifyPin(_tx: Transaction, input: { userId: string; pin: string }): Promise<PinCheck> {
+    this.pinsChecked.push(input.pin);
+    return Promise.resolve(this.pinOutcomes.shift() ?? { outcome: 'VERIFIED' });
+  }
   payeeOf(_tx: Transaction, userId: string) {
     return Promise.resolve(this.people.get(userId) ?? null);
   }
 }
 
+/** Same code as the ledger's error: Payments knows it only by its catalog code. */
+class LedgerInsufficientFunds extends DomainError {
+  readonly code = 'InsufficientFunds';
+}
+
 export class FakeLedger implements LedgerPort {
   readonly balances = new Map<string, Money>();
+  readonly posted: PixPosting[] = [];
+  postPixTransfer(_tx: Transaction, posting: PixPosting): Promise<void> {
+    const balance = this.balances.get(posting.payerAccountId) ?? Money.zero();
+    if (balance.isLessThan(posting.amount)) {
+      return Promise.reject(new LedgerInsufficientFunds('Debit above the available balance'));
+    }
+    this.posted.push(posting);
+    this.balances.set(posting.payerAccountId, balance.minus(posting.amount));
+    return Promise.resolve();
+  }
   availableBalance(_tx: Transaction, accountId: string): Promise<Money | null> {
     return Promise.resolve(this.balances.get(accountId) ?? null);
+  }
+}
+
+/** Always the same id, so tests can expect it. */
+export class FixedEndToEndIds implements EndToEndIds {
+  next(): string {
+    return 'E00000000202610081501a1B2c3D4e5F';
   }
 }
 
@@ -170,6 +213,7 @@ export function twoCustomers() {
   accounts.accounts.set('account-a', { id: 'account-a', holderUserId: 'user-a', status: 'ACTIVE' });
   accounts.accounts.set('account-b', { id: 'account-b', holderUserId: 'user-b', status: 'ACTIVE' });
   const identity = new FakeIdentity();
+  identity.people.set('user-a', { name: 'Ana Souza', documentMasked: '***.444.777-**' });
   identity.people.set('user-b', { name: 'Marina Costa', documentMasked: '***.456.789-**' });
   const ledger = new FakeLedger();
   ledger.balances.set('account-a', Money.of(10_000n));

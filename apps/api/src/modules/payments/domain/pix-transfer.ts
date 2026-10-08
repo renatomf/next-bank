@@ -105,6 +105,11 @@ export class PixTransfer {
     return transferLimitAt(now).isLessThan(this.#state.amount);
   }
 
+  /** A settled Pix is refused before the PIN is checked: it never costs an attempt (PIX-08). */
+  assertAwaitingAuthorization(): void {
+    this.#require('AWAITING_AUTH');
+  }
+
   /** The PIN was right: the Pix is being processed. An expired Pix must be cancelled instead. */
   startProcessing(now: Date): void {
     this.#require('AWAITING_AUTH');

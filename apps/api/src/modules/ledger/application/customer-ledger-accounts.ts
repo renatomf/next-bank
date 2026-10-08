@@ -4,6 +4,21 @@ import { customerCodeOf, LedgerAccount } from '../domain/ledger-account.ts';
 import type { PostJournalEntry } from './post-journal-entry.ts';
 import type { LedgerRepositoryFactory } from './ports.ts';
 
+/** Who is on one side of a Pix, as the other side's statement shows it. */
+export interface PixParty {
+  name: string;
+  documentMasked: string;
+}
+
+export interface PixTransferPosting {
+  transferId: string;
+  payerAccountId: string;
+  payeeAccountId: string;
+  amount: Money;
+  payer: PixParty;
+  payee: PixParty;
+}
+
 const FUNDING_CODE = 'system:funding';
 /** Who the customer sees on the other side of the demo funding. */
 const FUNDING_COUNTERPARTY = 'next bank';
@@ -71,6 +86,43 @@ export class CustomerLedgerAccounts {
           amount: input.amount,
           counterpartyName: FUNDING_COUNTERPARTY,
           counterpartyDocumentMasked: null,
+        },
+      ],
+    });
+  }
+
+  /**
+   * An internal Pix (domain-model.md 6): debit the payer, credit the payee, each
+   * side keeping who was on the other for the statement (section 8.1). The
+   * transfer is the reference, so a Pix is posted at most once (T-DB-05). A
+   * debit above the balance fails with InsufficientFunds before any write.
+   */
+  async transferPix(tx: Transaction, input: PixTransferPosting): Promise<void> {
+    const repository = this.#repositories.for(tx);
+    const payer = await repository.findByCode(customerCodeOf(input.payerAccountId));
+    const payee = await repository.findByCode(customerCodeOf(input.payeeAccountId));
+    if (!payer || !payee) {
+      throw new Error(`Cannot post Pix ${input.transferId}: ledger account missing`);
+    }
+
+    await this.#postJournalEntry.execute(tx, {
+      kind: 'PIX_INTERNAL',
+      referenceType: 'PIX_TRANSFER',
+      referenceId: input.transferId,
+      postings: [
+        {
+          ledgerAccountId: payer.id,
+          direction: 'DEBIT',
+          amount: input.amount,
+          counterpartyName: input.payee.name,
+          counterpartyDocumentMasked: input.payee.documentMasked,
+        },
+        {
+          ledgerAccountId: payee.id,
+          direction: 'CREDIT',
+          amount: input.amount,
+          counterpartyName: input.payer.name,
+          counterpartyDocumentMasked: input.payer.documentMasked,
         },
       ],
     });
