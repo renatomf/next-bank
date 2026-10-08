@@ -32,7 +32,7 @@ flowchart LR
     AU[Audit<br/>trilha de auditoria]
     OP[Operations<br/>Fase 3]
 
-    PA -- "verifica PIN (porta)" --> ID
+    PA -- "verifica PIN e lê nome do titular (porta)" --> ID
     PA -- "consulta conta e status (porta)" --> AC
     PA -- "registra lançamento (porta, mesma transação)" --> LE
     AC -- "abre conta contábil e lê saldo (porta)" --> LE
@@ -273,6 +273,7 @@ O extrato não é um agregado: é uma consulta (lado de leitura do CQRS) que lê
 | `PinLocked` | 423 | Revisar Pix | "PIN bloqueado por 30 minutos." |
 | `PinResetRequired` | 423 | Revisar Pix, Desbloqueio | "PIN bloqueado por segurança. Redefina o PIN com sua senha em Perfil > Segurança." |
 | `PinAlreadyCreated` | 409 | Criar PIN | "Você já tem um PIN. Para trocar, use Perfil > Segurança." |
+| `PinNotCreated` | 409 | Pix, Desbloqueio | "Crie seu PIN para continuar." (o app leva à tela "Criar PIN") |
 | `PixKeyNotFound` | 404 | Pix | "Não encontramos essa chave Pix." |
 | `SamePayerAndPayee` | 422 | Pix | "Você não pode enviar Pix para a própria conta." |
 | `InvalidAmount` | 422 | Pix | "Informe um valor válido." |
@@ -332,7 +333,7 @@ flowchart TD
 | 4. Criar PIN | digitar · confirmar · PINs diferentes · PIN trivial |
 | 5. Desbloqueio | biometria · fallback para PIN · `PinIncorrect` · `PinLocked` |
 | 6. Home | skeleton · pronto · saldo oculto · sem movimentações · erro (tentar de novo) |
-| 7. Pix: enviar | digitando · buscando chave · chave encontrada (nome mascarado) · `PixKeyNotFound` · `SamePayerAndPayee` · `InsufficientFunds` · `LimitExceeded` · `AccountBlocked` |
+| 7. Pix: enviar | digitando · buscando chave · chave encontrada (nome completo e documento mascarado) · `PixKeyNotFound` · `SamePayerAndPayee` · `InsufficientFunds` · `LimitExceeded` · `AccountBlocked` |
 | 8. Revisar + PIN | resumo · digitando PIN · verificando · `PinIncorrect` · `PinLocked` · `TransferExpired` · `PayeeUnavailable` |
 | 9. Processando | processando · falhou (com motivo) |
 | 10. Comprovante | concluído · compartilhando |
