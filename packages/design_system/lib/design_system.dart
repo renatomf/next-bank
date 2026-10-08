@@ -3,7 +3,10 @@
 /// uses them.
 library;
 
+export 'src/components/action_tile.dart';
+export 'src/components/amount_card.dart';
 export 'src/components/balance_card.dart';
+export 'src/components/contact_card.dart';
 export 'src/components/display_title.dart';
 export 'src/components/dither.dart';
 export 'src/components/error_state.dart';
@@ -16,6 +19,10 @@ export 'src/components/nb_text_field.dart';
 export 'src/components/next_logo.dart';
 export 'src/components/pin_field.dart';
 export 'src/components/primary_button.dart';
+export 'src/components/receipt_card.dart';
+export 'src/components/secondary_button.dart';
+export 'src/components/secure_hint.dart';
 export 'src/components/skeleton.dart';
+export 'src/components/status_badge.dart';
 export 'src/theme.dart';
 export 'src/tokens.dart';
