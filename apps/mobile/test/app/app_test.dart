@@ -11,8 +11,10 @@ import 'package:next_bank/features/auth/presentation/auth_providers.dart';
 import 'package:next_bank/main.dart';
 
 import '../support/fake_auth_repository.dart';
+import '../support/fake_monotonic_clock.dart';
 import '../support/fake_profile_repository.dart';
 import '../support/fake_token_store.dart';
+import '../support/fake_unlock_repository.dart';
 import '../support/pump_app.dart';
 
 /// A device whose keystore fails on the first read only.
@@ -28,6 +30,22 @@ class FlakyTokenStore extends FakeTokenStore {
 
 final Finder loginButton = find.widgetWithText(FilledButton, 'Entrar');
 final Finder signOutButton = find.bySemanticsLabel('Sair');
+final Finder unlockTitle = find.text('Digite seu PIN');
+
+/// The states a phone goes through to the background, in the order Flutter
+/// requires.
+void goToBackground(WidgetTester tester) => [
+  AppLifecycleState.inactive,
+  AppLifecycleState.hidden,
+  AppLifecycleState.paused,
+].forEach(tester.binding.handleAppLifecycleStateChanged);
+
+/// And back to the foreground.
+void comeBack(WidgetTester tester) => [
+  AppLifecycleState.hidden,
+  AppLifecycleState.inactive,
+  AppLifecycleState.resumed,
+].forEach(tester.binding.handleAppLifecycleStateChanged);
 
 // Navigation rules (domain-model.md, section 10) through the real router.
 void main() {
@@ -38,11 +56,90 @@ void main() {
     expect(find.byType(InfoNotice), findsNothing);
   });
 
-  testWidgets('opens on home with a stored session', (tester) async {
+  // F-16, PIX-06: whoever picks up the phone with the session open meets the
+  // PIN.
+  testWidgets('asks for the PIN when it opens with a stored session', (
+    tester,
+  ) async {
     await pumpApp(tester, store: FakeTokenStore(tokens));
 
-    expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
+    expect(unlockTitle, findsOneWidget);
+    expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsNothing);
     expect(signOutButton, findsOneWidget);
+  });
+
+  testWidgets('reaches home once the server accepts the PIN', (tester) async {
+    final unlock = FakeUnlockRepository();
+    await pumpApp(tester, store: FakeTokenStore(tokens), unlock: unlock);
+
+    await unlockWithPin(tester);
+
+    expect(unlock.pins, ['2580']);
+    expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
+  });
+
+  testWidgets('stays on the Unlock screen after a wrong PIN, saying why', (
+    tester,
+  ) async {
+    final unlock = FakeUnlockRepository()
+      ..answer = () async => throw const ApiRejected(
+        ApiErrorCode.pinIncorrect,
+        remainingAttempts: 4,
+      );
+    await pumpApp(tester, store: FakeTokenStore(tokens), unlock: unlock);
+
+    await unlockWithPin(tester, '7413');
+
+    expect(unlockTitle, findsOneWidget);
+    expect(find.text('PIN incorreto. Restam 4 tentativas.'), findsOneWidget);
+  });
+
+  // Week 6 plan, D6: a locked PIN can only be left behind; the login with the
+  // password comes back home.
+  testWidgets('offers only to leave when the PIN is locked', (tester) async {
+    final store = FakeTokenStore(tokens);
+    final unlock = FakeUnlockRepository()
+      ..answer = () async => throw const ApiRejected(ApiErrorCode.pinLocked);
+    await pumpApp(tester, store: store, unlock: unlock);
+    await unlockWithPin(tester, '7413');
+
+    expect(find.text('PIN bloqueado por 30 minutos.'), findsOneWidget);
+    expect(find.byType(PinField), findsNothing);
+    await tester.tap(signOutButton);
+    await tester.pumpAndSettle();
+
+    expect(store.stored, isNull);
+    expect(loginButton, findsOneWidget);
+  });
+
+  testWidgets('asks for the PIN again after 5 minutes in the background', (
+    tester,
+  ) async {
+    final clock = FakeMonotonicClock();
+    await pumpApp(tester, store: FakeTokenStore(tokens), clock: clock);
+    await unlockWithPin(tester);
+
+    goToBackground(tester);
+    clock.current += const Duration(minutes: 5);
+    comeBack(tester);
+    await tester.pumpAndSettle();
+
+    expect(unlockTitle, findsOneWidget);
+  });
+
+  testWidgets('stays open after a short trip to the background', (
+    tester,
+  ) async {
+    final clock = FakeMonotonicClock();
+    await pumpApp(tester, store: FakeTokenStore(tokens), clock: clock);
+    await unlockWithPin(tester);
+
+    goToBackground(tester);
+    clock.current += const Duration(minutes: 1);
+    comeBack(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
   });
 
   testWidgets('logs in and reaches home', (tester) async {
@@ -92,6 +189,7 @@ void main() {
     final store = FakeTokenStore(tokens);
     final repository = FakeAuthRepository(tokens);
     await pumpApp(tester, store: store, repository: repository);
+    await unlockWithPin(tester);
 
     await tester.tap(signOutButton);
     await tester.pumpAndSettle();
@@ -160,7 +258,7 @@ void main() {
     await tester.tap(find.text('Tentar de novo'));
     await tester.pumpAndSettle();
 
-    expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
+    expect(unlockTitle, findsOneWidget);
     expect(profile.fetches, 2);
   });
 
@@ -187,9 +285,10 @@ void main() {
   });
 
   // Brief, section 8: system font scale up to 1.3x on a small phone.
-  for (final (screen, store) in [
-    ('login', FakeTokenStore.new),
-    ('home', () => FakeTokenStore(tokens)),
+  for (final (screen, store, unlocked) in [
+    ('login', FakeTokenStore.new, false),
+    ('unlock', () => FakeTokenStore(tokens), false),
+    ('home', () => FakeTokenStore(tokens), true),
   ]) {
     testWidgets('$screen fits a small phone at 1.3x text', (tester) async {
       tester.view
@@ -200,6 +299,7 @@ void main() {
       addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
 
       await pumpApp(tester, store: store());
+      if (unlocked) await unlockWithPin(tester);
 
       expect(tester.takeException(), isNull);
     });

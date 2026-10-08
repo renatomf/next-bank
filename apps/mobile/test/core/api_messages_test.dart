@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/api_failure.dart';
+import 'package:next_bank/core/api_messages.dart';
 import 'package:next_bank/core/session/session_end_reason.dart';
-import 'package:next_bank/features/auth/presentation/auth_messages.dart';
 
 // The texts of the error catalog (domain-model.md, section 9).
 void main() {
@@ -44,6 +44,21 @@ void main() {
         expect(messageFor(ApiRejected(code)), message);
       });
     }
+
+    test('a wrong PIN says how many attempts are left', () {
+      expect(
+        messageFor(
+          const ApiRejected(ApiErrorCode.pinIncorrect, remainingAttempts: 3),
+        ),
+        'PIN incorreto. Restam 3 tentativas.',
+      );
+      expect(
+        messageFor(
+          const ApiRejected(ApiErrorCode.pinIncorrect, remainingAttempts: 1),
+        ),
+        'PIN incorreto. Resta 1 tentativa.',
+      );
+    });
 
     test('no answer from the API', () {
       expect(messageFor(const ApiUnreachable()), 'Sem conexão. Tente de novo.');

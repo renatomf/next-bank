@@ -2,9 +2,9 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/api_failure.dart';
+import 'package:next_bank/core/api_messages.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/session_controller.dart';
-import 'package:next_bank/features/auth/presentation/auth_messages.dart';
 
 /// Shown while the session is restored from the device and the account's
 /// profile is loaded (screen 1). The router leaves it as soon as both are

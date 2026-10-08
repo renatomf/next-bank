@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:next_bank/core/api_messages.dart';
 import 'package:next_bank/core/session/session_controller.dart';
-import 'package:next_bank/features/auth/presentation/auth_messages.dart';
 import 'package:next_bank/features/auth/presentation/login_controller.dart';
 
 /// Login with e-mail and password (screen 2). Says why the user is back
