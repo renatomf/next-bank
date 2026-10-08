@@ -2,7 +2,7 @@ import type { Clock, IdGenerator, Transaction } from '../../../shared/applicatio
 import type { Money } from '../../../shared/domain/money.ts';
 import { customerCodeOf, LedgerAccount } from '../domain/ledger-account.ts';
 import type { PostJournalEntry } from './post-journal-entry.ts';
-import type { LedgerRepositoryFactory } from './ports.ts';
+import type { LedgerRepositoryFactory, StatementPosition, StatementRow } from './ports.ts';
 
 /** Who is on one side of a Pix, as the other side's statement shows it. */
 export interface PixParty {
@@ -18,6 +18,29 @@ export interface PixTransferPosting {
   payer: PixParty;
   payee: PixParty;
 }
+
+export type StatementItemKind = 'PIX_SENT' | 'PIX_RECEIVED' | 'DEMO_FUNDING';
+
+export interface StatementItem {
+  /** The posting's id. */
+  id: string;
+  occurredAt: Date;
+  kind: StatementItemKind;
+  direction: 'IN' | 'OUT';
+  /** Always positive: the direction gives the sign. */
+  amount: Money;
+  counterparty: { name: string; documentMasked: string | null } | null;
+  transferId: string | null;
+}
+
+export interface StatementPage {
+  items: StatementItem[];
+  /** Where the next page starts, or null on the last one. */
+  next: StatementPosition | null;
+}
+
+/** At most 20 items: the client never chooses the size (READ-04). */
+const STATEMENT_PAGE_SIZE = 20;
 
 const FUNDING_CODE = 'system:funding';
 /** Who the customer sees on the other side of the demo funding. */
@@ -128,9 +151,55 @@ export class CustomerLedgerAccounts {
     });
   }
 
+  /**
+   * One page of the statement (domain-model.md 8.1): newest first, the ledger
+   * only, each item with the counterparty kept in its posting. A sent Pix
+   * carries its transfer, the link to the receipt; a received one does not,
+   * since only the payer reaches a Pix (PIX-01; week 6 plan, D3).
+   */
+  async statement(
+    tx: Transaction,
+    accountId: string,
+    after: StatementPosition | null,
+  ): Promise<StatementPage> {
+    const repository = this.#repositories.for(tx);
+    const account = await repository.findByCode(customerCodeOf(accountId));
+    if (!account) throw new Error(`No ledger account for account ${accountId}`);
+
+    // One more than a page tells whether another page follows.
+    const rows = await repository.statementPage(account.id, after, STATEMENT_PAGE_SIZE + 1);
+    const page = rows.slice(0, STATEMENT_PAGE_SIZE);
+    const last = page.at(-1);
+    return {
+      items: page.map(statementItemOf),
+      next:
+        rows.length > STATEMENT_PAGE_SIZE && last
+          ? { createdAt: last.position, postingId: last.postingId }
+          : null,
+    };
+  }
+
   /** A plain read, without a lock: it never waits for a posting in progress. */
   async availableBalance(tx: Transaction, accountId: string): Promise<Money | null> {
     const account = await this.#repositories.for(tx).findByCode(customerCodeOf(accountId));
     return account?.availableBalance ?? null;
   }
+}
+
+function statementItemOf(row: StatementRow): StatementItem {
+  const sent = row.direction === 'DEBIT';
+  const kind: StatementItemKind =
+    row.entryKind === 'FUNDING' ? 'DEMO_FUNDING' : sent ? 'PIX_SENT' : 'PIX_RECEIVED';
+  return {
+    id: row.postingId,
+    occurredAt: row.occurredAt,
+    kind,
+    direction: sent ? 'OUT' : 'IN',
+    amount: row.amount,
+    counterparty:
+      row.counterpartyName === null
+        ? null
+        : { name: row.counterpartyName, documentMasked: row.counterpartyDocumentMasked },
+    transferId: kind === 'PIX_SENT' ? row.referenceId : null,
+  };
 }

@@ -48,6 +48,8 @@ const CATALOG_STATUS: Readonly<Record<string, number>> = {
   PinLocked: 423,
   PinResetRequired: 423,
   PinAlreadyCreated: 409,
+  // A malformed value only a handler can check, such as a statement cursor.
+  InvalidRequest: 422,
   NotFound: 404,
   PixKeyNotFound: 404,
   InvalidAmount: 422,

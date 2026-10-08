@@ -2,8 +2,13 @@ import type pg from 'pg';
 import type { Transaction } from '../../../shared/application/ports.ts';
 import { Money } from '../../../shared/domain/money.ts';
 import { pgClientOf } from '../../../shared/infrastructure/pg-unit-of-work.ts';
-import type { LedgerRepository, LedgerRepositoryFactory } from '../application/ports.ts';
-import type { JournalEntryState } from '../domain/journal-entry.ts';
+import type {
+  LedgerRepository,
+  LedgerRepositoryFactory,
+  StatementPosition,
+  StatementRow,
+} from '../application/ports.ts';
+import type { JournalEntryKind, JournalEntryState } from '../domain/journal-entry.ts';
 import type { Direction, LedgerAccountKind, LedgerAccountState } from '../domain/ledger-account.ts';
 
 interface LedgerAccountRow {
@@ -123,6 +128,58 @@ export class PgLedgerRepository implements LedgerRepository {
       ],
     );
   }
+
+  /**
+   * database.md, section 8, served by postings_statement_idx. The position is
+   * the time as UTC text with microseconds, so the next page continues exactly
+   * where this one ended, even among postings of the same millisecond.
+   */
+  static readonly STATEMENT_SQL = `SELECT p.id, p.direction, p.amount, p.currency,
+      p.counterparty_name, p.counterparty_document_masked, p.created_at,
+      to_char(p.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS position,
+      je.kind, je.reference_id
+    FROM ledger.postings p
+    JOIN ledger.journal_entries je ON je.id = p.journal_entry_id
+    WHERE p.ledger_account_id = $1
+      AND ($2::timestamptz IS NULL OR (p.created_at, p.id) < ($2::timestamptz, $3::uuid))
+    ORDER BY p.created_at DESC, p.id DESC
+    LIMIT $4`;
+
+  async statementPage(
+    ledgerAccountId: string,
+    after: StatementPosition | null,
+    limit: number,
+  ): Promise<StatementRow[]> {
+    const { rows } = await this.#client.query<StatementRowRecord>(
+      PgLedgerRepository.STATEMENT_SQL,
+      [ledgerAccountId, after?.createdAt ?? null, after?.postingId ?? null, limit],
+    );
+    return rows.map((row) => ({
+      postingId: row.id,
+      position: row.position,
+      occurredAt: row.created_at,
+      direction: row.direction === 'D' ? 'DEBIT' : 'CREDIT',
+      amount: Money.of(BigInt(row.amount), row.currency),
+      counterpartyName: row.counterparty_name,
+      counterpartyDocumentMasked: row.counterparty_document_masked,
+      entryKind: row.kind,
+      referenceId: row.reference_id,
+    }));
+  }
+}
+
+interface StatementRowRecord {
+  id: string;
+  direction: 'D' | 'C';
+  /** bigint arrives as a string: never through a JavaScript number (D1). */
+  amount: string;
+  currency: 'BRL';
+  counterparty_name: string | null;
+  counterparty_document_masked: string | null;
+  created_at: Date;
+  position: string;
+  kind: JournalEntryKind;
+  reference_id: string;
 }
 
 /** The ledger repository on the connection of the shared transaction (ADR 0010). */

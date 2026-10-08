@@ -14,7 +14,11 @@ import {
 import type pg from 'pg';
 import { onboardingRoutes } from './application/onboarding/http.ts';
 import { RegisterCustomer } from './application/onboarding/register-customer.ts';
-import { createAccountsModule, myAccountRoutes } from './modules/accounts/index.ts';
+import {
+  createAccountsModule,
+  myAccountRoutes,
+  statementRoutes,
+} from './modules/accounts/index.ts';
 import {
   type AccessTokenKeys,
   createIdentityModule,
@@ -174,6 +178,7 @@ export function buildApp({ pool, logStream, security }: AppDependencies) {
     cancelPixTransfer: payments.cancelPixTransfer,
   });
   void app.register(myAccountRoutes, { getMyAccount: accounts.getMyAccount });
+  void app.register(statementRoutes, { getMyStatement: accounts.getMyStatement });
 
   return app;
 }
