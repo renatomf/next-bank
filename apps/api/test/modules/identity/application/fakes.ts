@@ -195,6 +195,12 @@ export class InMemoryDatabase implements UnitOfWork, IdentityRepositoriesFactory
               : null,
           );
         },
+        findPayee: (id) => {
+          const found = tables.users.find((u) => u.state.id === id);
+          return Promise.resolve(
+            found ? { name: found.state.name, documentMasked: found.cpf.masked } : null,
+          );
+        },
       },
       sessions: {
         insert: (session) => {

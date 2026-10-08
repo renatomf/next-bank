@@ -6,8 +6,9 @@ import type {
   PaymentsRepositoriesFactory,
   PixKeysRepository,
   ProtectedKeyValue,
+  StoredPixKey,
 } from '../application/ports.ts';
-import type { PixKeyState } from '../domain/pix-key.ts';
+import type { PixKeyState, PixKeyType } from '../domain/pix-key.ts';
 
 export class PgPixKeysRepository implements PixKeysRepository {
   readonly #client: pg.ClientBase;
@@ -33,6 +34,17 @@ export class PgPixKeysRepository implements PixKeysRepository {
         key.createdAt,
       ],
     );
+  }
+
+  /** Served by the pix_keys_type_value_hmac_key unique index. */
+  async findByIndex(type: PixKeyType, blindIndex: Uint8Array): Promise<StoredPixKey | null> {
+    const { rows } = await this.#client.query<{ account_id: string; value_masked: string }>(
+      `SELECT account_id, value_masked FROM payments.pix_keys
+       WHERE type = $1 AND value_hmac = $2`,
+      [type, blindIndex],
+    );
+    const row = rows[0];
+    return row ? { accountId: row.account_id, masked: row.value_masked } : null;
   }
 }
 

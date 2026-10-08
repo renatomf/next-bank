@@ -80,11 +80,18 @@ export interface Profile {
   hasPin: boolean;
 }
 
+/** Who receives a Pix, for the payer's screen and receipt: never the full CPF. */
+export interface Payee {
+  name: string;
+  documentMasked: string;
+}
+
 export interface UsersRepository {
   existsWithEmailOrCpf(email: string, cpfBlindIndex: Uint8Array): Promise<boolean>;
   findByEmail(email: string): Promise<LoginAccount | null>;
   insert(user: UserState, cpf: StoredCpf): Promise<void>;
   findProfile(id: string): Promise<Profile | null>;
+  findPayee(id: string): Promise<Payee | null>;
 }
 
 export interface SessionsRepository {

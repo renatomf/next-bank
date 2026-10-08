@@ -15,6 +15,8 @@ lib/src/model/login_request_input.dart
 lib/src/model/me.dart
 lib/src/model/money.dart
 lib/src/model/my_account.dart
+lib/src/model/pix_key_lookup.dart
+lib/src/model/pix_key_lookup_request_input.dart
 lib/src/model/problem.dart
 lib/src/model/refresh_request_input.dart
 lib/src/model/register_request_input.dart

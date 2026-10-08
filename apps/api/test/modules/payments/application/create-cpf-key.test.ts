@@ -40,6 +40,7 @@ class FakeRepositories implements PaymentsRepositoriesFactory {
           this.inserted.push({ tx, key, value });
           return Promise.resolve();
         },
+        findByIndex: () => Promise.resolve(null),
       },
     };
   }

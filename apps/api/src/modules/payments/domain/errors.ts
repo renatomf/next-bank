@@ -9,6 +9,15 @@ export class PixKeyNotFound extends DomainError {
   }
 }
 
+/** The lookup quota is spent: keys cannot be swept for names (PIX-07). */
+export class TooManyKeyLookups extends DomainError {
+  readonly code = 'TooManyAttempts';
+
+  constructor() {
+    super('Too many Pix key lookups for this customer');
+  }
+}
+
 export class InvalidAmount extends DomainError {
   readonly code = 'InvalidAmount';
 
