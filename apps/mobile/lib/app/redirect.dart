@@ -34,6 +34,12 @@ abstract final class AppRoutes {
 
   /// The receipt of the Pix [transferId] (screen 10).
   static String pixReceipt(String transferId) => '$pix/receipt/$transferId';
+
+  /// The statement (screen 11).
+  static const String statement = '/statement';
+
+  /// The detail of the movement [itemId] (screen 12).
+  static String statementItem(String itemId) => '$statement/$itemId';
 }
 
 /// Where the app must be for the current [session] and its [profile], or

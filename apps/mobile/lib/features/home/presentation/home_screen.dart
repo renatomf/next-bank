@@ -2,19 +2,35 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/account/account_providers.dart';
+import 'package:next_bank/core/clock.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
+import 'package:next_bank/core/statement/statement_controller.dart';
+import 'package:next_bank/core/statement/statement_item.dart';
+import 'package:next_bank/core/statement/statement_texts.dart';
 import 'package:next_bank/features/home/presentation/home_providers.dart';
 
 /// Home (screen 6; mockups home-dark and home-light): the greeting and the
-/// available balance, and the Pix shortcut. Recent activity and the floating
-/// navigation arrive with the screens they open (weeks 6 and 7, decision D7).
+/// available balance, the Pix shortcut and the latest movements. The floating
+/// navigation arrives with Profile and Security (week 7, decision D12).
 class HomeScreen extends ConsumerWidget {
   /// Creates the home; the app provides the header [actions] and where the
   /// shortcuts go, so features never import each other.
-  const new({required this.onPix, this.actions = const [], super.key});
+  const new({
+    required this.onPix,
+    required this.onStatement,
+    required this.onMovement,
+    this.actions = const [],
+    super.key,
+  });
 
   /// Opens the Pix.
   final VoidCallback onPix;
+
+  /// Opens the statement.
+  final VoidCallback onStatement;
+
+  /// Opens the detail of a movement.
+  final ValueChanged<String> onMovement;
 
   /// Buttons at the end of the header, such as sign-out.
   final List<Widget> actions;
@@ -53,6 +69,11 @@ class HomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 22),
               const _Balance(),
+              const SizedBox(height: 22),
+              _LatestMovements(
+                onStatement: onStatement,
+                onMovement: onMovement,
+              ),
             ],
           ),
         ),
@@ -146,5 +167,93 @@ class _Balance extends ConsumerWidget {
         onToggleHidden: toggle,
       ),
     };
+  }
+}
+
+/// The latest movements (home-dark mockup): the newest three of the same
+/// statement the statement screen shows, and "Ver extrato".
+class _LatestMovements extends ConsumerWidget {
+  const new({required this.onStatement, required this.onMovement});
+
+  final VoidCallback onStatement;
+  final ValueChanged<String> onMovement;
+
+  /// How many movements the Home shows.
+  static const int count = 3;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.nbColors;
+    final now = ref.watch(nowProvider)();
+    final hidden = ref.watch(balanceHiddenProvider);
+    final content = switch (ref.watch(statementProvider)) {
+      AsyncData(value: StatementView(items: [])) => const EmptyState(
+        icon: Icons.receipt_long_outlined,
+        title: 'Sem movimentações',
+        message: 'Seus Pix enviados e recebidos aparecem aqui.',
+      ),
+      AsyncData(:final value) => Column(
+        children: [
+          for (final (index, item) in value.items.take(count).indexed) ...[
+            if (index > 0) Divider(height: 1, color: colors.border),
+            TransactionItem(
+              title: statementTitle(item.kind),
+              caption: statementCaption(item, now),
+              amountCents: item.amountCents,
+              incoming: item.direction == MoneyDirection.incoming,
+              hidden: hidden,
+              onTap: () => onMovement(item.id),
+            ),
+          ],
+        ],
+      ),
+      AsyncError() => ErrorState(
+        message: 'Não foi possível carregar suas movimentações.',
+        onRetry: () => ref.invalidate(statementProvider),
+      ),
+      _ => Semantics(
+        label: 'Carregando movimentações',
+        container: true,
+        child: const Column(
+          children: [
+            Skeleton(width: double.infinity, height: 52),
+            SizedBox(height: NbSpace.md),
+            Skeleton(width: double.infinity, height: 52),
+          ],
+        ),
+      ),
+    };
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Últimas movimentações',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            TextButton(
+              onPressed: onStatement,
+              child: const Text('Ver extrato'),
+            ),
+          ],
+        ),
+        const SizedBox(height: NbSpace.md),
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: NbSpace.lg,
+            vertical: NbSpace.xs,
+          ),
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: BorderRadius.circular(NbRadius.block),
+            border: Border.all(color: colors.border),
+          ),
+          child: content,
+        ),
+      ],
+    );
   }
 }

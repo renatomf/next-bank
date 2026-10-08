@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/account/account_providers.dart';
 import 'package:next_bank/features/pix/domain/pix_amount.dart';
 import 'package:next_bank/features/pix/presentation/pix_formats.dart';
-import 'package:next_bank/features/pix/presentation/pix_header.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_controller.dart';
 
 /// Sending a Pix (screen 7; pix-dark mockup, without the tabs, the recent
@@ -55,7 +54,7 @@ class _SendPixScreenState extends ConsumerState<SendPixScreen> {
           child: ListView(
             padding: const EdgeInsets.all(NbSpace.screen),
             children: [
-              PixHeader(
+              ScreenHeader(
                 title: 'Pix',
                 icon: Icons.arrow_back,
                 iconLabel: 'Voltar',
