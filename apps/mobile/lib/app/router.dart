@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:next_bank/app/redirect.dart';
@@ -12,6 +12,11 @@ import 'package:next_bank/features/auth/presentation/register/register_screen.da
 import 'package:next_bank/features/auth/presentation/sign_out/sign_out_button.dart';
 import 'package:next_bank/features/auth/presentation/splash/splash_screen.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
+import 'package:next_bank/features/pix/domain/pix_transfer.dart';
+import 'package:next_bank/features/pix/presentation/processing/processing_screen.dart';
+import 'package:next_bank/features/pix/presentation/receipt/receipt_screen.dart';
+import 'package:next_bank/features/pix/presentation/review/review_pix_screen.dart';
+import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
 import 'package:next_bank/features/unlock/presentation/unlock_screen.dart';
 
 /// The app's navigation. It lives outside the features because it is the
@@ -65,10 +70,62 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
       ),
       GoRoute(
         path: AppRoutes.home,
-        builder: (_, _) => const HomeScreen(actions: [SignOutButton()]),
+        builder: (context, _) => HomeScreen(
+          onPix: () => context.push(AppRoutes.pix),
+          actions: const [SignOutButton()],
+        ),
+      ),
+      // Opened over the Home, and the review over the Pix, so back returns
+      // to them; once authorized, the Pix replaces the stack, so back never
+      // returns to the PIN (domain-model.md 10).
+      GoRoute(
+        path: AppRoutes.pix,
+        builder: (context, _) => SendPixScreen(
+          onBack: () => _back(context),
+          onReview: (id) => context.push(AppRoutes.pixReview(id)),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.pixReview(':transferId'),
+        builder: (context, state) => ReviewPixScreen(
+          transferId: _transferIdOf(state),
+          onBack: () => _back(context),
+          onHome: () => context.go(AppRoutes.home),
+          onFinished: (transfer) => context.go(
+            transfer.status == PixStatus.completed
+                ? AppRoutes.pixReceipt(transfer.id)
+                : AppRoutes.pixProcessing(transfer.id),
+          ),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.pixProcessing(':transferId'),
+        builder: (context, state) {
+          final transferId = _transferIdOf(state);
+          return ProcessingScreen(
+            transferId: transferId,
+            onHome: () => context.go(AppRoutes.home),
+            onReceipt: () => context.go(AppRoutes.pixReceipt(transferId)),
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.pixReceipt(':transferId'),
+        builder: (context, state) => ReceiptScreen(
+          transferId: _transferIdOf(state),
+          onHome: () => context.go(AppRoutes.home),
+        ),
       ),
     ],
   );
   ref.onDispose(router.dispose);
   return router;
 });
+
+/// Back to the screen below, or to the Home when there is none.
+void _back(BuildContext context) =>
+    context.canPop() ? context.pop() : context.go(AppRoutes.home);
+
+/// The Pix id in the path; the route never matches without it.
+String _transferIdOf(GoRouterState state) =>
+    state.pathParameters['transferId'] ?? '';

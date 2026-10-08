@@ -30,7 +30,10 @@ Future<void> pumpHome(
         ),
         nowProvider.overrideWithValue(() => now ?? DateTime(2026, 10, 7, 9)),
       ],
-      child: MaterialApp(theme: NbTheme.dark(), home: const HomeScreen()),
+      child: MaterialApp(
+        theme: NbTheme.dark(),
+        home: HomeScreen(onPix: () {}),
+      ),
     ),
   );
 }
