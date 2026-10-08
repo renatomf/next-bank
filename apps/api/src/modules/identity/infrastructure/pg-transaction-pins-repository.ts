@@ -40,4 +40,51 @@ export class PgTransactionPinsRepository implements TransactionPinsRepository {
       throw error;
     }
   }
+
+  async lockByUserId(userId: string): Promise<TransactionPinState | null> {
+    const { rows } = await this.#client.query<PinRow>(
+      `SELECT user_id, pin_hash, failed_attempts, locked_until, recent_locks, reset_required, updated_at
+       FROM identity.transaction_pins WHERE user_id = $1 FOR UPDATE`,
+      [userId],
+    );
+    const row = rows[0];
+    return row
+      ? {
+          userId: row.user_id,
+          pinHash: row.pin_hash,
+          failedAttempts: row.failed_attempts,
+          lockedUntil: row.locked_until,
+          recentLocks: row.recent_locks,
+          resetRequired: row.reset_required,
+          updatedAt: row.updated_at,
+        }
+      : null;
+  }
+
+  async update(pin: TransactionPinState): Promise<void> {
+    await this.#client.query(
+      `UPDATE identity.transaction_pins
+       SET failed_attempts = $2, locked_until = $3, recent_locks = $4, reset_required = $5,
+           updated_at = $6
+       WHERE user_id = $1`,
+      [
+        pin.userId,
+        pin.failedAttempts,
+        pin.lockedUntil,
+        pin.recentLocks,
+        pin.resetRequired,
+        pin.updatedAt,
+      ],
+    );
+  }
+}
+
+interface PinRow {
+  user_id: string;
+  pin_hash: string;
+  failed_attempts: number;
+  locked_until: Date | null;
+  recent_locks: Date[];
+  reset_required: boolean;
+  updated_at: Date;
 }

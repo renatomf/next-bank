@@ -5,6 +5,11 @@
 export abstract class DomainError extends Error {
   abstract readonly code: string;
 
+  /** Extra fields the client needs to react, e.g. the attempts left (section 9). */
+  get details(): Readonly<Record<string, number>> {
+    return {};
+  }
+
   constructor(message: string) {
     super(message);
     this.name = new.target.name;

@@ -9,6 +9,8 @@ export interface Problem {
   status: number;
   /** Error name from the catalog (domain-model.md, section 9): what the app reacts to. */
   code?: string;
+  /** Attempts left after a wrong PIN (PinIncorrect). */
+  remainingAttempts?: number;
 }
 
 export const PROBLEM_CONTENT_TYPE = 'application/problem+json';
@@ -19,6 +21,7 @@ export const ProblemSchema = z
     title: z.string(),
     status: z.int(),
     code: z.string().optional(),
+    remainingAttempts: z.int().min(0).optional(),
   })
   .meta({ id: 'Problem' });
 
@@ -36,6 +39,8 @@ const CATALOG_STATUS: Readonly<Record<string, number>> = {
   Unauthenticated: 401,
   InvalidCredentials: 401,
   TooManyAttempts: 429,
+  PinIncorrect: 422,
+  PinNotCreated: 409,
   PinLocked: 423,
   PinResetRequired: 423,
   PinAlreadyCreated: 409,
@@ -43,16 +48,30 @@ const CATALOG_STATUS: Readonly<Record<string, number>> = {
 };
 
 /** Generic RFC 9457 response: never carries stack, SQL or internal detail (API-03). */
-export function problem(status: number, code?: string): Problem {
+export function problem(
+  status: number,
+  code?: string,
+  details: Readonly<Record<string, number>> = {},
+): Problem {
   const body: Problem = { type: 'about:blank', title: STATUS_CODES[status] ?? 'Error', status };
   if (code !== undefined) body.code = code;
+  // Only fields the contract declares: a detail never leaks by accident.
+  if (details.remainingAttempts !== undefined) body.remainingAttempts = details.remainingAttempts;
   return body;
 }
 
-function classify(error: unknown): { status: number; code?: string } {
+interface Classified {
+  status: number;
+  code?: string;
+  details?: Readonly<Record<string, number>>;
+}
+
+function classify(error: unknown): Classified {
   if (error instanceof DomainError) {
     const status = CATALOG_STATUS[error.code];
-    return status === undefined ? { status: 500 } : { status, code: error.code };
+    return status === undefined
+      ? { status: 500 }
+      : { status, code: error.code, details: error.details };
   }
   if (isValidationError(error)) return { status: 422, code: 'InvalidRequest' };
   const status = clientErrorStatus(error);
@@ -76,13 +95,16 @@ function clientErrorStatus(error: unknown): number | undefined {
 
 export function registerProblemHandlers(app: FastifyInstance): void {
   app.setErrorHandler((error, request, reply) => {
-    const { status, code } = classify(error);
+    const { status, code, details } = classify(error);
     if (status >= 500) {
       request.log.error({ err: error }, 'unexpected error');
     } else {
       request.log.info({ err: error }, 'request rejected');
     }
-    return reply.status(status).type(PROBLEM_CONTENT_TYPE).send(problem(status, code));
+    return reply
+      .status(status)
+      .type(PROBLEM_CONTENT_TYPE)
+      .send(problem(status, code, details));
   });
 
   app.setNotFoundHandler((_request, reply) =>

@@ -111,6 +111,12 @@ export interface RefreshTokensRepository {
 export interface TransactionPinsRepository {
   /** Fails with PinAlreadyCreated when the user already has a PIN. */
   insert(pin: TransactionPinState): Promise<void>;
+  /**
+   * Reads the PIN and locks it until the transaction ends, so every attempt is
+   * counted once even when guesses arrive in parallel (PIX-05).
+   */
+  lockByUserId(userId: string): Promise<TransactionPinState | null>;
+  update(pin: TransactionPinState): Promise<void>;
 }
 
 export interface IdentityRepositories {

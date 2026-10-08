@@ -146,7 +146,7 @@ export function buildApp({ pool, logStream, security }: AppDependencies) {
     refreshSession: identity.refreshSession,
     logout: identity.logout,
   });
-  void app.register(pinRoutes, { createPin: identity.createPin });
+  void app.register(pinRoutes, { createPin: identity.createPin, verifyPin: identity.verifyPin });
   void app.register(meRoutes, { getProfile: identity.getProfile });
   void app.register(myAccountRoutes, { getMyAccount: accounts.getMyAccount });
 
