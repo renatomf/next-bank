@@ -1,12 +1,17 @@
 import 'package:nextbank_api/src/model/auth_tokens.dart';
 import 'package:nextbank_api/src/model/create_pin_request_input.dart';
+import 'package:nextbank_api/src/model/create_pix_transfer_request_input.dart';
+import 'package:nextbank_api/src/model/create_pix_transfer_request_input_key.dart';
 import 'package:nextbank_api/src/model/health.dart';
 import 'package:nextbank_api/src/model/login_request_input.dart';
 import 'package:nextbank_api/src/model/me.dart';
 import 'package:nextbank_api/src/model/money.dart';
+import 'package:nextbank_api/src/model/money_input.dart';
 import 'package:nextbank_api/src/model/my_account.dart';
 import 'package:nextbank_api/src/model/pix_key_lookup.dart';
 import 'package:nextbank_api/src/model/pix_key_lookup_request_input.dart';
+import 'package:nextbank_api/src/model/pix_payee.dart';
+import 'package:nextbank_api/src/model/pix_transfer.dart';
 import 'package:nextbank_api/src/model/problem.dart';
 import 'package:nextbank_api/src/model/refresh_request_input.dart';
 import 'package:nextbank_api/src/model/register_request_input.dart';
@@ -34,6 +39,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return AuthTokens.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreatePinRequestInput':
           return CreatePinRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreatePixTransferRequestInput':
+          return CreatePixTransferRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreatePixTransferRequestInputKey':
+          return CreatePixTransferRequestInputKey.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Health':
           return Health.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'LoginRequestInput':
@@ -42,12 +51,18 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return Me.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Money':
           return Money.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'MoneyInput':
+          return MoneyInput.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'MyAccount':
           return MyAccount.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PixKeyLookup':
           return PixKeyLookup.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PixKeyLookupRequestInput':
           return PixKeyLookupRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PixPayee':
+          return PixPayee.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PixTransfer':
+          return PixTransfer.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Problem':
           return Problem.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RefreshRequestInput':

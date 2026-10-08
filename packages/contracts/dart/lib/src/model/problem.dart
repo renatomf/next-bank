@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:nextbank_api/src/model/money.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -29,6 +30,8 @@ class Problem {
      this.code,
 
      this.remainingAttempts,
+
+     this.limit,
   });
 
   @JsonKey(
@@ -95,6 +98,18 @@ class Problem {
 
 
 
+  @JsonKey(
+    
+    name: r'limit',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final Money? limit;
+
+
+
 
 
     @override
@@ -103,7 +118,8 @@ class Problem {
       other.title == title &&
       other.status == status &&
       other.code == code &&
-      other.remainingAttempts == remainingAttempts;
+      other.remainingAttempts == remainingAttempts &&
+      other.limit == limit;
 
     @override
     int get hashCode =>
@@ -111,7 +127,8 @@ class Problem {
         title.hashCode +
         status.hashCode +
         code.hashCode +
-        remainingAttempts.hashCode;
+        remainingAttempts.hashCode +
+        limit.hashCode;
 
   factory Problem.fromJson(Map<String, dynamic> json) => _$ProblemFromJson(json);
 

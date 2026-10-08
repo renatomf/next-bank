@@ -2,6 +2,7 @@ import { STATUS_CODES } from 'node:http';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { DomainError } from '../domain/domain-error.ts';
+import { MoneySchema } from './money.ts';
 
 export interface Problem {
   type: 'about:blank';
@@ -11,6 +12,8 @@ export interface Problem {
   code?: string;
   /** Attempts left after a wrong PIN (PinIncorrect). */
   remainingAttempts?: number;
+  /** The limit in force (LimitExceeded). */
+  limit?: { amount: number; currency: 'BRL' };
 }
 
 export const PROBLEM_CONTENT_TYPE = 'application/problem+json';
@@ -22,6 +25,7 @@ export const ProblemSchema = z
     status: z.int(),
     code: z.string().optional(),
     remainingAttempts: z.int().min(0).optional(),
+    limit: MoneySchema.optional(),
   })
   .meta({ id: 'Problem' });
 
@@ -46,6 +50,13 @@ const CATALOG_STATUS: Readonly<Record<string, number>> = {
   PinAlreadyCreated: 409,
   NotFound: 404,
   PixKeyNotFound: 404,
+  InvalidAmount: 422,
+  SamePayerAndPayee: 422,
+  InsufficientFunds: 422,
+  LimitExceeded: 422,
+  AccountBlocked: 422,
+  IdempotencyKeyReused: 422,
+  RequestInProgress: 409,
 };
 
 /** Generic RFC 9457 response: never carries stack, SQL or internal detail (API-03). */
@@ -58,6 +69,8 @@ export function problem(
   if (code !== undefined) body.code = code;
   // Only fields the contract declares: a detail never leaks by accident.
   if (details.remainingAttempts !== undefined) body.remainingAttempts = details.remainingAttempts;
+  if (details.limitCents !== undefined)
+    body.limit = { amount: details.limitCents, currency: 'BRL' };
   return body;
 }
 

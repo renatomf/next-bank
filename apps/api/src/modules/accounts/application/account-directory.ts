@@ -1,5 +1,5 @@
 import type { Transaction } from '../../../shared/application/ports.ts';
-import type { AccountStatus } from '../domain/account.ts';
+import type { AccountState, AccountStatus } from '../domain/account.ts';
 import type { AccountsRepositoriesFactory } from './ports.ts';
 
 /** Who holds an account and whether it moves money: what Payments may know. */
@@ -20,10 +20,15 @@ export class AccountDirectory {
     this.#repositories = repositories;
   }
 
-  async findById(tx: Transaction, accountId: string): Promise<AccountSummary | null> {
-    const account = await this.#repositories.for(tx).accounts.findById(accountId);
-    return (
-      account && { id: account.id, holderUserId: account.holderUserId, status: account.status }
-    );
+  async findByHolder(tx: Transaction, userId: string): Promise<AccountSummary | null> {
+    return summaryOf(await this.#repositories.for(tx).accounts.findByHolder(userId));
   }
+
+  async findById(tx: Transaction, accountId: string): Promise<AccountSummary | null> {
+    return summaryOf(await this.#repositories.for(tx).accounts.findById(accountId));
+  }
+}
+
+function summaryOf(account: AccountState | null): AccountSummary | null {
+  return account && { id: account.id, holderUserId: account.holderUserId, status: account.status };
 }

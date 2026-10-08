@@ -69,6 +69,7 @@ export function pgRegisterCustomer(pool: pg.Pool, clock: Clock): RegisterCustome
       piiKeys: PII_KEYS,
       accounts: accounts.directory,
       identity: { payeeOf: () => Promise.resolve(null) },
+      ledger: ledger.customerAccounts,
     }).createCpfKey,
   });
 }
