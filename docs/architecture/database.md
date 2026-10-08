@@ -253,25 +253,30 @@ erDiagram
 **`pix_keys`**
 - `type`: `CHECK (type IN ('CPF','EMAIL','PHONE','RANDOM'))`
 - **`UNIQUE (type, value_hmac)`** — uma chave pertence a uma única conta
-- Máximo de 5 por conta: garantido na aplicação, com lock na conta durante a criação de chave
-- Índice: `(account_id)`
+- Valor cifrado com o protetor compartilhado (dado associado `payments.pix_keys.value`, índice cego com o prefixo `pix-key:<tipo>`), separado do CPF do usuário (semana 5, D7)
+- Máximo de 5 por conta: garantido na aplicação, com lock na conta durante a criação de chave (entra com "Minhas chaves"; na V1 só existe a chave CPF)
+- `GRANT`: só `SELECT, INSERT` para a API
+- Índice `(account_id)`: entra com "Minhas chaves", a primeira consulta que o usa
 
 **`pix_transfers`**
-- `CHECK (amount > 0)`; `CHECK (payer_account_id <> payee_account_id)`; `CHECK (char_length(description) <= 140)`
+- `CHECK (amount > 0)`; `CHECK (payer_account_id <> payee_account_id)`; `CHECK (char_length(description) <= 140)`; `currency = 'BRL'`; `expires_at > created_at`
 - `status`: `CHECK (status IN ('AWAITING_AUTH','PROCESSING','COMPLETED','FAILED','CANCELLED'))`
-- **Coerência de estado:**
+- **Coerência de estado** (escrita como igualdades, sem `OR` sobre colunas anuláveis):
   - `CHECK ((status = 'COMPLETED') = (completed_at IS NOT NULL))`
-  - `CHECK (status <> 'FAILED' OR failure_reason IS NOT NULL)`
-  - `CHECK (authorized_at IS NULL OR status IN ('PROCESSING','COMPLETED','FAILED'))`
+  - `CHECK ((status = 'COMPLETED') = (end_to_end_id IS NOT NULL))`, com o formato do Bacen
+  - `CHECK ((status IN ('PROCESSING','COMPLETED','FAILED')) = (authorized_at IS NOT NULL))`
+  - `CHECK ((status = 'FAILED') = (failure_reason IS NOT NULL))`, com os motivos conhecidos
 - `end_to_end_id`: `UNIQUE`
-- Índices: `(payer_account_id, created_at DESC)`; `(expires_at) WHERE status = 'AWAITING_AUTH'` (job de expiração)
+- `GRANT`: `SELECT, INSERT` e `UPDATE` só nas colunas de estado: o que foi pedido (pagador, recebedor, valor, descrição) nunca muda
+- Índices `(payer_account_id, created_at DESC)` e `(expires_at) WHERE status = 'AWAITING_AUTH'`: entram com a lista de Pix e com o job de expiração (semana 8). Na semana 5 toda consulta é pela PK, sempre com o filtro do pagador
 
 **`idempotency_records`**
-- PK `(user_id, key)` — escopo por usuário
-- `operation`: o comando protegido (ex.: `pix.create`, `pix.authorize`); mesma chave em operação diferente é recusada
-- `status`: `CHECK (status IN ('IN_PROGRESS','COMPLETED'))`
-- `response_body` só contém dados já mascarados (é a resposta enviada ao cliente)
-- Índice: `(expires_at)` para o job de limpeza (24h)
+- PK `(user_id, key)` — escopo por usuário; uma requisição concorrente com a mesma chave espera no `INSERT … ON CONFLICT DO NOTHING` até a primeira terminar
+- `operation`: o comando protegido (`pix.create`, `pix.authorize`); mesma chave em operação diferente é recusada
+- `request_hash`: HMAC-SHA256 da requisição com chave do servidor, nunca com o PIN (semana 5, D4)
+- `status`: `CHECK (status IN ('IN_PROGRESS','COMPLETED'))`; resposta presente exatamente quando concluída; validade de até 24 h (`CHECK`)
+- `response_body` só contém dados já mascarados (é a resposta enviada ao cliente) ou a recusa gravada (PIN incorreto, bloqueado, Pix expirado)
+- Índice `(expires_at)`: entra com o job de limpeza (semana 8)
 
 ### 5.5 `audit`
 

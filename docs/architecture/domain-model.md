@@ -289,6 +289,8 @@ O extrato não é um agregado: é uma consulta (lado de leitura do CQRS) que lê
 
 Formato da resposta: RFC 7807, com `type`, `title`, `status`, `code` (o nome do erro) e campos extras quando úteis (ex.: `remainingAttempts`, `limit`).
 
+**Na autorização do Pix** (tela 8 → 9), `InsufficientFunds`, `LimitExceeded`, `AccountBlocked` e `PayeeUnavailable` não são erros: o Pix foi processado e falhou, então a resposta é 200 com o Pix em `FAILED` e o motivo em `failureReason` (`INSUFFICIENT_FUNDS`, `LIMIT_EXCEEDED`, `ACCOUNT_BLOCKED`, `PAYEE_UNAVAILABLE`), o estado "falhou (com motivo)" da tela 9. Na criação (tela 7), os mesmos casos continuam erros, porque nenhum Pix nasce. `PinIncorrect`, `PinLocked`, `PinResetRequired` e `TransferExpired` continuam erros na autorização e ficam gravados com a chave de idempotência: a mesma requisição repetida recebe a mesma resposta sem conferir o PIN de novo (plano da semana 5, D5).
+
 ## 10. Mapa de navegação
 
 ```mermaid

@@ -1,6 +1,6 @@
 # Plano — Semana 5: Pix (backend)
 
-- **Status:** Aprovado (2026-10-07), com as decisões D1–D12 nos padrões recomendados
+- **Status:** Concluído (2026-10-08), com as decisões D1–D12 nos padrões recomendados (PRs #67 a #78)
 - **Roadmap:** `docs/roadmap.md` (seção 8, semana 5)
 - **Base:** ADRs 0004 (PIN no servidor), 0005 (ledger), 0006 (`Money`), 0007 (idempotência e concorrência) e 0010 (orquestração); `domain-model.md` (2, 3.1, 3.4, 3.5, 4, 5, 6, 7, 8, 9 e 11); `database.md` (2, 4, 5.4, 6, 7, 10 e 11); threat model (PIX-01 a PIX-10, AUTH-04, API-04); checklist ASVS (itens da semana 5); achado F-16
 - **Carga:** ~30h (5 dias × 6h)
@@ -193,9 +193,9 @@ Nenhuma. O fuso de São Paulo vem do `Intl` do Node; o ID E2E e o hash da idempo
 
 ## Tarefa 2 — Domínio, TDD estrito (dia 1–2)
 
-- [ ] `PixKey` (CPF do titular, valor normalizado e mascarado)
-- [ ] `PixTransfer`: criação, cada transição da seção 4, expiração, snapshot do recebedor
-- [ ] `TransferLimits` com `Clock` e fuso de São Paulo; `EndToEndId` (D10)
+- [x] `PixKey` (CPF do titular, valor normalizado e mascarado)
+- [x] `PixTransfer`: criação, cada transição da seção 4, expiração, snapshot do recebedor
+- [x] `TransferLimits` com `Clock` e fuso de São Paulo; `EndToEndId` (D10)
 
 ## Tarefa 3 — PIN e cadastro (dia 2)
 
@@ -205,8 +205,8 @@ Nenhuma. O fuso de São Paulo vem do `Intl` do Node; o ID E2E e o hash da idempo
 | AUTH-04 | Sessão revogada → 401 no `POST /v1/me/pin/verify` |
 | F-16 | Acerto → 204 e tentativas zeradas |
 
-- [ ] `VerifyPin` no Identity (rota e porta do Payments), com `PinNotCreated` (D8)
-- [ ] Cadastro cria a chave CPF na mesma transação; falha forçada → nada gravado
+- [x] `VerifyPin` no Identity (rota e porta do Payments), com `PinNotCreated` (D8)
+- [x] Cadastro cria a chave CPF na mesma transação; falha forçada → nada gravado
 
 ## Tarefa 4 — Pix, outside-in (dia 3–4)
 
@@ -220,28 +220,28 @@ Nenhuma. O fuso de São Paulo vem do `Intl` do Node; o ID E2E e o hash da idempo
 | PIX-09 | `PIX_COMPLETED` com `sessionId` e `requestId` |
 | PIX-10 | `Clock` às 21h → limite noturno |
 
-- [ ] `LookupPixKey` e rota, com o contador de consultas
-- [ ] Idempotência (registro, hash sem PIN, resposta guardada, `RequestInProgress` por `lock_timeout`)
-- [ ] `CreatePixTransfer`, `AuthorizePixTransfer` (ordem da `database.md` 7), `CancelPixTransfer`, `GetPixTransfer` e rotas
-- [ ] Contrato: schemas novos, lista aprovada de rotas com ID (D3), cliente Dart regenerado
-- [ ] `EXPLAIN ANALYZE` de cada query nova
+- [x] `LookupPixKey` e rota, com o contador de consultas
+- [x] Idempotência (registro, hash sem PIN, resposta guardada, `RequestInProgress` por `lock_timeout`)
+- [x] `CreatePixTransfer`, `AuthorizePixTransfer` (ordem da `database.md` 7), `CancelPixTransfer`, `GetPixTransfer` e rotas
+- [x] Contrato: schemas novos, lista aprovada de rotas com ID (D3), cliente Dart regenerado
+- [x] `EXPLAIN ANALYZE` de cada query nova: a busca de chave usa `pix_keys_type_value_hmac_key` (0,04 ms); as demais são pela PK (Pix com o filtro do pagador, idempotência, PIN, contas) ou por `accounts_holder_user_id_key`
 
 ## Tarefa 5 — Concorrência e fechamento (dia 5)
 
-- [ ] T-DB-06, T-DB-08, T-DB-09 pela rota; autorização dupla em paralelo; T-DB-14 com 1.000 Pix (D11)
-- [ ] `/security-review` (obrigatório: Pix, PIN, idempotência, ledger e autorização)
-- [ ] Threat model e matriz de controles: PIX-01 a PIX-10 e AUTH-04 com evidência; checklist ASVS
-- [ ] `database.md` (índices que ficaram para depois), `domain-model.md` (D6, D8), catálogo de erros, CHANGELOG
-- [ ] D12: instrução para recriar o banco local no PR do cadastro
+- [x] T-DB-06 pela rota (10 criações com a mesma chave); autorização dupla em paralelo pela rota, com o Argon2id real; T-DB-08, T-DB-09 e T-DB-14 pelos casos de uso reais contra o Postgres (D11), com a concorrência no tamanho do pool
+- [x] `/security-review` (obrigatório: Pix, PIN, idempotência, ledger e autorização)
+- [x] Threat model e matriz de controles: PIX-01 a PIX-10 e AUTH-04 com evidência; checklist ASVS
+- [x] `database.md` (índices que ficaram para depois), `domain-model.md` (D6, D8), catálogo de erros, CHANGELOG
+- [x] D12: instrução para recriar o banco local no PR do cadastro
 
 ---
 
 ## Checkpoint de fim de semana
 
-- [ ] Pix de ponta a ponta pela API: cadastro de A e B → consulta da chave → criação → autorização com PIN → comprovante; saldos de A e B corretos
-- [ ] PIX-01 a PIX-10 e AUTH-04 com teste verde
-- [ ] T-DB-05 a T-DB-10 e T-DB-14 verdes, com reconciliação conferida
-- [ ] Cobertura ≥ 90% em `domain/` e `application/`
-- [ ] Rota de verificação do PIN pronta para o Desbloqueio (F-16)
-- [ ] Se a semana estourar: o cancelamento pelo cliente e a consulta do comprovante passam para o início da semana 6; idempotência, locks, PIN e testes de concorrência e de segurança não são cortados
+- [x] Pix de ponta a ponta pela API: cadastro de A e B → consulta da chave → criação → autorização com PIN → comprovante; saldos de A e B corretos
+- [x] PIX-01 a PIX-10 e AUTH-04 com teste verde
+- [x] T-DB-05 a T-DB-10 e T-DB-14 verdes, com reconciliação conferida
+- [x] Cobertura ≥ 90% em `domain/` e `application/`
+- [x] Rota de verificação do PIN pronta para o Desbloqueio (F-16)
+- [x] Se a semana estourar: o cancelamento pelo cliente e a consulta do comprovante passam para o início da semana 6; idempotência, locks, PIN e testes de concorrência e de segurança não são cortados. Resultado: nada foi cortado nem adiado
 - [ ] Próximo passo: plano da semana 6 (Pix no app, Desbloqueio, comprovante e extrato)
