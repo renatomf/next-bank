@@ -12,6 +12,8 @@ import 'package:next_bank/core/session/secure_token_store.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/features/auth/data/http_auth_repository.dart';
 import 'package:next_bank/features/auth/presentation/auth_providers.dart';
+import 'package:next_bank/features/pix/data/http_pix_repository.dart';
+import 'package:next_bank/features/pix/presentation/pix_providers.dart';
 import 'package:next_bank/features/unlock/data/http_unlock_repository.dart';
 import 'package:next_bank/features/unlock/presentation/unlock_providers.dart';
 
@@ -32,6 +34,9 @@ void main() {
         accountRepositoryProvider.overrideWith(
           (ref) =>
               HttpAccountRepository(ref.watch(apiProvider).getDefaultApi()),
+        ),
+        pixRepositoryProvider.overrideWith(
+          (ref) => HttpPixRepository(ref.watch(apiProvider).getDefaultApi()),
         ),
         unlockRepositoryProvider.overrideWith(
           (ref) => HttpUnlockRepository(ref.watch(apiProvider).getDefaultApi()),

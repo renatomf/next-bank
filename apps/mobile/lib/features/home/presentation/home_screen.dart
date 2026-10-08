@@ -6,11 +6,15 @@ import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/features/home/presentation/home_providers.dart';
 
 /// Home (screen 6; mockups home-dark and home-light): the greeting and the
-/// available balance. Shortcuts, recent activity and the floating navigation
-/// arrive with the screens they open (weeks 6 and 7, decision D7).
+/// available balance, and the Pix shortcut. Recent activity and the floating
+/// navigation arrive with the screens they open (weeks 6 and 7, decision D7).
 class HomeScreen extends ConsumerWidget {
-  /// Creates the home with the header [actions] the app provides.
-  const new({this.actions = const [], super.key});
+  /// Creates the home; the app provides the header [actions] and where the
+  /// shortcuts go, so features never import each other.
+  const new({required this.onPix, this.actions = const [], super.key});
+
+  /// Opens the Pix.
+  final VoidCallback onPix;
 
   /// Buttons at the end of the header, such as sign-out.
   final List<Widget> actions;
@@ -31,6 +35,21 @@ class HomeScreen extends ConsumerWidget {
               const DisplayTitle(
                 lead: 'Seu dinheiro,',
                 trail: 'um passo à frente.',
+              ),
+              const SizedBox(height: 22),
+              // The mockup's row of four; the other three shortcuts come with
+              // their screens, so the Pix keeps a quarter of the width.
+              Row(
+                children: [
+                  Expanded(
+                    child: ActionTile(
+                      icon: Icons.diamond_outlined,
+                      label: 'Área Pix',
+                      onPressed: onPix,
+                    ),
+                  ),
+                  const Spacer(flex: 3),
+                ],
               ),
               const SizedBox(height: 22),
               const _Balance(),
