@@ -71,6 +71,13 @@ export class FakePaymentsRepositories implements PaymentsRepositoriesFactory {
     this.keys.set(textOf(new FakeKeyProtector().blindIndex(type, value)), key);
   }
 
+  #transferOf(id: string, payerAccountId: string): PixTransferState | null {
+    const found = this.transfers.find(
+      (transfer) => transfer.id === id && transfer.payerAccountId === payerAccountId,
+    );
+    return found ? copyOf(found) : null;
+  }
+
   for(): PaymentsRepositories {
     const idempotency: IdempotencyRepository = {
       claim: (claim): Promise<ClaimResult> => {
@@ -105,6 +112,13 @@ export class FakePaymentsRepositories implements PaymentsRepositoriesFactory {
           this.transfers.push(state);
           return Promise.resolve();
         },
+        findForPayer: (id, payerAccountId) => Promise.resolve(this.#transferOf(id, payerAccountId)),
+        lockForPayer: (id, payerAccountId) => Promise.resolve(this.#transferOf(id, payerAccountId)),
+        update: (state) => {
+          const index = this.transfers.findIndex((transfer) => transfer.id === state.id);
+          this.transfers[index] = state;
+          return Promise.resolve();
+        },
       },
       idempotency,
       audit: {
@@ -115,6 +129,11 @@ export class FakePaymentsRepositories implements PaymentsRepositoriesFactory {
       },
     };
   }
+}
+
+/** Only the payer's own Pix is ever found (PIX-01). */
+function copyOf(state: PixTransferState): PixTransferState {
+  return { ...state, payee: { ...state.payee } };
 }
 
 export class FakeAccounts implements AccountsPort {
