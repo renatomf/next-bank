@@ -25,7 +25,6 @@ Setup setUpProcessing() {
     ],
   );
   addTearDown(container.dispose);
-  container.listen(processingControllerProvider(_transferId), (_, _) {});
   return (container: container, repository: repository, waits: waits);
 }
 
@@ -45,8 +44,12 @@ void answerReads(FakePixRepository repository, List<PixStatus> statuses) {
   };
 }
 
-Future<PixTransfer> settled(ProviderContainer container) =>
-    container.read(processingControllerProvider(_transferId).future);
+/// Opens the screen, after the test set the answers, and waits for the end.
+Future<PixTransfer> settled(ProviderContainer container) {
+  final provider = processingControllerProvider(_transferId);
+  container.listen(provider, (_, _) {});
+  return container.read(provider.future);
+}
 
 // Screen 9 (domain-model.md 11): processing · failed (with reason). In V1 the
 // money moves within the authorization, so processing is rarely seen
