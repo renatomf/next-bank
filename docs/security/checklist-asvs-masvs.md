@@ -41,13 +41,13 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 | Negar por padrão; toda rota declara sua regra de acesso | ✅ | 2 |
 | Verificação de dono em todo recurso; recurso alheio → 404 (PIX-01, READ-01) | ⏳ | 4–6 |
 | Identificadores de conta nunca vêm do cliente (PIX-04, READ-01) | ⏳ | 4–6 |
-| Operações sensíveis exigem nova verificação (PIN no servidor) (PIX-05, PIX-06) | ⏳ | 3, 5 |
+| Operações sensíveis exigem nova verificação (PIN no servidor) (PIX-05, PIX-06) | ✅ | 3, 5 |
 
 ### Validação de entrada e codificação
 | Item | Status | Sem. |
 |---|---|---|
 | Schemas estritos em toda entrada; campos desconhecidos recusados (PIX-04) | ⏳ | 2+ |
-| Valores monetários como inteiros validados (PIX-04) | ⏳ | 4–5 |
+| Valores monetários como inteiros validados (PIX-04) | ✅ | 4–5 |
 | Só queries parametrizadas (API-01) | ✅ | 2+ |
 | Limite de tamanho de corpo (API-02) | ✅ | 2 |
 
@@ -64,8 +64,8 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 |---|---|---|
 | Erros genéricos ao cliente (RFC 7807), sem detalhes internos (API-03) | ✅ | 2 |
 | Logs estruturados sem dados sensíveis (API-04, API-10) | ✅ | 2 |
-| Eventos de segurança auditados (login, falhas, PIN, sessões, Pix) (PIX-09) | ⏳ | 3–5 |
-| Auditoria imutável (API-05) | ⏳ | 4 |
+| Eventos de segurança auditados (login, falhas, PIN, sessões, Pix) (PIX-09) | ✅ | 3–5 |
+| Auditoria imutável (API-05) | ✅ | 4 |
 
 ### Proteção de dados
 | Item | Status | Sem. |
@@ -83,10 +83,10 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 ### Lógica de negócio
 | Item | Status | Sem. |
 |---|---|---|
-| Fluxos em ordem e sem pular etapas (máquina de estados do Pix) (PIX-08) | ⏳ | 5 |
-| Limites de negócio no servidor, com horário do servidor (PIX-10) | ⏳ | 5 |
-| Proteção contra automação abusiva (rate limits) (AUTH-09, PIX-07) | ⏳ | 3, 5 |
-| Operações idempotentes e resistentes a concorrência (PIX-02, PIX-03) | ⏳ | 5 |
+| Fluxos em ordem e sem pular etapas (máquina de estados do Pix) (PIX-08) | ✅ | 5 |
+| Limites de negócio no servidor, com horário do servidor (PIX-10) | ✅ | 5 |
+| Proteção contra automação abusiva (rate limits) (AUTH-09, PIX-07) | ✅ | 3, 5 |
+| Operações idempotentes e resistentes a concorrência (PIX-02, PIX-03) | ✅ | 5 |
 
 ### API e serviços web
 | Item | Status | Sem. |

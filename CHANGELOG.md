@@ -6,6 +6,21 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não publicado]
 
+### Adicionado — Semana 5: Pix (backend)
+- Schema `payments`: chaves Pix com o valor cifrado e uma conta por chave; Pix com status coerente com as datas, o motivo de falha e o ID E2E no formato do Bacen; registros de idempotência por cliente e chave, válidos por 24 h. A API só altera o estado de um Pix, nunca o que foi pedido
+- Chave Pix CPF criada no cadastro, na mesma transação do usuário, da conta e do saldo de demonstração; o valor é gravado cifrado e encontrado pelo índice cego
+- Verificação do PIN para o Desbloqueio (`POST /v1/me/pin/verify`): o mesmo contador de tentativas do Pix, com a linha travada contra palpites paralelos; a resposta de erro passa a informar as tentativas restantes
+- Consulta de chave Pix (`POST /v1/pix/key-lookups`): o recebedor com o nome completo e o CPF mascarado; 30 consultas por hora por cliente, chave inexistente conta em dobro
+- Criação do Pix (`POST /v1/pix/transfers`) com `Idempotency-Key` obrigatória: conta ativa, chave, limite pelo relógio do servidor e saldo conferidos antes; a mesma requisição repetida recebe a mesma resposta e cria um Pix só, mesmo em paralelo
+- Autorização com o PIN conferido no servidor (`POST /v1/pix/transfers/{id}/authorize`), numa transação com as travas em ordem fixa: o dinheiro se move uma vez, com um lançamento `PIX_INTERNAL` e a contraparte de cada lado para o extrato; PIN errado mantém o Pix aguardando, PIN bloqueado e Pix expirado o cancelam; saldo, limite e contas indisponíveis resultam num Pix `FAILED` com o motivo
+- Comprovante (`GET /v1/pix/transfers/{id}`) e cancelamento (`POST .../cancel`): o ID vai no caminho, mas só o pagador encontra o Pix; os demais recebem o mesmo 404
+- Limites por Pix: R$ 5.000,00 das 6h às 20h e R$ 1.000,00 das 20h às 6h, no fuso de São Paulo, conferidos na criação e de novo na autorização
+- Integridade financeira provada pelo Pix contra o Postgres: o mesmo saldo é gasto uma vez (T-DB-08), Pix em direções opostas não travam (T-DB-09) e, depois de 1.000 Pix aleatórios, todo saldo bate com a soma das partidas e o dinheiro se conserva (T-DB-14)
+- ADR 0011: BFF fora da V1, com a revisão marcada para o desenho do backoffice
+
+### Corrigido — Semana 5
+- Testes de PIN fora dos logs procuravam os 4 dígitos soltos e falhavam quando eles apareciam por acaso num tempo de resposta; agora procuram o PIN como valor JSON, como um vazamento real apareceria
+
 ### Adicionado — Semana 4: Accounts + Ledger
 - Schemas `accounts` e `ledger`: conta única por cliente, numerada por sequência; ledger de partidas dobradas que o próprio banco protege (saldo de cliente nunca negativo, lançamento sempre balanceado no `COMMIT`, inclusive sem partidas, mesma referência nunca lançada duas vezes, histórico imutável até para o dono das tabelas) e `system:funding` sem saldo materializado; a API só altera status de conta e saldos
 - Perfil do cliente (`GET /v1/me`): nome e se o PIN já foi criado, para o app retomar o cadastro interrompido antes do PIN; só esses dois campos saem da API, o usuário vem sempre do token e qualquer parâmetro é recusado; contrato OpenAPI e cliente Dart atualizados
