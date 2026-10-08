@@ -18,6 +18,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Corrigido
 - Leitor de tela: seis componentes do `design_system` se fundiam com os textos vizinhos dentro de listas (o "Entrar" do login era anunciado junto com o texto ao lado, um bloco inteiro virava título); cada um agora tem o próprio nó de semântica (F-17)
+- Card de saldo e brilho da tela fiéis ao mockup da Home: gradientes com a geometria exata do CSS e granulado que esconde as faixas que o Impeller desenhava nos degradês (F-19); o saldo oculto mostra a máscara na Manrope, que tem o ponto, e o "R$" não se mexe ao tocar no olho
 
 ### Adicionado — Semana 3: Identity
 - Primeiras migrations: schemas `identity` (usuários, sessões, refresh tokens, PIN) e `audit` (trilha append-only garantida por `GRANT` e trigger), com as invariantes também no banco
