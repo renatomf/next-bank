@@ -207,26 +207,30 @@ void main() {
     });
   });
 
-  // The Pix screens are for a signed-in customer with a PIN and an unlocked
-  // app, like the Home (PIX-06; domain-model.md 10).
-  group('Pix', () {
-    final pixScreens = [
+  // The Pix and statement screens are for a signed-in customer with a PIN and
+  // an unlocked app, like the Home (PIX-06, READ-01; domain-model.md 10).
+  group('Pix and statement', () {
+    final accountScreens = [
       AppRoutes.pix,
       AppRoutes.pixReview('pix-1'),
       AppRoutes.pixProcessing('pix-1'),
       AppRoutes.pixReceipt('pix-1'),
+      AppRoutes.statement,
+      AppRoutes.statementItem('posting-1'),
     ];
 
-    test('the paths of one Pix', () {
-      expect(pixScreens, [
+    test('the paths of each screen', () {
+      expect(accountScreens, [
         '/pix',
         '/pix/review/pix-1',
         '/pix/processing/pix-1',
         '/pix/receipt/pix-1',
+        '/statement',
+        '/statement/posting-1',
       ]);
     });
 
-    for (final location in pixScreens) {
+    for (final location in accountScreens) {
       test('with PIN, on $location → stays', () {
         expect(redirectFor(signedIn, withPin, location, locked: false), null);
       });
