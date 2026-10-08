@@ -6,6 +6,7 @@ import { CreatePin } from './application/create-pin.ts';
 import { GetProfile } from './application/get-profile.ts';
 import { Login } from './application/login.ts';
 import { Logout } from './application/logout.ts';
+import { PayeeDirectory } from './application/payee-directory.ts';
 import type { AccessTokenVerifier } from './application/ports.ts';
 import { RefreshSession } from './application/refresh-session.ts';
 import { RegisterUser } from './application/register-user.ts';
@@ -25,6 +26,7 @@ export { loginRoutes } from './http/login-route.ts';
 export { meRoutes } from './http/me-route.ts';
 export { pinRoutes } from './http/pin-route.ts';
 export { sessionRoutes } from './http/session-routes.ts';
+export type { PayeeDirectory } from './application/payee-directory.ts';
 export type { AccessTokenKeys } from './infrastructure/jose-access-tokens.ts';
 export type {
   PreparedRegistration,
@@ -45,6 +47,8 @@ export interface IdentityModule {
   createPin: CreatePin;
   verifyPin: VerifyPin;
   getProfile: GetProfile;
+  /** Implements the IdentityPort of Payments. */
+  payees: PayeeDirectory;
 }
 
 export interface IdentitySettings {
@@ -116,5 +120,6 @@ export function createIdentityModule(settings: IdentitySettings): IdentityModule
       pinHasher,
     }),
     getProfile: new GetProfile({ unitOfWork: settings.unitOfWork, repositories }),
+    payees: new PayeeDirectory(repositories),
   };
 }

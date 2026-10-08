@@ -4,6 +4,8 @@ const SENSITIVE_KEYS = [
   'pin',
   'cpf',
   'pixKey',
+  // The value of a Pix key looked up or paid (a CPF, an e-mail...).
+  'value',
   'token',
   'accessToken',
   'refreshToken',

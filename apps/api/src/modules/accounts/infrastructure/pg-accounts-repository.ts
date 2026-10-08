@@ -44,18 +44,17 @@ export class PgAccountsRepository implements AccountsRepository {
     const { rows } = await this.#client.query<AccountRow>(PgAccountsRepository.FIND_BY_HOLDER_SQL, [
       userId,
     ]);
-    const row = rows[0];
-    return row
-      ? {
-          id: row.id,
-          holderUserId: row.holder_user_id,
-          branch: row.branch,
-          number: row.number,
-          status: row.status,
-          openedAt: row.opened_at,
-          updatedAt: row.updated_at,
-        }
-      : null;
+    return stateOf(rows[0]);
+  }
+
+  /** Served by the primary key. */
+  async findById(id: string): Promise<AccountState | null> {
+    const { rows } = await this.#client.query<AccountRow>(
+      `SELECT id, holder_user_id, branch, number, status, opened_at, updated_at
+       FROM accounts.accounts WHERE id = $1`,
+      [id],
+    );
+    return stateOf(rows[0]);
   }
 
   async insert(account: AccountState): Promise<void> {
@@ -74,6 +73,20 @@ export class PgAccountsRepository implements AccountsRepository {
       ],
     );
   }
+}
+
+function stateOf(row: AccountRow | undefined): AccountState | null {
+  return row
+    ? {
+        id: row.id,
+        holderUserId: row.holder_user_id,
+        branch: row.branch,
+        number: row.number,
+        status: row.status,
+        openedAt: row.opened_at,
+        updatedAt: row.updated_at,
+      }
+    : null;
 }
 
 /** The accounts repository and the audit trail on the connection of the shared transaction. */

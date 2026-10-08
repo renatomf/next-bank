@@ -8,6 +8,7 @@ export interface AccountsRepository {
   insert(account: AccountState): Promise<void>;
   /** The account of a customer: one per customer in V1. */
   findByHolder(userId: string): Promise<AccountState | null>;
+  findById(id: string): Promise<AccountState | null>;
 }
 
 export interface AccountsRepositories {

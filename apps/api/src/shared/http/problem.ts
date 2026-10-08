@@ -45,6 +45,7 @@ const CATALOG_STATUS: Readonly<Record<string, number>> = {
   PinResetRequired: 423,
   PinAlreadyCreated: 409,
   NotFound: 404,
+  PixKeyNotFound: 404,
 };
 
 /** Generic RFC 9457 response: never carries stack, SQL or internal detail (API-03). */

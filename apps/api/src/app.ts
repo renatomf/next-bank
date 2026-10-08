@@ -25,7 +25,7 @@ import {
   sessionRoutes,
 } from './modules/identity/index.ts';
 import { createLedgerModule } from './modules/ledger/index.ts';
-import { createPaymentsModule } from './modules/payments/index.ts';
+import { createPaymentsModule, keyLookupRoutes } from './modules/payments/index.ts';
 import { healthRoutes } from './shared/http/health.ts';
 import { registerProblemHandlers } from './shared/http/problem.ts';
 import type { PiiKeys } from './shared/infrastructure/aes-gcm-pii-protector.ts';
@@ -135,7 +135,15 @@ export function buildApp({ pool, logStream, security }: AppDependencies) {
   registerAuthentication(app, identity.accessTokenVerifier, identity.activeSessions, clock);
 
   void app.register(healthRoutes, { pool });
-  const payments = createPaymentsModule({ clock, ids, piiKeys: security.piiKeys });
+  // Payments reaches Accounts and Identity only through the ports it defines.
+  const payments = createPaymentsModule({
+    unitOfWork,
+    clock,
+    ids,
+    piiKeys: security.piiKeys,
+    accounts: accounts.directory,
+    identity: identity.payees,
+  });
   const registerCustomer = new RegisterCustomer({
     unitOfWork,
     identity: identity.registerUser,
@@ -151,6 +159,7 @@ export function buildApp({ pool, logStream, security }: AppDependencies) {
   });
   void app.register(pinRoutes, { createPin: identity.createPin, verifyPin: identity.verifyPin });
   void app.register(meRoutes, { getProfile: identity.getProfile });
+  void app.register(keyLookupRoutes, { lookupPixKey: payments.lookupPixKey });
   void app.register(myAccountRoutes, { getMyAccount: accounts.getMyAccount });
 
   return app;

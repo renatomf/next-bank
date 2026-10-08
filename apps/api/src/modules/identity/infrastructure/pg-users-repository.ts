@@ -1,5 +1,11 @@
 import pg from 'pg';
-import type { LoginAccount, Profile, StoredCpf, UsersRepository } from '../application/ports.ts';
+import type {
+  LoginAccount,
+  Payee,
+  Profile,
+  StoredCpf,
+  UsersRepository,
+} from '../application/ports.ts';
 import { AlreadyRegistered } from '../domain/errors.ts';
 import type { UserState, UserStatus } from '../domain/user.ts';
 
@@ -52,6 +58,16 @@ export class PgUsersRepository implements UsersRepository {
     );
     const row = rows[0];
     return row ? { name: row.name, hasPin: row.has_pin } : null;
+  }
+
+  /** Served by the primary key. */
+  async findPayee(id: string): Promise<Payee | null> {
+    const { rows } = await this.#client.query<{ name: string; cpf_masked: string }>(
+      'SELECT name, cpf_masked FROM identity.users WHERE id = $1',
+      [id],
+    );
+    const row = rows[0];
+    return row ? { name: row.name, documentMasked: row.cpf_masked } : null;
   }
 
   async insert(user: UserState, cpf: StoredCpf): Promise<void> {
