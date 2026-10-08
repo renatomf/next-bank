@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/pix_formats.dart';
-import 'package:next_bank/features/pix/presentation/pix_header.dart';
 import 'package:next_bank/features/pix/presentation/pix_providers.dart';
 import 'package:next_bank/features/pix/presentation/review/review_pix_controller.dart';
 
@@ -75,7 +74,7 @@ class _ReviewPixScreenState extends ConsumerState<ReviewPixScreen> {
           child: ListView(
             padding: const EdgeInsets.all(NbSpace.screen),
             children: [
-              PixHeader(
+              ScreenHeader(
                 title: 'Revisar Pix',
                 icon: Icons.arrow_back,
                 iconLabel: 'Voltar',

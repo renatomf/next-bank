@@ -21,6 +21,7 @@ export 'src/components/next_logo.dart';
 export 'src/components/pin_field.dart';
 export 'src/components/primary_button.dart';
 export 'src/components/receipt_card.dart';
+export 'src/components/screen_header.dart';
 export 'src/components/secondary_button.dart';
 export 'src/components/secure_hint.dart';
 export 'src/components/skeleton.dart';

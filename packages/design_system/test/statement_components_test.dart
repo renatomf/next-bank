@@ -95,4 +95,28 @@ void main() {
     expect(find.text('Sem movimentações'), findsOneWidget);
     expect(find.text('Seus Pix aparecem aqui.'), findsOneWidget);
   });
+
+  testWidgets('ScreenHeader announces its title and names its button', (
+    tester,
+  ) async {
+    var taps = 0;
+    await tester.pumpWidget(
+      host(
+        ScreenHeader(
+          title: 'Extrato',
+          icon: Icons.arrow_back,
+          iconLabel: 'Voltar',
+          onPressed: () => taps++,
+        ),
+      ),
+    );
+
+    await tester.tap(find.bySemanticsLabel('Voltar'));
+
+    expect(taps, 1);
+    expect(
+      tester.getSemantics(find.text('Extrato')),
+      isSemantics(label: 'Extrato', isHeader: true),
+    );
+  });
 }

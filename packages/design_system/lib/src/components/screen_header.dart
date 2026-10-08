@@ -1,9 +1,10 @@
-import 'package:design_system/design_system.dart';
+import 'package:design_system/src/components/icon_circle_button.dart';
+import 'package:design_system/src/tokens.dart';
 import 'package:flutter/material.dart';
 
-/// The header of the Pix screens (pix-dark and comprovante-dark mockups): a
+/// The header of an inner screen (pix-dark and comprovante-dark mockups): a
 /// round button on the left and the title centered.
-class PixHeader extends StatelessWidget {
+class ScreenHeader extends StatelessWidget {
   /// Creates the header.
   const new({
     required this.title,

@@ -5,7 +5,6 @@ import 'package:next_bank/core/account/account_providers.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/pix_formats.dart';
-import 'package:next_bank/features/pix/presentation/pix_header.dart';
 import 'package:next_bank/features/pix/presentation/pix_providers.dart';
 
 /// The receipt of a Pix (screen 10; comprovante-dark mockup, without sharing,
@@ -36,7 +35,7 @@ class ReceiptScreen extends ConsumerWidget {
             child: ListView(
               padding: const EdgeInsets.all(NbSpace.screen),
               children: [
-                PixHeader(
+                ScreenHeader(
                   title: 'Comprovante',
                   icon: Icons.close,
                   iconLabel: 'Fechar',
