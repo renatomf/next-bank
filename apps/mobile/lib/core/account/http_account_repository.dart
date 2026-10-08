@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
+import 'package:next_bank/core/account/account_repository.dart';
+import 'package:next_bank/core/account/account_summary.dart';
 import 'package:next_bank/core/api_failure.dart';
-import 'package:next_bank/features/home/domain/account_repository.dart';
-import 'package:next_bank/features/home/domain/account_summary.dart';
 import 'package:nextbank_api/nextbank_api.dart';
 
 /// [AccountRepository] over the generated API client (ADR 0008). The client

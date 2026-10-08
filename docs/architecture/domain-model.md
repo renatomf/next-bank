@@ -278,7 +278,7 @@ O extrato não é um agregado: é uma consulta (lado de leitura do CQRS) que lê
 | `SamePayerAndPayee` | 422 | Pix | "Você não pode enviar Pix para a própria conta." |
 | `InvalidAmount` | 422 | Pix | "Informe um valor válido." |
 | `InsufficientFunds` | 422 | Pix, Revisar | "Saldo insuficiente." |
-| `LimitExceeded` | 422 | Pix, Revisar | "Valor acima do seu limite (R$ X entre 20h e 6h)." |
+| `LimitExceeded` | 422 | Pix, Revisar | "Valor acima do seu limite de R$ X por Pix." (`X` vem do campo `limit` da resposta: o servidor sabe qual limite vale agora, PIX-10) |
 | `AccountBlocked` | 422 | Pix | "Sua conta está bloqueada. Fale com o suporte." |
 | `PayeeUnavailable` | 422 | Revisar | "A conta de destino não pode receber Pix agora." |
 | `TransferExpired` | 409 | Revisar | "O tempo para confirmar acabou. Comece de novo." |

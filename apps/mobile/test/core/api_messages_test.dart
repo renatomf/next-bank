@@ -39,6 +39,29 @@ void main() {
         'Você já tem um PIN. Para trocar, use Perfil > Segurança.',
       ),
       (ApiErrorCode.notFound, 'Não encontrado.'),
+      (ApiErrorCode.pixKeyNotFound, 'Não encontramos essa chave Pix.'),
+      (
+        ApiErrorCode.samePayerAndPayee,
+        'Você não pode enviar Pix para a própria conta.',
+      ),
+      (ApiErrorCode.invalidAmount, 'Informe um valor válido.'),
+      (ApiErrorCode.insufficientFunds, 'Saldo insuficiente.'),
+      (ApiErrorCode.limitExceeded, 'Valor acima do seu limite.'),
+      (
+        ApiErrorCode.accountBlocked,
+        'Sua conta está bloqueada. Fale com o suporte.',
+      ),
+      (
+        ApiErrorCode.transferExpired,
+        'O tempo para confirmar acabou. Comece de novo.',
+      ),
+      (ApiErrorCode.invalidTransferState, 'Este Pix já foi processado.'),
+      // A bug in the app, never the customer's doing.
+      (ApiErrorCode.idempotencyKeyReused, 'Algo deu errado. Tente de novo.'),
+      (
+        ApiErrorCode.requestInProgress,
+        'Ainda estamos processando. Tente de novo em instantes.',
+      ),
     ]) {
       test(code.wire, () {
         expect(messageFor(ApiRejected(code)), message);
@@ -57,6 +80,16 @@ void main() {
           const ApiRejected(ApiErrorCode.pinIncorrect, remainingAttempts: 1),
         ),
         'PIN incorreto. Resta 1 tentativa.',
+      );
+    });
+
+    // The server knows which limit applies now (PIX-10); the app only says it.
+    test('an amount over the limit says the limit', () {
+      expect(
+        messageFor(
+          const ApiRejected(ApiErrorCode.limitExceeded, limitCents: 100000),
+        ),
+        r'Valor acima do seu limite de R$ 1.000,00 por Pix.',
       );
     });
 
