@@ -122,6 +122,8 @@ Por decisão do desenvolvedor sobre o mockup, o ponto não tem glow e fica na li
 | `FloatingNavBar` com ação central | Home |
 | `SecureHint` (cadeado + texto) | Pix |
 
+**Documentos na tela:** CPF sempre com os seis dígitos do meio, `***.456.789-**`, como a API devolve e o DICT do Pix mostra. Os mockups de Pix e comprovante usam `•••.842.•••-09`; vale a máscara da API (plano da semana 6, D7). Conta sempre com os quatro últimos dígitos: `•••• 0004`.
+
 ## 8. Acessibilidade
 
 - Contraste mínimo AA em todo texto; valores verificados neste documento.
