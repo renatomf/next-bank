@@ -277,9 +277,9 @@ apps/mobile/lib/
 
 ## Tarefa 4 — Extrato no app (dia 4–5)
 
-- [ ] `design_system`: `TransactionItem`, `EmptyState`
-- [ ] `features/statement`: repositório e notifier com paginação por cursor (TDD)
-- [ ] Telas 11 e 12; "Últimas movimentações" na Home
+- [x] `design_system`: `TransactionItem`, `EmptyState`
+- [x] `features/statement`: repositório e notifier com paginação por cursor (TDD)
+- [x] Telas 11 e 12; "Últimas movimentações" na Home
 
 ### Desenho da tarefa 4
 
