@@ -212,6 +212,12 @@ describe('GET /v1/me/statement', () => {
       'a cursor with a forged shape',
       `?cursor=${Buffer.from('{"t":"x","i":"y"}').toString('base64url')}`,
     ],
+    [
+      'a cursor with an impossible date',
+      `?cursor=${Buffer.from(
+        JSON.stringify({ t: '2030-13-45T25:61:61.000000Z', i: randomUUID() }),
+      ).toString('base64url')}`,
+    ],
     ['a page size (READ-04)', '?limit=10000'],
     ['an account id (READ-01)', `?accountId=${randomUUID()}`],
   ])('refuses %s (InvalidRequest)', async (_case, query) => {
