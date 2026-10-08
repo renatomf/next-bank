@@ -9,15 +9,18 @@ import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/clock.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/session_controller.dart';
+import 'package:next_bank/core/statement/statement_controller.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
 
 import '../../../support/fake_account_repository.dart';
 import '../../../support/fake_profile_repository.dart';
+import '../../../support/fake_statement_repository.dart';
 import '../../../support/fake_token_store.dart';
 
 Future<void> pumpHome(
   WidgetTester tester, {
   FakeAccountRepository? account,
+  FakeStatementRepository? statement,
   DateTime? now,
 }) async {
   await tester.pumpWidget(
@@ -29,10 +32,13 @@ Future<void> pumpHome(
           account ?? FakeAccountRepository(),
         ),
         nowProvider.overrideWithValue(() => now ?? DateTime(2026, 10, 7, 9)),
+        statementRepositoryProvider.overrideWithValue(
+          statement ?? FakeStatementRepository(),
+        ),
       ],
       child: MaterialApp(
         theme: NbTheme.dark(),
-        home: HomeScreen(onPix: () {}),
+        home: HomeScreen(onPix: () {}, onStatement: () {}, onMovement: (_) {}),
       ),
     ),
   );

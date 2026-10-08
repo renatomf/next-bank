@@ -17,6 +17,8 @@ import 'package:next_bank/features/pix/presentation/processing/processing_screen
 import 'package:next_bank/features/pix/presentation/receipt/receipt_screen.dart';
 import 'package:next_bank/features/pix/presentation/review/review_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
+import 'package:next_bank/features/statement/presentation/detail/statement_detail_screen.dart';
+import 'package:next_bank/features/statement/presentation/list/statement_screen.dart';
 import 'package:next_bank/features/unlock/presentation/unlock_screen.dart';
 
 /// The app's navigation. It lives outside the features because it is the
@@ -72,6 +74,8 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
         path: AppRoutes.home,
         builder: (context, _) => HomeScreen(
           onPix: () => context.push(AppRoutes.pix),
+          onStatement: () => context.push(AppRoutes.statement),
+          onMovement: (id) => context.push(AppRoutes.statementItem(id)),
           actions: const [SignOutButton()],
         ),
       ),
@@ -113,7 +117,28 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
         path: AppRoutes.pixReceipt(':transferId'),
         builder: (context, state) => ReceiptScreen(
           transferId: _transferIdOf(state),
+          // Pushed from a statement detail, back returns to it (T4-3);
+          // after a Pix just sent nothing is below, so it goes home.
+          onClose: () => _back(context),
           onHome: () => context.go(AppRoutes.home),
+        ),
+      ),
+      // Opened over the Home, the detail over the statement or the Home, and
+      // the receipt over the detail.
+      GoRoute(
+        path: AppRoutes.statement,
+        builder: (context, _) => StatementScreen(
+          onBack: () => _back(context),
+          onItem: (id) => context.push(AppRoutes.statementItem(id)),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.statementItem(':itemId'),
+        builder: (context, state) => StatementDetailScreen(
+          itemId: state.pathParameters['itemId'] ?? '',
+          onBack: () => _back(context),
+          onReceipt: (transferId) =>
+              context.push(AppRoutes.pixReceipt(transferId)),
         ),
       ),
     ],

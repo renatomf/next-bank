@@ -9,11 +9,16 @@ import 'package:next_bank/features/pix/presentation/pix_providers.dart';
 
 /// The receipt of a Pix (screen 10; comprovante-dark mockup, without sharing,
 /// decision D9). The payer is the customer: their name and their account's
-/// last digits come from what the app already has (D10). Back and close lead
-/// to the Home, never to the PIN (domain-model.md 10).
+/// last digits come from what the app already has (D10). Back and close never
+/// lead to the PIN (domain-model.md 10): the router says where they go.
 class ReceiptScreen extends ConsumerWidget {
   /// Creates the receipt of the Pix [transferId].
-  const new({required this.transferId, required this.onHome, super.key});
+  const new({
+    required this.transferId,
+    required this.onClose,
+    required this.onHome,
+    super.key,
+  });
 
   /// The Pix on the receipt.
   final String transferId;
@@ -21,13 +26,17 @@ class ReceiptScreen extends ConsumerWidget {
   /// Back to the Home.
   final VoidCallback onHome;
 
+  /// Closes the receipt: back to the statement detail it was opened from,
+  /// or to the Home after a Pix just sent (T4-3).
+  final VoidCallback onClose;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final transfer = ref.watch(pixTransferProvider(transferId));
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) onHome();
+        if (!didPop) onClose();
       },
       child: Scaffold(
         body: GlowBackground(
@@ -39,7 +48,7 @@ class ReceiptScreen extends ConsumerWidget {
                   title: 'Comprovante',
                   icon: Icons.close,
                   iconLabel: 'Fechar',
-                  onPressed: onHome,
+                  onPressed: onClose,
                 ),
                 const SizedBox(height: NbSpace.xl),
                 ...switch (transfer) {
