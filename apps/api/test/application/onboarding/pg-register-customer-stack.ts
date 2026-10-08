@@ -25,7 +25,11 @@ class FakeRefreshTokensWithUniqueHash extends FakeRefreshTokens {
 }
 
 /** Fixed keys, so tests can find a stored value by its blind index. */
-const PII_KEYS = { keyVersion: 1, encryptionKey: randomBytes(32), hmacKey: Buffer.alloc(32, 7) };
+export const PII_KEYS = {
+  keyVersion: 1,
+  encryptionKey: randomBytes(32),
+  hmacKey: Buffer.alloc(32, 7),
+};
 
 /** The purpose Payments binds Pix key values to (week 5 plan, D7). */
 export const PIX_KEY_PROTECTOR = new AesGcmPiiProtector(PII_KEYS, {
