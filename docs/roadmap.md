@@ -367,7 +367,9 @@ Quem avalia o projeto precisa vê-lo funcionando **em menos de um minuto**, sem 
 - **Testes:** Playwright cobrindo o fluxo de dupla aprovação, incluindo a tentativa do solicitante de aprovar a própria solicitação (deve falhar).
 - **Deploy:** Render, no mesmo provedor da API. Os endpoints `/admin/*` são servidos por uma instância separada da API (mesma imagem, modo `admin`), implantada como **serviço privado**, sem URL pública: só o backoffice a alcança pela rede interna. A API pública não registra as rotas `/admin/*`. Evolução opcional: gateway de identidade (zero trust) na frente do backoffice.
 
-**ADR:** 011 Backoffice: RBAC e dupla aprovação
+- **Revisão do BFF (ADR 0011):** o desenho da fase começa respondendo se o servidor do Next.js basta como BFF do backoffice (sessão em cookie `httpOnly`, Server Actions chamando a API `/admin/*` privada) ou se é preciso um serviço dedicado, e como ficam CSRF/`SameSite` e a propagação do `requestId` e da `Idempotency-Key` nos comandos do staff.
+
+**ADR:** 0012 Backoffice: RBAC e dupla aprovação
 
 **Pronto quando:** um PIX divergente da Fase 2 é resolvido pelo backoffice, com dupla aprovação, e aparece corretamente no extrato do cliente e na trilha de auditoria.
 
