@@ -16,6 +16,9 @@ import 'package:nextbank_api/src/model/pix_transfer.dart';
 import 'package:nextbank_api/src/model/problem.dart';
 import 'package:nextbank_api/src/model/refresh_request_input.dart';
 import 'package:nextbank_api/src/model/register_request_input.dart';
+import 'package:nextbank_api/src/model/statement.dart';
+import 'package:nextbank_api/src/model/statement_counterparty.dart';
+import 'package:nextbank_api/src/model/statement_item.dart';
 import 'package:nextbank_api/src/model/verify_pin_request_input.dart';
 
 final _regList = RegExp(r'^List<(.*)>$');
@@ -72,6 +75,12 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return RefreshRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RegisterRequestInput':
           return RegisterRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'Statement':
+          return Statement.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'StatementCounterparty':
+          return StatementCounterparty.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'StatementItem':
+          return StatementItem.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'VerifyPinRequestInput':
           return VerifyPinRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
         default:
