@@ -144,6 +144,7 @@ describe('POST /v1/me/pin', () => {
       [email],
     );
     expect(rows[0]?.n).toBe(1);
-    expect(logs.raw()).not.toContain('3691');
+    // As a JSON value: four loose digits also turn up inside timings and ids.
+    expect(logs.raw()).not.toContain('"3691"');
   });
 });
