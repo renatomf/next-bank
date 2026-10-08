@@ -53,7 +53,7 @@ Achado de revisão, de ferramenta (Semgrep, lint) ou de CI que uma regra já doc
 ### 3. Arquitetura
 
 - Fronteiras hexagonais e regras de import verificadas no CI (dependency-cruiser no TS; teste de arquitetura no Dart, `apps/mobile/test/architecture_test.dart`). Violação quebra o build.
-- **App (Clean Architecture por feature):** `domain/` é Dart puro (entidades e interfaces de repositório); `data/` implementa as interfaces; `presentation/` (providers e widgets) depende só do domínio. Features não importam outras features. A raiz de composição (`main.dart`) é o único lugar que liga interfaces a implementações.
+- **App (Clean Architecture por feature):** `domain/` é Dart puro (entidades e interfaces de repositório); `data/` implementa as interfaces; `presentation/` (providers e widgets) depende só do domínio; com mais de uma tela, cada tela ganha uma subpasta com seu controller (`presentation/login/`), e os providers da feature ficam na raiz de `presentation/`. Features não importam outras features. A raiz de composição (`main.dart`) é o único lugar que liga interfaces a implementações.
 - Domínio sem dependência de framework.
 - **Princípios de design:** Clean Architecture, DDD (linguagem ubíqua, agregados que protegem as próprias invariantes, contextos delimitados por módulo) e SOLID, aplicados com pragmatismo: cada princípio resolve um problema concreto do código, nunca vira cerimônia.
 - Toda decisão relevante vira ADR (`docs/adr/`), com alternativas e consequências negativas.
