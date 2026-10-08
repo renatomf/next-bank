@@ -6,9 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/account/account_providers.dart';
 import 'package:next_bank/core/api_failure.dart';
+import 'package:next_bank/core/clock.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/session_controller.dart';
-import 'package:next_bank/features/home/presentation/home_providers.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
 
 import '../../../support/fake_account_repository.dart';
