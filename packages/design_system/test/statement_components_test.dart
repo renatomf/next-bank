@@ -1,0 +1,98 @@
+import 'package:design_system/design_system.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+Widget host(Widget child) => MaterialApp(
+  theme: NbTheme.dark(),
+  home: Scaffold(
+    body: Padding(padding: const EdgeInsets.all(20), child: child),
+  ),
+);
+
+// The statement's components, each point checked against home-dark (F-14).
+void main() {
+  group('TransactionItem', () {
+    Widget item({
+      bool incoming = true,
+      bool hidden = false,
+      VoidCallback? onTap,
+    }) => host(
+      TransactionItem(
+        title: incoming ? 'Pix recebido' : 'Pix enviado',
+        caption: 'Mariana Costa · Hoje, 09:12',
+        amountCents: 35000,
+        incoming: incoming,
+        hidden: hidden,
+        onTap: onTap,
+      ),
+    );
+
+    testWidgets('money in: a south-west arrow and a plus sign', (tester) async {
+      await tester.pumpWidget(item());
+
+      expect(find.text('Pix recebido'), findsOneWidget);
+      expect(find.text('Mariana Costa · Hoje, 09:12'), findsOneWidget);
+      expect(find.byIcon(Icons.south_west), findsOneWidget);
+      expect(find.text(r'+ R$ 350,00'), findsOneWidget);
+    });
+
+    testWidgets('money out: a north-east arrow and a minus sign', (
+      tester,
+    ) async {
+      await tester.pumpWidget(item(incoming: false));
+
+      expect(find.byIcon(Icons.north_east), findsOneWidget);
+      expect(find.text(r'− R$ 350,00'), findsOneWidget);
+    });
+
+    testWidgets('reads the direction and the amount aloud', (tester) async {
+      await tester.pumpWidget(item(incoming: false));
+
+      expect(
+        find.bySemanticsLabel(
+          r'Pix enviado, Mariana Costa · Hoje, 09:12, saída de R$ 350,00',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    // MOB-05: the amounts reveal the balance as much as the balance does.
+    testWidgets('hides the amount, keeping the sign', (tester) async {
+      await tester.pumpWidget(item(hidden: true));
+
+      expect(find.textContaining('350'), findsNothing);
+      expect(find.text(r'+ R$ ••••'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel(
+          'Pix recebido, Mariana Costa · Hoje, 09:12, valor oculto',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('opens the detail on tap', (tester) async {
+      var taps = 0;
+      await tester.pumpWidget(item(onTap: () => taps++));
+
+      await tester.tap(find.byType(TransactionItem));
+
+      expect(taps, 1);
+    });
+  });
+
+  testWidgets('EmptyState shows its icon, title and message', (tester) async {
+    await tester.pumpWidget(
+      host(
+        const EmptyState(
+          icon: Icons.receipt_long_outlined,
+          title: 'Sem movimentações',
+          message: 'Seus Pix aparecem aqui.',
+        ),
+      ),
+    );
+
+    expect(find.byIcon(Icons.receipt_long_outlined), findsOneWidget);
+    expect(find.text('Sem movimentações'), findsOneWidget);
+    expect(find.text('Seus Pix aparecem aqui.'), findsOneWidget);
+  });
+}
