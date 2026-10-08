@@ -34,7 +34,10 @@ enum ApiErrorCode {
   invalidPin('InvalidPin'),
 
   /// The PIN exists; changing it needs the password.
-  pinAlreadyCreated('PinAlreadyCreated');
+  pinAlreadyCreated('PinAlreadyCreated'),
+
+  /// The resource does not exist for this customer.
+  notFound('NotFound');
 
   new(this.wire);
 

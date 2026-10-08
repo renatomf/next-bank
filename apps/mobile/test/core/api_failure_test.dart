@@ -31,6 +31,7 @@ void main() {
       ('RefreshTokenReuseDetected', ApiErrorCode.refreshTokenReuseDetected),
       ('InvalidPin', ApiErrorCode.invalidPin),
       ('PinAlreadyCreated', ApiErrorCode.pinAlreadyCreated),
+      ('NotFound', ApiErrorCode.notFound),
     ]) {
       test('maps $wire to its catalog code', () async {
         final failure = await failureFor(ProblemReply(422, wire));
