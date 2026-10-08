@@ -281,6 +281,71 @@ apps/mobile/lib/
 - [ ] `features/statement`: repositório e notifier com paginação por cursor (TDD)
 - [ ] Telas 11 e 12; "Últimas movimentações" na Home
 
+### Desenho da tarefa 4
+
+**Fontes conferidas**
+
+| Fonte | Regra | Teste |
+|---|---|---|
+| `domain-model.md` 8.1 | Tipo pelo `kind` ("Pix enviado", "Pix recebido", "Depósito inicial"); valor com sinal pela direção; contraparte do snapshot; do mais novo ao mais antigo | `statement_texts_test`: título, legenda e sinal de cada tipo |
+| T-DB-12 (lado do app) | Paginar não duplica nem pula | `statement_controller_test`: a página seguinte usa o `nextCursor`; um item repetido entre páginas não aparece duas vezes; `nextCursor` nulo encerra a lista |
+| READ-02 / D3 | "Ver comprovante" só num Pix enviado com `transferId` | `http_statement_repository_test`: `transferId` em item que não é Pix enviado → `ApiUnexpected`; teste de widget do detalhe |
+| F-18 | Valor inteiro e positivo; direção coerente com o tipo | Repositório: valor ≤ 0, tipo ou direção desconhecidos, ou direção incoerente → `ApiUnexpected` |
+| MOB-05 | Saldo oculto | T4-1 (abaixo); teste de widget |
+| `domain-model.md` 11 | Tela 11: skeleton · lista · carregando mais · fim da lista · vazio · erro. Tela 12: carregando · pronto · `NotFound`. Home: sem movimentações | Testes de widget de cada estado |
+| `domain-model.md` 10 | Extrato → Detalhe → Comprovante | `app_test`: Home → "Ver extrato" → item → "Ver comprovante" → voltar ao detalhe |
+| Brief 7 e home-dark (F-14) | `TransactionItem` (ícone em círculo, título, legenda, valor com sinal, nunca só cor) e `EmptyState` | Testes de widget conferidos contra o mockup |
+
+**Estrutura**
+
+```
+apps/mobile/lib/
+├── core/statement/          # a Home e o extrato leem o mesmo estado (plano, "Estrutura")
+│   ├── statement_item.dart, statement_repository.dart, http_statement_repository.dart
+│   ├── statement_controller.dart   # páginas carregadas, próxima página, atualizar
+│   └── statement_texts.dart        # título, legenda ("Mariana Costa · Hoje, 09:12") e sinal
+└── features/statement/presentation/
+    ├── list/      tela 11
+    └── detail/    tela 12, lê o item das páginas já carregadas
+packages/design_system/   # TransactionItem, EmptyState
+```
+
+- **Rotas:**
+  - `/statement`, aberta por `push` a partir do "Ver extrato" da Home;
+  - `/statement/:itemId`, por `push` sobre a lista;
+  - o "Ver comprovante" abre `/pix/receipt/:transferId` por `push`, para o voltar retornar ao detalhe.
+- **Estado do extrato:** fica no `core`, porque a Home (três primeiros itens) e a tela 11 mostram o mesmo extrato. Ele vive enquanto uma dessas telas está aberta e se recarrega ao voltar de um Pix, porque o fim do Pix troca a pilha de telas.
+
+**Concorrência**
+
+| Cenário | O que acontece | Teste |
+|---|---|---|
+| Rolagem dispara "carregar mais" duas vezes | O segundo pedido é ignorado enquanto o primeiro não volta | `statement_controller_test` |
+| "Atualizar" durante um "carregar mais" | A atualização vence: a página antiga que chegar depois é descartada | `statement_controller_test` |
+| Pix novo entre duas páginas | O servidor não duplica (T-DB-12); o app ainda descarta um id já mostrado | `statement_controller_test` |
+| Falha no "carregar mais" | Os itens já carregados ficam, e o fim da lista oferece "Tentar de novo" | `statement_controller_test` + widget |
+
+**Contratos:**
+- Nada muda na API. A tela usa `getMyStatement(cursor)` do cliente gerado.
+- O `StatementRepository` tem só `page(cursor?)`, que devolve `(items, nextCursor)`.
+- Não há rota de item avulso. O detalhe lê o item das páginas carregadas; se o item não estiver lá, mostra `NotFound`.
+
+**Dependências novas:** nenhuma.
+
+**Decisões da tarefa 4**
+
+| # | Decisão | Padrão recomendado |
+|---|---|---|
+| T4-1 | O "ocultar saldo" também esconde os valores das movimentações? | Sim, na Home e no extrato: os valores revelam o saldo para quem está ao lado (MOB-05). Aparece `R$ ••••` com o sinal e o tipo, e o leitor de tela diz "Valor oculto" |
+| T4-2 | Fonte do detalhe (tela 12) | As páginas já carregadas, sem rota nova na API (escopo congelado). Item ausente → `NotFound` |
+| T4-3 | Voltar do comprovante aberto pelo detalhe | Volta ao detalhe (`push`). Depois de um Pix recém-enviado, continua indo à Home |
+| T4-4 | Tamanho da entrega | Um PR: a tarefa é menor que a 3 (sem PIN nem idempotência) |
+
+**Fora da tarefa 4:**
+- filtros por período e tipo (extra);
+- agrupar a lista por dia;
+- compartilhar comprovante (D9).
+
 ## Tarefa 5 — Fechamento
 
 - [ ] `/security-review` (obrigatório: Pix, PIN e autorização)
