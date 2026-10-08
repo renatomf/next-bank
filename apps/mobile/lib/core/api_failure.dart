@@ -36,6 +36,18 @@ enum ApiErrorCode {
   /// The PIN exists; changing it needs the password.
   pinAlreadyCreated('PinAlreadyCreated'),
 
+  /// Wrong PIN; the answer says how many attempts are left.
+  pinIncorrect('PinIncorrect'),
+
+  /// Too many wrong PINs: locked for 30 minutes.
+  pinLocked('PinLocked'),
+
+  /// Locked too often: the PIN must be reset with the password.
+  pinResetRequired('PinResetRequired'),
+
+  /// The account has no PIN yet.
+  pinNotCreated('PinNotCreated'),
+
   /// The resource does not exist for this customer.
   notFound('NotFound');
 
@@ -53,10 +65,13 @@ sealed class ApiFailure implements Exception {
 /// The API refused the request with a catalog error.
 final class ApiRejected extends ApiFailure {
   /// Creates a refusal with its catalog code.
-  const new(this.code);
+  const new(this.code, {this.remainingAttempts});
 
   /// The catalog error the screen reacts to.
   final ApiErrorCode code;
+
+  /// Attempts left after a wrong PIN, when the API says.
+  final int? remainingAttempts;
 
   @override
   String toString() => 'ApiRejected(${code.wire})';
@@ -86,8 +101,14 @@ ApiFailure apiFailureOf(DioException error) {
     case DioExceptionType.badResponse:
       final body = error.response?.data;
       final wire = body is Map ? body['code'] : null;
+      final remaining = body is Map ? body['remainingAttempts'] : null;
       for (final code in ApiErrorCode.values) {
-        if (code.wire == wire) return ApiRejected(code);
+        if (code.wire == wire) {
+          return ApiRejected(
+            code,
+            remainingAttempts: remaining is int ? remaining : null,
+          );
+        }
       }
       return const ApiUnexpected();
     case DioExceptionType.badCertificate ||

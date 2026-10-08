@@ -16,6 +16,9 @@ abstract final class AppRoutes {
   /// Transaction PIN creation, whenever the account has no PIN yet.
   static const String createPin = '/create-pin';
 
+  /// The PIN before anything of the account (F-16).
+  static const String unlock = '/unlock';
+
   /// Home of a signed-in user.
   static const String home = '/home';
 }
@@ -23,14 +26,15 @@ abstract final class AppRoutes {
 /// Where the app must be for the current [session] and its [profile], or
 /// null to stay at [location] (domain-model.md, section 10). An ended
 /// session goes back to login from any screen; an account without its PIN
-/// always resumes at the PIN creation.
+/// always resumes at the PIN creation; a [locked] app asks for the PIN first.
 String? redirectFor(
   AsyncValue<Session> session,
   AsyncValue<Profile?> profile,
-  String location,
-) {
+  String location, {
+  required bool locked,
+}) {
   final target = switch (session) {
-    AsyncData(value: SignedIn()) => _signedInTarget(profile, location),
+    AsyncData(value: SignedIn()) => _signedInTarget(profile, location, locked),
     AsyncData(value: SignedOut()) =>
       location == AppRoutes.register ? location : AppRoutes.login,
     // Still restoring, or the device storage failed: splash shows which.
@@ -39,16 +43,21 @@ String? redirectFor(
   return target == location ? null : target;
 }
 
-String _signedInTarget(AsyncValue<Profile?> profile, String location) =>
-    switch (profile) {
-      AsyncData(value: Profile(hasPin: false)) => AppRoutes.createPin,
-      AsyncData(value: Profile(hasPin: true)) => switch (location) {
-        AppRoutes.splash ||
-        AppRoutes.login ||
-        AppRoutes.register ||
-        AppRoutes.createPin => AppRoutes.home,
-        _ => location,
-      },
-      // Not known yet, or it could not be loaded: splash shows which.
-      _ => AppRoutes.splash,
-    };
+String _signedInTarget(
+  AsyncValue<Profile?> profile,
+  String location,
+  bool locked,
+) => switch (profile) {
+  AsyncData(value: Profile(hasPin: false)) => AppRoutes.createPin,
+  AsyncData(value: Profile(hasPin: true)) when locked => AppRoutes.unlock,
+  AsyncData(value: Profile(hasPin: true)) => switch (location) {
+    AppRoutes.splash ||
+    AppRoutes.login ||
+    AppRoutes.register ||
+    AppRoutes.createPin ||
+    AppRoutes.unlock => AppRoutes.home,
+    _ => location,
+  },
+  // Not known yet, or it could not be loaded: splash shows which.
+  _ => AppRoutes.splash,
+};
