@@ -31,7 +31,7 @@ void main() {
       (12, 'dez'),
     ]) {
       test('month $month is "$name"', () {
-        expect(receiptDate(DateTime(2026, month, 1)), '1 $name 2026 · 00:00');
+        expect(receiptDate(DateTime(2026, month)), '1 $name 2026 · 00:00');
       });
     }
 
