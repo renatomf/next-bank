@@ -148,7 +148,62 @@ void main() {
     ('with PIN, on home', signedIn, withPin, AppRoutes.home, null),
   ]) {
     test('$name → ${expected ?? 'stays'}', () {
-      expect(redirectFor(session, profile, location), expected);
+      expect(redirectFor(session, profile, location, locked: false), expected);
     });
   }
+
+  // The Unlock screen (F-16, PIX-06): a locked app asks for the PIN before
+  // anything a signed-in customer can do.
+  group('locked', () {
+    for (final (name, session, profile, location, expected) in [
+      (
+        'with PIN, on splash',
+        signedIn,
+        withPin,
+        AppRoutes.splash,
+        AppRoutes.unlock,
+      ),
+      (
+        'with PIN, on home',
+        signedIn,
+        withPin,
+        AppRoutes.home,
+        AppRoutes.unlock,
+      ),
+      ('with PIN, on unlock', signedIn, withPin, AppRoutes.unlock, null),
+      // No PIN to unlock with: the PIN creation comes first.
+      (
+        'no PIN, on unlock',
+        signedIn,
+        withoutPin,
+        AppRoutes.unlock,
+        AppRoutes.createPin,
+      ),
+      (
+        'signed out, on unlock',
+        signedOut,
+        noProfile,
+        AppRoutes.unlock,
+        AppRoutes.login,
+      ),
+      (
+        'profile loading, on unlock',
+        signedIn,
+        profileLoading,
+        AppRoutes.unlock,
+        AppRoutes.splash,
+      ),
+    ]) {
+      test('$name → ${expected ?? 'stays'}', () {
+        expect(redirectFor(session, profile, location, locked: true), expected);
+      });
+    }
+
+    test('unlocked, on unlock → home', () {
+      expect(
+        redirectFor(signedIn, withPin, AppRoutes.unlock, locked: false),
+        AppRoutes.home,
+      );
+    });
+  });
 }

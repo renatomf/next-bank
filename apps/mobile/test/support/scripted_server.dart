@@ -18,10 +18,13 @@ final class JsonReply extends Reply {
 
 /// An RFC 9457 problem with the catalog code, as the API answers errors.
 final class ProblemReply extends Reply {
-  const new(this.status, this.code);
+  const new(this.status, this.code, [this.extra = const {}]);
 
   final int status;
   final String code;
+
+  /// Fields the catalog adds to some errors, such as the attempts left.
+  final Map<String, Object?> extra;
 }
 
 /// No answer at all, like a dropped connection.
@@ -69,18 +72,20 @@ class ScriptedServer implements HttpClientAdapter {
         reason: 'connection refused',
       ),
       JsonReply(:final status, :final body) => _json(status, body),
-      ProblemReply(:final status, :final code) => ResponseBody.fromString(
-        jsonEncode({
-          'type': 'about:blank',
-          'title': 'Error',
-          'status': status,
-          'code': code,
-        }),
-        status,
-        headers: {
-          Headers.contentTypeHeader: ['application/problem+json'],
-        },
-      ),
+      ProblemReply(:final status, :final code, :final extra) =>
+        ResponseBody.fromString(
+          jsonEncode({
+            'type': 'about:blank',
+            'title': 'Error',
+            'status': status,
+            'code': code,
+            ...extra,
+          }),
+          status,
+          headers: {
+            Headers.contentTypeHeader: ['application/problem+json'],
+          },
+        ),
     };
   }
 

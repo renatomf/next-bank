@@ -45,6 +45,21 @@ void main() {
       });
     }
 
+    test('a wrong PIN says how many attempts are left', () {
+      expect(
+        messageFor(
+          const ApiRejected(ApiErrorCode.pinIncorrect, remainingAttempts: 3),
+        ),
+        'PIN incorreto. Restam 3 tentativas.',
+      );
+      expect(
+        messageFor(
+          const ApiRejected(ApiErrorCode.pinIncorrect, remainingAttempts: 1),
+        ),
+        'PIN incorreto. Resta 1 tentativa.',
+      );
+    });
+
     test('no answer from the API', () {
       expect(messageFor(const ApiUnreachable()), 'Sem conexão. Tente de novo.');
     });

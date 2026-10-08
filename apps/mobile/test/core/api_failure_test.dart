@@ -41,6 +41,24 @@ void main() {
       });
     }
 
+    // F-16, PIX-05: the Unlock screen tells how many attempts are left.
+    test('keeps the attempts left of a wrong PIN', () async {
+      final failure = await failureFor(
+        const ProblemReply(422, 'PinIncorrect', {'remainingAttempts': 3}),
+      );
+
+      expect(failure, isA<ApiRejected>());
+      expect((failure as ApiRejected).remainingAttempts, 3);
+    });
+
+    test('ignores attempts left that are not a whole number', () async {
+      final failure = await failureFor(
+        const ProblemReply(422, 'PinIncorrect', {'remainingAttempts': '3'}),
+      );
+
+      expect((failure as ApiRejected).remainingAttempts, isNull);
+    });
+
     test('treats an unknown code as unexpected, never guessing', () async {
       expect(
         await failureFor(const ProblemReply(422, 'SomethingNew')),
