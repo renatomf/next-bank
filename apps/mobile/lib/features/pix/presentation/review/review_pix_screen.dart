@@ -59,7 +59,11 @@ class _ReviewPixScreenState extends ConsumerState<ReviewPixScreen> {
 
   Future<void> _finish(Future<PixTransfer?> authorization) async {
     final transfer = await authorization;
-    if (transfer != null && mounted) widget.onFinished(transfer);
+    if (transfer == null || !mounted) return;
+    // The Pix read before the PIN is stale now: the next screen reads it
+    // again instead of showing it as still waiting.
+    ref.invalidate(pixTransferProvider(widget.transferId));
+    widget.onFinished(transfer);
   }
 
   @override
