@@ -8,6 +8,12 @@ final Provider<PixRepository> pixRepositoryProvider = Provider(
   (ref) => throw UnimplementedError('Bound in main.dart'),
 );
 
+/// The pause between two reads of a Pix still processing; tests skip it.
+final Provider<Future<void> Function()> pixPollDelayProvider = Provider(
+  (ref) =>
+      () => Future<void>.delayed(const Duration(seconds: 1)),
+);
+
 /// Draws the idempotency key of each new attempt (D11); tests override it to
 /// see when a key is drawn.
 final Provider<String Function()> idempotencyKeysProvider = Provider(
