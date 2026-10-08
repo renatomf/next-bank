@@ -31,8 +31,7 @@ String payerDetail({required String branch, required String number}) {
 }
 
 /// The payee's document as the server masked it; the app never sees more.
-String payeeDetail(PixPayee payee) =>
-    'CPF ${payee.documentMasked} · next bank';
+String payeeDetail(PixPayee payee) => 'CPF ${payee.documentMasked} · next bank';
 
 /// The kind of transfer and key, e.g. "Pix · Chave CPF".
 String pixType(PixKeyType keyType) => switch (keyType) {

@@ -1,12 +1,22 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/idempotency_key.dart';
 import 'package:next_bank/features/pix/domain/pix_repository.dart';
+import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 
 /// Where Pix are sent. Bound to `HttpPixRepository` by the composition root
 /// (`main.dart`); tests override it with a fake.
 final Provider<PixRepository> pixRepositoryProvider = Provider(
   (ref) => throw UnimplementedError('Bound in main.dart'),
 );
+
+/// One Pix as the server has it, read while a screen shows it: the review
+/// confirms what the server recorded, not what the app remembers. Not
+/// retried automatically: offline, the screen offers "Tentar de novo".
+final FutureProvider<PixTransfer> Function(String) pixTransferProvider =
+    FutureProvider.autoDispose.family<PixTransfer, String>(
+      (ref, transferId) => ref.watch(pixRepositoryProvider).fetch(transferId),
+      retry: (_, _) => null,
+    );
 
 /// The pause between two reads of a Pix still processing; tests skip it.
 final Provider<Future<void> Function()> pixPollDelayProvider = Provider(
