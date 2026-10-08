@@ -222,6 +222,32 @@ describe('ledger schema', () => {
       );
     });
 
+    it('posts a Pix at most once, whatever the application does (T-DB-05)', async () => {
+      const pixId = randomUUID();
+      const insertPixEntry = () =>
+        app.query(
+          `INSERT INTO ledger.journal_entries (id, kind, reference_type, reference_id, created_at)
+           VALUES ($1, 'PIX_INTERNAL', 'PIX_TRANSFER', $2, now())`,
+          [randomUUID(), pixId],
+        );
+      const payer = await customerAccount(10_000);
+      const payee = await customerAccount();
+      await inTransaction(async () => {
+        await insertPixEntry();
+        const { rows } = await app.query<{ id: string }>(
+          'SELECT id FROM ledger.journal_entries WHERE reference_id = $1',
+          [pixId],
+        );
+        const entryId = rows[0]?.id ?? '';
+        await insertPosting(entryId, payer, 'D', 8_000);
+        await insertPosting(entryId, payee, 'C', 8_000);
+      });
+
+      await expect(insertPixEntry()).rejects.toThrow(
+        /journal_entries_reference_type_reference_id_kind_key/,
+      );
+    });
+
     it('accepts only positive amounts, D or C, and known entry kinds', async () => {
       const customer = await customerAccount();
 

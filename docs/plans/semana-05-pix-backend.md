@@ -46,7 +46,7 @@ Cada linha das fontes que a semana toca, com o teste que a prova.
 | `domain-model.md` 9 | Erros do catálogo, com `remainingAttempts` e `limit` quando úteis | Teste de rota de cada erro (status, `code` e campos extras) |
 | `database.md` 2 | Valor da chave Pix é pessoal sensível: cifrado (AES-256-GCM) + índice cego (HMAC) + versão mascarada | Banco: a coluna não contém o CPF em claro (API-06) |
 | `database.md` 5.4 | `CHECK`s de `pix_transfers` (valor, pagador ≠ recebedor, descrição, status e coerência de datas); `UNIQUE end_to_end_id`; PK `(user_id, key)` | T-DB-10 e um teste por `CHECK` |
-| `database.md` 6 | `nextbank_app`: `SELECT, INSERT, UPDATE` em `pix_keys` e `pix_transfers`; `DELETE` só em `idempotency_records` | T-DB-13 estendido ao schema `payments` |
+| `database.md` 6 | `nextbank_app`: `SELECT, INSERT` em `pix_keys`; `UPDATE` só nas colunas de estado de `pix_transfers`; `DELETE` só em `idempotency_records` | T-DB-13 estendido ao schema `payments` |
 | `database.md` 7 | `AuthorizePix`: idempotência → Pix `FOR UPDATE` → PIN `FOR UPDATE` → contas `FOR SHARE` → contas contábeis em ordem de ID → saldo e limite → lançamento → status → auditoria e resposta → `COMMIT` | T-DB-06, T-DB-08, T-DB-09 e T-DB-14 no nível do Pix; revisão da ordem no PR |
 | ADR 0004 / AUTH-04 | PIN no servidor em todo Pix; autorizar exige sessão ativa no banco | Token de sessão revogada → 401 no `AuthorizePix` e no `VerifyPin` |
 | ADR 0007 | `Idempotency-Key` (UUID) obrigatória em comandos financeiros; mesma chave + payload → mesma resposta; payload diferente → 422; em andamento → 409 | T-DB-06; rota sem o header → 422 |
@@ -133,7 +133,7 @@ apps/api/src/
 | `payments.pix_transfers` | Colunas do ERD; todos os `CHECK`s da seção 5.4; `UNIQUE (end_to_end_id)`; `currency CHECK = 'BRL'` |
 | `payments.idempotency_records` | PK `(user_id, key)`; `operation`; `request_hash bytea` (D4); `status CHECK`; `response_status`, `response_body jsonb`; `expires_at` |
 | `ledger.journal_entries` | Sem mudança: `PIX_INTERNAL` e o `UNIQUE (reference_type, reference_id, kind)` já existem |
-| `GRANT`s | `nextbank_app`: `SELECT, INSERT, UPDATE` em `pix_keys` e `pix_transfers`; `SELECT, INSERT, UPDATE, DELETE` em `idempotency_records` |
+| `GRANT`s | `nextbank_app`: `SELECT, INSERT` em `pix_keys` (nada altera uma chave antes de "Minhas chaves"); em `pix_transfers`, `SELECT, INSERT` e `UPDATE` só nas colunas de estado (o que foi pedido nunca muda); em `idempotency_records`, `SELECT, INSERT, DELETE` e `UPDATE` só da resposta |
 
 Os índices `pix_transfers (payer_account_id, created_at DESC)`, `pix_transfers (expires_at) WHERE status = 'AWAITING_AUTH'`, `pix_keys (account_id)` e `idempotency_records (expires_at)` não entram: nenhuma query desta semana os usa. Cada um entra com a sua consulta (extrato de Pix, job de expiração, "Minhas chaves" e job de limpeza).
 
@@ -188,8 +188,8 @@ Nenhuma. O fuso de São Paulo vem do `Intl` do Node; o ID E2E e o hash da idempo
 
 ## Tarefa 1 — Banco (dia 1)
 
-- [ ] Migration do schema `payments`, com os testes de banco escritos antes: T-DB-05 (dois `PIX_INTERNAL` para o mesmo Pix), T-DB-07, T-DB-10, um teste por `CHECK` e T-DB-13 estendido
-- [ ] `pii-protector` movido para `shared/infrastructure` com separação de domínio no HMAC (D7), testes migrados
+- [x] Migration do schema `payments`, com os testes de banco escritos antes: T-DB-05 (dois `PIX_INTERNAL` para o mesmo Pix), T-DB-07, T-DB-10, um teste por `CHECK` e T-DB-13 estendido
+- [x] `pii-protector` movido para `shared/infrastructure` com separação de domínio no HMAC (D7), testes migrados
 
 ## Tarefa 2 — Domínio, TDD estrito (dia 1–2)
 
