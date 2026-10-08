@@ -69,6 +69,8 @@ class _SendPixScreenState extends ConsumerState<SendPixScreen> {
                   Positioned.fill(
                     child: Opacity(
                       opacity: 0,
+                      // Still announced: a screen reader types the amount here.
+                      alwaysIncludeSemantics: true,
                       child: TextField(
                         focusNode: _amount,
                         autofocus: true,
