@@ -46,11 +46,23 @@ function decodeCursor(cursor: string): StatementPosition {
     typeof decoded.t !== 'string' ||
     typeof decoded.i !== 'string' ||
     !POSITION_TIME.test(decoded.t) ||
+    !isRealInstant(decoded.t) ||
     !UUID.test(decoded.i)
   ) {
     throw new InvalidCursor();
   }
   return { createdAt: decoded.t, postingId: decoded.i };
+}
+
+/**
+ * The format alone lets "2030-13-45" through, and Postgres would refuse it with
+ * a 500. A real instant reads back as the same text, up to the milliseconds.
+ */
+function isRealInstant(time: string): boolean {
+  const instant = new Date(time);
+  return (
+    !Number.isNaN(instant.getTime()) && instant.toISOString().slice(0, 23) === time.slice(0, 23)
+  );
 }
 
 // Only the cursor: no account (READ-01) and no page size (READ-04).
