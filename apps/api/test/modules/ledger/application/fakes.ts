@@ -3,6 +3,7 @@ import { Money } from '../../../../src/shared/domain/money.ts';
 import type {
   LedgerRepository,
   LedgerRepositoryFactory,
+  StatementRow,
 } from '../../../../src/modules/ledger/application/ports.ts';
 import type { JournalEntryState } from '../../../../src/modules/ledger/domain/journal-entry.ts';
 import type { LedgerAccountState } from '../../../../src/modules/ledger/domain/ledger-account.ts';
@@ -73,6 +74,37 @@ export class InMemoryLedger implements LedgerRepositoryFactory {
       updateBalance: (account) => {
         this.accounts.set(account.id, { ...account });
         return Promise.resolve();
+      },
+      // Newest first, by (created_at, id), as the SQL of database.md section 8.
+      statementPage: (ledgerAccountId, after, limit) => {
+        const rows: StatementRow[] = this.entries.flatMap((entry) =>
+          entry.postings
+            .filter((posting) => posting.ledgerAccountId === ledgerAccountId)
+            .map((posting) => ({
+              postingId: posting.id,
+              position: entry.createdAt.toISOString(),
+              occurredAt: entry.createdAt,
+              direction: posting.direction,
+              amount: posting.amount,
+              counterpartyName: posting.counterpartyName,
+              counterpartyDocumentMasked: posting.counterpartyDocumentMasked,
+              entryKind: entry.kind,
+              referenceId: entry.referenceId,
+            })),
+        );
+        const sorted = rows.sort((a, b) =>
+          a.position === b.position
+            ? b.postingId.localeCompare(a.postingId)
+            : b.position.localeCompare(a.position),
+        );
+        const start = after
+          ? sorted.findIndex(
+              (row) =>
+                row.position < after.createdAt ||
+                (row.position === after.createdAt && row.postingId < after.postingId),
+            )
+          : 0;
+        return Promise.resolve(start < 0 ? [] : sorted.slice(start, start + limit));
       },
     };
   }

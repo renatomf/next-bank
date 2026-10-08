@@ -4,6 +4,8 @@ import type {
   AccountsRepositories,
   AccountsRepositoriesFactory,
   LedgerPort,
+  StatementPage,
+  StatementPosition,
 } from '../../../../src/modules/accounts/application/ports.ts';
 import type { AccountState } from '../../../../src/modules/accounts/domain/account.ts';
 
@@ -55,5 +57,17 @@ export class FakeLedger implements LedgerPort {
 
   availableBalance(_transaction: Transaction, accountId: string): Promise<Money | null> {
     return Promise.resolve(this.balances.get(accountId) ?? null);
+  }
+
+  /** Which account and position each statement page was asked for. */
+  statementRequests: { accountId: string; after: StatementPosition | null }[] = [];
+
+  statement(
+    _transaction: Transaction,
+    accountId: string,
+    after: StatementPosition | null,
+  ): Promise<StatementPage> {
+    this.statementRequests.push({ accountId, after });
+    return Promise.resolve({ items: [], next: null });
   }
 }

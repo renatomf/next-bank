@@ -67,8 +67,30 @@ describe('OpenAPI document', () => {
       'Problem',
       'RefreshRequestInput',
       'RegisterRequestInput',
+      'Statement',
+      'StatementCounterparty',
+      'StatementItem',
       'VerifyPinRequestInput',
     ]);
+  });
+
+  // READ-01, READ-04: the account comes from the token and the page size is fixed.
+  it('describes GET /v1/me/statement as a protected read with only a cursor', () => {
+    const operation = document.paths['/v1/me/statement']?.get;
+
+    expect(operation?.operationId).toBe('getMyStatement');
+    expect(operation?.security).toEqual([{ bearerAuth: [] }]);
+    expect(operation?.parameters).toEqual([
+      expect.objectContaining({ in: 'query', name: 'cursor', required: false }),
+    ]);
+    expect(operation?.responses['200']?.content?.['application/json']?.schema).toEqual({
+      $ref: '#/components/schemas/Statement',
+    });
+    for (const status of ['401', '422']) {
+      expect(operation?.responses[status]?.content?.['application/problem+json']?.schema).toEqual({
+        $ref: '#/components/schemas/Problem',
+      });
+    }
   });
 
   it('declares bearer authentication and requires it only on protected operations', () => {
