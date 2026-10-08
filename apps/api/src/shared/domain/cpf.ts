@@ -1,10 +1,20 @@
-import { InvalidCpf } from './errors.ts';
+import { DomainError } from './domain-error.ts';
 
 // Either only digits or the usual 000.000.000-00 punctuation.
 const ACCEPTED_FORMAT = /^(?:\d{11}|\d{3}\.\d{3}\.\d{3}-\d{2})$/;
 const REPEATED_DIGITS = /^(\d)\1{10}$/;
 
-/** Brazilian individual taxpayer number. Personal sensitive data: printed only masked. */
+export class InvalidCpf extends DomainError {
+  readonly code = 'InvalidCpf';
+
+  constructor() {
+    super('CPF is invalid');
+  }
+}
+
+/**
+ * Brazilian individual taxpayer number, shared by Identity (the customer) and
+ * Payments (the CPF Pix key). Personal sensitive data: printed only masked. */
 export class Cpf {
   readonly digits: string;
 

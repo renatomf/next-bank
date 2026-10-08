@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Cpf } from '../../../../src/modules/identity/domain/cpf.ts';
-import { InvalidCpf } from '../../../../src/modules/identity/domain/errors.ts';
+import { Cpf, InvalidCpf } from '../../../src/shared/domain/cpf.ts';
 
 // Fictitious CPFs used in textbook examples; never real people's data.
 const VALID = '123.456.789-09';

@@ -2,7 +2,7 @@
 // SecLists Passwords/Common-Credentials/100k-most-used-passwords-NCSC.txt (MIT).
 // Usage: node scripts/build-common-passwords.ts <downloaded-file>
 import { readFileSync, writeFileSync } from 'node:fs';
-import { Cpf } from '../src/modules/identity/domain/cpf.ts';
+import { Cpf } from '../src/shared/domain/cpf.ts';
 import { COMMON_PASSWORDS_FILE } from '../src/modules/identity/infrastructure/common-password-file.ts';
 
 const MIN_LENGTH = 10;

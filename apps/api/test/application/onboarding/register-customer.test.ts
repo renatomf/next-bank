@@ -3,11 +3,8 @@ import { RegisterCustomer } from '../../../src/application/onboarding/register-c
 import type { Transaction } from '../../../src/shared/application/ports.ts';
 import { Money } from '../../../src/shared/domain/money.ts';
 import { RegisterUser } from '../../../src/modules/identity/application/register-user.ts';
-import {
-  AlreadyRegistered,
-  InvalidCpf,
-  WeakPassword,
-} from '../../../src/modules/identity/domain/errors.ts';
+import { AlreadyRegistered, WeakPassword } from '../../../src/modules/identity/domain/errors.ts';
+import { InvalidCpf } from '../../../src/shared/domain/cpf.ts';
 import {
   FakeAccessTokens,
   FakeCpfProtector,

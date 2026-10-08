@@ -3,7 +3,7 @@ import {
   type PiiKeys,
 } from '../../../shared/infrastructure/aes-gcm-pii-protector.ts';
 import type { CpfProtector, EncryptedCpf } from '../application/ports.ts';
-import { Cpf } from '../domain/cpf.ts';
+import { Cpf } from '../../../shared/domain/cpf.ts';
 
 /** The user's CPF, with the layout stored since week 3 (database.md, section 2). */
 export class AesGcmCpfProtector implements CpfProtector {

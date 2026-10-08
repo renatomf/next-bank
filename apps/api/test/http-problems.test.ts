@@ -5,13 +5,13 @@ import { z } from 'zod';
 import { buildApp } from '../src/app.ts';
 import {
   AlreadyRegistered,
-  InvalidCpf,
   InvalidPin,
   PinLocked,
   PinResetRequired,
   SessionExpired,
   WeakPassword,
 } from '../src/modules/identity/domain/errors.ts';
+import { InvalidCpf } from '../src/shared/domain/cpf.ts';
 import { DomainError } from '../src/shared/domain/domain-error.ts';
 import { createPool } from '../src/shared/db.ts';
 import { captureLogs, testDatabaseUrl, testSecurity } from './helpers.ts';
