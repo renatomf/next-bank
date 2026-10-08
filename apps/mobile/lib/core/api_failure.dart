@@ -49,7 +49,37 @@ enum ApiErrorCode {
   pinNotCreated('PinNotCreated'),
 
   /// The resource does not exist for this customer.
-  notFound('NotFound');
+  notFound('NotFound'),
+
+  /// No Pix key with this value.
+  pixKeyNotFound('PixKeyNotFound'),
+
+  /// The key belongs to the payer's own account.
+  samePayerAndPayee('SamePayerAndPayee'),
+
+  /// Zero, negative or fractional amount.
+  invalidAmount('InvalidAmount'),
+
+  /// The available balance does not cover the amount.
+  insufficientFunds('InsufficientFunds'),
+
+  /// The amount is over the limit that applies now; the answer says which.
+  limitExceeded('LimitExceeded'),
+
+  /// The payer's account cannot send money.
+  accountBlocked('AccountBlocked'),
+
+  /// The 10 minutes to authorize the Pix are over.
+  transferExpired('TransferExpired'),
+
+  /// The Pix was already authorized, cancelled or expired.
+  invalidTransferState('InvalidTransferState'),
+
+  /// The same key came with a different request: a bug in the app.
+  idempotencyKeyReused('IdempotencyKeyReused'),
+
+  /// The same request is still running on the server.
+  requestInProgress('RequestInProgress');
 
   new(this.wire);
 
@@ -65,13 +95,16 @@ sealed class ApiFailure implements Exception {
 /// The API refused the request with a catalog error.
 final class ApiRejected extends ApiFailure {
   /// Creates a refusal with its catalog code.
-  const new(this.code, {this.remainingAttempts});
+  const new(this.code, {this.remainingAttempts, this.limitCents});
 
   /// The catalog error the screen reacts to.
   final ApiErrorCode code;
 
   /// Attempts left after a wrong PIN, when the API says.
   final int? remainingAttempts;
+
+  /// The limit an amount went over, in integer cents, when the API says.
+  final int? limitCents;
 
   @override
   String toString() => 'ApiRejected(${code.wire})';
@@ -107,6 +140,7 @@ ApiFailure apiFailureOf(DioException error) {
           return ApiRejected(
             code,
             remainingAttempts: remaining is int ? remaining : null,
+            limitCents: body is Map ? _reaisCents(body['limit']) : null,
           );
         }
       }
@@ -118,3 +152,10 @@ ApiFailure apiFailureOf(DioException error) {
       return const ApiUnexpected();
   }
 }
+
+// Money from the API is whole, non-negative cents in reais (F-18); anything
+// else is dropped rather than shown.
+int? _reaisCents(Object? money) => switch (money) {
+  {'amount': final int cents, 'currency': 'BRL'} when cents >= 0 => cents,
+  _ => null,
+};

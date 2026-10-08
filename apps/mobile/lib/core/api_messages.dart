@@ -1,3 +1,4 @@
+import 'package:design_system/design_system.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/session/session_end_reason.dart';
 
@@ -5,6 +6,9 @@ import 'package:next_bank/core/session/session_end_reason.dart';
 String messageFor(ApiFailure failure) => switch (failure) {
   ApiRejected(code: ApiErrorCode.pinIncorrect, :final remainingAttempts?) =>
     _attemptsLeft(remainingAttempts),
+  // The server knows which limit applies now (PIX-10): the text names it.
+  ApiRejected(code: ApiErrorCode.limitExceeded, :final limitCents?) =>
+    'Valor acima do seu limite de ${formatReais(limitCents).full} por Pix.',
   ApiRejected(:final code) => _catalogText(code),
   ApiUnreachable() => 'Sem conexão. Tente de novo.',
   ApiUnexpected() => 'Algo deu errado. Tente de novo.',
@@ -43,6 +47,20 @@ String _catalogText(ApiErrorCode code) => switch (code) {
         'Perfil > Segurança.',
   ApiErrorCode.pinNotCreated => 'Crie seu PIN para continuar.',
   ApiErrorCode.notFound => 'Não encontrado.',
+  ApiErrorCode.pixKeyNotFound => 'Não encontramos essa chave Pix.',
+  ApiErrorCode.samePayerAndPayee =>
+    'Você não pode enviar Pix para a própria conta.',
+  ApiErrorCode.invalidAmount => 'Informe um valor válido.',
+  ApiErrorCode.insufficientFunds => 'Saldo insuficiente.',
+  ApiErrorCode.limitExceeded => 'Valor acima do seu limite.',
+  ApiErrorCode.accountBlocked =>
+    'Sua conta está bloqueada. Fale com o suporte.',
+  ApiErrorCode.transferExpired =>
+    'O tempo para confirmar acabou. Comece de novo.',
+  ApiErrorCode.invalidTransferState => 'Este Pix já foi processado.',
+  ApiErrorCode.idempotencyKeyReused => 'Algo deu errado. Tente de novo.',
+  ApiErrorCode.requestInProgress =>
+    'Ainda estamos processando. Tente de novo em instantes.',
 };
 
 String _attemptsLeft(int remaining) => remaining == 1
