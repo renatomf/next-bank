@@ -16,7 +16,12 @@ import type {
 } from '../application/ports.ts';
 import { RequestInProgress } from '../domain/errors.ts';
 import type { PixKeyState, PixKeyType } from '../domain/pix-key.ts';
-import type { PixTransferState } from '../domain/pix-transfer.ts';
+import type {
+  PixFailureReason,
+  PixTransferState,
+  PixTransferStatus,
+} from '../domain/pix-transfer.ts';
+import { Money } from '../../../shared/domain/money.ts';
 
 export class PgPixKeysRepository implements PixKeysRepository {
   readonly #client: pg.ClientBase;
@@ -93,6 +98,98 @@ export class PgPixTransfersRepository implements PixTransfersRepository {
       ],
     );
   }
+
+  /** Served by the primary key; the payer filter makes another customer's Pix invisible. */
+  async findForPayer(id: string, payerAccountId: string): Promise<PixTransferState | null> {
+    const { rows } = await this.#client.query<TransferRow>(
+      `${SELECT_TRANSFER} WHERE id = $1 AND payer_account_id = $2`,
+      [id, payerAccountId],
+    );
+    return stateOf(rows[0]);
+  }
+
+  async lockForPayer(id: string, payerAccountId: string): Promise<PixTransferState | null> {
+    const { rows } = await this.#client.query<TransferRow>(
+      `${SELECT_TRANSFER} WHERE id = $1 AND payer_account_id = $2 FOR UPDATE`,
+      [id, payerAccountId],
+    );
+    return stateOf(rows[0]);
+  }
+
+  /** Only the state moves; what was asked never changes (database.md 6, column grants). */
+  async update(transfer: PixTransferState): Promise<void> {
+    await this.#client.query(
+      `UPDATE payments.pix_transfers
+       SET status = $2, failure_reason = $3, end_to_end_id = $4, authorized_at = $5,
+           completed_at = $6, version = $7, updated_at = $8
+       WHERE id = $1`,
+      [
+        transfer.id,
+        transfer.status,
+        transfer.failureReason,
+        transfer.endToEndId,
+        transfer.authorizedAt,
+        transfer.completedAt,
+        transfer.version,
+        transfer.updatedAt,
+      ],
+    );
+  }
+}
+
+const SELECT_TRANSFER = `SELECT id, end_to_end_id, payer_account_id, payee_account_id, payee_key_type,
+    payee_key_masked, payee_name, payee_document_masked, amount, currency, description, status,
+    failure_reason, version, created_at, expires_at, authorized_at, completed_at, updated_at
+  FROM payments.pix_transfers`;
+
+interface TransferRow {
+  id: string;
+  end_to_end_id: string | null;
+  payer_account_id: string;
+  payee_account_id: string;
+  payee_key_type: PixKeyType;
+  payee_key_masked: string;
+  payee_name: string;
+  payee_document_masked: string;
+  /** bigint arrives as a string: never through a JavaScript number (D1). */
+  amount: string;
+  currency: 'BRL';
+  description: string | null;
+  status: PixTransferStatus;
+  failure_reason: PixFailureReason | null;
+  version: string;
+  created_at: Date;
+  expires_at: Date;
+  authorized_at: Date | null;
+  completed_at: Date | null;
+  updated_at: Date;
+}
+
+function stateOf(row: TransferRow | undefined): PixTransferState | null {
+  return row
+    ? {
+        id: row.id,
+        endToEndId: row.end_to_end_id,
+        payerAccountId: row.payer_account_id,
+        payee: {
+          accountId: row.payee_account_id,
+          name: row.payee_name,
+          documentMasked: row.payee_document_masked,
+          keyType: row.payee_key_type,
+          keyMasked: row.payee_key_masked,
+        },
+        amount: Money.of(BigInt(row.amount), row.currency),
+        description: row.description,
+        status: row.status,
+        failureReason: row.failure_reason,
+        version: Number(row.version),
+        createdAt: row.created_at,
+        expiresAt: row.expires_at,
+        authorizedAt: row.authorized_at,
+        completedAt: row.completed_at,
+        updatedAt: row.updated_at,
+      }
+    : null;
 }
 
 /** Waiting for a lock longer than the role's lock_timeout (API-12). */

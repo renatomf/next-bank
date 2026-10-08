@@ -161,7 +161,11 @@ export function buildApp({ pool, logStream, security }: AppDependencies) {
   void app.register(pinRoutes, { createPin: identity.createPin, verifyPin: identity.verifyPin });
   void app.register(meRoutes, { getProfile: identity.getProfile });
   void app.register(keyLookupRoutes, { lookupPixKey: payments.lookupPixKey });
-  void app.register(transferRoutes, { createPixTransfer: payments.createPixTransfer });
+  void app.register(transferRoutes, {
+    createPixTransfer: payments.createPixTransfer,
+    getPixTransfer: payments.getPixTransfer,
+    cancelPixTransfer: payments.cancelPixTransfer,
+  });
   void app.register(myAccountRoutes, { getMyAccount: accounts.getMyAccount });
 
   return app;

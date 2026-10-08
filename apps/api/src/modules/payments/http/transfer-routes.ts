@@ -3,7 +3,9 @@ import { z } from 'zod';
 import { MoneySchema } from '../../../shared/http/money.ts';
 import { PROBLEM_CONTENT_TYPE, ProblemSchema } from '../../../shared/http/problem.ts';
 import { callerOf } from '../../identity/index.ts';
+import type { CancelPixTransfer } from '../application/cancel-pix-transfer.ts';
 import type { CreatePixTransfer } from '../application/create-pix-transfer.ts';
+import type { GetPixTransfer } from '../application/get-pix-transfer.ts';
 
 const KEY_TYPES = ['CPF', 'EMAIL', 'PHONE', 'RANDOM'] as const;
 
@@ -52,12 +54,60 @@ export const PixTransferSchema = z
   })
   .meta({ id: 'PixTransfer' });
 
+// A Pix by its UUIDv7 (D3): unguessable, and found only with its payer (PIX-01).
+const TransferParamsSchema = z.strictObject({ transferId: z.uuid() });
+
 const problem = { content: { [PROBLEM_CONTENT_TYPE]: { schema: ProblemSchema } } };
 
-export const transferRoutes: FastifyPluginAsyncZod<{ createPixTransfer: CreatePixTransfer }> = (
-  app,
-  { createPixTransfer },
-) => {
+export const transferRoutes: FastifyPluginAsyncZod<{
+  createPixTransfer: CreatePixTransfer;
+  getPixTransfer: GetPixTransfer;
+  cancelPixTransfer: CancelPixTransfer;
+}> = (app, { createPixTransfer, getPixTransfer, cancelPixTransfer }) => {
+  app.get(
+    '/v1/pix/transfers/:transferId',
+    {
+      schema: {
+        operationId: 'getPixTransfer',
+        security: [{ bearerAuth: [] }],
+        params: TransferParamsSchema,
+        response: { 200: PixTransferSchema, 401: problem, 404: problem, 422: problem },
+      },
+    },
+    async (request) => {
+      const { userId } = callerOf(request);
+      return getPixTransfer.execute({ userId, transferId: request.params.transferId });
+    },
+  );
+
+  app.post(
+    '/v1/pix/transfers/:transferId/cancel',
+    {
+      config: { activeSession: true },
+      schema: {
+        operationId: 'cancelPixTransfer',
+        security: [{ bearerAuth: [] }],
+        params: TransferParamsSchema,
+        response: {
+          200: PixTransferSchema,
+          401: problem,
+          404: problem,
+          409: problem,
+          422: problem,
+        },
+      },
+    },
+    async (request) => {
+      const { userId, sessionId } = callerOf(request);
+      return cancelPixTransfer.execute({
+        userId,
+        sessionId,
+        transferId: request.params.transferId,
+        requestId: request.id,
+      });
+    },
+  );
+
   app.post(
     '/v1/pix/transfers',
     {

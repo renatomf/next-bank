@@ -180,9 +180,31 @@ describe('OpenAPI document', () => {
     });
   });
 
-  // READ-01, READ-05: resources come from the token; no route names one by id or number.
-  it('has no route that takes a resource id in the path', () => {
-    expect(Object.keys(document.paths).filter((path) => path.includes('{'))).toEqual([]);
+  // READ-01, READ-05: accounts and customers always come from the token. Only these
+  // routes take an id in the path (D3): a Pix, by an unguessable UUIDv7, each with
+  // its own IDOR test (PIX-01). Any new one must be added here on purpose.
+  it('takes an id in the path only on the approved Pix routes', () => {
+    expect(Object.keys(document.paths).filter((path) => path.includes('{'))).toEqual([
+      '/v1/pix/transfers/{transferId}',
+      '/v1/pix/transfers/{transferId}/cancel',
+    ]);
+  });
+
+  it('describes the receipt and the cancel of a Pix as protected operations', () => {
+    const get = document.paths['/v1/pix/transfers/{transferId}']?.get;
+    const cancel = document.paths['/v1/pix/transfers/{transferId}/cancel']?.post;
+
+    expect(get?.operationId).toBe('getPixTransfer');
+    expect(cancel?.operationId).toBe('cancelPixTransfer');
+    for (const operation of [get, cancel]) {
+      expect(operation?.security).toEqual([{ bearerAuth: [] }]);
+      expect(operation?.responses['200']?.content?.['application/json']?.schema).toEqual({
+        $ref: '#/components/schemas/PixTransfer',
+      });
+      expect(operation?.responses['404']?.content?.['application/problem+json']?.schema).toEqual({
+        $ref: '#/components/schemas/Problem',
+      });
+    }
   });
 
   it('is deterministic', async () => {

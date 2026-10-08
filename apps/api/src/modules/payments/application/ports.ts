@@ -30,8 +30,13 @@ export interface PixKeysRepository {
   findByIndex(type: PixKeyType, blindIndex: Uint8Array): Promise<StoredPixKey | null>;
 }
 
+/** A Pix is always looked up with its payer's account: anyone else finds nothing (PIX-01). */
 export interface PixTransfersRepository {
   insert(transfer: PixTransferState): Promise<void>;
+  findForPayer(id: string, payerAccountId: string): Promise<PixTransferState | null>;
+  /** Locks the Pix until the transaction ends: it changes state once (PIX-08). */
+  lockForPayer(id: string, payerAccountId: string): Promise<PixTransferState | null>;
+  update(transfer: PixTransferState): Promise<void>;
 }
 
 /** The answer a request produced, kept so a repeated request gets the same one. */

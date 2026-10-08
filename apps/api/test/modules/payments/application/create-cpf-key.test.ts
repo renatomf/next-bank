@@ -42,7 +42,12 @@ class FakeRepositories implements PaymentsRepositoriesFactory {
         },
         findByIndex: () => Promise.resolve(null),
       },
-      pixTransfers: { insert: () => Promise.resolve() },
+      pixTransfers: {
+        insert: () => Promise.resolve(),
+        findForPayer: () => Promise.resolve(null),
+        lockForPayer: () => Promise.resolve(null),
+        update: () => Promise.resolve(),
+      },
       idempotency: {
         claim: () => Promise.resolve({ claimed: true }),
         complete: () => Promise.resolve(),
