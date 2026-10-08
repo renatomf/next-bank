@@ -29,7 +29,12 @@ StatementItem movement(
 class FakeStatementRepository implements StatementRepository {
   /// Creates the fake; by default a single empty page.
   new([Map<String?, Future<StatementPage> Function()>? pages])
-    : pages = pages ?? {null: () async => (items: [], nextCursor: null)};
+    : pages =
+          pages ??
+          {
+            null: () async =>
+                (items: const <StatementItem>[], nextCursor: null),
+          };
 
   /// What each cursor answers.
   final Map<String?, Future<StatementPage> Function()> pages;
