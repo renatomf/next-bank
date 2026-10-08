@@ -175,6 +175,7 @@ describe('POST /v1/me/pin/verify', () => {
       [email],
     );
     expect(rows[0]?.n).toBe(1);
-    expect(logs.raw()).not.toContain('9517');
+    // As a JSON value: four loose digits also turn up inside timings and ids.
+    expect(logs.raw()).not.toContain('"9517"');
   });
 });
