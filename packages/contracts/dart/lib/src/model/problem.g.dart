@@ -17,6 +17,8 @@ abstract class _$ProblemCWProxy {
 
   Problem remainingAttempts(int? remainingAttempts);
 
+  Problem limit(Money? limit);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Problem(...).copyWith.fieldName(value)`.
@@ -31,6 +33,7 @@ abstract class _$ProblemCWProxy {
     int status,
     String? code,
     int? remainingAttempts,
+    Money? limit,
   });
 }
 
@@ -57,6 +60,9 @@ class _$ProblemCWProxyImpl implements _$ProblemCWProxy {
   Problem remainingAttempts(int? remainingAttempts) =>
       call(remainingAttempts: remainingAttempts);
 
+  @override
+  Problem limit(Money? limit) => call(limit: limit);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Problem(...).copyWith.fieldName(value)`.
@@ -72,6 +78,7 @@ class _$ProblemCWProxyImpl implements _$ProblemCWProxy {
     Object? status = const $CopyWithPlaceholder(),
     Object? code = const $CopyWithPlaceholder(),
     Object? remainingAttempts = const $CopyWithPlaceholder(),
+    Object? limit = const $CopyWithPlaceholder(),
   }) {
     return Problem(
       type: type == const $CopyWithPlaceholder() || type == null
@@ -94,6 +101,10 @@ class _$ProblemCWProxyImpl implements _$ProblemCWProxy {
           ? _value.remainingAttempts
           // ignore: cast_nullable_to_non_nullable
           : remainingAttempts as int?,
+      limit: limit == const $CopyWithPlaceholder()
+          ? _value.limit
+          // ignore: cast_nullable_to_non_nullable
+          : limit as Money?,
     );
   }
 }
@@ -124,6 +135,10 @@ Problem _$ProblemFromJson(Map<String, dynamic> json) =>
           'remainingAttempts',
           (v) => (v as num?)?.toInt(),
         ),
+        limit: $checkedConvert(
+          'limit',
+          (v) => v == null ? null : Money.fromJson(v as Map<String, dynamic>),
+        ),
       );
       return val;
     });
@@ -134,6 +149,7 @@ Map<String, dynamic> _$ProblemToJson(Problem instance) => <String, dynamic>{
   'status': instance.status,
   'code': ?instance.code,
   'remainingAttempts': ?instance.remainingAttempts,
+  'limit': ?instance.limit?.toJson(),
 };
 
 const _$ProblemTypeEnumEnumMap = {
