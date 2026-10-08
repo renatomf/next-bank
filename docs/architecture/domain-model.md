@@ -300,7 +300,7 @@ flowchart TD
     L -->|criar conta| C[3. Cadastro]
     C --> P[4. Criar PIN]
     P --> H[6. Home]
-    L --> U
+    L -->|senha conferida| H
     U --> H
 
     H --> PX[7. Pix: enviar]
@@ -323,6 +323,7 @@ flowchart TD
 **Regras de navegação:**
 - Sessão expirada ou reuso de refresh detectado → volta ao Login a partir de qualquer tela.
 - App em segundo plano por mais de 5 minutos → volta ao Desbloqueio.
+- O Desbloqueio aparece na abertura do app com sessão guardada e após o tempo em segundo plano; depois do login com senha, o app vai direto para a Home, porque a senha acabou de ser conferida (plano da semana 6, D5).
 - O botão "voltar" do Comprovante leva à Home, nunca de volta à tela de PIN.
 
 ## 11. Estados por tela

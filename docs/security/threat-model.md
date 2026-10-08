@@ -121,6 +121,7 @@ Legenda STRIDE: **S** falsificação de identidade · **T** adulteração · **R
 | MOB-04 | App descompilado em busca de segredos | I | A4 | Nenhum segredo no app; release ofuscado; servidor é a única autoridade | Busca por chaves no binário de release | 8 |
 | MOB-05 | Pessoa ao lado vê o saldo | I | A3 | Opção de ocultar saldo; desbloqueio após 5 min em segundo plano | Teste de widget do saldo oculto | 4, 7 |
 | MOB-06 | Link externo ou intent abre uma tela interna direto, pulando o fluxo (o Flutter liga deep links por padrão) | T, E | A1, A4 | Deep links desligados no Android (`flutter_deeplinking_enabled`) e no iOS (`FlutterDeepLinkingEnabled`); o app sempre abre pela Splash e um redirect central decide a tela pela sessão | `deep_links_test.dart` confere o manifesto e o `Info.plist`; `redirect_test.dart` cobre cada estado de sessão × rota | 3 |
+| MOB-07 | App repete a autorização de um Pix com uma `Idempotency-Key` nova depois de perder a resposta, e o servidor trata como outra tentativa | T | A2, rede | A chave nasce com cada tentativa (criação ou PIN digitado) e é reaproveitada em toda repetição da mesma tentativa; só um PIN novo gera chave nova (plano da semana 6, D11) | Notifier: falha de rede depois de o servidor processar → nova tentativa com a mesma chave; PIN novo → chave nova | 6 |
 
 ### 5.5 API, dados e infraestrutura
 
