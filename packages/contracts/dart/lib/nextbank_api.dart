@@ -18,6 +18,8 @@ export 'package:nextbank_api/src/model/login_request_input.dart';
 export 'package:nextbank_api/src/model/me.dart';
 export 'package:nextbank_api/src/model/money.dart';
 export 'package:nextbank_api/src/model/my_account.dart';
+export 'package:nextbank_api/src/model/pix_key_lookup.dart';
+export 'package:nextbank_api/src/model/pix_key_lookup_request_input.dart';
 export 'package:nextbank_api/src/model/problem.dart';
 export 'package:nextbank_api/src/model/refresh_request_input.dart';
 export 'package:nextbank_api/src/model/register_request_input.dart';
