@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:next_bank/features/auth/presentation/create_pin_controller.dart';
+import 'package:next_bank/features/auth/presentation/create_pin/create_pin_controller.dart';
 
 /// Transaction PIN creation (screen 4), in two steps: type, then confirm.
 /// Any refusal starts over from the first step.
