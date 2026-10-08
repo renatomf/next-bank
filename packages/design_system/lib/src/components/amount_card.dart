@@ -92,6 +92,8 @@ class AmountCard extends StatelessWidget {
                         )
                       else
                         Semantics(
+                          // Its own node, like the balance on the Home.
+                          container: true,
                           label: balanceHidden
                               ? 'Saldo oculto'
                               : formatReais(balance).full,
