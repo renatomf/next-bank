@@ -91,9 +91,17 @@ class TransactionItem extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: NbSpace.md),
-              Text(
-                '$sign $amount',
-                style: NbType.bodyStrong.copyWith(color: colors.text),
+              // Shares the width with the title and shrinks to fit, so a large
+              // amount never overflows a small phone (brief, section 8).
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    '$sign $amount',
+                    style: NbType.bodyStrong.copyWith(color: colors.text),
+                  ),
+                ),
               ),
             ],
           ),
