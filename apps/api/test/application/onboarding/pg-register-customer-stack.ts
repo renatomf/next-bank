@@ -6,7 +6,9 @@ import { RegisterUser } from '../../../src/modules/identity/application/register
 import { AesGcmCpfProtector } from '../../../src/modules/identity/infrastructure/aes-gcm-cpf-protector.ts';
 import { PgIdentityRepositories } from '../../../src/modules/identity/infrastructure/pg-identity-repositories.ts';
 import { createLedgerModule } from '../../../src/modules/ledger/index.ts';
+import { createPaymentsModule } from '../../../src/modules/payments/index.ts';
 import type { Clock } from '../../../src/shared/application/ports.ts';
+import { AesGcmPiiProtector } from '../../../src/shared/infrastructure/aes-gcm-pii-protector.ts';
 import { PgUnitOfWork } from '../../../src/shared/infrastructure/pg-unit-of-work.ts';
 import { UuidV7Generator } from '../../../src/shared/infrastructure/system-ports.ts';
 import {
@@ -21,6 +23,15 @@ class FakeRefreshTokensWithUniqueHash extends FakeRefreshTokens {
     return { token: 'refresh-token-value', hash: randomBytes(32) };
   }
 }
+
+/** Fixed keys, so tests can find a stored value by its blind index. */
+const PII_KEYS = { keyVersion: 1, encryptionKey: randomBytes(32), hmacKey: Buffer.alloc(32, 7) };
+
+/** The purpose Payments binds Pix key values to (week 5 plan, D7). */
+export const PIX_KEY_PROTECTOR = new AesGcmPiiProtector(PII_KEYS, {
+  associatedData: 'payments.pix_keys.value',
+  indexPrefix: 'pix-key:CPF',
+});
 
 /**
  * Registration with the real repositories of every context on Postgres, and
@@ -41,11 +52,7 @@ export function pgRegisterCustomer(pool: pg.Pool, clock: Clock): RegisterCustome
     clock,
     ids,
     hasher: new FakeHasher(),
-    cpfProtector: new AesGcmCpfProtector({
-      keyVersion: 1,
-      encryptionKey: randomBytes(32),
-      hmacKey: Buffer.alloc(32, 7),
-    }),
+    cpfProtector: new AesGcmCpfProtector(PII_KEYS),
     commonPasswords: { contains: () => false },
     refreshTokens: new FakeRefreshTokensWithUniqueHash(),
     accessTokens: new FakeAccessTokens(),
@@ -55,5 +62,6 @@ export function pgRegisterCustomer(pool: pg.Pool, clock: Clock): RegisterCustome
     identity,
     accounts: accounts.openAccount,
     ledger: ledger.customerAccounts,
+    payments: createPaymentsModule({ clock, ids, piiKeys: PII_KEYS }).createCpfKey,
   });
 }

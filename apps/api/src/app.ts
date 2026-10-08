@@ -25,6 +25,7 @@ import {
   sessionRoutes,
 } from './modules/identity/index.ts';
 import { createLedgerModule } from './modules/ledger/index.ts';
+import { createPaymentsModule } from './modules/payments/index.ts';
 import { healthRoutes } from './shared/http/health.ts';
 import { registerProblemHandlers } from './shared/http/problem.ts';
 import type { PiiKeys } from './shared/infrastructure/aes-gcm-pii-protector.ts';
@@ -134,11 +135,13 @@ export function buildApp({ pool, logStream, security }: AppDependencies) {
   registerAuthentication(app, identity.accessTokenVerifier, identity.activeSessions, clock);
 
   void app.register(healthRoutes, { pool });
+  const payments = createPaymentsModule({ clock, ids, piiKeys: security.piiKeys });
   const registerCustomer = new RegisterCustomer({
     unitOfWork,
     identity: identity.registerUser,
     accounts: accounts.openAccount,
     ledger: ledger.customerAccounts,
+    payments: payments.createCpfKey,
   });
   void app.register(onboardingRoutes, { registerCustomer });
   void app.register(loginRoutes, { login: identity.login });

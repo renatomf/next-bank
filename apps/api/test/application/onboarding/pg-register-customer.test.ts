@@ -4,11 +4,11 @@ import { createPool } from '../../../src/shared/db.ts';
 import { testDatabaseUrl } from '../../helpers.ts';
 import { FixedClock } from '../../modules/identity/application/fakes.ts';
 import { fictitiousCpf, uniqueEmail } from '../../modules/identity/fixtures.ts';
-import { pgRegisterCustomer } from './pg-register-customer-stack.ts';
+import { PIX_KEY_PROTECTOR, pgRegisterCustomer } from './pg-register-customer-stack.ts';
 
 // The whole registration on Postgres (domain-model.md, section 8): user,
-// current account, ledger account, R$ 10.000,00 of funding and the audit
-// trail, all committed together.
+// current account, ledger account, R$ 10.000,00 of funding, the CPF Pix key
+// and the audit trail, all committed together.
 const pool = createPool(testDatabaseUrl());
 const register = pgRegisterCustomer(pool, new FixedClock(new Date('2026-10-07T12:00:00.000Z')));
 
@@ -70,6 +70,51 @@ describe('registration on Postgres across contexts', () => {
       expect.objectContaining({ action: 'SESSION_CREATED' }),
       { action: 'USER_REGISTERED', subject_id: userId },
     ]);
+  });
+
+  it("registers the holder's CPF as the Pix key, encrypted and found by its blind index", async () => {
+    const data = input();
+    const { userId } = await register.execute(data);
+    const account = await accountOf(userId);
+    const digits = data.cpf.replace(/\D/g, '');
+
+    const { rows } = await pool.query<{
+      account_id: string;
+      type: string;
+      value_ciphertext: Buffer;
+      value_masked: string;
+    }>(
+      `SELECT account_id, type, value_ciphertext, value_masked FROM payments.pix_keys
+        WHERE type = 'CPF' AND value_hmac = $1`,
+      [PIX_KEY_PROTECTOR.blindIndex(digits)],
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ account_id: account?.id, type: 'CPF' });
+    expect(rows[0]?.value_masked).toBe(`***.${digits.slice(3, 6)}.${digits.slice(6, 9)}-**`);
+    expect(rows[0]?.value_ciphertext.includes(Buffer.from(digits))).toBe(false);
+  });
+
+  // domain-model.md 8: if the key cannot be created, nothing of the customer stays.
+  it('writes nothing in any schema when the Pix key cannot be created', async () => {
+    const data = input();
+    const digits = data.cpf.replace(/\D/g, '');
+    // A key already holding this CPF makes the insert fail inside the registration.
+    await pool.query(
+      `INSERT INTO payments.pix_keys
+         (id, account_id, type, value_ciphertext, value_hmac, value_masked, key_version, created_at)
+       VALUES (gen_random_uuid(), gen_random_uuid(), 'CPF', '\\x00', $1, 'x', 1, now())`,
+      [PIX_KEY_PROTECTOR.blindIndex(digits)],
+    );
+
+    await expect(register.execute(data)).rejects.toThrow(/pix_keys_type_value_hmac_key/);
+
+    const { rows } = await pool.query<{ users: number; accounts: number }>(
+      `SELECT (SELECT count(*) FROM identity.users WHERE email = $1)::int AS users,
+              (SELECT count(*) FROM accounts.accounts a
+                 JOIN identity.users u ON u.id = a.holder_user_id WHERE u.email = $1)::int AS accounts`,
+      [data.email],
+    );
+    expect(rows[0]).toEqual({ users: 0, accounts: 0 });
   });
 
   // The sequence hands out numbers without a lock: no two customers share one.
