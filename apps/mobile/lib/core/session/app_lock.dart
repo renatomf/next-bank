@@ -2,8 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 
 /// Time since an arbitrary start that only moves forward: changing the
-/// device's date or time zone cannot move it, so it cannot cut the time in
-/// the background short.
+/// device's date cannot move it. It stops while the device sleeps, which is
+/// why the lock also reads a [WallClock] (F-21).
 abstract interface class MonotonicClock {
   /// Time since the clock started.
   Duration elapsed();
@@ -18,9 +18,27 @@ class StopwatchClock implements MonotonicClock {
   Duration elapsed() => _stopwatch.elapsed;
 }
 
-/// The clock the lock measures with; tests override it with a fake.
+/// The device's date and time: it keeps running while the device sleeps, but
+/// whoever holds the phone can change it.
+abstract interface class WallClock {
+  /// The date and time the device shows.
+  DateTime now();
+}
+
+/// [WallClock] over [DateTime.now].
+class SystemWallClock implements WallClock {
+  @override
+  DateTime now() => DateTime.now();
+}
+
+/// The clocks the lock measures with; tests override them with fakes.
 final Provider<MonotonicClock> monotonicClockProvider = Provider(
   (ref) => StopwatchClock(),
+);
+
+/// See [monotonicClockProvider].
+final Provider<WallClock> wallClockProvider = Provider(
+  (ref) => SystemWallClock(),
 );
 
 /// Whether the app asks for the PIN before showing anything of the account.
@@ -37,6 +55,7 @@ class AppLock extends Notifier<bool> {
   static const Duration backgroundLimit = Duration(minutes: 5);
 
   Duration? _pausedAt;
+  DateTime? _pausedOn;
 
   @override
   bool build() {
@@ -59,14 +78,27 @@ class AppLock extends Notifier<bool> {
   void unlock() => state = false;
 
   /// The app went to the background.
-  void paused() => _pausedAt = ref.read(monotonicClockProvider).elapsed();
+  void paused() {
+    _pausedAt = ref.read(monotonicClockProvider).elapsed();
+    _pausedOn = ref.read(wallClockProvider).now();
+  }
 
-  /// The app came back: locked again after [backgroundLimit].
+  /// The app came back: locked again after [backgroundLimit] by either clock.
+  /// The monotonic one cannot be moved but stops while the device sleeps; the
+  /// date keeps running asleep but can be changed, so a date that went back
+  /// locks too (F-21).
   void resumed() {
     final pausedAt = _pausedAt;
+    final pausedOn = _pausedOn;
     _pausedAt = null;
-    if (pausedAt == null) return;
-    final away = ref.read(monotonicClockProvider).elapsed() - pausedAt;
-    if (away >= backgroundLimit) state = true;
+    _pausedOn = null;
+    if (pausedAt == null || pausedOn == null) return;
+    final awake = ref.read(monotonicClockProvider).elapsed() - pausedAt;
+    final onTheDate = ref.read(wallClockProvider).now().difference(pausedOn);
+    if (awake >= backgroundLimit ||
+        onTheDate >= backgroundLimit ||
+        onTheDate.isNegative) {
+      state = true;
+    }
   }
 }
