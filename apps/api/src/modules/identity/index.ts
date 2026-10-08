@@ -9,6 +9,7 @@ import { Logout } from './application/logout.ts';
 import type { AccessTokenVerifier } from './application/ports.ts';
 import { RefreshSession } from './application/refresh-session.ts';
 import { RegisterUser } from './application/register-user.ts';
+import { VerifyPin } from './application/verify-pin.ts';
 import type { PiiKeys } from '../../shared/infrastructure/aes-gcm-pii-protector.ts';
 import { AesGcmCpfProtector } from './infrastructure/aes-gcm-cpf-protector.ts';
 import { Argon2idHasher } from './infrastructure/argon2id-hasher.ts';
@@ -42,6 +43,7 @@ export interface IdentityModule {
   accessTokenVerifier: AccessTokenVerifier;
   activeSessions: ActiveSessions;
   createPin: CreatePin;
+  verifyPin: VerifyPin;
   getProfile: GetProfile;
 }
 
@@ -61,6 +63,7 @@ export function createIdentityModule(settings: IdentitySettings): IdentityModule
   const hasher = new Argon2idHasher();
   const refreshTokens = new RandomRefreshTokens();
   const accessTokens = new JoseAccessTokens(settings.accessTokenKeys);
+  const pinHasher = new Argon2idHasher({ pepper: settings.pinPepper });
   return {
     registerUser: new RegisterUser({
       repositories,
@@ -103,7 +106,14 @@ export function createIdentityModule(settings: IdentitySettings): IdentityModule
       repositories,
       clock: settings.clock,
       ids: settings.ids,
-      pinHasher: new Argon2idHasher({ pepper: settings.pinPepper }),
+      pinHasher,
+    }),
+    verifyPin: new VerifyPin({
+      unitOfWork: settings.unitOfWork,
+      repositories,
+      clock: settings.clock,
+      ids: settings.ids,
+      pinHasher,
     }),
     getProfile: new GetProfile({ unitOfWork: settings.unitOfWork, repositories }),
   };

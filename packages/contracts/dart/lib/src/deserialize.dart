@@ -8,6 +8,7 @@ import 'package:nextbank_api/src/model/my_account.dart';
 import 'package:nextbank_api/src/model/problem.dart';
 import 'package:nextbank_api/src/model/refresh_request_input.dart';
 import 'package:nextbank_api/src/model/register_request_input.dart';
+import 'package:nextbank_api/src/model/verify_pin_request_input.dart';
 
 final _regList = RegExp(r'^List<(.*)>$');
 final _regSet = RegExp(r'^Set<(.*)>$');
@@ -47,6 +48,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return RefreshRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RegisterRequestInput':
           return RegisterRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'VerifyPinRequestInput':
+          return VerifyPinRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
         default:
           RegExpMatch? match;
 

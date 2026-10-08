@@ -24,6 +24,29 @@ export class InvalidPin extends DomainError {
   }
 }
 
+export class PinIncorrect extends DomainError {
+  readonly code = 'PinIncorrect';
+  readonly remainingAttempts: number;
+
+  constructor(remainingAttempts: number) {
+    super('PIN does not match');
+    this.remainingAttempts = remainingAttempts;
+  }
+
+  override get details(): Readonly<Record<string, number>> {
+    return { remainingAttempts: this.remainingAttempts };
+  }
+}
+
+/** Only an app that skipped "Create PIN" gets here (week 5 plan, D8). */
+export class PinNotCreated extends DomainError {
+  readonly code = 'PinNotCreated';
+
+  constructor() {
+    super('Transaction PIN not created yet');
+  }
+}
+
 export class PinLocked extends DomainError {
   readonly code = 'PinLocked';
   readonly lockedUntil: Date;
