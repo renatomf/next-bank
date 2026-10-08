@@ -21,9 +21,9 @@ ReaisParts formatReais(int cents) {
   return (integer: integer, cents: decimals, full: 'R\$ $integer$decimals');
 }
 
-/// A large amount of money (brief, section 3): "R$" and the cents smaller and
-/// muted beside the integer. While [hidden], no digit is shown or read
-/// (MOB-05).
+/// A large amount of money (brief, section 3; Home mockup): "R$" and the
+/// cents smaller and muted beside the integer, 6 px apart on one baseline.
+/// While [hidden], no digit is shown or read (MOB-05).
 class MoneyText extends StatelessWidget {
   /// Creates the amount; [color] and [mutedColor] default to the theme's.
   const new({
@@ -49,10 +49,8 @@ class MoneyText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.nbColors;
+    final muted = mutedColor ?? colors.textMuted;
     final main = NbType.moneyLarge.copyWith(color: color ?? colors.text);
-    final part = NbType.moneyLargePart.copyWith(
-      color: mutedColor ?? colors.textMuted,
-    );
     // Sora has no "•" glyph: the mask uses Manrope, at the integer's size.
     final mask = main.copyWith(
       fontFamily: NbType.body,
@@ -60,24 +58,42 @@ class MoneyText extends StatelessWidget {
       fontVariations: const [FontVariation.weight(800)],
       letterSpacing: 2,
     );
+    // Every text of the amount, digits or bullets, sits on the integer's line:
+    // same height, same baseline. So "R$", apart from the amount, never moves
+    // when the eye is tapped.
+    final amountLine = StrutStyle.fromTextStyle(main, forceStrutHeight: true);
     final parts = hidden ? null : formatReais(cents);
+    const gap = SizedBox(width: 6);
     // Its own node: inside a list or a card it must not merge with siblings.
     return Semantics(
       container: true,
       label: parts?.full ?? 'Saldo oculto',
       excludeSemantics: true,
-      child: RichText(
-        textScaler: MediaQuery.textScalerOf(context),
-        text: TextSpan(
-          children: [
-            TextSpan(text: r'R$ ', style: part),
-            if (parts == null)
-              TextSpan(text: '••••••', style: mask)
-            else
-              TextSpan(text: parts.integer, style: main),
-            TextSpan(text: parts?.cents ?? '', style: part),
-          ],
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
+        children: [
+          Text(r'R$', style: NbType.moneyLargeCurrency.copyWith(color: muted)),
+          gap,
+          if (parts == null)
+            Text('••••••', style: mask, strutStyle: amountLine)
+          else
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Text(parts.integer, style: main, strutStyle: amountLine),
+                gap,
+                Text(
+                  parts.cents,
+                  style: NbType.moneyLargeCents.copyWith(color: muted),
+                  strutStyle: amountLine,
+                ),
+              ],
+            ),
+        ],
       ),
     );
   }

@@ -47,18 +47,31 @@ void main() {
     ) async {
       await tester.pumpWidget(host(const MoneyText(cents: 1000000)));
 
-      final text = tester.widget<RichText>(
-        find.descendant(
-          of: find.byType(MoneyText),
-          matching: find.byType(RichText),
-        ),
+      TextStyle styleOf(String text) =>
+          tester.widget<Text>(find.text(text)).style!;
+      final currency = styleOf(r'R$');
+      final integer = styleOf('10.000');
+      final cents = styleOf(',00');
+      // Mockup: 18, 34 and 20 px.
+      expect(
+        [currency.fontSize, integer.fontSize, cents.fontSize],
+        [18, 34, 20],
       );
-      final spans = (text.text as TextSpan).children!.cast<TextSpan>();
-      final [currency, integer, cents] = spans;
-      expect(integer.style!.fontSize, greaterThan(currency.style!.fontSize!));
-      expect(integer.style!.fontSize, greaterThan(cents.style!.fontSize!));
-      expect(currency.style!.color, NbColors.dark.textMuted);
-      expect(cents.style!.color, NbColors.dark.textMuted);
+      expect(currency.color, NbColors.dark.textMuted);
+      expect(cents.color, NbColors.dark.textMuted);
+      expect(integer.color, NbColors.dark.text);
+    });
+
+    testWidgets('sets the three parts 6 px apart on one baseline (mockup)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(host(const MoneyText(cents: 1000000)));
+
+      final currency = tester.getRect(find.text(r'R$'));
+      final integer = tester.getRect(find.text('10.000'));
+      final cents = tester.getRect(find.text(',00'));
+      expect(integer.left - currency.right, 6);
+      expect(cents.left - integer.right, 6);
     });
 
     // Found on the emulator: Sora has no "•" glyph, so the hidden balance
@@ -72,15 +85,7 @@ void main() {
         host(const MoneyText(cents: 1000000, hidden: true)),
       );
 
-      final text = tester.widget<RichText>(
-        find.descendant(
-          of: find.byType(MoneyText),
-          matching: find.byType(RichText),
-        ),
-      );
-      final mask = (text.text as TextSpan).children!
-          .cast<TextSpan>()
-          .singleWhere((span) => span.text!.contains('•'));
+      final mask = tester.widget<Text>(find.text('••••••'));
       expect(mask.style!.fontFamily, 'packages/design_system/${NbType.body}');
     });
 
@@ -96,6 +101,23 @@ void main() {
       );
       expect(find.bySemanticsLabel('Saldo oculto'), findsOneWidget);
       expect(find.bySemanticsLabel(RegExp(r'\d')), findsNothing);
+    });
+
+    // Found on the phone: tapping the eye made "R$" jump, because the line
+    // changed height when the digits became bullets.
+    testWidgets(r'keeps "R$" still when the amount is hidden or shown', (
+      tester,
+    ) async {
+      await tester.pumpWidget(host(const MoneyText(cents: 1000000)));
+      final shown = tester.getRect(find.text(r'R$'));
+      final shownSize = tester.getSize(find.byType(MoneyText));
+
+      await tester.pumpWidget(
+        host(const MoneyText(cents: 1000000, hidden: true)),
+      );
+
+      expect(tester.getRect(find.text(r'R$')).top, shown.top);
+      expect(tester.getSize(find.byType(MoneyText)).height, shownSize.height);
     });
   });
 }

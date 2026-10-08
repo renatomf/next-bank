@@ -12,6 +12,8 @@ class IconCircleButton extends StatelessWidget {
     required this.onPressed,
     this.background,
     this.foreground,
+    this.borderColor,
+    this.iconSize = 20,
     super.key,
   });
 
@@ -30,6 +32,12 @@ class IconCircleButton extends StatelessWidget {
   /// Icon color; defaults to the theme's text.
   final Color? foreground;
 
+  /// Border; defaults to the theme's border.
+  final Color? borderColor;
+
+  /// Icon size: 20 in headers, 18 on the balance card (mockup).
+  final double iconSize;
+
   @override
   Widget build(BuildContext context) {
     final colors = context.nbColors;
@@ -45,11 +53,13 @@ class IconCircleButton extends StatelessWidget {
         dimension: NbSize.touch,
         child: Material(
           color: background ?? colors.surface,
-          shape: CircleBorder(side: BorderSide(color: colors.border)),
+          shape: CircleBorder(
+            side: BorderSide(color: borderColor ?? colors.border),
+          ),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: onPressed,
-            child: Icon(icon, size: 20, color: foreground ?? colors.text),
+            child: Icon(icon, size: iconSize, color: foreground ?? colors.text),
           ),
         ),
       ),

@@ -230,6 +230,13 @@ void main() {
       final gradient = (glow.decoration as BoxDecoration).gradient!;
       expect(ground.color, colors.background);
       expect(gradient.colors.first, colors.glow);
+      expect(
+        find.descendant(
+          of: find.byType(GlowBackground),
+          matching: find.byType(Dither),
+        ),
+        findsOneWidget,
+      );
       expect(find.text('Conteúdo'), findsOneWidget);
     });
   }

@@ -5,6 +5,7 @@ library;
 
 export 'src/components/balance_card.dart';
 export 'src/components/display_title.dart';
+export 'src/components/dither.dart';
 export 'src/components/error_state.dart';
 export 'src/components/form_error_text.dart';
 export 'src/components/glow_background.dart';
