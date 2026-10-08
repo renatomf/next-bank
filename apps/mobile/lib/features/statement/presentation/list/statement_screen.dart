@@ -21,9 +21,6 @@ class StatementScreen extends ConsumerWidget {
   /// Opens the detail of a movement.
   final ValueChanged<String> onItem;
 
-  /// How close to the end, in pixels, the next page is asked.
-  static const double loadMoreAhead = 400;
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final statement = ref.watch(statementProvider);
@@ -54,15 +51,7 @@ class StatementScreen extends ConsumerWidget {
                     ),
                   AsyncData(value: final view) => RefreshIndicator(
                     onRefresh: controller.refresh,
-                    child: NotificationListener<ScrollNotification>(
-                      onNotification: (scroll) {
-                        if (scroll.metrics.extentAfter < loadMoreAhead) {
-                          unawaited(controller.loadMore());
-                        }
-                        return false;
-                      },
-                      child: _List(view: view, onItem: onItem),
-                    ),
+                    child: _List(view: view, onItem: onItem),
                   ),
                   AsyncError() => _Padded(
                     child: ErrorState(
@@ -134,6 +123,8 @@ class _Movement extends StatelessWidget {
 }
 
 /// The end of the list: the next page loading, why it failed, or the end.
+/// The list builds it only when the end is near, so being built is what asks
+/// the next page, also when the first page fits the screen and never scrolls.
 class _Footer extends ConsumerWidget {
   const new({required this.view});
 
@@ -142,6 +133,12 @@ class _Footer extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final error = view.loadMoreError;
+    if (view.hasMore && !view.loadingMore && error == null) {
+      // After the frame: a page is never asked in the middle of a build.
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => unawaited(ref.read(statementProvider.notifier).loadMore()),
+      );
+    }
     final child = switch (view) {
       StatementView(loadingMore: true) => const CircularProgressIndicator(
         semanticsLabel: 'Carregando mais movimentações',
