@@ -12,7 +12,7 @@ import '../../../support/scripted_server.dart';
 
 const _transferId = '0b9a7c1e-5d2f-4a8b-9c3d-7e6f5a4b3c2d';
 // Generated, never a literal: a fixed UUID next to "key" looks like a secret.
-final _key = newIdempotencyKey();
+final String _key = newIdempotencyKey();
 const _transferPath = '/v1/pix/transfers/$_transferId';
 
 HttpPixRepository repositoryFor(ScriptedServer server) {
