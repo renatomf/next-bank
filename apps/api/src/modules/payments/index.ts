@@ -2,6 +2,7 @@
 // use only what is exported here (ADR 0002, ADR 0010).
 import type { Clock, IdGenerator, UnitOfWork } from '../../shared/application/ports.ts';
 import type { PiiKeys } from '../../shared/infrastructure/aes-gcm-pii-protector.ts';
+import { AuthorizePixTransfer } from './application/authorize-pix-transfer.ts';
 import { CancelPixTransfer } from './application/cancel-pix-transfer.ts';
 import { CreateCpfKey } from './application/create-cpf-key.ts';
 import { CreatePixTransfer } from './application/create-pix-transfer.ts';
@@ -9,6 +10,7 @@ import { GetPixTransfer } from './application/get-pix-transfer.ts';
 import { LookupPixKey } from './application/lookup-pix-key.ts';
 import type { AccountsPort, IdentityPort, LedgerPort } from './application/ports.ts';
 import { AesGcmPixKeyProtector } from './infrastructure/aes-gcm-pix-key-protector.ts';
+import { CryptoEndToEndIds } from './infrastructure/crypto-end-to-end-ids.ts';
 import { HmacRequestFingerprint } from './infrastructure/hmac-request-fingerprint.ts';
 import { InMemoryKeyLookupQuota } from './infrastructure/in-memory-key-lookup-quota.ts';
 import { PgPaymentsRepositories } from './infrastructure/pg-payments-repositories.ts';
@@ -16,16 +18,18 @@ import { PgPaymentsRepositories } from './infrastructure/pg-payments-repositorie
 export { keyLookupRoutes } from './http/key-lookup-route.ts';
 export { transferRoutes } from './http/transfer-routes.ts';
 export type { CreateCpfKey } from './application/create-cpf-key.ts';
+export type { AuthorizePixTransfer } from './application/authorize-pix-transfer.ts';
 export type { CancelPixTransfer } from './application/cancel-pix-transfer.ts';
 export type { CreatePixTransfer } from './application/create-pix-transfer.ts';
 export type { GetPixTransfer } from './application/get-pix-transfer.ts';
 export type { LookupPixKey } from './application/lookup-pix-key.ts';
-export type { AccountsPort, IdentityPort, LedgerPort } from './application/ports.ts';
+export type { AccountsPort, IdentityPort, LedgerPort, PinCheck } from './application/ports.ts';
 
 export interface PaymentsModule {
   createCpfKey: CreateCpfKey;
   lookupPixKey: LookupPixKey;
   createPixTransfer: CreatePixTransfer;
+  authorizePixTransfer: AuthorizePixTransfer;
   getPixTransfer: GetPixTransfer;
   cancelPixTransfer: CancelPixTransfer;
 }
@@ -44,6 +48,7 @@ export function createPaymentsModule(settings: {
   const protector = new AesGcmPixKeyProtector(settings.piiKeys);
   // One quota for lookups and creations: both name the payee (PIX-07).
   const quota = new InMemoryKeyLookupQuota();
+  const fingerprint = new HmacRequestFingerprint(settings.piiKeys);
   return {
     createCpfKey: new CreateCpfKey({
       repositories,
@@ -64,11 +69,22 @@ export function createPaymentsModule(settings: {
       unitOfWork: settings.unitOfWork,
       repositories,
       protector,
-      fingerprint: new HmacRequestFingerprint(settings.piiKeys),
+      fingerprint,
       accounts: settings.accounts,
       identity: settings.identity,
       ledger: settings.ledger,
       quota,
+      clock: settings.clock,
+      ids: settings.ids,
+    }),
+    authorizePixTransfer: new AuthorizePixTransfer({
+      unitOfWork: settings.unitOfWork,
+      repositories,
+      fingerprint,
+      accounts: settings.accounts,
+      identity: settings.identity,
+      ledger: settings.ledger,
+      endToEndIds: new CryptoEndToEndIds(),
       clock: settings.clock,
       ids: settings.ids,
     }),

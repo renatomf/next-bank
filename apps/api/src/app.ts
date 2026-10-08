@@ -142,8 +142,14 @@ export function buildApp({ pool, logStream, security }: AppDependencies) {
     ids,
     piiKeys: security.piiKeys,
     accounts: accounts.directory,
-    identity: identity.payees,
-    ledger: ledger.customerAccounts,
+    identity: {
+      payeeOf: (tx, userId) => identity.payees.payeeOf(tx, userId),
+      verifyPin: (tx, input) => identity.verifyPin.verify(tx, input),
+    },
+    ledger: {
+      availableBalance: (tx, accountId) => ledger.customerAccounts.availableBalance(tx, accountId),
+      postPixTransfer: (tx, posting) => ledger.customerAccounts.transferPix(tx, posting),
+    },
   });
   const registerCustomer = new RegisterCustomer({
     unitOfWork,
@@ -163,6 +169,7 @@ export function buildApp({ pool, logStream, security }: AppDependencies) {
   void app.register(keyLookupRoutes, { lookupPixKey: payments.lookupPixKey });
   void app.register(transferRoutes, {
     createPixTransfer: payments.createPixTransfer,
+    authorizePixTransfer: payments.authorizePixTransfer,
     getPixTransfer: payments.getPixTransfer,
     cancelPixTransfer: payments.cancelPixTransfer,
   });

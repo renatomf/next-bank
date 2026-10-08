@@ -27,6 +27,16 @@ export class AccountDirectory {
   async findById(tx: Transaction, accountId: string): Promise<AccountSummary | null> {
     return summaryOf(await this.#repositories.for(tx).accounts.findById(accountId));
   }
+
+  /** Status locked for share until the caller's transaction ends (database.md 7). */
+  async lockForShare(tx: Transaction, accountIds: string[]): Promise<AccountSummary[]> {
+    const accounts = await this.#repositories.for(tx).accounts.lockForShare(accountIds);
+    return accounts.map((account) => ({
+      id: account.id,
+      holderUserId: account.holderUserId,
+      status: account.status,
+    }));
+  }
 }
 
 function summaryOf(account: AccountState | null): AccountSummary | null {

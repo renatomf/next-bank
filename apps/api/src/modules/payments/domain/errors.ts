@@ -83,6 +83,29 @@ export class RequestInProgress extends DomainError {
   }
 }
 
+/**
+ * An authorization the customer must act on, recorded before answering
+ * (ADR 0010, rule 3) and stored with the idempotency key, so a repeated request
+ * gets the same refusal without checking the PIN again (D5).
+ */
+export type AuthorizationRefusal =
+  'PinIncorrect' | 'PinLocked' | 'PinResetRequired' | 'TransferExpired';
+
+export class PixAuthorizationRefused extends DomainError {
+  readonly code: AuthorizationRefusal;
+  readonly #details: Readonly<Record<string, number>>;
+
+  constructor(code: AuthorizationRefusal, details: Readonly<Record<string, number>> = {}) {
+    super(`Pix authorization refused: ${code}`);
+    this.code = code;
+    this.#details = details;
+  }
+
+  override get details(): Readonly<Record<string, number>> {
+    return this.#details;
+  }
+}
+
 export class InvalidTransferState extends DomainError {
   readonly code = 'InvalidTransferState';
 
