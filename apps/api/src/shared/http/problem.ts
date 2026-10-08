@@ -57,6 +57,7 @@ const CATALOG_STATUS: Readonly<Record<string, number>> = {
   AccountBlocked: 422,
   IdempotencyKeyReused: 422,
   RequestInProgress: 409,
+  InvalidTransferState: 409,
 };
 
 /** Generic RFC 9457 response: never carries stack, SQL or internal detail (API-03). */
