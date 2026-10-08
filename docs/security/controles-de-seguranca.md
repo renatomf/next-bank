@@ -1,6 +1,6 @@
 # next bank — Matriz de controles de segurança (V1)
 
-- **Atualizado em:** 2026-10-06 (semana 3, em andamento)
+- **Atualizado em:** 2026-10-07 (fim da semana 4)
 - **Objetivo:** mostrar, para cada controle de segurança esperado de um banco digital, o que **já está implementado** (com a evidência), o que **será implementado** (e em que semana) e o que foi **descartado ou adiado** (e por quê).
 - **Fontes:** `threat-model.md` (ameaças e riscos aceitos), `checklist-asvs-masvs.md` (OWASP ASVS L2 e MASVS), ADRs 0004, 0007 e 0009, `docs/roadmap.md` (semanas e escopo congelado).
 - **Regra:** um controle só é marcado como ✅ quando existe código **e** um teste ou verificação automática que o comprove.
@@ -47,6 +47,7 @@
 | XSS | ➖ | A API só responde JSON (`Content-Type` explícito, com CSP do helmet), e o app Flutter não renderiza HTML. Reavaliar no backoffice web (Fase 3). | — |
 | SSRF | ➖ | A API não faz requisições para URLs vindas do cliente. Regra: se isso surgir, só com lista de destinos permitidos. | — |
 | IDOR / BOLA | ⏳ | Conta sempre derivada do token; **todo recurso tem teste de IDOR** (CLAUDE.md, READ-01, PIX-01). Feito para `GET /v1/me` e `GET /v1/me/account` (dois clientes, cada token só alcança a própria conta; ID ou número de outra conta → 422, READ-05) e garantido no contrato: nenhuma rota tem ID no caminho. Faltam extrato e Pix. | 4–6 |
+| Minimização das respostas | 🟡 | Toda resposta sai de um schema com as chaves exatas, e o teste de contrato falha se surgir schema fora da lista aprovada (READ-02). Feito para cadastro, login, `GET /v1/me` (só `name` e `hasPin`) e `GET /v1/me/account` (sem ID, titular ou saldo contabilizado; conta mascarada no app). Faltam extrato e Pix. | 3–6 |
 | Command injection | ➖ | A API não executa comandos do sistema. O único uso (`execFileSync` no setup dos testes) tem argumentos fixos e não usa shell. | — |
 | Path traversal | ➖ | Nenhuma leitura ou escrita de arquivo a partir de entrada do cliente. | — |
 | Headers de segurança | 🟡 | helmet (HSTS, CSP, `nosniff`…). `http-security.test.ts` verifica HSTS, `nosniff` e a ausência de `x-powered-by`. `Cache-Control: no-store` em toda resposta (✅, F-06). | 2, 3 |
@@ -88,6 +89,8 @@
 | Secure storage para tokens | ⏳ | `flutter_secure_storage` (Keychain/Keystore) e verificação no CI contra `SharedPreferences` para tokens (MOB-01). | 3 |
 | Certificate / public-key pinning | 🔭 | Risco aceito: o pinning pode quebrar o app na rotação de certificados do provedor. Evolução: pinning da chave pública (SPKI) com chave reserva. | — |
 | Nada sensível em logs | 🟡 | Lints estritos proíbem `print`; o logger e o Sentry terão filtro de dados pessoais (MOB-02). | 2+ |
+| Ocultar saldo | ✅ | Olho no card de saldo, visível por padrão e guardado só em memória (D8; nunca em `SharedPreferences`, MOB-01). Oculto, nenhum dígito é desenhado nem lido pelo leitor de tela (MOB-05, `money_text_test.dart`, `home_screen_test.dart`). Desbloqueio após tempo em segundo plano: semanas 5 e 6 (F-16). | 4 |
+| Validação dos dados vindos da API | 🟡 | O app confere o que recebe antes de usar: `amount` que não seja inteiro é recusado em qualquer resposta (`AmountIntegrityInterceptor`, F-18), e o repositório da conta recusa saldo negativo (`http_account_repository_test.dart`). Cada repositório novo traz a própria verificação. | 2+ |
 | Proteção contra captura de tela | 🔭 | Risco aceito (baixo impacto na demo); há a opção de ocultar o saldo (MOB-05). | — |
 | Ofuscação | ⏳ | Build de release ofuscado; busca por segredos no binário (MOB-04). | 8 |
 | Integridade do app (Play Integrity / App Attest) | 🔭 | Risco aceito: exige contas de loja e configuração de backend. | — |

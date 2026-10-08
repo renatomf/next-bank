@@ -1,6 +1,6 @@
 # Plano — Semana 4: Accounts + Ledger
 
-- **Status:** Aprovado (2026-10-07), com as decisões D1–D10 nos padrões recomendados
+- **Status:** Concluído (2026-10-07), com as decisões D1–D10 nos padrões recomendados (PRs #57 a #65)
 - **Roadmap:** `docs/roadmap.md` (seção 8, semana 4)
 - **Base:** ADRs 0005 (ledger), 0006 (`Money`), 0007 (concorrência) e 0010 (orquestração); `domain-model.md` (3.2, 3.3, 5, 6, 8, 9 e 11); `database.md` (5.2, 5.3, 6, 7, 10 e 11); threat model (READ-01, READ-02, API-05, MOB-05); brief (2.3, 3 e 7) e mockup `home-dark.png`
 - **Carga:** ~30h (5 dias × 6h)
@@ -172,17 +172,17 @@ Nenhuma. A formatação de dinheiro no `design_system` é escrita no próprio pa
 
 ## Tarefa 1 — `GET /v1/me` (dia 1)
 
-- [ ] Teste HTTP antes da rota: sem token → 401; com token → `{ name, hasPin }` com as chaves exatas; `hasPin` muda depois do `POST /v1/me/pin`
-- [ ] Rota no Identity; schema `Me` no contrato; cliente Dart regenerado
-- [ ] App: depois do login e na restauração da sessão, sessão sem PIN vai para "Criar PIN" (TDD no redirect)
+- [x] Teste HTTP antes da rota: sem token → 401; com token → `{ name, hasPin }` com as chaves exatas; `hasPin` muda depois do `POST /v1/me/pin`
+- [x] Rota no Identity; schema `Me` no contrato; cliente Dart regenerado
+- [x] App: depois do login e na restauração da sessão, sessão sem PIN vai para "Criar PIN" (TDD no redirect)
 
 ## Tarefa 2 — Banco e domínio, TDD estrito (dia 1–2)
 
-- [ ] Migrations de `accounts` e `ledger` (seção Contratos), com os testes de banco escritos antes: T-DB-01, T-DB-02, T-DB-02b (lançamento sem partidas), T-DB-03, T-DB-05 adaptado e T-DB-13 estendido
-- [ ] `Money` (TS): inteiro em centavos, mesma moeda, sem fração, conversão segura na borda (D1)
-- [ ] `Account`: DV módulo 11, formato, status (só `ACTIVE` movimenta, regra usada a partir da semana 5)
-- [ ] `LedgerAccount`: crédito aumenta, débito diminui; cliente nunca negativo (`InsufficientFunds`); sistema sem saldo materializado
-- [ ] `JournalEntry`: ≥ 2 partidas, Σ débitos = Σ créditos, moeda única, valor > 0
+- [x] Migrations de `accounts` e `ledger` (seção Contratos), com os testes de banco escritos antes: T-DB-01, T-DB-02, T-DB-02b (lançamento sem partidas), T-DB-03, T-DB-05 adaptado e T-DB-13 estendido
+- [x] `Money` (TS): inteiro em centavos, mesma moeda, sem fração, conversão segura na borda (D1)
+- [x] `Account`: DV módulo 11, formato, status (só `ACTIVE` movimenta, regra usada a partir da semana 5)
+- [x] `LedgerAccount`: crédito aumenta, débito diminui; cliente nunca negativo (`InsufficientFunds`); sistema sem saldo materializado
+- [x] `JournalEntry`: ≥ 2 partidas, Σ débitos = Σ créditos, moeda única, valor > 0
 
 ## Tarefa 3 — Casos de uso e API, outside-in (dia 2–4)
 
@@ -194,36 +194,36 @@ Nenhuma. A formatação de dinheiro no `design_system` é escrita no próprio pa
 | API-05 | `UPDATE`/`DELETE` em `postings` e `journal_entries` recusados (T-DB-03) |
 | Concorrência | 20 cadastros paralelos; T-DB-08 e T-DB-09 no `PostJournalEntry` |
 
-- [ ] `PostJournalEntry` no Ledger: locks ordenados só em contas de cliente, verificação de saldo, partidas e saldos com `version` (D6)
-- [ ] `OpenAccount` no Accounts, com a `LedgerPort` e `ACCOUNT_OPENED` na auditoria (D2)
-- [ ] `RegisterCustomer`: conta, conta contábil e funding na mesma transação (D3); falha em qualquer etapa → nada gravado
-- [ ] `GET /v1/me/account` (D5); schemas `MyAccount` e `Money`; cliente Dart regenerado
-- [ ] `EXPLAIN ANALYZE` de cada query nova
+- [x] `PostJournalEntry` no Ledger: locks ordenados só em contas de cliente, verificação de saldo, partidas e saldos com `version` (D6)
+- [x] `OpenAccount` no Accounts, com a `LedgerPort` e `ACCOUNT_OPENED` na auditoria (D2)
+- [x] `RegisterCustomer`: conta, conta contábil e funding na mesma transação (D3); falha em qualquer etapa → nada gravado
+- [x] `GET /v1/me/account` (D5); schemas `MyAccount` e `Money`; cliente Dart regenerado
+- [x] `EXPLAIN ANALYZE` de cada query nova
 
 ## Tarefa 4 — App: Home (dia 4–5)
 
-- [ ] `features/home`: repositório da conta (TDD), validação do saldo vindo da API (inteiro, moeda conhecida)
-- [ ] `design_system`: `MoneyText` (formatação só aqui, ADR 0006), `BalanceCard` com ocultar saldo (D8), `IconCircleButton`, `Skeleton`, `ErrorState`, conferidos contra o `home-dark.png` e o `home-light.png`
-- [ ] Home: saudação com o nome, título, `BalanceCard`; estados skeleton · pronto · saldo oculto · erro; contraste AA e escala de fonte 1.3×
-- [ ] Sai o status da API da semana 2 (provider, repositório e testes), sem deixar código morto
+- [x] `features/home`: repositório da conta (TDD), validação do saldo vindo da API (inteiro, moeda conhecida)
+- [x] `design_system`: `MoneyText` (formatação só aqui, ADR 0006), `BalanceCard` com ocultar saldo (D8), `IconCircleButton`, `Skeleton`, `ErrorState`, conferidos contra o `home-dark.png` e o `home-light.png`
+- [x] Home: saudação com o nome, título, `BalanceCard`; estados skeleton · pronto · saldo oculto · erro; contraste AA e escala de fonte 1.3×
+- [x] Sai o status da API da semana 2 (provider, repositório e testes), sem deixar código morto
 
 ## Tarefa 5 — Fechamento
 
-- [ ] `/security-review` (obrigatório: ledger e autorização)
-- [ ] Threat model: READ-05; READ-01, READ-02, API-05 e MOB-05 com evidência na matriz de controles
-- [ ] `database.md`: sequência do número, `CHECK` de conta de sistema, índice `postings (journal_entry_id)` e o trigger em `journal_entries`
-- [ ] `domain-model.md`: porta Accounts → Ledger também para o saldo (D5)
-- [ ] ADR se alguma decisão D1–D10 mudar no caminho; CHANGELOG
-- [ ] D9: instrução para recriar o banco local no PR que muda o cadastro
+- [x] `/security-review` (obrigatório: ledger e autorização)
+- [x] Threat model: READ-05; READ-01, READ-02, API-05 e MOB-05 com evidência na matriz de controles
+- [x] `database.md`: sequência do número, `CHECK` de conta de sistema, índice `postings (journal_entry_id)` e o trigger em `journal_entries`
+- [x] `domain-model.md`: porta Accounts → Ledger também para o saldo (D5)
+- [x] ADR se alguma decisão D1–D10 mudar no caminho; CHANGELOG
+- [x] D9: instrução para recriar o banco local no PR que muda o cadastro
 
 ---
 
 ## Checkpoint de fim de semana
 
-- [ ] Σ débitos = Σ créditos: domínio (`JournalEntry`) e banco (T-DB-02, T-DB-02b) verdes
-- [ ] READ-01, READ-02, READ-05 e API-05 com teste verde
-- [ ] T-DB-08 e T-DB-09 verdes, com reconciliação conferida
-- [ ] Cobertura ≥ 90% em `domain/` e `application/`
-- [ ] App: cadastro novo mostra R$ 10.000,00 na Home; ocultar saldo funciona; erro de rede mostra "tentar de novo"
-- [ ] Se a semana estourar: o job de reconciliação vai para o backlog; os testes de concorrência e de segurança não são cortados
+- [x] Σ débitos = Σ créditos: domínio (`JournalEntry`) e banco (T-DB-02, T-DB-02b) verdes
+- [x] READ-01, READ-02, READ-05 e API-05 com teste verde
+- [x] T-DB-08 e T-DB-09 verdes, com reconciliação conferida
+- [x] Cobertura ≥ 90% em `domain/` e `application/`
+- [x] App: cadastro novo mostra R$ 10.000,00 na Home; ocultar saldo funciona; erro de rede mostra "tentar de novo"
+- [x] Se a semana estourar: o job de reconciliação vai para o backlog; os testes de concorrência e de segurança não são cortados. Resultado: o job (extra) foi para o backlog; nenhum teste de concorrência ou de segurança foi cortado, e a reconciliação é conferida nos testes do ledger contra o Postgres (T-DB-14)
 - [ ] Próximo passo: plano da semana 5 (Pix — backend), com a chave CPF no cadastro e a rota de verificação do PIN (D10)

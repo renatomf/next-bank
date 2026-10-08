@@ -116,7 +116,7 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 | | Certificate pinning | 🚫 | — |
 | **PLATFORM** | Sem deep links na V1: desligados no Android e no iOS (MOB-06) | ✅ | 3 |
 | | Proteção de telas sensíveis contra captura | 🚫 | — |
-| | Opção de ocultar saldo (MOB-05) | ⏳ | 4 |
+| | Opção de ocultar saldo (MOB-05) | ✅ | 4 |
 | **CODE** | Dependências atualizadas e verificadas (API-09) | ✅ | 2 |
 | | Validação de dados vindos da API antes do uso | ⏳ | 2+ |
 | **RESILIENCE** | Build de release ofuscado (MOB-04) | ⏳ | 8 |
