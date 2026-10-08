@@ -70,6 +70,28 @@ void main() {
       );
     });
 
+    // Brief, section 8: a large amount on a small phone at 1.3x text.
+    testWidgets('fits a small phone at 1.3x text', (tester) async {
+      tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+      await tester.pumpWidget(
+        host(
+          const SizedBox(
+            width: 240,
+            child: TransactionItem(
+              title: 'Depósito inicial',
+              caption: 'Hoje, 09:12',
+              amountCents: 1000000,
+              incoming: true,
+            ),
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('opens the detail on tap', (tester) async {
       var taps = 0;
       await tester.pumpWidget(item(onTap: () => taps++));
