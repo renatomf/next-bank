@@ -6,17 +6,19 @@ import 'package:next_bank/core/session/session_controller.dart';
 import '../../support/fake_monotonic_clock.dart';
 import '../../support/fake_token_store.dart';
 
-(ProviderContainer, FakeMonotonicClock) setUpLock() {
+(ProviderContainer, FakeMonotonicClock, FakeWallClock) setUpLock() {
   final clock = FakeMonotonicClock();
+  final wall = FakeWallClock();
   final container = ProviderContainer(
     overrides: [
       monotonicClockProvider.overrideWithValue(clock),
+      wallClockProvider.overrideWithValue(wall),
       tokenStoreProvider.overrideWithValue(FakeTokenStore()),
     ],
   );
   addTearDown(container.dispose);
   container.listen(appLockProvider, (_, _) {});
-  return (container, clock);
+  return (container, clock, wall);
 }
 
 bool locked(ProviderContainer container) => container.read(appLockProvider);
@@ -29,14 +31,14 @@ void main() {
     test(
       'starts locked: a session restored from the device asks for the PIN',
       () {
-        final (container, _) = setUpLock();
+        final (container, _, _) = setUpLock();
 
         expect(locked(container), isTrue);
       },
     );
 
     test('unlocks once the PIN is verified', () {
-      final (container, _) = setUpLock();
+      final (container, _, _) = setUpLock();
 
       container.read(appLockProvider.notifier).unlock();
 
@@ -44,7 +46,7 @@ void main() {
     });
 
     test('unlocks on a new sign-in: the password was just checked', () async {
-      final (container, _) = setUpLock();
+      final (container, _, _) = setUpLock();
       await container.read(sessionProvider.future);
 
       await container.read(sessionProvider.notifier).signIn(tokens);
@@ -53,7 +55,7 @@ void main() {
     });
 
     test('stays unlocked after less than 5 minutes in the background', () {
-      final (container, clock) = setUpLock();
+      final (container, clock, _) = setUpLock();
       final lock = container.read(appLockProvider.notifier)
         ..unlock()
         ..paused();
@@ -65,7 +67,7 @@ void main() {
     });
 
     test('locks after 5 minutes in the background (PIX-06)', () {
-      final (container, clock) = setUpLock();
+      final (container, clock, _) = setUpLock();
       final lock = container.read(appLockProvider.notifier)
         ..unlock()
         ..paused();
@@ -77,7 +79,7 @@ void main() {
     });
 
     test('counts each stay in the background from its own start', () {
-      final (container, clock) = setUpLock();
+      final (container, clock, _) = setUpLock();
       final lock = container.read(appLockProvider.notifier)
         ..unlock()
         ..paused();
@@ -92,10 +94,42 @@ void main() {
       expect(locked(container), isFalse);
     });
 
+    // F-21: the monotonic clock stops while the device sleeps; the device's
+    // date keeps running, so hours asleep in the background still lock it.
+    test(
+      'locks after 5 minutes asleep, though the monotonic clock stopped',
+      () {
+        final (container, clock, wall) = setUpLock();
+        final lock = container.read(appLockProvider.notifier)
+          ..unlock()
+          ..paused();
+
+        clock.current += const Duration(seconds: 10);
+        wall.current = wall.current.add(const Duration(hours: 3));
+        lock.resumed();
+
+        expect(locked(container), isTrue);
+      },
+    );
+
+    // Moving the date back to dodge the lock locks it instead.
+    test('locks when the device date moved back while in the background', () {
+      final (container, clock, wall) = setUpLock();
+      final lock = container.read(appLockProvider.notifier)
+        ..unlock()
+        ..paused();
+
+      clock.current += const Duration(seconds: 10);
+      wall.current = wall.current.subtract(const Duration(hours: 1));
+      lock.resumed();
+
+      expect(locked(container), isTrue);
+    });
+
     test(
       'locks again when the session ends, for the next one restored',
       () async {
-        final (container, _) = setUpLock();
+        final (container, _, _) = setUpLock();
         await container.read(sessionProvider.future);
         await container.read(sessionProvider.notifier).signIn(tokens);
 
