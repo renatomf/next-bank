@@ -6,6 +6,7 @@ interface MediaType {
 interface Operation {
   operationId?: string;
   security?: Record<string, string[]>[];
+  parameters?: { in: string; name: string; required?: boolean }[];
   responses: Record<string, { content?: Record<string, MediaType> } | undefined>;
 }
 export interface OpenApiDocument {

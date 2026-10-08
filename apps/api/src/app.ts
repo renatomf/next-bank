@@ -25,7 +25,7 @@ import {
   sessionRoutes,
 } from './modules/identity/index.ts';
 import { createLedgerModule } from './modules/ledger/index.ts';
-import { createPaymentsModule, keyLookupRoutes } from './modules/payments/index.ts';
+import { createPaymentsModule, keyLookupRoutes, transferRoutes } from './modules/payments/index.ts';
 import { healthRoutes } from './shared/http/health.ts';
 import { registerProblemHandlers } from './shared/http/problem.ts';
 import type { PiiKeys } from './shared/infrastructure/aes-gcm-pii-protector.ts';
@@ -143,6 +143,7 @@ export function buildApp({ pool, logStream, security }: AppDependencies) {
     piiKeys: security.piiKeys,
     accounts: accounts.directory,
     identity: identity.payees,
+    ledger: ledger.customerAccounts,
   });
   const registerCustomer = new RegisterCustomer({
     unitOfWork,
@@ -160,6 +161,7 @@ export function buildApp({ pool, logStream, security }: AppDependencies) {
   void app.register(pinRoutes, { createPin: identity.createPin, verifyPin: identity.verifyPin });
   void app.register(meRoutes, { getProfile: identity.getProfile });
   void app.register(keyLookupRoutes, { lookupPixKey: payments.lookupPixKey });
+  void app.register(transferRoutes, { createPixTransfer: payments.createPixTransfer });
   void app.register(myAccountRoutes, { getMyAccount: accounts.getMyAccount });
 
   return app;

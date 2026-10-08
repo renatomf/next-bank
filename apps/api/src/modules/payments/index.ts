@@ -3,20 +3,25 @@
 import type { Clock, IdGenerator, UnitOfWork } from '../../shared/application/ports.ts';
 import type { PiiKeys } from '../../shared/infrastructure/aes-gcm-pii-protector.ts';
 import { CreateCpfKey } from './application/create-cpf-key.ts';
+import { CreatePixTransfer } from './application/create-pix-transfer.ts';
 import { LookupPixKey } from './application/lookup-pix-key.ts';
-import type { AccountsPort, IdentityPort } from './application/ports.ts';
+import type { AccountsPort, IdentityPort, LedgerPort } from './application/ports.ts';
 import { AesGcmPixKeyProtector } from './infrastructure/aes-gcm-pix-key-protector.ts';
+import { HmacRequestFingerprint } from './infrastructure/hmac-request-fingerprint.ts';
 import { InMemoryKeyLookupQuota } from './infrastructure/in-memory-key-lookup-quota.ts';
 import { PgPaymentsRepositories } from './infrastructure/pg-payments-repositories.ts';
 
 export { keyLookupRoutes } from './http/key-lookup-route.ts';
+export { transferRoutes } from './http/transfer-routes.ts';
 export type { CreateCpfKey } from './application/create-cpf-key.ts';
+export type { CreatePixTransfer } from './application/create-pix-transfer.ts';
 export type { LookupPixKey } from './application/lookup-pix-key.ts';
-export type { AccountsPort, IdentityPort } from './application/ports.ts';
+export type { AccountsPort, IdentityPort, LedgerPort } from './application/ports.ts';
 
 export interface PaymentsModule {
   createCpfKey: CreateCpfKey;
   lookupPixKey: LookupPixKey;
+  createPixTransfer: CreatePixTransfer;
 }
 
 /** Builds the payments context with its production adapters. */
@@ -27,9 +32,12 @@ export function createPaymentsModule(settings: {
   piiKeys: PiiKeys;
   accounts: AccountsPort;
   identity: IdentityPort;
+  ledger: LedgerPort;
 }): PaymentsModule {
   const repositories = new PgPaymentsRepositories();
   const protector = new AesGcmPixKeyProtector(settings.piiKeys);
+  // One quota for lookups and creations: both name the payee (PIX-07).
+  const quota = new InMemoryKeyLookupQuota();
   return {
     createCpfKey: new CreateCpfKey({
       repositories,
@@ -43,8 +51,20 @@ export function createPaymentsModule(settings: {
       protector,
       accounts: settings.accounts,
       identity: settings.identity,
-      quota: new InMemoryKeyLookupQuota(),
+      quota,
       clock: settings.clock,
+    }),
+    createPixTransfer: new CreatePixTransfer({
+      unitOfWork: settings.unitOfWork,
+      repositories,
+      protector,
+      fingerprint: new HmacRequestFingerprint(settings.piiKeys),
+      accounts: settings.accounts,
+      identity: settings.identity,
+      ledger: settings.ledger,
+      quota,
+      clock: settings.clock,
+      ids: settings.ids,
     }),
   };
 }
