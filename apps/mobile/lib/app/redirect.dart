@@ -21,6 +21,19 @@ abstract final class AppRoutes {
 
   /// Home of a signed-in user.
   static const String home = '/home';
+
+  /// Sending a Pix (screen 7).
+  static const String pix = '/pix';
+
+  /// The review of the Pix [transferId], with the PIN (screen 8).
+  static String pixReview(String transferId) => '$pix/review/$transferId';
+
+  /// The Pix [transferId] being processed (screen 9).
+  static String pixProcessing(String transferId) =>
+      '$pix/processing/$transferId';
+
+  /// The receipt of the Pix [transferId] (screen 10).
+  static String pixReceipt(String transferId) => '$pix/receipt/$transferId';
 }
 
 /// Where the app must be for the current [session] and its [profile], or
