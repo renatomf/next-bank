@@ -56,6 +56,8 @@ describe('OpenAPI document', () => {
       'Me',
       'Money',
       'MyAccount',
+      'PixKeyLookup',
+      'PixKeyLookupRequestInput',
       'Problem',
       'RefreshRequestInput',
       'RegisterRequestInput',
@@ -133,6 +135,22 @@ describe('OpenAPI document', () => {
     expect(document.components.schemas.Problem).toMatchObject({
       properties: { remainingAttempts: { type: 'integer' } },
     });
+  });
+
+  // D2: the key value travels in the body, never in the URL; PIX-07.
+  it('describes POST /v1/pix/key-lookups as a protected lookup of the payee', () => {
+    const operation = document.paths['/v1/pix/key-lookups']?.post;
+
+    expect(operation?.operationId).toBe('lookupPixKey');
+    expect(operation?.security).toEqual([{ bearerAuth: [] }]);
+    expect(operation?.responses['200']?.content?.['application/json']?.schema).toEqual({
+      $ref: '#/components/schemas/PixKeyLookup',
+    });
+    for (const status of ['401', '404', '422', '429']) {
+      expect(operation?.responses[status]?.content?.['application/problem+json']?.schema).toEqual({
+        $ref: '#/components/schemas/Problem',
+      });
+    }
   });
 
   // READ-01, READ-05: resources come from the token; no route names one by id or number.
