@@ -181,6 +181,21 @@ describe('PixTransfer state machine', () => {
     }).toThrow(InvalidTransferState);
   });
 
+  // Checked before the PIN: a settled Pix never costs a PIN attempt.
+  it('tells whether it still awaits authorization, without moving', () => {
+    const awaiting = PixTransfer.create(input());
+    const cancelled = PixTransfer.create(input());
+    cancelled.cancel(LATER);
+
+    expect(() => {
+      awaiting.assertAwaitingAuthorization();
+    }).not.toThrow();
+    expect(awaiting.state.version).toBe(0);
+    expect(() => {
+      cancelled.assertAwaitingAuthorization();
+    }).toThrow(InvalidTransferState);
+  });
+
   it('completes or fails only while processing', () => {
     const awaiting = PixTransfer.create(input());
 

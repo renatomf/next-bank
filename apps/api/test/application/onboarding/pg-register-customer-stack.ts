@@ -68,8 +68,14 @@ export function pgRegisterCustomer(pool: pg.Pool, clock: Clock): RegisterCustome
       ids,
       piiKeys: PII_KEYS,
       accounts: accounts.directory,
-      identity: { payeeOf: () => Promise.resolve(null) },
-      ledger: ledger.customerAccounts,
+      identity: {
+        payeeOf: () => Promise.resolve(null),
+        verifyPin: () => Promise.resolve({ outcome: 'VERIFIED' }),
+      },
+      ledger: {
+        availableBalance: () => Promise.resolve(null),
+        postPixTransfer: () => Promise.resolve(),
+      },
     }).createCpfKey,
   });
 }
