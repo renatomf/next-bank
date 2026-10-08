@@ -115,7 +115,7 @@ packages/design_system/                   # AmountCard, ContactCard, SecureHint,
 
 **App, rotas do GoRouter:**
 - `/unlock`;
-- `/pix`, `/pix/review` (bottom sheet), `/pix/processing`, `/pix/receipt/:transferId`;
+- `/pix`, `/pix/review/:transferId`, `/pix/processing/:transferId`, `/pix/receipt/:transferId`. A revisão virou tela cheia em vez de bottom sheet: o campo do PIN e o "Tentar de novo" precisam do espaço, e o voltar funciona igual;
 - `/statement`, `/statement/:itemId`.
 
 ## Dependências novas
@@ -172,10 +172,10 @@ Nenhuma. A UUID da `Idempotency-Key` sai de `Random.secure` (D11). Biometria (`l
 
 ## Tarefa 3 — Pix no app (dia 2–4)
 
-- [ ] `design_system`: `AmountCard`, `ContactCard`, `SecureHint`, `ActionTile`, `ReceiptCard`, `StatusBadge`, conferidos contra os mockups
-- [ ] `features/pix`: repositório (TDD), notifiers do envio e da revisão (TDD, inclusive a repetição com a mesma chave)
-- [ ] Telas 7, 8, 9 e 10 com todos os estados da seção 11; voltar do comprovante leva à Home
-- [ ] Atalho "Pix" na Home
+- [x] `design_system`: `AmountCard`, `ContactCard`, `SecureHint`, `ActionTile`, `ReceiptCard`, `StatusBadge`, conferidos contra os mockups
+- [x] `features/pix`: repositório (TDD), notifiers do envio e da revisão (TDD, inclusive a repetição com a mesma chave)
+- [x] Telas 7, 8, 9 e 10 com todos os estados da seção 11; voltar do comprovante leva à Home
+- [x] Atalho "Pix" na Home
 
 ### Desenho da tarefa 3
 
