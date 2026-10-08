@@ -27,7 +27,9 @@ class PrimaryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.nbColors;
     final enabled = onPressed != null && !loading;
+    // Its own node: otherwise it merges with nearby text in a list.
     return Semantics(
+      container: true,
       button: true,
       enabled: enabled,
       label: label,

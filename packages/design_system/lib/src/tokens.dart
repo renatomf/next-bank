@@ -14,6 +14,54 @@ abstract final class NbBrand {
   static const Color actionGlow = Color(0x5900FFC8);
 }
 
+/// The balance card's own palette (brief, section 2.3), exactly as in the
+/// Home mockup's CSS: the card is always dark, in both modes, so its colors
+/// do not come from the theme.
+abstract final class NbBalanceCardColors {
+  /// Top of the base gradient.
+  static const Color baseTop = Color(0xFF0B2A26);
+
+  /// Bottom of the base gradient.
+  static const Color baseBottom = Color(0xFF06110F);
+
+  /// Mint light in the top-right corner: mint at 75%.
+  static const Color glowTop = Color(0xBF00FFC8);
+
+  /// Light in the bottom-left corner: #00BEA0 at 65%.
+  static const Color glowBottom = Color(0xA600BEA0);
+
+  /// The diagonal silk sheen: rgba(220, 255, 248, 0.16).
+  static const Color sheen = Color(0x29DCFFF8);
+
+  /// Card border: mint at 22%.
+  static const Color border = Color(0x3800FFC8);
+
+  /// Card shadow: mint at 35%.
+  static const Color shadow = Color(0x5900FFC8);
+
+  /// Glass panel under the balance: it keeps the text readable over the
+  /// lights.
+  static const Color glass = Color(0x9E060C0E);
+
+  /// Glass panel border: white at 10%.
+  static const Color glassBorder = Color(0x1AFFFFFF);
+
+  /// Balance and logo.
+  static const Color text = Color(0xFFF2F6F8);
+
+  /// Labels, "R$" and cents.
+  static const Color textMuted = Color(0xFFA9B6BF);
+
+  /// Eye button: rgba(10, 15, 20, 0.45).
+  static const Color button = Color(0x730A0F14);
+
+  /// Eye button border: white at 14%.
+  static const Color buttonBorder = Color(0x24FFFFFF);
+
+  /// Loading placeholders on the glass.
+  static const Color placeholder = Color(0x29FFFFFF);
+}
+
 /// Theme colors for one mode (brief, section 2.2), read with
 /// `Theme.of(context).extension<NbColors>()`.
 @immutable
@@ -233,6 +281,32 @@ abstract final class NbType {
     height: 1.15,
     letterSpacing: -0.9,
   );
+
+  /// Large amount, the integer part: Sora 600, 34, tracking -3% (mockup).
+  static final TextStyle moneyLarge = _style(
+    display,
+    34,
+    600,
+    letterSpacing: -1.02,
+  );
+
+  /// "R$" beside a large amount: Sora 500, 18 (brief, section 3; mockup).
+  static final TextStyle moneyLargeCurrency = _style(display, 18, 500);
+
+  /// Cents beside a large amount: Sora 500, 20 (mockup).
+  static final TextStyle moneyLargeCents = _style(display, 20, 500);
+
+  /// Small label on a card: Manrope 400, 12 (mockup).
+  static final TextStyle cardLabel = _style(body, 12, 400);
+
+  /// Emphasized body, such as the customer's name: Manrope 700, 15 (mockup).
+  static final TextStyle bodyStrong = _style(body, 15, 700);
+
+  /// Plain caption, such as the greeting: Manrope 400, 13 (mockup).
+  static final TextStyle captionPlain = _style(body, 13, 400);
+
+  /// Initial in an avatar: Sora 600, 16 (mockup).
+  static final TextStyle avatar = _style(display, 16, 600);
 
   /// Body: Manrope 600, 15.
   static final TextStyle bodyText = _style(body, 15, 600);

@@ -52,6 +52,35 @@ void main() {
       expect(find.bySemanticsLabel('Entrar'), findsOneWidget);
     });
 
+    // Found while building the Home: in a list, the button merged with the
+    // text beside it and was announced as "Bem-vindo, Entrar".
+    testWidgets('stays its own button next to other text in a list', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: NbTheme.dark(),
+          home: Scaffold(
+            body: ListView(
+              children: [
+                Column(
+                  children: [
+                    const Text('Bem-vindo'),
+                    PrimaryButton(label: 'Entrar', onPressed: () {}),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        tester.getSemantics(find.byType(PrimaryButton)),
+        isSemantics(label: 'Entrar', isButton: true),
+      );
+    });
+
     List<BoxShadow>? glowOf(WidgetTester tester) {
       final box = tester.widget<DecoratedBox>(
         find
@@ -201,6 +230,13 @@ void main() {
       final gradient = (glow.decoration as BoxDecoration).gradient!;
       expect(ground.color, colors.background);
       expect(gradient.colors.first, colors.glow);
+      expect(
+        find.descendant(
+          of: find.byType(GlowBackground),
+          matching: find.byType(Dither),
+        ),
+        findsOneWidget,
+      );
       expect(find.text('Conteúdo'), findsOneWidget);
     });
   }

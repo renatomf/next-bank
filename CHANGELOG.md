@@ -14,6 +14,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Lançamentos no ledger (`PostJournalEntry`): contas de cliente travadas sempre em ordem de ID e contas de sistema nunca travadas; saldo conferido antes de qualquer escrita; provado contra o Postgres que dois débitos de R$ 80 sobre R$ 100 gastam o saldo uma vez (T-DB-08) e que transferências opostas simultâneas não travam (T-DB-09); abertura, funding único e leitura de saldo da conta contábil do cliente
 - Cadastro abre a conta corrente (número da sequência com dígito verificador, conta contábil aberta pela porta do Ledger, `ACCOUNT_OPENED` na auditoria) e deposita R$ 10.000,00 de demonstração, tudo na mesma transação do usuário; 20 cadastros simultâneos nunca repetem número de conta
 - Conta do cliente (`GET /v1/me/account`): agência, número, status e saldo disponível em centavos inteiros; a conta vem sempre do token, qualquer parâmetro é recusado e nenhuma rota aceita ID de recurso no caminho (READ-01, nova ameaça READ-05); erro `NotFound` do catálogo; contrato OpenAPI e cliente Dart atualizados
+- `design_system`: `MoneyText` (centavos inteiros formatados como reais, o único lugar onde dinheiro é formatado, e oculto sem nenhum dígito), `BalanceCard` (seda em gradientes, painel de vidro, conta mascarada e olho para ocultar o saldo, com AA mesmo sobre o brilho Menta), `IconCircleButton`, `Skeleton` e `ErrorState`
+
+### Corrigido
+- Leitor de tela: seis componentes do `design_system` se fundiam com os textos vizinhos dentro de listas (o "Entrar" do login era anunciado junto com o texto ao lado, um bloco inteiro virava título); cada um agora tem o próprio nó de semântica (F-17)
+- Card de saldo e brilho da tela fiéis ao mockup da Home: gradientes com a geometria exata do CSS e granulado que esconde as faixas que o Impeller desenhava nos degradês (F-19); o saldo oculto mostra a máscara na Manrope, que tem o ponto, e o "R$" não se mexe ao tocar no olho
 
 ### Adicionado — Semana 3: Identity
 - Primeiras migrations: schemas `identity` (usuários, sessões, refresh tokens, PIN) e `audit` (trilha append-only garantida por `GRANT` e trigger), com as invariantes também no banco

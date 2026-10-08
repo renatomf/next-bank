@@ -50,16 +50,18 @@
 
 ### 2.3 Card de saldo (assinatura, igual nos dois modos)
 
-Sempre escuro. Camadas, de cima para baixo:
+Sempre escuro, 214 de altura (cresce com texto maior). Camadas, de cima para baixo, com a geometria exata do CSS do mockup da Home:
 
-1. Radial Menta 75% no canto superior direito
-2. Radial `#00BEA0` 65% no canto inferior esquerdo
-3. Faixa diagonal clara (efeito de seda) a 16%
-4. Base linear `#0B2A26 → #06110F`
+1. Radial Menta 75%: `radial-gradient(70% 90% at 92% 8%)`, transparente a 60%
+2. Radial `#00BEA0` 65%: `radial-gradient(60% 80% at 8% 105%)`, transparente a 65%
+3. Faixa de seda `rgba(220,255,248,0.16)`: `linear-gradient(118deg)`, transparente a 38%, cheia a 48%, transparente a 58%
+4. Base `linear-gradient(160deg, #0B2A26 0%, #06110F 70%)`
 5. Borda `rgba(0,255,200,0.22)`; sombra `0 18 50 -12 rgba(0,255,200,0.35)`
-6. Painel de vidro `rgba(6,12,14,0.62)` + blur 14 para o saldo (garante contraste do texto)
+6. Painel de vidro `rgba(6,12,14,0.62)` + blur 14, borda branca a 10%, a 12 da base e das laterais (garante contraste do texto)
 
-No Flutter, a primeira versão usa gradientes empilhados. Evolução opcional: fragment shader com a seda em movimento lento.
+Texto do card: saldo e logo `#F2F6F8`; rótulo, "R$" e centavos `#A9B6BF` (AA sobre o vidro mesmo nos pontos mais claros das luzes, provado em teste). Botão do olho: `rgba(10,15,20,0.45)`, borda branca a 14%, ícone 18.
+
+No Flutter, os gradientes são empilhados e desenhados com a geometria do CSS (elipses, ângulos e paradas sobre a caixa real), para baterem com o mockup em qualquer largura. O Impeller não faz *dithering* em gradientes, e degradês suaves sobre fundo escuro mostram faixas no aparelho (F-19). Por isso, o card e o brilho da tela recebem um granulado de 1 px em modo *overlay* (`Dither`), que esconde as faixas sem mudar a cor média. Evolução opcional: fragment shader com a seda em movimento lento.
 
 ## 3. Tipografia
 
@@ -74,7 +76,7 @@ No Flutter, a primeira versão usa gradientes empilhados. Evolução opcional: f
 | Rótulo em caixa alta | Manrope | 700, tracking +8% | 11 |
 | IDs técnicos | JetBrains Mono | 500 | 12 |
 
-Valores monetários sempre separam "R$", inteiro e centavos em estilos diferentes.
+Valores monetários sempre separam "R$", inteiro e centavos em estilos diferentes. No card de saldo: "R$" 18, inteiro 34 e centavos 20, a 6 px um do outro, na mesma linha de base. Com o saldo oculto, a máscara `••••••` usa Manrope 800 (a Sora não tem o ponto) e mantém a altura de linha do inteiro, para o "R$" não se mexer ao tocar no olho.
 
 ## 4. Forma e espaço
 
@@ -98,7 +100,9 @@ Lucide (traço 1.8; 2–3 nos ícones de check e seta dentro de botões). Ícone
 
 ## 6. Logo
 
-Wordmark **"next"** em Sora 700, tracking −4%, seguido de um ponto Menta com glow. Identidade 100% própria: nenhum elemento de logos de outras instituições.
+Wordmark **"next"** em Sora 700, tracking −4%, seguido de um ponto Menta. Identidade 100% própria: nenhum elemento de logos de outras instituições.
+
+Por decisão do desenvolvedor sobre o mockup, o ponto não tem glow e fica na linha de base, colado ao "t". Para o tamanho `size` do texto, o ponto tem diâmetro `size × 0,2`, fica a `size × 0,06` do "t" e desce e avança `size × 2/36` (2 px no tamanho 36).
 
 ## 7. Componentes validados nos mockups
 
