@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/api_failure.dart';
+import 'package:next_bank/core/api_messages.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/features/auth/domain/pin_rules.dart';
-import 'package:next_bank/features/auth/presentation/auth_messages.dart';
 import 'package:next_bank/features/auth/presentation/auth_providers.dart';
 
 /// What the PIN creation screen shows. Never holds the PIN: the screen keeps

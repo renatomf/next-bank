@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/api_failure.dart';
+import 'package:next_bank/core/api_messages.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/features/auth/domain/cpf.dart';
 import 'package:next_bank/features/auth/domain/email.dart';
 import 'package:next_bank/features/auth/domain/registration_rules.dart';
-import 'package:next_bank/features/auth/presentation/auth_messages.dart';
 import 'package:next_bank/features/auth/presentation/auth_providers.dart';
 
 /// What the registration screen shows. Never holds the password: it lives
