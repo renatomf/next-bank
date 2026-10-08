@@ -1,5 +1,5 @@
 import type { Clock, IdGenerator, Transaction } from '../../../shared/application/ports.ts';
-import { Cpf } from '../domain/cpf.ts';
+import { Cpf } from '../../../shared/domain/cpf.ts';
 import { AlreadyRegistered } from '../domain/errors.ts';
 import { type CommonPasswordList, Password } from '../domain/password.ts';
 import { Session } from '../domain/session.ts';

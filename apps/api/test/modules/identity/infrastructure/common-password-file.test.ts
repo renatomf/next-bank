@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { Cpf } from '../../../../src/modules/identity/domain/cpf.ts';
+import { Cpf } from '../../../../src/shared/domain/cpf.ts';
 import {
   COMMON_PASSWORDS_FILE,
   loadCommonPasswords,

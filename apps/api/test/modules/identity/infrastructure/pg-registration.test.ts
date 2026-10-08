@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { afterAll, describe, expect, it } from 'vitest';
-import { Cpf } from '../../../../src/modules/identity/domain/cpf.ts';
+import { Cpf } from '../../../../src/shared/domain/cpf.ts';
 import { AlreadyRegistered } from '../../../../src/modules/identity/domain/errors.ts';
 import { PgIdentityRepositories } from '../../../../src/modules/identity/infrastructure/pg-identity-repositories.ts';
 import { PgUsersRepository } from '../../../../src/modules/identity/infrastructure/pg-users-repository.ts';

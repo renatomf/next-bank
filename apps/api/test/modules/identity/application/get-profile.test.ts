@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { GetProfile } from '../../../../src/modules/identity/application/get-profile.ts';
-import { Cpf } from '../../../../src/modules/identity/domain/cpf.ts';
+import { Cpf } from '../../../../src/shared/domain/cpf.ts';
 import { Unauthenticated } from '../../../../src/modules/identity/domain/errors.ts';
 import { InMemoryDatabase } from './fakes.ts';
 

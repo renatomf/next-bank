@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Cpf } from '../../../../src/modules/identity/domain/cpf.ts';
+import { Cpf } from '../../../../src/shared/domain/cpf.ts';
 import { User } from '../../../../src/modules/identity/domain/user.ts';
 
 const NOW = new Date('2026-10-06T12:00:00.000Z');

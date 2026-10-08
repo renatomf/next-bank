@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { Cpf } from '../../../../src/modules/identity/domain/cpf.ts';
+import { Cpf } from '../../../../src/shared/domain/cpf.ts';
 import { AesGcmCpfProtector } from '../../../../src/modules/identity/infrastructure/aes-gcm-cpf-protector.ts';
 
 // CPF is encrypted in the application, so a leaked dump or backup does not

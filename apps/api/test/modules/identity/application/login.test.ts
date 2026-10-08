@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Login } from '../../../../src/modules/identity/application/login.ts';
-import { Cpf } from '../../../../src/modules/identity/domain/cpf.ts';
+import { Cpf } from '../../../../src/shared/domain/cpf.ts';
 import {
   InvalidCredentials,
   TooManyAttempts,

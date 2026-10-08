@@ -16,7 +16,7 @@ import type {
   SecretHasher,
   StoredRefreshToken,
 } from '../../../../src/modules/identity/application/ports.ts';
-import { Cpf } from '../../../../src/modules/identity/domain/cpf.ts';
+import { Cpf } from '../../../../src/shared/domain/cpf.ts';
 import type { LoginAttemptsState } from '../../../../src/modules/identity/domain/login-attempts.ts';
 import { PinAlreadyCreated } from '../../../../src/modules/identity/domain/errors.ts';
 import type { SessionState } from '../../../../src/modules/identity/domain/session.ts';

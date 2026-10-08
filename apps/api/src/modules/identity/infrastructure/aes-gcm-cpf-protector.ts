@@ -1,6 +1,6 @@
 import { createCipheriv, createDecipheriv, createHmac, randomBytes } from 'node:crypto';
 import type { CpfProtector, EncryptedCpf } from '../application/ports.ts';
-import { Cpf } from '../domain/cpf.ts';
+import { Cpf } from '../../../shared/domain/cpf.ts';
 
 const KEY_BYTES = 32;
 const NONCE_BYTES = 12;

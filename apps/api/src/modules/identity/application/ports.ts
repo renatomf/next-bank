@@ -1,5 +1,5 @@
 import type { AuditTrail, Transaction } from '../../../shared/application/ports.ts';
-import type { Cpf } from '../domain/cpf.ts';
+import type { Cpf } from '../../../shared/domain/cpf.ts';
 import type { IssuedRefreshToken, SessionState } from '../domain/session.ts';
 import type { LoginAttemptsState } from '../domain/login-attempts.ts';
 import type { TransactionPinState } from '../domain/transaction-pin.ts';

@@ -1,4 +1,4 @@
-import type { Cpf } from './cpf.ts';
+import type { Cpf } from '../../../shared/domain/cpf.ts';
 
 export type UserStatus = 'ACTIVE' | 'LOCKED';
 
