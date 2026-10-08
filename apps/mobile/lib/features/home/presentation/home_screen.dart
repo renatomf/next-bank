@@ -21,16 +21,17 @@ class HomeScreen extends ConsumerWidget {
     return Scaffold(
       body: GlowBackground(
         child: SafeArea(
+          // Mockup: 28 px on top, 20 on the sides, 22 between sections.
           child: ListView(
-            padding: const EdgeInsets.all(NbSpace.screen),
+            padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
             children: [
               _Header(greeting: greeting, name: name, actions: actions),
-              const SizedBox(height: NbSpace.xxl),
+              const SizedBox(height: 22),
               const DisplayTitle(
                 lead: 'Seu dinheiro,',
                 trail: 'um passo à frente.',
               ),
-              const SizedBox(height: NbSpace.xxl),
+              const SizedBox(height: 22),
               const _Balance(),
             ],
           ),
@@ -54,17 +55,22 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.nbColors;
-    final text = Theme.of(context).textTheme;
     return Row(
       children: [
         // The initial repeats the name, which is read right after it.
         ExcludeSemantics(
-          child: CircleAvatar(
-            radius: NbSize.touch / 2,
-            backgroundColor: colors.surface2,
+          child: Container(
+            width: NbSize.touch,
+            height: NbSize.touch,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: colors.surface2,
+              shape: BoxShape.circle,
+              border: Border.all(color: colors.border),
+            ),
             child: Text(
               name.isEmpty ? '' : name.characters.first.toUpperCase(),
-              style: text.titleMedium,
+              style: NbType.avatar.copyWith(color: colors.text),
             ),
           ),
         ),
@@ -73,10 +79,14 @@ class _Header extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(greeting, style: text.bodySmall),
+              Text(
+                greeting,
+                style: NbType.captionPlain.copyWith(color: colors.textMuted),
+              ),
+              const SizedBox(height: 2),
               Text(
                 name,
-                style: text.titleMedium,
+                style: NbType.bodyStrong.copyWith(color: colors.text),
                 overflow: TextOverflow.ellipsis,
               ),
             ],
