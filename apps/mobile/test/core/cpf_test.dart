@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:next_bank/features/auth/domain/cpf.dart';
+import 'package:next_bank/core/cpf.dart';
 
 // The same textbook examples as the API tests; never real people's data.
 // The rule mirrors the API's Cpf (check digits, no repeated digits).
