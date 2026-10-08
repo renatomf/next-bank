@@ -27,6 +27,8 @@ class Problem {
     required  this.status,
 
      this.code,
+
+     this.remainingAttempts,
   });
 
   @JsonKey(
@@ -79,6 +81,20 @@ class Problem {
 
 
 
+          // minimum: 0
+          // maximum: 9007199254740991
+  @JsonKey(
+    
+    name: r'remainingAttempts',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final int? remainingAttempts;
+
+
+
 
 
     @override
@@ -86,14 +102,16 @@ class Problem {
       other.type == type &&
       other.title == title &&
       other.status == status &&
-      other.code == code;
+      other.code == code &&
+      other.remainingAttempts == remainingAttempts;
 
     @override
     int get hashCode =>
         type.hashCode +
         title.hashCode +
         status.hashCode +
-        code.hashCode;
+        code.hashCode +
+        remainingAttempts.hashCode;
 
   factory Problem.fromJson(Map<String, dynamic> json) => _$ProblemFromJson(json);
 

@@ -18,3 +18,4 @@ lib/src/model/my_account.dart
 lib/src/model/problem.dart
 lib/src/model/refresh_request_input.dart
 lib/src/model/register_request_input.dart
+lib/src/model/verify_pin_request_input.dart

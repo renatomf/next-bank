@@ -15,6 +15,8 @@ abstract class _$ProblemCWProxy {
 
   Problem code(String? code);
 
+  Problem remainingAttempts(int? remainingAttempts);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Problem(...).copyWith.fieldName(value)`.
@@ -23,7 +25,13 @@ abstract class _$ProblemCWProxy {
   /// ```dart
   /// Problem(...).copyWith(id: 12, name: "My name")
   /// ```
-  Problem call({ProblemTypeEnum type, String title, int status, String? code});
+  Problem call({
+    ProblemTypeEnum type,
+    String title,
+    int status,
+    String? code,
+    int? remainingAttempts,
+  });
 }
 
 /// Callable proxy for `copyWith` functionality.
@@ -45,6 +53,10 @@ class _$ProblemCWProxyImpl implements _$ProblemCWProxy {
   @override
   Problem code(String? code) => call(code: code);
 
+  @override
+  Problem remainingAttempts(int? remainingAttempts) =>
+      call(remainingAttempts: remainingAttempts);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Problem(...).copyWith.fieldName(value)`.
@@ -59,6 +71,7 @@ class _$ProblemCWProxyImpl implements _$ProblemCWProxy {
     Object? title = const $CopyWithPlaceholder(),
     Object? status = const $CopyWithPlaceholder(),
     Object? code = const $CopyWithPlaceholder(),
+    Object? remainingAttempts = const $CopyWithPlaceholder(),
   }) {
     return Problem(
       type: type == const $CopyWithPlaceholder() || type == null
@@ -77,6 +90,10 @@ class _$ProblemCWProxyImpl implements _$ProblemCWProxy {
           ? _value.code
           // ignore: cast_nullable_to_non_nullable
           : code as String?,
+      remainingAttempts: remainingAttempts == const $CopyWithPlaceholder()
+          ? _value.remainingAttempts
+          // ignore: cast_nullable_to_non_nullable
+          : remainingAttempts as int?,
     );
   }
 }
@@ -103,6 +120,10 @@ Problem _$ProblemFromJson(Map<String, dynamic> json) =>
         title: $checkedConvert('title', (v) => v as String),
         status: $checkedConvert('status', (v) => (v as num).toInt()),
         code: $checkedConvert('code', (v) => v as String?),
+        remainingAttempts: $checkedConvert(
+          'remainingAttempts',
+          (v) => (v as num?)?.toInt(),
+        ),
       );
       return val;
     });
@@ -112,6 +133,7 @@ Map<String, dynamic> _$ProblemToJson(Problem instance) => <String, dynamic>{
   'title': instance.title,
   'status': instance.status,
   'code': ?instance.code,
+  'remainingAttempts': ?instance.remainingAttempts,
 };
 
 const _$ProblemTypeEnumEnumMap = {
