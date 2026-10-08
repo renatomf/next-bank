@@ -1,26 +1,11 @@
+import 'package:next_bank/core/date_texts.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
-
-const List<String> _months = [
-  'jan',
-  'fev',
-  'mar',
-  'abr',
-  'mai',
-  'jun',
-  'jul',
-  'ago',
-  'set',
-  'out',
-  'nov',
-  'dez',
-];
 
 /// "5 out 2026 · 14:32", in the customer's local time (comprovante-dark).
 String receiptDate(DateTime instant) {
   final local = instant.toLocal();
-  String two(int value) => value.toString().padLeft(2, '0');
-  return '${local.day} ${_months[local.month - 1]} ${local.year} · '
-      '${two(local.hour)}:${two(local.minute)}';
+  return '${local.day} ${shortMonth(local.month)} ${local.year} · '
+      '${clockTime(local)}';
 }
 
 /// The payer's account with only its last four digits (brief, section 7).
