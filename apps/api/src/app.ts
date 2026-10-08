@@ -17,7 +17,6 @@ import { RegisterCustomer } from './application/onboarding/register-customer.ts'
 import { createAccountsModule, myAccountRoutes } from './modules/accounts/index.ts';
 import {
   type AccessTokenKeys,
-  type CpfKeys,
   createIdentityModule,
   loginRoutes,
   meRoutes,
@@ -28,6 +27,7 @@ import {
 import { createLedgerModule } from './modules/ledger/index.ts';
 import { healthRoutes } from './shared/http/health.ts';
 import { registerProblemHandlers } from './shared/http/problem.ts';
+import type { PiiKeys } from './shared/infrastructure/aes-gcm-pii-protector.ts';
 import { PgUnitOfWork } from './shared/infrastructure/pg-unit-of-work.ts';
 import { SystemClock, UuidV7Generator } from './shared/infrastructure/system-ports.ts';
 import { REDACT_PATHS } from './shared/logging.ts';
@@ -42,7 +42,7 @@ export interface AppDependencies {
   /** Log destination; defaults to stdout. */
   logStream?: LogDestination;
   /** Signing and CPF keys: required, there is no insecure default. */
-  security: { accessTokenKeys: AccessTokenKeys; cpfKeys: CpfKeys; pinPepper: Uint8Array };
+  security: { accessTokenKeys: AccessTokenKeys; piiKeys: PiiKeys; pinPepper: Uint8Array };
 }
 
 // Per client IP (API-02). In memory: one instance in V1 (plan D3). Behind the
@@ -127,7 +127,7 @@ export function buildApp({ pool, logStream, security }: AppDependencies) {
     clock,
     ids,
     accessTokenKeys: security.accessTokenKeys,
-    cpfKeys: security.cpfKeys,
+    piiKeys: security.piiKeys,
     pinPepper: security.pinPepper,
   });
   // Before any route: every route requires a token unless declared public.

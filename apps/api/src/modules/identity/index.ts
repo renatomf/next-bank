@@ -9,7 +9,8 @@ import { Logout } from './application/logout.ts';
 import type { AccessTokenVerifier } from './application/ports.ts';
 import { RefreshSession } from './application/refresh-session.ts';
 import { RegisterUser } from './application/register-user.ts';
-import { AesGcmCpfProtector, type CpfKeys } from './infrastructure/aes-gcm-cpf-protector.ts';
+import type { PiiKeys } from '../../shared/infrastructure/aes-gcm-pii-protector.ts';
+import { AesGcmCpfProtector } from './infrastructure/aes-gcm-cpf-protector.ts';
 import { Argon2idHasher } from './infrastructure/argon2id-hasher.ts';
 import { loadCommonPasswords } from './infrastructure/common-password-file.ts';
 import { InMemoryLoginAttempts } from './infrastructure/in-memory-login-attempts.ts';
@@ -23,7 +24,6 @@ export { loginRoutes } from './http/login-route.ts';
 export { meRoutes } from './http/me-route.ts';
 export { pinRoutes } from './http/pin-route.ts';
 export { sessionRoutes } from './http/session-routes.ts';
-export type { CpfKeys } from './infrastructure/aes-gcm-cpf-protector.ts';
 export type { AccessTokenKeys } from './infrastructure/jose-access-tokens.ts';
 export type {
   PreparedRegistration,
@@ -50,7 +50,7 @@ export interface IdentitySettings {
   clock: Clock;
   ids: IdGenerator;
   accessTokenKeys: AccessTokenKeys;
-  cpfKeys: CpfKeys;
+  piiKeys: PiiKeys;
   /** Server-side key mixed into PIN hashes (API-13). */
   pinPepper: Uint8Array;
 }
@@ -67,7 +67,7 @@ export function createIdentityModule(settings: IdentitySettings): IdentityModule
       clock: settings.clock,
       ids: settings.ids,
       hasher,
-      cpfProtector: new AesGcmCpfProtector(settings.cpfKeys),
+      cpfProtector: new AesGcmCpfProtector(settings.piiKeys),
       commonPasswords: loadCommonPasswords(),
       refreshTokens,
       accessTokens,

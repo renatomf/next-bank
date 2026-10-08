@@ -14,7 +14,7 @@ const app = buildApp({
   // Throwaway keys: they do not change the document, which only reads route schemas.
   security: {
     accessTokenKeys: { privateKey: generateKeyPairSync('ed25519').privateKey, keyId: 'contract' },
-    cpfKeys: { keyVersion: 1, encryptionKey: randomBytes(32), hmacKey: randomBytes(32) },
+    piiKeys: { keyVersion: 1, encryptionKey: randomBytes(32), hmacKey: randomBytes(32) },
     pinPepper: randomBytes(32),
   },
 });

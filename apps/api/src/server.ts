@@ -7,7 +7,7 @@ const app = buildApp({
   pool: createPool(config.databaseUrl),
   security: {
     accessTokenKeys: config.jwt,
-    cpfKeys: {
+    piiKeys: {
       keyVersion: config.pii.keyVersion,
       encryptionKey: config.pii.encryptionKey,
       hmacKey: config.pii.hmacKey,
