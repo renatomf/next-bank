@@ -74,13 +74,21 @@ class TransactionItem extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: NbSpace.md),
+              // The words get more room than the amount, and the title stays
+              // on one line, shrinking only when it must.
               Expanded(
+                flex: 3,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: NbType.bodyText.copyWith(color: colors.text),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        title,
+                        maxLines: 1,
+                        style: NbType.bodyText.copyWith(color: colors.text),
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -94,6 +102,7 @@ class TransactionItem extends StatelessWidget {
               // Shares the width with the title and shrinks to fit, so a large
               // amount never overflows a small phone (brief, section 8).
               Flexible(
+                flex: 2,
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerRight,
