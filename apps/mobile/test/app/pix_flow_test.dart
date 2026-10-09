@@ -7,6 +7,7 @@ import 'package:next_bank/features/pix/presentation/receipt/receipt_screen.dart'
 import 'package:next_bank/features/pix/presentation/review/review_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
 
+import '../support/fake_account_repository.dart';
 import '../support/fake_pix_repository.dart';
 import '../support/fake_token_store.dart';
 import '../support/pump_app.dart';
@@ -33,8 +34,17 @@ Finder listOf(Type type) => find
     .first;
 
 /// Signed in with the PIN, unlocked, on the Home.
-Future<void> openHome(WidgetTester tester, FakePixRepository pix) async {
-  await pumpApp(tester, store: FakeTokenStore(tokens), pix: pix);
+Future<void> openHome(
+  WidgetTester tester,
+  FakePixRepository pix, {
+  FakeAccountRepository? account,
+}) async {
+  await pumpApp(
+    tester,
+    store: FakeTokenStore(tokens),
+    pix: pix,
+    account: account,
+  );
   await unlockWithPin(tester);
 }
 
@@ -137,6 +147,28 @@ void main() {
 
     expect(find.bySemanticsLabel('Área Pix'), findsOneWidget);
     expect(find.byType(PinField), findsNothing);
+  });
+
+  // Found on a device: after a Pix of R$ 100,00, the Home showed the movement
+  // but still the balance from before it.
+  testWidgets('the Home shows the balance after the Pix', (tester) async {
+    final account = FakeAccountRepository();
+    final pix = FakePixRepository();
+    final complete = completes(pix);
+    pix.authorizeAnswer = () async {
+      account.balanceCents = 1000000 - 35000;
+      return await complete();
+    };
+    await openHome(tester, pix, account: account);
+    expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
+
+    await fillInPix(tester);
+    await reviewPix(tester);
+    await typePin(tester);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    expect(find.bySemanticsLabel(r'R$ 9.650,00'), findsOneWidget);
   });
 
   testWidgets('"Voltar ao início" on the receipt leads to the Home', (

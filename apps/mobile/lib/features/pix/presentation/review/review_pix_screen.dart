@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:next_bank/core/account/account_providers.dart';
+import 'package:next_bank/core/statement/statement_controller.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/pix_formats.dart';
 import 'package:next_bank/features/pix/presentation/pix_providers.dart';
@@ -59,9 +61,13 @@ class _ReviewPixScreenState extends ConsumerState<ReviewPixScreen> {
   Future<void> _finish(Future<PixTransfer?> authorization) async {
     final transfer = await authorization;
     if (transfer == null || !mounted) return;
-    // The Pix read before the PIN is stale now: the next screen reads it
-    // again instead of showing it as still waiting.
-    ref.invalidate(pixTransferProvider(widget.transferId));
+    // What was read before the PIN is stale now: the Pix, and, since the money
+    // may have moved, the balance and the statement. The screens that show
+    // them read them again instead of showing the old ones.
+    ref
+      ..invalidate(pixTransferProvider(widget.transferId))
+      ..invalidate(accountProvider)
+      ..invalidate(statementProvider);
     widget.onFinished(transfer);
   }
 

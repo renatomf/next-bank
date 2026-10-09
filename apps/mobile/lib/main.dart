@@ -71,7 +71,14 @@ class _NextBankAppState extends ConsumerState<NextBankApp> {
     // Time in the background counts toward the Unlock screen (F-16).
     _lifecycle = AppLifecycleListener(
       onPause: () => ref.read(appLockProvider.notifier).paused(),
-      onResume: () => ref.read(appLockProvider.notifier).resumed(),
+      onResume: () {
+        ref.read(appLockProvider.notifier).resumed();
+        // Money may have arrived while the app was away: the balance and the
+        // statement are read again by whichever screen shows them.
+        ref
+          ..invalidate(accountProvider)
+          ..invalidate(statementProvider);
+      },
     );
   }
 

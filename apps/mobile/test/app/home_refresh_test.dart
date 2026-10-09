@@ -1,0 +1,100 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:next_bank/core/statement/statement_item.dart';
+
+import '../support/fake_account_repository.dart';
+import '../support/fake_statement_repository.dart';
+import '../support/fake_token_store.dart';
+import '../support/pump_app.dart';
+
+/// The states a phone goes through to the background and back, in the order
+/// Flutter requires.
+void goToBackgroundAndBack(WidgetTester tester) => [
+  AppLifecycleState.inactive,
+  AppLifecycleState.hidden,
+  AppLifecycleState.paused,
+  AppLifecycleState.hidden,
+  AppLifecycleState.inactive,
+  AppLifecycleState.resumed,
+].forEach(tester.binding.handleAppLifecycleStateChanged);
+
+/// A statement whose first page the test can change, as new money arrives.
+({FakeStatementRepository repository, void Function(List<String>) arrive})
+statementOf(List<String> ids) {
+  var current = ids;
+  final repository = FakeStatementRepository({
+    null: () async => (
+      items: [
+        for (final id in current)
+          movement(
+            id,
+            kind: id == 'funding'
+                ? StatementKind.demoFunding
+                : StatementKind.pixReceived,
+          ),
+      ],
+      nextCursor: null,
+    ),
+  });
+  return (repository: repository, arrive: (ids) => current = ids);
+}
+
+// Found on a device: with the app open, a Pix received never showed, neither
+// in the balance nor in the latest movements. The Home reads both again when
+// the app comes back and when the customer pulls it down.
+void main() {
+  late FakeAccountRepository account;
+
+  Future<void> openHome(
+    WidgetTester tester,
+    FakeStatementRepository statement,
+  ) async {
+    // Tall enough for the Home's latest movements to be built at once.
+    tester.view.physicalSize = const Size(1080, 3600);
+    addTearDown(tester.view.reset);
+    account = FakeAccountRepository();
+    await pumpApp(
+      tester,
+      store: FakeTokenStore(tokens),
+      account: account,
+      statement: statement,
+    );
+    await unlockWithPin(tester);
+  }
+
+  testWidgets('reads the balance and movements again when the app comes back', (
+    tester,
+  ) async {
+    final statement = statementOf(['funding']);
+    await openHome(tester, statement.repository);
+    expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
+    expect(find.text('Pix recebido'), findsNothing);
+
+    account.balanceCents = 1010000;
+    statement.arrive(['received', 'funding']);
+    goToBackgroundAndBack(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.bySemanticsLabel(r'R$ 10.100,00'), findsOneWidget);
+    expect(find.text('Pix recebido'), findsOneWidget);
+  });
+
+  testWidgets('reads them again when the customer pulls the Home down', (
+    tester,
+  ) async {
+    final statement = statementOf(['funding']);
+    await openHome(tester, statement.repository);
+
+    account.balanceCents = 1010000;
+    statement.arrive(['received', 'funding']);
+    await tester.fling(
+      find.byType(Scrollable).first,
+      const Offset(0, 400),
+      1000,
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.bySemanticsLabel(r'R$ 10.100,00'), findsOneWidget);
+    expect(find.text('Pix recebido'), findsOneWidget);
+  });
+}
