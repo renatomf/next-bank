@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/api_messages.dart';
+import 'package:next_bank/core/device_label.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/features/auth/domain/email.dart';
 import 'package:next_bank/features/auth/presentation/auth_providers.dart';
@@ -61,7 +62,7 @@ class LoginController extends Notifier<LoginState> {
       final tokens = await repository.login(
         email: address,
         password: password,
-        deviceLabel: null,
+        deviceLabel: ref.read(deviceLabelProvider),
       );
       await session.signIn(tokens);
     } on ApiFailure catch (failure) {
