@@ -104,7 +104,7 @@ Nenhuma (ver D2 e D9).
 | # | Decisão | Padrão recomendado |
 |---|---|---|
 | D1 | Prioridade, se a semana estourar | Na ordem: sessões (API + tela) → trocar/redefinir PIN → trocar senha → navegação flutuante → acessibilidade e estados de erro. Se estourar, a navegação flutuante e o tema vão para a semana 8. Testes de segurança nunca são cortados |
-| D2 | Como o aparelho aparece na lista de sessões | O app envia no login e no cadastro um rótulo do sistema, como "Android 15" ou "iOS 18" (`dart:io`, sem dependência nova). Modelo do aparelho pediria o `device_info_plus` |
+| D2 | Como o aparelho aparece na lista de sessões | O app envia no login e no cadastro um rótulo do sistema, "Android" ou "iOS" (`dart:io`, sem dependência nova). A versão do sistema não sai do `dart:io` de forma legível, e o modelo do aparelho pediria o `device_info_plus`; a lista diferencia as sessões também pela data de uso |
 | D3 | Encerrar a sessão atual pela lista | A lista não oferece "Encerrar" na sessão atual: ela mostra "Este aparelho", e sair é pelo "Sair" do Perfil (logout, AUTH-06). A rota recusa a sessão do próprio token com 422 |
 | D4 | Troca de senha nesta semana | Entra: o ASVS e o AUTH-06 a marcam para a semana 7, e o PIN bloqueado já manda o cliente para "Perfil > Segurança". Encerra todas as **outras** sessões e mantém a atual |
 | D5 | Redefinir o PIN bloqueado | A mesma tela de trocar PIN: senha + PIN novo. Ela zera as tentativas, o bloqueio de 30 min e o `resetRequired`. O Desbloqueio com PIN bloqueado continua oferecendo só "Sair": o cliente entra com a senha e redefine |
@@ -128,8 +128,8 @@ Nenhuma (ver D2 e D9).
 
 ## Tarefa 1 — Sessões na API (dia 1)
 
-- [ ] `GET /v1/me/sessions` e `POST /v1/me/sessions/{id}/revoke`, outside-in, com o IDOR e a concorrência com o refresh escritos antes
-- [ ] App envia o rótulo do aparelho no login e no cadastro (D2)
+- [x] `GET /v1/me/sessions` e `POST /v1/me/sessions/{id}/revoke`, outside-in, com o IDOR e a concorrência com o refresh escritos antes
+- [x] App envia o rótulo do aparelho no login e no cadastro (D2)
 
 ## Tarefa 2 — PIN e senha na API (dia 2)
 
