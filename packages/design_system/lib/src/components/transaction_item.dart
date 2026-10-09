@@ -59,8 +59,8 @@ class TransactionItem extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                width: NbSize.touch,
-                height: NbSize.touch,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
                   color: incoming
                       ? colors.accent.withValues(alpha: 0.14)
@@ -87,13 +87,19 @@ class TransactionItem extends StatelessWidget {
                       child: Text(
                         title,
                         maxLines: 1,
-                        style: NbType.bodyText.copyWith(color: colors.text),
+                        style: NbType.bodyText.copyWith(
+                          color: colors.text,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       caption,
-                      style: NbType.caption.copyWith(color: colors.textMuted),
+                      style: NbType.caption.copyWith(
+                        color: colors.textMuted,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),

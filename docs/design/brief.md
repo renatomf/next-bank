@@ -50,7 +50,7 @@
 
 ### 2.3 Card de saldo (assinatura, igual nos dois modos)
 
-Sempre escuro, 214 de altura (cresce com texto maior). Camadas, de cima para baixo, com a geometria exata do CSS do mockup da Home:
+Sempre escuro, 190 de altura (cresce com texto maior). O mockup tem 214; o desenvolvedor reduziu para 190 na conferência no celular (semana 6). Camadas, de cima para baixo, com a geometria exata do CSS do mockup da Home:
 
 1. Radial Menta 75%: `radial-gradient(70% 90% at 92% 8%)`, transparente a 60%
 2. Radial `#00BEA0` 65%: `radial-gradient(60% 80% at 8% 105%)`, transparente a 65%
@@ -112,7 +112,7 @@ Por decisão do desenvolvedor sobre o mockup, o ponto não tem glow e fica na li
 | `ActionTile` (84 de altura, raio 20) | Atalhos da Home |
 | `BalanceCard` (com ocultar saldo) | Home |
 | `AmountCard` | Pix |
-| `TransactionItem` (ícone em círculo, título, legenda, valor com sinal) | Home, Extrato |
+| `TransactionItem` (ícone em círculo de 36, título 14 em uma linha, legenda 12, valor com sinal; medidas ajustadas pelo desenvolvedor no celular, semana 6) | Home, Extrato |
 | `SegmentedControl` em pílula | Pix |
 | `ContactCard` selecionável + `ContactChip` | Pix |
 | `TextField` com label | Pix |

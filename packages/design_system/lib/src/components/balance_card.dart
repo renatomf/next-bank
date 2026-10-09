@@ -24,7 +24,7 @@ class BalanceCard extends StatelessWidget {
   });
 
   /// Height of the card in the mockup; larger text grows it.
-  static const double height = 214;
+  static const double height = 190;
 
   /// The account number, e.g. "100000-4"; only its last four digits show.
   final String? accountNumber;

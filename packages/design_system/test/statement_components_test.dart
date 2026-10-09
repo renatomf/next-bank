@@ -120,6 +120,28 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
+    // Brief, section 7: sizes set by the developer on a device (week 6).
+    testWidgets('a 36 circle, a 14 title and a 12 caption', (tester) async {
+      await tester.pumpWidget(item());
+
+      final circle = find.ancestor(
+        of: find.byIcon(Icons.south_west),
+        matching: find.byType(Container),
+      );
+      expect(tester.getSize(circle.first), const Size(36, 36));
+      expect(
+        tester.widget<Text>(find.text('Pix recebido')).style?.fontSize,
+        14,
+      );
+      expect(
+        tester
+            .widget<Text>(find.text('Mariana Costa · Hoje, 09:12'))
+            .style
+            ?.fontSize,
+        12,
+      );
+    });
+
     testWidgets('opens the detail on tap', (tester) async {
       var taps = 0;
       await tester.pumpWidget(item(onTap: () => taps++));
