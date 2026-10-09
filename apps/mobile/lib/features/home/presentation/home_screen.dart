@@ -42,39 +42,48 @@ class HomeScreen extends ConsumerWidget {
     return Scaffold(
       body: GlowBackground(
         child: SafeArea(
-          // Mockup: 28 px on top, 20 on the sides, 22 between sections.
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
-            children: [
-              _Header(greeting: greeting, name: name, actions: actions),
-              const SizedBox(height: 22),
-              const DisplayTitle(
-                lead: 'Seu dinheiro,',
-                trail: 'um passo à frente.',
-              ),
-              const SizedBox(height: 22),
-              // The mockup's row of four; the other three shortcuts come with
-              // their screens, so the Pix keeps a quarter of the width.
-              Row(
-                children: [
-                  Expanded(
-                    child: ActionTile(
-                      icon: Icons.diamond_outlined,
-                      label: 'Área Pix',
-                      onPressed: onPix,
+          // Pulled down, the Home reads the balance and the movements again,
+          // as when money arrives with the app open.
+          child: RefreshIndicator(
+            onRefresh: () => Future.wait([
+              ref.refresh(accountProvider.future),
+              ref.read(statementProvider.notifier).refresh(),
+            ]),
+            // Mockup: 28 px on top, 20 on the sides, 22 between sections.
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
+              children: [
+                _Header(greeting: greeting, name: name, actions: actions),
+                const SizedBox(height: 22),
+                const DisplayTitle(
+                  lead: 'Seu dinheiro,',
+                  trail: 'um passo à frente.',
+                ),
+                const SizedBox(height: 22),
+                // The mockup's row of four; the other three shortcuts come with
+                // their screens, so the Pix keeps a quarter of the width.
+                Row(
+                  children: [
+                    Expanded(
+                      child: ActionTile(
+                        icon: Icons.diamond_outlined,
+                        label: 'Área Pix',
+                        onPressed: onPix,
+                      ),
                     ),
-                  ),
-                  const Spacer(flex: 3),
-                ],
-              ),
-              const SizedBox(height: 22),
-              const _Balance(),
-              const SizedBox(height: 22),
-              _LatestMovements(
-                onStatement: onStatement,
-                onMovement: onMovement,
-              ),
-            ],
+                    const Spacer(flex: 3),
+                  ],
+                ),
+                const SizedBox(height: 22),
+                const _Balance(),
+                const SizedBox(height: 22),
+                _LatestMovements(
+                  onStatement: onStatement,
+                  onMovement: onMovement,
+                ),
+              ],
+            ),
           ),
         ),
       ),
