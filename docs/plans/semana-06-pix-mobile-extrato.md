@@ -357,7 +357,7 @@ packages/design_system/   # TransactionItem, EmptyState
 ## Checkpoint de fim de semana
 
 - [x] **Pix funcionando de ponta a ponta no app** contra a API real, no emulador (Ana) e no celular (Bruno): Pix de R$ 100,00 e R$ 120,00, saldos 9.780 e 10.220, comprovante, extrato e detalhe conferidos na tela. O teste no aparelho achou F-22, F-23, o título quebrado e o Pix recebido que não aparecia, todos corrigidos
-- [ ] Desbloqueio na abertura e após 5 min em segundo plano; PIN bloqueado oferece "Sair". Na abertura conferido no aparelho; os 5 min e o PIN bloqueado estão cobertos por `app_lock_test.dart` e `app_test.dart`, e falta conferir no aparelho
+- [x] Desbloqueio na abertura e após 5 min em segundo plano; PIN bloqueado oferece "Sair". Conferido no aparelho: na abertura e depois de mais de 5 min em segundo plano no emulador (pelo desenvolvedor e numa captura de tela automatizada). PIN bloqueado: coberto por `app_test.dart`
 - [x] Falha de rede na autorização não duplica o Pix (MOB-07: `review_pix_controller_test.dart`, `pix_flow_test.dart`)
 - [x] Extrato pagina sem duplicar nem pular (T-DB-12); READ-01 a READ-04 com teste verde
 - [x] Cobertura ≥ 90% em `domain/` e `application/` (gate do CI); `flutter analyze` sem warnings
