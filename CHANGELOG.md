@@ -6,6 +6,23 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não publicado]
 
+### Adicionado — Semana 6: Pix no app + Extrato
+- Extrato na API (`GET /v1/me/statement`): só da conta do token, página fixa de 20, do mais novo ao mais antigo, com cursor opaco `(created_at, id)` em microssegundos; Pix novo entre duas páginas não duplica nem pula (T-DB-12); índice `postings_statement_idx` verificado com `EXPLAIN ANALYZE`; `transferId` só num Pix enviado
+- Desbloqueio (tela 5): o app abre travado com sessão guardada e trava de novo após 5 minutos em segundo plano, medidos pelo relógio monotônico e pela data do aparelho; o PIN é conferido no servidor, no mesmo contador do Pix; PIN bloqueado oferece só "Sair"; o login com senha vai direto à Home
+- Pix no app (telas 7 a 10): valor digitado em centavos inteiros, chave CPF conferida no aparelho antes da consulta, revisão com o que o servidor gravou, PIN, processamento e comprovante; a resposta perdida da autorização é pedida de novo com a mesma `Idempotency-Key` e o mesmo PIN, mantido só em memória (MOB-07); voltar do comprovante leva à Home, nunca ao PIN
+- Extrato no app (telas 11 e 12): lista com paginação por cursor e "puxar para atualizar", detalhe com "Ver comprovante" só num Pix enviado, e as três movimentações mais recentes na Home com "Ver extrato"
+- "Ocultar saldo" esconde também os valores das movimentações e o saldo na tela do Pix
+- A Home lê de novo o saldo e as movimentações ao voltar ao app e quando é puxada para baixo, para mostrar o dinheiro que chegou com o app aberto
+- Design system: `AmountCard`, `ContactCard`, `SecureHint`, `ActionTile`, `StatusBadge`, `ReceiptCard`, `SecondaryButton`, `TransactionItem`, `EmptyState` e `ScreenHeader`, conferidos contra os mockups; card de saldo com 190 de altura e linha de movimentação mais compacta, ajustados no aparelho
+- App organizado com uma pasta por tela em `presentation/`
+
+### Corrigido — Semana 6
+- F-20: cursor do extrato com data impossível respondia 500; agora 422
+- F-21: o Desbloqueio não contava o tempo com o aparelho dormindo
+- F-22: a verificação de dinheiro do app recusava toda resposta de Pix e de extrato, porque o `Money` vem sob o nome `amount`; os testes de repositório passam a usar os interceptors do app
+- F-23: depois de um Pix, a Home mostrava o saldo de antes
+- O comprovante mostrava um Pix concluído como "Processando"; a lista do extrato não pedia a página seguinte quando a primeira cabia na tela; títulos e valores da linha de movimentação quebravam ou estouravam em telas estreitas; o leitor de tela não anunciava o saldo oculto nem conseguia digitar o valor do Pix
+
 ### Adicionado — Semana 5: Pix (backend)
 - Schema `payments`: chaves Pix com o valor cifrado e uma conta por chave; Pix com status coerente com as datas, o motivo de falha e o ID E2E no formato do Bacen; registros de idempotência por cliente e chave, válidos por 24 h. A API só altera o estado de um Pix, nunca o que foi pedido
 - Chave Pix CPF criada no cadastro, na mesma transação do usuário, da conta e do saldo de demonstração; o valor é gravado cifrado e encontrado pelo índice cego

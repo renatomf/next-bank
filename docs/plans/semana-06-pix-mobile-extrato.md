@@ -348,9 +348,9 @@ packages/design_system/   # TransactionItem, EmptyState
 
 ## Tarefa 5 — Fechamento
 
-- [ ] `/security-review` (obrigatório: Pix, PIN e autorização)
-- [ ] Threat model e matriz de controles (READ-03, READ-04, PIX-06, F-16 fechado); checklist MASVS
-- [ ] `database.md` (índice do extrato verificado), `domain-model.md`, CHANGELOG
+- [x] `/security-review` (obrigatório: Pix, PIN e autorização): revisão integrada da semana sem achados; os achados das revisões por PR (F-20, F-21) e do teste no aparelho (F-22, F-23) foram corrigidos
+- [x] Threat model e matriz de controles (READ-03, READ-04, PIX-06, F-16 fechado); checklist MASVS
+- [x] `database.md` (índice do extrato verificado), `domain-model.md`, CHANGELOG
 
 ---
 
@@ -358,8 +358,8 @@ packages/design_system/   # TransactionItem, EmptyState
 
 - [ ] **Pix funcionando de ponta a ponta no app** contra a API real, no emulador e no celular
 - [ ] Desbloqueio na abertura e após 5 min em segundo plano; PIN bloqueado oferece "Sair"
-- [ ] Falha de rede na autorização não duplica o Pix
-- [ ] Extrato pagina sem duplicar nem pular (T-DB-12); READ-01 a READ-04 com teste verde
-- [ ] Cobertura ≥ 90% em `domain/` e `application/`; `flutter analyze` sem warnings
-- [ ] Se a semana estourar: aplica a D1
+- [x] Falha de rede na autorização não duplica o Pix (MOB-07: `review_pix_controller_test.dart`, `pix_flow_test.dart`)
+- [x] Extrato pagina sem duplicar nem pular (T-DB-12); READ-01 a READ-04 com teste verde
+- [x] Cobertura ≥ 90% em `domain/` e `application/` (gate do CI); `flutter analyze` sem warnings
+- [x] Se a semana estourar: aplica a D1 (não estourou: o detalhe e as "Últimas movimentações" entraram na semana)
 - [ ] Próximo passo: plano da semana 7 (Perfil, Segurança, navegação flutuante)
