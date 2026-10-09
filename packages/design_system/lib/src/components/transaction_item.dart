@@ -59,8 +59,8 @@ class TransactionItem extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                width: NbSize.touch,
-                height: NbSize.touch,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
                   color: incoming
                       ? colors.accent.withValues(alpha: 0.14)
@@ -74,18 +74,32 @@ class TransactionItem extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: NbSpace.md),
+              // The words get more room than the amount, and the title stays
+              // on one line, shrinking only when it must.
               Expanded(
+                flex: 3,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: NbType.bodyText.copyWith(color: colors.text),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        title,
+                        maxLines: 1,
+                        style: NbType.bodyText.copyWith(
+                          color: colors.text,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       caption,
-                      style: NbType.caption.copyWith(color: colors.textMuted),
+                      style: NbType.caption.copyWith(
+                        color: colors.textMuted,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
@@ -94,6 +108,7 @@ class TransactionItem extends StatelessWidget {
               // Shares the width with the title and shrinks to fit, so a large
               // amount never overflows a small phone (brief, section 8).
               Flexible(
+                flex: 2,
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerRight,
