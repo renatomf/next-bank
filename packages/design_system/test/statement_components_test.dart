@@ -92,6 +92,34 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
+    // Found on a device: in the Home's card, "Depósito inicial" broke into
+    // two lines beside "+ R$ 10.000,00".
+    testWidgets('keeps the title on one line beside a large amount', (
+      tester,
+    ) async {
+      Future<double> titleHeightAt(double width) async {
+        await tester.pumpWidget(
+          host(
+            SizedBox(
+              width: width,
+              child: const TransactionItem(
+                title: 'Depósito inicial',
+                caption: 'Hoje, 09:12',
+                amountCents: 1000000,
+                incoming: true,
+              ),
+            ),
+          ),
+        );
+        return tester.getSize(find.text('Depósito inicial')).height;
+      }
+
+      final oneLine = await titleHeightAt(700);
+
+      expect(await titleHeightAt(288), lessThanOrEqualTo(oneLine));
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('opens the detail on tap', (tester) async {
       var taps = 0;
       await tester.pumpWidget(item(onTap: () => taps++));
