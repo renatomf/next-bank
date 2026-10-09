@@ -5,8 +5,10 @@ import 'package:dio/dio.dart';
 /// The generated client reads every amount with `(v as num).toInt()`, so
 /// 10.5 would silently become 10. The API never sends a fraction, but the
 /// app checks what it receives (MASVS, code; finding F-18) and money is
-/// never rounded quietly. Every `amount` in the contract is a `Money`, so
-/// the check walks the whole answer.
+/// never rounded quietly. The check walks the whole answer: a field named
+/// `amount` is either the integer cents inside a `Money`, or a `Money` itself,
+/// as a Pix or a statement item carries it, whose own `amount` is checked in
+/// turn.
 class AmountIntegrityInterceptor extends Interceptor {
   @override
   void onResponse(
@@ -29,7 +31,9 @@ class AmountIntegrityInterceptor extends Interceptor {
   static bool _hasInexactAmount(Object? json) => switch (json) {
     Map<String, Object?>() => json.entries.any(
       (entry) =>
-          (entry.key == 'amount' && entry.value is! int) ||
+          (entry.key == 'amount' &&
+              entry.value is! int &&
+              entry.value is! Map) ||
           _hasInexactAmount(entry.value),
     ),
     List<Object?>() => json.any(_hasInexactAmount),
