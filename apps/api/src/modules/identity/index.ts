@@ -4,12 +4,14 @@ import type { Clock, IdGenerator, UnitOfWork } from '../../shared/application/po
 import { ActiveSessions } from './application/active-sessions.ts';
 import { CreatePin } from './application/create-pin.ts';
 import { GetProfile } from './application/get-profile.ts';
+import { ListSessions } from './application/list-sessions.ts';
 import { Login } from './application/login.ts';
 import { Logout } from './application/logout.ts';
 import { PayeeDirectory } from './application/payee-directory.ts';
 import type { AccessTokenVerifier } from './application/ports.ts';
 import { RefreshSession } from './application/refresh-session.ts';
 import { RegisterUser } from './application/register-user.ts';
+import { RevokeSession } from './application/revoke-session.ts';
 import { VerifyPin } from './application/verify-pin.ts';
 import type { PiiKeys } from '../../shared/infrastructure/aes-gcm-pii-protector.ts';
 import { AesGcmCpfProtector } from './infrastructure/aes-gcm-cpf-protector.ts';
@@ -24,6 +26,7 @@ export { AuthTokensSchema, authTokensBody } from './http/auth-tokens.ts';
 export { callerOf, registerAuthentication } from './http/authentication.ts';
 export { loginRoutes } from './http/login-route.ts';
 export { meRoutes } from './http/me-route.ts';
+export { meSessionsRoutes } from './http/me-sessions-routes.ts';
 export { pinRoutes } from './http/pin-route.ts';
 export { sessionRoutes } from './http/session-routes.ts';
 export type { PayeeDirectory } from './application/payee-directory.ts';
@@ -42,6 +45,8 @@ export interface IdentityModule {
   login: Login;
   refreshSession: RefreshSession;
   logout: Logout;
+  listSessions: ListSessions;
+  revokeSession: RevokeSession;
   accessTokenVerifier: AccessTokenVerifier;
   activeSessions: ActiveSessions;
   createPin: CreatePin;
@@ -98,6 +103,17 @@ export function createIdentityModule(settings: IdentitySettings): IdentityModule
       accessTokens,
     }),
     logout: new Logout({
+      unitOfWork: settings.unitOfWork,
+      repositories,
+      clock: settings.clock,
+      ids: settings.ids,
+    }),
+    listSessions: new ListSessions({
+      unitOfWork: settings.unitOfWork,
+      repositories,
+      clock: settings.clock,
+    }),
+    revokeSession: new RevokeSession({
       unitOfWork: settings.unitOfWork,
       repositories,
       clock: settings.clock,

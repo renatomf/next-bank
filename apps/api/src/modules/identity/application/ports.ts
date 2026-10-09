@@ -103,6 +103,8 @@ export interface SessionsRepository {
    * logouts of one session run one at a time.
    */
   lockById(id: string): Promise<SessionState | null>;
+  /** The user's sessions still active at [now], most recently used first. */
+  listActive(userId: string, now: Date): Promise<SessionState[]>;
   update(session: SessionState): Promise<void>;
 }
 

@@ -117,3 +117,15 @@ export class PinAlreadyCreated extends DomainError {
     super('Transaction PIN already created');
   }
 }
+
+/**
+ * The session list cannot end the session it is read from: that is a sign-out
+ * (week 7 plan, D3). Answered as an invalid request, since the app never asks it.
+ */
+export class CurrentSessionNotRevocable extends DomainError {
+  readonly code = 'InvalidRequest';
+
+  constructor() {
+    super('The current session ends by signing out');
+  }
+}
