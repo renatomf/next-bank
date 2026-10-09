@@ -385,6 +385,7 @@ Cada item recebe um parágrafo de design no README, sem implementação:
 - **SDUI/BDC:** Home montada pelo servidor sobre o Design System, com schema versionado e fallback local.
 - **Conta global multimoeda:** cotação com validade, spread, conversão em lançamentos no ledger.
 - **Feature flags** e **observabilidade com métricas e dashboards**.
+- **Animações** de transição entre telas e de feedback (extra da semana 7, que ficou fora pelo plano da semana 7, D10).
 - **Testes visuais de regressão (golden tests)** do `design_system` e das telas: hoje os testes conferem valores (cor, tamanho, contraste), não a aparência renderizada.
 
 ## 12. Fora do código (mesma prioridade)

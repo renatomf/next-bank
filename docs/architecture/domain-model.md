@@ -261,6 +261,7 @@ O extrato não é um agregado: é uma consulta (lado de leitura do CQRS) que lê
 |---|---|---|---|
 | `InvalidRequest` | 422 | Qualquer | "Confira os dados informados." (entrada fora do formato ou com campo desconhecido; o app valida antes, então indica erro de programação ou cliente adulterado) |
 | `InvalidCredentials` | 401 | Login | "E-mail ou senha incorretos." |
+| `PasswordIncorrect` | 422 | Trocar PIN, Trocar senha | "Senha incorreta." (422, e não 401: o cliente já está autenticado, e um 401 faria o app tentar o refresh e sair da conta; a tentativa conta no mesmo bloqueio progressivo do login, AUTH-01) |
 | `TooManyAttempts` | 429 | Login, Pix | "Muitas tentativas. Tente de novo em alguns minutos." |
 | `InvalidCpf` | 422 | Cadastro | "CPF inválido." |
 | `WeakPassword` | 422 | Cadastro | "Use pelo menos 10 caracteres e evite senhas comuns." |
