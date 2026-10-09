@@ -334,12 +334,12 @@ flowchart TD
 | 2. Login | padrão · enviando · `InvalidCredentials` · `TooManyAttempts` |
 | 3. Cadastro | padrão · validação local (CPF, e-mail, senha) · enviando · `InvalidCpf` · `WeakPassword` · `AlreadyRegistered` |
 | 4. Criar PIN | digitar · confirmar · PINs diferentes · PIN trivial |
-| 5. Desbloqueio | biometria · fallback para PIN · `PinIncorrect` · `PinLocked` |
-| 6. Home | skeleton · pronto · saldo oculto · sem movimentações · erro (tentar de novo) |
+| 5. Desbloqueio | digitando PIN · verificando · `PinIncorrect` (tentativas restantes) · `PinLocked` e `PinResetRequired` (só "Sair"). Biometria: extra (plano da semana 6, D4) |
+| 6. Home | skeleton · pronto · saldo oculto (valores das movimentações também) · sem movimentações · erro (tentar de novo) |
 | 7. Pix: enviar | digitando · buscando chave · chave encontrada (nome completo e documento mascarado) · `PixKeyNotFound` · `SamePayerAndPayee` · `InsufficientFunds` · `LimitExceeded` · `AccountBlocked` |
-| 8. Revisar + PIN | resumo · digitando PIN · verificando · `PinIncorrect` · `PinLocked` · `TransferExpired` · `PayeeUnavailable` |
+| 8. Revisar + PIN | resumo (lido do servidor) · digitando PIN · verificando · `PinIncorrect` · `PinLocked` · `TransferExpired` · resposta perdida (só "Tentar de novo", com a mesma chave e o mesmo PIN, MOB-07) |
 | 9. Processando | processando · falhou (com motivo) |
-| 10. Comprovante | concluído · compartilhando |
+| 10. Comprovante | carregando · concluído · erro (tentar de novo). Compartilhar: fora da V1 (plano da semana 6, D9) |
 | 11. Extrato | skeleton · lista · carregando mais · fim da lista · vazio · erro |
 | 12. Detalhe | carregando · pronto · `NotFound` |
 | 13. Perfil | pronto |
