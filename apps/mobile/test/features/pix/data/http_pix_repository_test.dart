@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:next_bank/core/amount_integrity_interceptor.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/idempotency_key.dart';
 import 'package:next_bank/features/pix/data/http_pix_repository.dart';
@@ -17,7 +18,10 @@ const _transferPath = '/v1/pix/transfers/$_transferId';
 
 HttpPixRepository repositoryFor(ScriptedServer server) {
   final dio = Dio(BaseOptions(baseUrl: 'https://api.example.test'))
-    ..httpClientAdapter = server;
+    ..httpClientAdapter = server
+    // The app's own check on money (F-18), as main.dart wires it: without it
+    // these tests missed that it refused every Pix and statement answer.
+    ..interceptors.add(AmountIntegrityInterceptor());
   return HttpPixRepository(
     NextbankApi(dio: dio, interceptors: []).getDefaultApi(),
   );
