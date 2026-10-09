@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/cpf.dart';
+import 'package:next_bank/core/device_label.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/features/auth/presentation/auth_providers.dart';
 import 'package:next_bank/features/auth/presentation/register/register_controller.dart';
@@ -26,6 +27,7 @@ Future<Register> setUpRegister() async {
       tokenStoreProvider.overrideWithValue(store),
       authRepositoryProvider.overrideWithValue(repository),
       randomProvider.overrideWithValue(Random(42)),
+      deviceLabelProvider.overrideWithValue('iOS'),
     ],
   );
   addTearDown(container.dispose);
@@ -92,6 +94,8 @@ void main() {
       expect(sent.email, 'ana@example.test');
       expect(sent.cpf, cpf);
       expect(sent.password, 'a long passphrase');
+      // Week 7 plan, D2: the Security screen tells the devices apart.
+      expect(repository.deviceLabels, ['iOS']);
       expect(store.stored, same(tokens));
       expect(container.read(sessionProvider).value, isA<SignedIn>());
     });

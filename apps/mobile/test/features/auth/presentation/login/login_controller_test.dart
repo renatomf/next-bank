@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/api_failure.dart';
+import 'package:next_bank/core/device_label.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/features/auth/presentation/auth_providers.dart';
 import 'package:next_bank/features/auth/presentation/login/login_controller.dart';
@@ -23,6 +24,7 @@ Future<Login> setUpLogin() async {
     overrides: [
       tokenStoreProvider.overrideWithValue(store),
       authRepositoryProvider.overrideWithValue(repository),
+      deviceLabelProvider.overrideWithValue('Android'),
     ],
   );
   addTearDown(container.dispose);
@@ -69,6 +71,18 @@ void main() {
       expect(repository.logins.single.password, 'a long passphrase');
       expect(store.stored, same(tokens));
       expect(container.read(sessionProvider).value, isA<SignedIn>());
+    });
+
+    // Week 7 plan, D2: the Security screen tells the devices apart.
+    test('tells the server which kind of device signs in', () async {
+      final (:container, :repository, store: _) = await setUpLogin();
+
+      await container.login.submit(
+        email: 'ana@example.test',
+        password: 'a long passphrase',
+      );
+
+      expect(repository.deviceLabels, ['Android']);
     });
 
     test('sends one request on a double tap', () async {
