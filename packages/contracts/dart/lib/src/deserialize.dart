@@ -1,3 +1,4 @@
+import 'package:nextbank_api/src/model/active_session.dart';
 import 'package:nextbank_api/src/model/auth_tokens.dart';
 import 'package:nextbank_api/src/model/authorize_pix_transfer_request_input.dart';
 import 'package:nextbank_api/src/model/create_pin_request_input.dart';
@@ -16,6 +17,7 @@ import 'package:nextbank_api/src/model/pix_transfer.dart';
 import 'package:nextbank_api/src/model/problem.dart';
 import 'package:nextbank_api/src/model/refresh_request_input.dart';
 import 'package:nextbank_api/src/model/register_request_input.dart';
+import 'package:nextbank_api/src/model/session_list.dart';
 import 'package:nextbank_api/src/model/statement.dart';
 import 'package:nextbank_api/src/model/statement_counterparty.dart';
 import 'package:nextbank_api/src/model/statement_item.dart';
@@ -39,6 +41,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return (valueString == 'true' || valueString == '1') as ReturnType;
         case 'double':
           return (value is double ? value : double.parse('$value')) as ReturnType;
+        case 'ActiveSession':
+          return ActiveSession.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AuthTokens':
           return AuthTokens.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AuthorizePixTransferRequestInput':
@@ -75,6 +79,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return RefreshRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RegisterRequestInput':
           return RegisterRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SessionList':
+          return SessionList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Statement':
           return Statement.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'StatementCounterparty':
