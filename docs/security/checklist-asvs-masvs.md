@@ -39,8 +39,8 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 | Item | Status | Sem. |
 |---|---|---|
 | Negar por padrão; toda rota declara sua regra de acesso | ✅ | 2 |
-| Verificação de dono em todo recurso; recurso alheio → 404 (PIX-01, READ-01) | ⏳ | 4–6 |
-| Identificadores de conta nunca vêm do cliente (PIX-04, READ-01) | ⏳ | 4–6 |
+| Verificação de dono em todo recurso; recurso alheio → 404 (PIX-01, READ-01) | ✅ | 4–6 |
+| Identificadores de conta nunca vêm do cliente (PIX-04, READ-01) | ✅ | 4–6 |
 | Operações sensíveis exigem nova verificação (PIN no servidor) (PIX-05, PIX-06) | ✅ | 3, 5 |
 
 ### Validação de entrada e codificação
@@ -70,7 +70,7 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 ### Proteção de dados
 | Item | Status | Sem. |
 |---|---|---|
-| Respostas só com campos necessários; documentos mascarados (READ-02) | ⏳ | 4–6 |
+| Respostas só com campos necessários; documentos mascarados (READ-02) | ✅ | 4–6 |
 | Dados sensíveis fora de URLs e de cache HTTP (`Cache-Control: no-store`) | ⏳ | 2 |
 | Minimização de dados pessoais (LGPD) | ⏳ | 1+ |
 
@@ -110,15 +110,15 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 | | Nada sensível em logs, cache ou preferências (MOB-02) | ⏳ | 2+ |
 | **CRYPTO** | Nenhuma criptografia caseira; nenhuma chave embutida no app (MOB-04) | ⏳ | 2+ |
 | **AUTH** | Autenticação e autorização decididas no servidor | ⏳ | 3 |
-| | PIN validado no servidor; biometria só como conveniência local (PIX-06) | ⏳ | 3, 6 |
-| | Desbloqueio após tempo em segundo plano (D5) | ⏳ | 5, 6 (F-16) |
+| | PIN validado no servidor; biometria só como conveniência local (PIX-06) | ✅ | 3, 6 (biometria: extra, D4) |
+| | Desbloqueio após tempo em segundo plano (D5) | ✅ | 5, 6 (F-16, F-21) |
 | **NETWORK** | Só HTTPS; tráfego em texto puro desabilitado (MOB-03) | ✅ | 2 |
 | | Certificate pinning | 🚫 | — |
 | **PLATFORM** | Sem deep links na V1: desligados no Android e no iOS (MOB-06) | ✅ | 3 |
 | | Proteção de telas sensíveis contra captura | 🚫 | — |
 | | Opção de ocultar saldo (MOB-05) | ✅ | 4 |
 | **CODE** | Dependências atualizadas e verificadas (API-09) | ✅ | 2 |
-| | Validação de dados vindos da API antes do uso | ⏳ | 2+ |
+| | Validação de dados vindos da API antes do uso | ✅ | 2, 4, 6 |
 | **RESILIENCE** | Build de release ofuscado (MOB-04) | ⏳ | 8 |
 | | Verificação de integridade do app (Play Integrity / App Attest) | 🚫 | — |
 | **PRIVACY** | Coleta mínima de dados; Sentry sem PII (MOB-02) | ⏳ | 2 |

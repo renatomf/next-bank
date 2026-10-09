@@ -334,8 +334,8 @@ ORDER BY p.created_at DESC, p.id DESC
 LIMIT 21;                                      -- 20 itens + 1 para saber se há próxima página
 ```
 
-- **Índice:** `postings (ledger_account_id, created_at DESC, id DESC)` — a consulta lê só as linhas da página, independentemente do tamanho do histórico (verificado com `EXPLAIN ANALYZE` na implementação).
-- **Cursor:** `(created_at, id)` codificado em base64url. Não precisa ser assinado: o filtro por conta é feito no servidor, então um cursor adulterado só navega no próprio extrato. O formato é validado e um cursor inválido retorna 422.
+- **Índice:** `postings (ledger_account_id, created_at DESC, id DESC)` — a consulta lê só as linhas da página, independentemente do tamanho do histórico. Verificado com `EXPLAIN ANALYZE` na semana 6 (#81, migration `add_statement_index`): `Bitmap Index Scan on postings_statement_idx`, 0,73 ms numa conta com 217 partidas.
+- **Cursor:** `(created_at, id)` codificado em base64url, com o `created_at` como texto do Postgres em microssegundos, nunca um `Date` do JavaScript arredondado em milissegundos. Não precisa ser assinado: o filtro por conta é feito no servidor, então um cursor adulterado só navega no próprio extrato. O formato é validado, e o horário precisa ser um instante real (F-20); um cursor inválido retorna 422.
 - **Paginação estável:** um Pix novo durante a navegação não duplica nem pula itens (diferente de `OFFSET`).
 
 ## 9. Migrations
@@ -363,7 +363,7 @@ LIMIT 21;                                      -- 20 itens + 1 para saber se há
 | Paginação do extrato estável | — | cursor + índice | T-DB-12 |
 | Usuário A não lê dados de B | ✅ (aplicação) | — | T-API (IDOR), Tarefa 3 |
 
-## 11. Testes de integração do banco (TDD da semana 4–5)
+## 11. Testes de integração do banco (TDD das semanas 4 a 6)
 
 Todos rodam contra **Postgres real** (Docker), com o papel `nextbank_app`.
 
@@ -381,7 +381,7 @@ Todos rodam contra **Postgres real** (Docker), com o papel `nextbank_app`.
 | T-DB-09 | 50 Pix A→B e 50 B→A em paralelo | Nenhum deadlock; reconciliação bate |
 | T-DB-10 | Pix `COMPLETED` sem `completed_at` | Recusado pelo `CHECK` |
 | T-DB-11 | Dois usuários com o mesmo CPF | O segundo é recusado |
-| T-DB-12 | Pix novo entre a página 1 e a 2 do extrato | Nenhum item duplicado ou pulado |
+| T-DB-12 | Pix novo entre a página 1 e a 2 do extrato, inclusive itens no mesmo milissegundo | Nenhum item duplicado ou pulado (semana 6, `statement-route.test.ts`) |
 | T-DB-13 | Papel da aplicação tenta `CREATE TABLE` / `TRUNCATE` | Recusado |
 | T-DB-14 | Reconciliação após 1.000 Pix aleatórios concorrentes | Saldo projetado = Σ lançamentos em todas as contas |
 
