@@ -17,6 +17,9 @@ import 'package:next_bank/features/pix/presentation/processing/processing_screen
 import 'package:next_bank/features/pix/presentation/receipt/receipt_screen.dart';
 import 'package:next_bank/features/pix/presentation/review/review_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
+import 'package:next_bank/features/security/presentation/change_password/change_password_screen.dart';
+import 'package:next_bank/features/security/presentation/change_pin/change_pin_screen.dart';
+import 'package:next_bank/features/security/presentation/sessions/security_screen.dart';
 import 'package:next_bank/features/statement/presentation/detail/statement_detail_screen.dart';
 import 'package:next_bank/features/statement/presentation/list/statement_screen.dart';
 import 'package:next_bank/features/unlock/presentation/unlock_screen.dart';
@@ -139,6 +142,29 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
           onBack: () => _back(context),
           onReceipt: (transferId) =>
               context.push(AppRoutes.pixReceipt(transferId)),
+        ),
+      ),
+      // The changes open over Security, so back and done return to it.
+      GoRoute(
+        path: AppRoutes.security,
+        builder: (context, _) => SecurityScreen(
+          onBack: () => _back(context),
+          onChangePin: () => context.push(AppRoutes.changePin),
+          onChangePassword: () => context.push(AppRoutes.changePassword),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.changePin,
+        builder: (context, _) => ChangePinScreen(
+          onBack: () => _back(context),
+          onDone: () => _back(context),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.changePassword,
+        builder: (context, _) => ChangePasswordScreen(
+          onBack: () => _back(context),
+          onDone: () => _back(context),
         ),
       ),
     ],
