@@ -89,9 +89,12 @@ class ProfileScreen extends ConsumerWidget {
                 children: [
                   signOut,
                   const SizedBox(width: NbSpace.md),
-                  Text(
-                    'Sair da conta',
-                    style: NbType.bodyText.copyWith(color: colors.text),
+                  // Wraps on a small phone with large text (brief, section 8).
+                  Expanded(
+                    child: Text(
+                      'Sair da conta',
+                      style: NbType.bodyText.copyWith(color: colors.text),
+                    ),
                   ),
                 ],
               ),
