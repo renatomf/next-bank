@@ -191,3 +191,71 @@ describe('TransactionPin', () => {
     expect(restored.state).toEqual(original.state);
   });
 });
+
+// domain-model.md 3.1: Change needs the password (checked outside the domain)
+// and is how a locked PIN, even one that needs a reset, is recovered (week 7
+// plan, D5).
+describe('TransactionPin.change', () => {
+  it('takes the new PIN hash and records when', () => {
+    const pin = newPin();
+
+    pin.change('$argon2id$new', at(HOUR));
+
+    expect(pin.state.pinHash).toBe('$argon2id$new');
+    expect(pin.state.updatedAt).toEqual(at(HOUR));
+  });
+
+  it('clears the wrong attempts', () => {
+    const pin = newPin();
+    fail(pin, 3);
+
+    pin.change('$argon2id$new', at(MINUTE));
+
+    expect(pin.state.failedAttempts).toBe(0);
+  });
+
+  it('lifts a 30 minute lock at once', () => {
+    const pin = newPin();
+    fail(pin, 5);
+
+    pin.change('$argon2id$new', at(MINUTE));
+
+    expect(pin.state.lockedUntil).toBeNull();
+    expect(() => {
+      pin.assertCanVerify(at(MINUTE));
+    }).not.toThrow();
+  });
+
+  it('recovers a PIN that needed a reset, with a clean history of locks', () => {
+    const pin = newPin();
+    for (let lock = 0; lock < 3; lock++) {
+      const now = at(lock * HOUR);
+      pin.assertCanVerify(now);
+      fail(pin, 5, now);
+    }
+    expect(() => {
+      pin.assertCanVerify(at(4 * HOUR));
+    }).toThrow(PinResetRequired);
+
+    pin.change('$argon2id$new', at(4 * HOUR));
+
+    expect(pin.state.resetRequired).toBe(false);
+    expect(pin.state.recentLocks).toEqual([]);
+    expect(() => {
+      pin.assertCanVerify(at(4 * HOUR));
+    }).not.toThrow();
+  });
+
+  it('a recovered PIN locks again after 5 wrong attempts', () => {
+    const pin = newPin();
+    fail(pin, 5);
+    pin.change('$argon2id$new', at(MINUTE));
+
+    const result = fail(pin, 5, at(MINUTE));
+
+    expect(result.outcome).toBe('LOCKED');
+    expect(() => {
+      pin.assertCanVerify(at(2 * MINUTE));
+    }).toThrow(PinLocked);
+  });
+});
