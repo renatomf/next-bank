@@ -40,6 +40,15 @@ abstract final class AppRoutes {
 
   /// The detail of the movement [itemId] (screen 12).
   static String statementItem(String itemId) => '$statement/$itemId';
+
+  /// Sessions and credentials (screen 14).
+  static const String security = '/security';
+
+  /// A new PIN with the password, also how a locked PIN works again.
+  static const String changePin = '$security/change-pin';
+
+  /// A new password, ending the other sessions.
+  static const String changePassword = '$security/change-password';
 }
 
 /// Where the app must be for the current [session] and its [profile], or

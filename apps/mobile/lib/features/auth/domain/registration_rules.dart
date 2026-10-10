@@ -10,11 +10,4 @@ bool isValidName(String name) {
       !_controlCharacter.hasMatch(trimmed);
 }
 
-/// A password of 10 to 128 characters (AUTH-07, AUTH-08), counted as the
-/// API counts them: Unicode code points, not UTF-16 units.
-bool hasAcceptablePasswordLength(String password) {
-  final length = password.runes.length;
-  return length >= 10 && length <= 128;
-}
-
 final RegExp _controlCharacter = RegExp(r'\p{Cc}', unicode: true);

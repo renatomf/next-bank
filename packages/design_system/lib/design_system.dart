@@ -6,6 +6,7 @@ library;
 export 'src/components/action_tile.dart';
 export 'src/components/amount_card.dart';
 export 'src/components/balance_card.dart';
+export 'src/components/confirm_dialog.dart';
 export 'src/components/contact_card.dart';
 export 'src/components/display_title.dart';
 export 'src/components/dither.dart';

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:next_bank/features/auth/domain/pin_rules.dart';
+import 'package:next_bank/core/pin_rules.dart';
 
 // Mirrors the API's Pin (domain-model.md 3.1): the same cases as its tests,
 // so the app never sends a PIN the API would refuse.

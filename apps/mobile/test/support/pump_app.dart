@@ -10,6 +10,7 @@ import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/core/statement/statement_controller.dart';
 import 'package:next_bank/features/auth/presentation/auth_providers.dart';
 import 'package:next_bank/features/pix/presentation/pix_providers.dart';
+import 'package:next_bank/features/security/presentation/security_providers.dart';
 import 'package:next_bank/features/unlock/presentation/unlock_providers.dart';
 import 'package:next_bank/main.dart';
 
@@ -18,6 +19,7 @@ import 'fake_auth_repository.dart';
 import 'fake_monotonic_clock.dart';
 import 'fake_pix_repository.dart';
 import 'fake_profile_repository.dart';
+import 'fake_security_repository.dart';
 import 'fake_statement_repository.dart';
 import 'fake_token_store.dart';
 import 'fake_unlock_repository.dart';
@@ -34,6 +36,7 @@ Future<ProviderContainer> pumpApp(
   FakeUnlockRepository? unlock,
   FakePixRepository? pix,
   FakeStatementRepository? statement,
+  FakeSecurityRepository? security,
   FakeMonotonicClock? clock,
 }) async {
   await tester.pumpWidget(
@@ -53,6 +56,9 @@ Future<ProviderContainer> pumpApp(
           unlock ?? FakeUnlockRepository(),
         ),
         pixRepositoryProvider.overrideWithValue(pix ?? FakePixRepository()),
+        securityRepositoryProvider.overrideWithValue(
+          security ?? FakeSecurityRepository(),
+        ),
         statementRepositoryProvider.overrideWithValue(
           statement ?? FakeStatementRepository(),
         ),
