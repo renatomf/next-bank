@@ -13,6 +13,10 @@ const SECRETS = {
   accessToken: 'fake-access-token',
   refreshToken: 'fake-refresh-token',
   token: 'fake-token',
+  // The PIN and password changes (week 7; F-25).
+  currentPassword: 'fake-current-password',
+  newPassword: 'fake-new-password',
+  newPin: '4682',
   // Personal data never goes to logs either (database.md, section 2; F-13).
   email: 'fake-person@example.test',
   name: 'Fake Person Name',
