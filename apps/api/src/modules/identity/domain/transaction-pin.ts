@@ -91,6 +91,23 @@ export class TransactionPin {
     return this.#lock(now);
   }
 
+  /**
+   * A new PIN, after the password was checked (domain-model.md 3.1). The
+   * password proves the person, so every lock and its history goes: this is
+   * how a PIN that needed a reset works again (week 7 plan, D5).
+   */
+  change(newPinHash: string, now: Date): void {
+    this.#state = {
+      ...this.#state,
+      pinHash: newPinHash,
+      failedAttempts: 0,
+      lockedUntil: null,
+      recentLocks: [],
+      resetRequired: false,
+      updatedAt: now,
+    };
+  }
+
   #lock(now: Date): VerificationResult {
     const locks = [...this.#state.recentLocks, now];
     const windowStart = now.getTime() - LOCK_WINDOW_MS;
