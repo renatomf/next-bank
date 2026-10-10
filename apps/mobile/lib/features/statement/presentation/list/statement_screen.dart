@@ -12,11 +12,12 @@ import 'package:next_bank/core/statement/statement_texts.dart';
 /// The statement (screen 11): newest first, the next page as the customer
 /// nears the end, pull to refresh. Amounts hide with the balance (T4-1).
 class StatementScreen extends ConsumerWidget {
-  /// Creates the screen; the router says where back and a movement go.
-  const new({required this.onBack, required this.onItem, super.key});
+  /// Creates the screen; the router says where a movement goes. Without
+  /// [onBack] it has no back arrow: a destination of the floating bar.
+  const new({required this.onItem, this.onBack, super.key});
 
-  /// Leaves the statement.
-  final VoidCallback onBack;
+  /// Leaves the statement, when it was opened over another screen.
+  final VoidCallback? onBack;
 
   /// Opens the detail of a movement.
   final ValueChanged<String> onItem;
@@ -25,6 +26,7 @@ class StatementScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final statement = ref.watch(statementProvider);
     final controller = ref.read(statementProvider.notifier);
+    final back = onBack;
     return Scaffold(
       body: GlowBackground(
         child: SafeArea(
@@ -32,12 +34,23 @@ class StatementScreen extends ConsumerWidget {
             children: [
               Padding(
                 padding: const EdgeInsets.all(NbSpace.screen),
-                child: ScreenHeader(
-                  title: 'Extrato',
-                  icon: Icons.arrow_back,
-                  iconLabel: 'Voltar',
-                  onPressed: onBack,
-                ),
+                child: back == null
+                    ? Align(
+                        alignment: Alignment.centerLeft,
+                        child: Semantics(
+                          header: true,
+                          child: Text(
+                            'Extrato',
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                        ),
+                      )
+                    : ScreenHeader(
+                        title: 'Extrato',
+                        icon: Icons.arrow_back,
+                        iconLabel: 'Voltar',
+                        onPressed: back,
+                      ),
               ),
               Expanded(
                 child: switch (statement) {

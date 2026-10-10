@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:next_bank/app/nav_shell.dart';
 import 'package:next_bank/app/redirect.dart';
 import 'package:next_bank/core/profile/profile.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
@@ -17,6 +18,7 @@ import 'package:next_bank/features/pix/presentation/processing/processing_screen
 import 'package:next_bank/features/pix/presentation/receipt/receipt_screen.dart';
 import 'package:next_bank/features/pix/presentation/review/review_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
+import 'package:next_bank/features/profile/presentation/profile_screen.dart';
 import 'package:next_bank/features/security/presentation/change_password/change_password_screen.dart';
 import 'package:next_bank/features/security/presentation/change_pin/change_pin_screen.dart';
 import 'package:next_bank/features/security/presentation/sessions/security_screen.dart';
@@ -73,14 +75,42 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
         path: AppRoutes.unlock,
         builder: (_, _) => const UnlockScreen(actions: [SignOutButton()]),
       ),
-      GoRoute(
-        path: AppRoutes.home,
-        builder: (context, _) => HomeScreen(
-          onPix: () => context.push(AppRoutes.pix),
-          onStatement: () => context.push(AppRoutes.statement),
-          onMovement: (id) => context.push(AppRoutes.statementItem(id)),
-          actions: const [SignOutButton()],
-        ),
+      // The five areas of the app share the floating bar (week 7 plan, D7);
+      // every flow (Pix, details, changes) opens over it, without the bar.
+      ShellRoute(
+        builder: (context, state, child) =>
+            NavShell(location: state.matchedLocation, child: child),
+        routes: [
+          GoRoute(
+            path: AppRoutes.home,
+            builder: (context, _) => HomeScreen(
+              onPix: () => context.push(AppRoutes.pix),
+              onStatement: () => context.go(AppRoutes.statement),
+              onMovement: (id) => context.push(AppRoutes.statementItem(id)),
+            ),
+          ),
+          GoRoute(
+            path: AppRoutes.statement,
+            builder: (context, _) => StatementScreen(
+              onItem: (id) => context.push(AppRoutes.statementItem(id)),
+            ),
+          ),
+          GoRoute(
+            path: AppRoutes.security,
+            builder: (context, _) => SecurityScreen(
+              onChangePin: () => context.push(AppRoutes.changePin),
+              onChangePassword: () => context.push(AppRoutes.changePassword),
+            ),
+          ),
+          GoRoute(
+            path: AppRoutes.profile,
+            builder: (context, _) => ProfileScreen(
+              onSecurity: () => context.go(AppRoutes.security),
+              // T3-1: signing out lives on the Profile.
+              signOut: const SignOutButton(),
+            ),
+          ),
+        ],
       ),
       // Opened over the Home, and the review over the Pix, so back returns
       // to them; once authorized, the Pix replaces the stack, so back never
@@ -126,15 +156,7 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
           onHome: () => context.go(AppRoutes.home),
         ),
       ),
-      // Opened over the Home, the detail over the statement or the Home, and
-      // the receipt over the detail.
-      GoRoute(
-        path: AppRoutes.statement,
-        builder: (context, _) => StatementScreen(
-          onBack: () => _back(context),
-          onItem: (id) => context.push(AppRoutes.statementItem(id)),
-        ),
-      ),
+      // The detail opens over the statement or the Home, the receipt over it.
       GoRoute(
         path: AppRoutes.statementItem(':itemId'),
         builder: (context, state) => StatementDetailScreen(
@@ -145,14 +167,6 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
         ),
       ),
       // The changes open over Security, so back and done return to it.
-      GoRoute(
-        path: AppRoutes.security,
-        builder: (context, _) => SecurityScreen(
-          onBack: () => _back(context),
-          onChangePin: () => context.push(AppRoutes.changePin),
-          onChangePassword: () => context.push(AppRoutes.changePassword),
-        ),
-      ),
       GoRoute(
         path: AppRoutes.changePin,
         builder: (context, _) => ChangePinScreen(
