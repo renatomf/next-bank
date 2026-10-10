@@ -168,18 +168,28 @@ final List<(String, Type, Future<void> Function(WidgetTester))> screens = [
 // for screen readers, touch targets of 48 dp (Android) and 44 pt (iOS), and
 // AA contrast of each text over what is actually painted behind it.
 void main() {
+  // In both themes, which follow the phone by default (D9).
   for (final (name, screen, open) in screens) {
-    testWidgets('$name meets the accessibility guidelines', (tester) async {
-      final semantics = tester.ensureSemantics();
-      await open(tester);
-      expect(find.byType(screen), findsOneWidget);
+    for (final brightness in Brightness.values) {
+      testWidgets('$name meets the accessibility guidelines in '
+          '${brightness.name} mode', (tester) async {
+        tester.platformDispatcher.platformBrightnessTestValue = brightness;
+        addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+        final semantics = tester.ensureSemantics();
+        await open(tester);
+        expect(find.byType(screen), findsOneWidget);
+        expect(
+          Theme.of(tester.element(find.byType(screen))).brightness,
+          brightness,
+        );
 
-      await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
-      await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
-      await expectLater(tester, meetsGuideline(iOSTapTargetGuideline));
-      await expectLater(tester, meetsGuideline(textContrastGuideline));
-      semantics.dispose();
-    });
+        await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+        await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+        await expectLater(tester, meetsGuideline(iOSTapTargetGuideline));
+        await expectLater(tester, meetsGuideline(textContrastGuideline));
+        semantics.dispose();
+      });
+    }
   }
 
   // The only screen without its own test at 1.3x on a small phone.

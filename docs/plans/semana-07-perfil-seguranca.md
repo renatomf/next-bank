@@ -207,7 +207,7 @@ packages/design_system/    FloatingNavBar, ConfirmDialog
 ## Tarefa 4 — Polimento (dia 4–5)
 
 - [x] Acessibilidade e estados de erro nas 14 telas (D8)
-- [ ] Seletor de tema, se houver folga (D9)
+- [x] Seletor de tema, se houver folga (D9)
 
 ### Desenho da tarefa 4
 
@@ -250,6 +250,20 @@ packages/design_system/    FloatingNavBar, ConfirmDialog
 - **Como se guarda:** só a escolha diferente do padrão, no `flutter_secure_storage` que o app já usa. Não entra `SharedPreferences` (MOB-01).
 - **Valor guardado inválido:** é ignorado e o app volta ao padrão.
 - **Estrutura:** `core/theme/` (preferência e provider), com TDD no notifier.
+
+**Detalhe da D9 (aprovada)**
+
+| Peça | Onde | O que faz | Teste |
+|---|---|---|---|
+| `ThemeChoice` | `core/theme/theme_choice.dart` | `system`, `light` e `dark`, cada um com o seu `ThemeMode` | Unitário |
+| `ThemeStore` e `SecureThemeStore` | `core/theme/` | Lê e grava a escolha na chave `theme` do `flutter_secure_storage`, com as mesmas opções do token store (MOB-01). `system` apaga a chave; valor desconhecido vale `system` | Com o mock do secure storage: ida e volta, `system` apaga, valor inválido |
+| `themeChoiceProvider` | `core/theme/theme_controller.dart` | `AsyncNotifier`: lê a escolha ao abrir. `choose` troca na hora e grava; se gravar falhar, a escolha vale até fechar o app | TDD com loja falsa |
+| Raiz | `main.dart` | `theme: light()`, `darkTheme: dark()`, `themeMode` da escolha, que vale `system` enquanto carrega | Teste de app: escolher "Claro" muda o tema |
+| Perfil | `profile_screen.dart` | Bloco "Tema" com `SegmentedButton` (Sistema, Claro, Escuro), que já anuncia o item selecionado | Widget e varredura |
+
+- **Concorrência:** duas escolhas seguidas e rápidas terminam com a última na tela e na loja. As gravações seguem em ordem pelo canal da plataforma, e um teste prova isso.
+- **Varredura:** passa a rodar cada tela nos temas claro e escuro.
+- **Segurança:** a escolha não é dado sensível, mas fica no secure storage porque o app não usa `SharedPreferences` (MOB-01). Sair da conta não apaga o tema, que pertence ao aparelho e não ao cliente.
 
 **Fora do escopo:**
 - **Leitor de tela no aparelho (TalkBack):** fica para o checkpoint da tarefa 5, porque o teste automático não substitui ouvir as telas.

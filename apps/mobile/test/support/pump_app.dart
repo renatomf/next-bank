@@ -8,6 +8,7 @@ import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/app_lock.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/core/statement/statement_controller.dart';
+import 'package:next_bank/core/theme/theme_controller.dart';
 import 'package:next_bank/features/auth/presentation/auth_providers.dart';
 import 'package:next_bank/features/pix/presentation/pix_providers.dart';
 import 'package:next_bank/features/security/presentation/security_providers.dart';
@@ -21,6 +22,7 @@ import 'fake_pix_repository.dart';
 import 'fake_profile_repository.dart';
 import 'fake_security_repository.dart';
 import 'fake_statement_repository.dart';
+import 'fake_theme_store.dart';
 import 'fake_token_store.dart';
 import 'fake_unlock_repository.dart';
 
@@ -38,6 +40,7 @@ Future<ProviderContainer> pumpApp(
   FakeStatementRepository? statement,
   FakeSecurityRepository? security,
   FakeMonotonicClock? clock,
+  FakeThemeStore? theme,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -66,6 +69,7 @@ Future<ProviderContainer> pumpApp(
         pixPollDelayProvider.overrideWithValue(() async {}),
         monotonicClockProvider.overrideWithValue(clock ?? FakeMonotonicClock()),
         randomProvider.overrideWithValue(Random(42)),
+        themeStoreProvider.overrideWithValue(theme ?? FakeThemeStore()),
       ],
       child: const NextBankApp(),
     ),

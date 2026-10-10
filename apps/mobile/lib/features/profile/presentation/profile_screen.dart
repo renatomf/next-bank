@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/account/account_providers.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
+import 'package:next_bank/core/theme/theme_choice.dart';
+import 'package:next_bank/core/theme/theme_controller.dart';
 
 /// Profile (screen 13): who is signed in, their account, Security and the way
 /// out (week 7 plan, D6 and T3-1). Only what the app already has: no e-mail
@@ -83,6 +85,28 @@ class ProfileScreen extends ConsumerWidget {
                 title: 'Segurança',
                 caption: 'Aparelhos, PIN e senha',
                 onTap: onSecurity,
+              ),
+              const SizedBox(height: NbSpace.xl),
+              Text('Tema', style: NbType.bodyText.copyWith(color: colors.text)),
+              const SizedBox(height: NbSpace.sm),
+              // The choice selected is announced, not only shown (brief,
+              // section 8).
+              SegmentedButton<ThemeChoice>(
+                showSelectedIcon: false,
+                segments: const [
+                  ButtonSegment(
+                    value: ThemeChoice.system,
+                    label: Text('Sistema'),
+                  ),
+                  ButtonSegment(value: ThemeChoice.light, label: Text('Claro')),
+                  ButtonSegment(value: ThemeChoice.dark, label: Text('Escuro')),
+                ],
+                selected: {
+                  ref.watch(themeChoiceProvider).value ?? ThemeChoice.system,
+                },
+                onSelectionChanged: (choice) => ref
+                    .read(themeChoiceProvider.notifier)
+                    .choose(choice.single),
               ),
               const SizedBox(height: NbSpace.xl),
               Row(

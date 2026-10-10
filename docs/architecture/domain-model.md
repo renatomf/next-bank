@@ -343,7 +343,7 @@ flowchart TD
 | 10. Comprovante | carregando · concluído · erro (tentar de novo). Compartilhar: fora da V1 (plano da semana 6, D9) |
 | 11. Extrato | skeleton · lista · carregando mais · fim da lista · vazio · erro |
 | 12. Detalhe | carregando · pronto · `NotFound` |
-| 13. Perfil | pronto |
+| 13. Perfil | pronto · tema (Sistema, Claro ou Escuro; plano da semana 7, D9) |
 | 14. Segurança | lista de sessões · encerrando sessão (confirmação) · trocar PIN |
 
 ## 12. Decisões registradas nesta tarefa

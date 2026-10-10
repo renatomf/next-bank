@@ -12,6 +12,9 @@ import 'package:next_bank/core/session/secure_token_store.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/core/statement/http_statement_repository.dart';
 import 'package:next_bank/core/statement/statement_controller.dart';
+import 'package:next_bank/core/theme/secure_theme_store.dart';
+import 'package:next_bank/core/theme/theme_choice.dart';
+import 'package:next_bank/core/theme/theme_controller.dart';
 import 'package:next_bank/features/auth/data/http_auth_repository.dart';
 import 'package:next_bank/features/auth/presentation/auth_providers.dart';
 import 'package:next_bank/features/pix/data/http_pix_repository.dart';
@@ -28,6 +31,7 @@ void main() {
     ProviderScope(
       overrides: [
         tokenStoreProvider.overrideWithValue(SecureTokenStore()),
+        themeStoreProvider.overrideWithValue(SecureThemeStore()),
         profileRepositoryProvider.overrideWith(
           (ref) =>
               HttpProfileRepository(ref.watch(apiProvider).getDefaultApi()),
@@ -96,10 +100,13 @@ class _NextBankAppState extends ConsumerState<NextBankApp> {
 
   @override
   Widget build(BuildContext context) {
-    // Dark is the V1 look; the theme picker comes later (roadmap).
+    // Follows the phone until the customer picks one on the Profile (D9).
+    final choice = ref.watch(themeChoiceProvider).value ?? ThemeChoice.system;
     return MaterialApp.router(
       title: 'next bank',
-      theme: NbTheme.dark(),
+      theme: NbTheme.light(),
+      darkTheme: NbTheme.dark(),
+      themeMode: choice.mode,
       routerConfig: ref.watch(routerProvider),
     );
   }
