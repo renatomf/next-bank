@@ -272,8 +272,8 @@ packages/design_system/    FloatingNavBar, ConfirmDialog
 
 ## Tarefa 5 — Fechamento
 
-- [ ] `/security-review` (obrigatório: sessão, PIN e senha)
-- [ ] Threat model, matriz de controles e checklist ASVS/MASVS
+- [x] `/security-review` (obrigatório: sessão, PIN e senha): feito em cada PR (F-24 e F-25) e numa releitura final da revogação de sessão, da troca de senha e das rotas, sem achados novos
+- [x] Threat model, matriz de controles e checklist ASVS/MASVS
 - [ ] `domain-model.md`, CHANGELOG e checkpoint no aparelho
 
 ---
@@ -283,6 +283,6 @@ packages/design_system/    FloatingNavBar, ConfirmDialog
 - [ ] As 14 telas implementadas, no emulador e no celular
 - [ ] Sessão encerrada em outro aparelho deixa de funcionar; troca de senha encerra as outras sessões
 - [ ] PIN bloqueado redefinido com a senha
-- [ ] Todas as telas em 1.3x num celular pequeno, com rótulos de leitor de tela
+- [x] Todas as telas em 1.3x num celular pequeno, com rótulos de leitor de tela (varredura automática nos dois temas; TalkBack no checkpoint)
 - [ ] Cobertura ≥ 90% em `domain/` e `application/`; lint e `flutter analyze` sem warnings
 - [ ] Próximo passo: plano da semana 8 (qualidade, deploy e demo pública)

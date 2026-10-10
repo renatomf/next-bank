@@ -6,6 +6,28 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não publicado]
 
+### Adicionado — Semana 7: Perfil, Segurança e polimento
+- **Sessões na API:**
+  - `GET /v1/me/sessions` lista as sessões ativas do cliente, com o rótulo do aparelho e qual é a atual;
+  - `POST /v1/me/sessions/{id}/revoke` encerra outra sessão. O refresh token dela deixa de valer na hora, a própria sessão não pode ser encerrada por aí, e a sessão de outro cliente responde o mesmo 404.
+- **Rótulo do aparelho:** o app envia "Android" ou "iOS" no login e no cadastro.
+- **Troca de PIN** (`POST /v1/me/pin/change`): exige a senha. As senhas erradas contam no mesmo contador do login, e assim um PIN bloqueado é redefinido com a senha.
+- **Troca de senha** (`POST /v1/me/password/change`): exige a senha atual e encerra as outras sessões na mesma transação (AUTH-06).
+- **Novo erro:** `PasswordIncorrect` ("Senha incorreta.").
+- **Segurança no app (tela 14):** sessões ativas, com confirmação antes de encerrar, e as telas de trocar PIN e trocar senha.
+- **Perfil (tela 13):** nome, agência e conta mascarada, atalho para Segurança e o "Sair", que deixou a Home.
+- **Navegação flutuante:** Início, Extrato, Pix, Segurança e Perfil. O Extrato virou destino da barra, e os fluxos (Pix, detalhes, trocas) abrem por cima, sem ela.
+- **Tema:** o app segue o modo claro ou escuro do celular, e o Perfil oferece Sistema, Claro e Escuro. A escolha fica no secure storage (MOB-01).
+- **Varredura de acessibilidade:** as 16 telas, nos dois temas, são conferidas quanto a rótulos de leitor de tela, áreas de toque de 48 dp e 44 pt, e contraste AA do texto sobre o fundo desenhado. Todas as telas também cabem num celular pequeno com fonte em 1.3x.
+- **CI:** login no Docker Hub, para não esbarrar no limite de downloads anônimos.
+
+### Corrigido — Semana 7
+- **F-24:** um login com a senha antiga, ainda em verificação quando a senha era trocada, abria sessão depois da troca.
+- **F-25:** os campos novos de senha e PIN das trocas não estavam na redação dos logs.
+- **F-26:** o `PinNotCreated` só mostrava a mensagem; agora leva à criação do PIN.
+- **Barra flutuante:** quebrava fora de um `Scaffold`, por falta de `Material`.
+- **Perfil:** "Sair da conta" estourava a borda num celular pequeno com fonte grande.
+
 ### Adicionado — Semana 6: Pix no app + Extrato
 - Extrato na API (`GET /v1/me/statement`): só da conta do token, página fixa de 20, do mais novo ao mais antigo, com cursor opaco `(created_at, id)` em microssegundos; Pix novo entre duas páginas não duplica nem pula (T-DB-12); índice `postings_statement_idx` verificado com `EXPLAIN ANALYZE`; `transferId` só num Pix enviado
 - Desbloqueio (tela 5): o app abre travado com sessão guardada e trava de novo após 5 minutos em segundo plano, medidos pelo relógio monotônico e pela data do aparelho; o PIN é conferido no servidor, no mesmo contador do Pix; PIN bloqueado oferece só "Sair"; o login com senha vai direto à Home
