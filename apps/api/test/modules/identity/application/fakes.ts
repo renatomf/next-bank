@@ -195,6 +195,12 @@ export class InMemoryDatabase implements UnitOfWork, IdentityRepositoriesFactory
               : null,
           );
         },
+        findCredentials: (id) => {
+          const found = tables.users.find((u) => u.state.id === id);
+          return Promise.resolve(
+            found ? { email: found.state.email, passwordHash: found.state.passwordHash } : null,
+          );
+        },
         findPayee: (id) => {
           const found = tables.users.find((u) => u.state.id === id);
           return Promise.resolve(
