@@ -142,6 +142,68 @@ Nenhuma (ver D2 e D9).
 - [ ] `features/security`: repositório e controllers (TDD); telas de sessões, trocar PIN e trocar senha
 - [ ] `features/profile`: tela 13; navegação flutuante (D7)
 
+### Desenho da tarefa 3
+
+**Fontes conferidas**
+
+| Fonte | Regra | Teste |
+|---|---|---|
+| `domain-model.md` 11 | Tela 14: lista de sessões · encerrando (confirmação) · trocar PIN; tela 13: pronto | Teste de widget de cada estado; o "Encerrar" pede confirmação antes |
+| D3 | A sessão atual aparece como "Este aparelho", sem "Encerrar" | `sessions_controller_test` e teste de widget |
+| D5 / PIX-05 | O PIN bloqueado é redefinido pela troca de PIN, com a senha | `app_test`: Desbloqueio com PIN bloqueado → "Sair" → login com senha → Perfil → Segurança → Trocar PIN → o Pix volta a aceitar o PIN |
+| AUTH-06 | Depois da troca de senha, o app avisa que os outros aparelhos saíram, e o aparelho atual continua | `change_password_controller_test` |
+| `domain-model.md` 9 | `PasswordIncorrect` ("Senha incorreta."), `TooManyAttempts`, `InvalidPin`, `WeakPassword` | `api_failure_test` e `api_messages_test`; um teste por estado nos controllers |
+| MOB-01 / MOB-02 | Senha e PIN nunca no estado, em log ou no aparelho | O estado dos controllers não tem campo de senha nem de PIN; os campos são limpos depois do envio |
+| F-18 (MASVS, código) | Dados da API conferidos antes do uso | `http_security_repository_test`: no máximo uma sessão `current`; datas válidas |
+| D7 / `domain-model.md` 10 | Barra flutuante com Início · Extrato · **Pix** · Segurança · Perfil; some nos fluxos | Testes do router: cada destino abre a sua tela, o Pix abre o fluxo, e a trava continua barrando todos |
+| Brief 7 e 8 | `FloatingNavBar` e `ConfirmDialog` conferidos contra o mockup da Home; 1.3x em 320 px | Testes de widget dos componentes e das telas |
+
+**Estrutura**
+
+```
+apps/mobile/lib/
+├── core/api_failure.dart, api_messages.dart   # + PasswordIncorrect
+├── features/security/
+│   ├── domain/   ActiveSession, SecurityRepository
+│   ├── data/     HttpSecurityRepository (cliente gerado)
+│   └── presentation/
+│       ├── security_providers.dart
+│       ├── sessions/          tela 14: lista e encerrar (SessionsController)
+│       ├── change_pin/        ChangePinController e tela
+│       └── change_password/   ChangePasswordController e tela
+├── features/profile/presentation/   tela 13 (nome, agência e conta; Segurança; Sair)
+└── app/router.dart        # ShellRoute com a barra flutuante
+packages/design_system/    FloatingNavBar, ConfirmDialog
+```
+
+- **"Sair"** sai do cabeçalho da Home e vai para o Perfil (T3-1). O botão continua sendo do `auth` e é entregue pela raiz de composição, como hoje.
+- **Extrato** vira um destino da barra: sem a seta de voltar, porque a barra leva a qualquer área (T3-2). O detalhe, o comprovante e os fluxos de troca abrem por cima, sem a barra.
+
+**Concorrência**
+
+| Cenário | O que acontece | Teste |
+|---|---|---|
+| Toque duplo em "Encerrar" ou em "Confirmar" das trocas | O segundo pedido é ignorado enquanto o primeiro não volta | Controllers |
+| Sessão já encerrada por outro aparelho (404) | A lista é recarregada, sem mensagem de erro: o objetivo já foi alcançado | `sessions_controller_test` |
+| Troca de senha com a lista aberta | A lista é recarregada ao voltar: só "Este aparelho" | `app_test` |
+
+**Contratos:**
+- Nada muda na API.
+- O `SecurityRepository` tem `sessions()`, `revoke(id)`, `changePin(password, newPin)` e `changePassword(current, new)`.
+- **Rotas novas no app:** `/profile`, `/security`, `/security/change-pin`, `/security/change-password`.
+
+**Validação no app**, antes de chamar a API:
+- PIN de 4 dígitos, não trivial, digitado duas vezes iguais;
+- senha nova de 10 a 128 caracteres, também digitada duas vezes.
+
+**Decisões da tarefa 3**
+
+| # | Decisão | Padrão recomendado |
+|---|---|---|
+| T3-1 | Onde fica o "Sair" | Só no Perfil, como nos bancos e no mockup (a Home não tem "Sair" no cabeçalho). O Desbloqueio continua com o seu "Sair" |
+| T3-2 | Extrato com a barra | Vira destino da barra, sem a seta de voltar; o "Ver extrato" da Home leva ao mesmo destino |
+| T3-3 | Tamanho da entrega | Dois PRs: (a) Segurança (repositório, controllers, telas 14 e trocas); (b) Perfil, barra flutuante e "Sair" no Perfil |
+
 ## Tarefa 4 — Polimento (dia 4–5)
 
 - [ ] Acessibilidade e estados de erro nas 14 telas (D8)
