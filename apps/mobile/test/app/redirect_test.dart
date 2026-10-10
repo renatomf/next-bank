@@ -217,6 +217,9 @@ void main() {
       AppRoutes.pixReceipt('pix-1'),
       AppRoutes.statement,
       AppRoutes.statementItem('posting-1'),
+      AppRoutes.security,
+      AppRoutes.changePin,
+      AppRoutes.changePassword,
     ];
 
     test('the paths of each screen', () {
@@ -227,6 +230,9 @@ void main() {
         '/pix/receipt/pix-1',
         '/statement',
         '/statement/posting-1',
+        '/security',
+        '/security/change-pin',
+        '/security/change-password',
       ]);
     });
 
