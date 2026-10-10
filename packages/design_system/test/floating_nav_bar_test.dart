@@ -82,6 +82,29 @@ void main() {
     );
   });
 
+  // Found when the app placed the bar over its screens: outside a Scaffold
+  // there was no Material for the taps' ink.
+  testWidgets('stands on its own, outside a Scaffold', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: NbTheme.dark(),
+        home: Align(
+          alignment: Alignment.bottomCenter,
+          child: FloatingNavBar(
+            leading: const [(icon: Icons.home_outlined, label: 'Início')],
+            trailing: const [(icon: Icons.person_outline, label: 'Perfil')],
+            action: (icon: Icons.diamond_outlined, label: 'Pix'),
+            selectedIndex: 0,
+            onSelected: (_) {},
+            onAction: () {},
+          ),
+        ),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('is 72 high, as in the mockup', (tester) async {
     await pumpBar(tester);
 
