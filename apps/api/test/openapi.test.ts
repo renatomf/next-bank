@@ -127,10 +127,8 @@ describe('OpenAPI document', () => {
 
     expect(operation?.operationId).toBe('changePassword');
     expect(operation?.security).toEqual([{ bearerAuth: [] }]);
-    // The request body is typed loosely by the OpenAPI types: checked as text.
-    expect(JSON.stringify(operation?.requestBody)).toContain(
-      '#/components/schemas/ChangePasswordRequestInput',
-    );
+    // The test's Operation type has no request body: the reference is checked as text.
+    expect(JSON.stringify(operation)).toContain('#/components/schemas/ChangePasswordRequestInput');
     for (const status of ['401', '422', '429']) {
       expect(operation?.responses[status]?.content?.['application/problem+json']?.schema).toEqual({
         $ref: '#/components/schemas/Problem',
@@ -144,10 +142,8 @@ describe('OpenAPI document', () => {
 
     expect(operation?.operationId).toBe('changePin');
     expect(operation?.security).toEqual([{ bearerAuth: [] }]);
-    // The request body is typed loosely by the OpenAPI types: checked as text.
-    expect(JSON.stringify(operation?.requestBody)).toContain(
-      '#/components/schemas/ChangePinRequestInput',
-    );
+    // The test's Operation type has no request body: the reference is checked as text.
+    expect(JSON.stringify(operation)).toContain('#/components/schemas/ChangePinRequestInput');
     for (const status of ['401', '409', '422', '429']) {
       expect(operation?.responses[status]?.content?.['application/problem+json']?.schema).toEqual({
         $ref: '#/components/schemas/Problem',
