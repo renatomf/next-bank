@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/api_messages.dart';
+import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/pix_providers.dart';
 
@@ -97,6 +98,11 @@ class ReviewPixController extends Notifier<ReviewPixState> {
       return transfer;
     } on ApiFailure catch (failure) {
       if (!ref.mounted) return null;
+      // Catalog: the account has no PIN; the profile read again sends the
+      // router to the PIN creation.
+      if (failure case ApiRejected(code: ApiErrorCode.pinNotCreated)) {
+        ref.invalidate(profileProvider);
+      }
       state = _stateAfter(failure);
       if (!state.outcomeUnknown) _unanswered = null;
       return null;
