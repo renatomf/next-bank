@@ -52,6 +52,8 @@ describe('OpenAPI document', () => {
       'ActiveSession',
       'AuthTokens',
       'AuthorizePixTransferRequestInput',
+      'ChangePasswordRequestInput',
+      'ChangePinRequestInput',
       'CreatePinRequestInput',
       'CreatePixTransferRequestInput',
       'Health',
@@ -114,6 +116,36 @@ describe('OpenAPI document', () => {
     }
     for (const status of ['401', '404', '422']) {
       expect(revoke?.responses[status]?.content?.['application/problem+json']?.schema).toEqual({
+        $ref: '#/components/schemas/Problem',
+      });
+    }
+  });
+
+  // ASVS: the password changes with the current one and ends the other sessions (AUTH-06).
+  it('describes POST /v1/me/password/change as a protected command', () => {
+    const operation = document.paths['/v1/me/password/change']?.post;
+
+    expect(operation?.operationId).toBe('changePassword');
+    expect(operation?.security).toEqual([{ bearerAuth: [] }]);
+    // The test's Operation type has no request body: the reference is checked as text.
+    expect(JSON.stringify(operation)).toContain('#/components/schemas/ChangePasswordRequestInput');
+    for (const status of ['401', '422', '429']) {
+      expect(operation?.responses[status]?.content?.['application/problem+json']?.schema).toEqual({
+        $ref: '#/components/schemas/Problem',
+      });
+    }
+  });
+
+  // domain-model.md 3.1: the PIN changes with the password; AUTH-01.
+  it('describes POST /v1/me/pin/change as a protected command', () => {
+    const operation = document.paths['/v1/me/pin/change']?.post;
+
+    expect(operation?.operationId).toBe('changePin');
+    expect(operation?.security).toEqual([{ bearerAuth: [] }]);
+    // The test's Operation type has no request body: the reference is checked as text.
+    expect(JSON.stringify(operation)).toContain('#/components/schemas/ChangePinRequestInput');
+    for (const status of ['401', '409', '422', '429']) {
+      expect(operation?.responses[status]?.content?.['application/problem+json']?.schema).toEqual({
         $ref: '#/components/schemas/Problem',
       });
     }

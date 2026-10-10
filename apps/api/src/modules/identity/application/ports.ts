@@ -74,6 +74,12 @@ export interface LoginAccount {
   status: UserStatus;
 }
 
+/** What confirming the signed-in customer's password needs: the key of the login's counter and the hash. */
+export interface Credentials {
+  email: string;
+  passwordHash: string;
+}
+
 /** What the customer sees about themselves; never the CPF, e-mail or hashes. */
 export interface Profile {
   name: string;
@@ -92,6 +98,13 @@ export interface UsersRepository {
   insert(user: UserState, cpf: StoredCpf): Promise<void>;
   findProfile(id: string): Promise<Profile | null>;
   findPayee(id: string): Promise<Payee | null>;
+  findCredentials(id: string): Promise<Credentials | null>;
+  updatePasswordHash(id: string, passwordHash: string): Promise<void>;
+  /**
+   * Reads the password hash and holds the row until the transaction ends, so a
+   * password change and a login opening its session run one after the other.
+   */
+  lockPasswordHash(id: string): Promise<string | null>;
 }
 
 export interface SessionsRepository {
@@ -103,6 +116,11 @@ export interface SessionsRepository {
    * logouts of one session run one at a time.
    */
   lockById(id: string): Promise<SessionState | null>;
+  /**
+   * Locks the user's sessions still active at [now], in id order, so a password
+   * change and the refreshes it races with never deadlock.
+   */
+  lockActiveByUser(userId: string, now: Date): Promise<SessionState[]>;
   /** The user's sessions still active at [now], most recently used first. */
   listActive(userId: string, now: Date): Promise<SessionState[]>;
   update(session: SessionState): Promise<void>;

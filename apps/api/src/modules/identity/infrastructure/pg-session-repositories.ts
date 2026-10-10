@@ -58,10 +58,27 @@ export class PgSessionsRepository implements SessionsRepository {
     ORDER BY last_used_at DESC, id
     LIMIT 50`;
 
+  /** Served by sessions_user_id_active_idx; locked in id order, as every other lock. */
+  static readonly LOCK_ACTIVE_BY_USER_SQL = `SELECT id, user_id, device_label, created_at,
+      last_used_at, idle_expires_at, absolute_expires_at, revoked_at, revoked_reason
+    FROM identity.sessions
+    WHERE user_id = $1 AND revoked_at IS NULL
+      AND idle_expires_at > $2 AND absolute_expires_at > $2
+    ORDER BY id
+    FOR UPDATE`;
+
   readonly #client: pg.ClientBase;
 
   constructor(client: pg.ClientBase) {
     this.#client = client;
+  }
+
+  async lockActiveByUser(userId: string, now: Date): Promise<SessionState[]> {
+    const { rows } = await this.#client.query<SessionRow>(
+      PgSessionsRepository.LOCK_ACTIVE_BY_USER_SQL,
+      [userId, now],
+    );
+    return rows.flatMap((row) => toSessionState(row) ?? []);
   }
 
   async listActive(userId: string, now: Date): Promise<SessionState[]> {

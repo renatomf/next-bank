@@ -133,9 +133,9 @@ Nenhuma (ver D2 e D9).
 
 ## Tarefa 2 — PIN e senha na API (dia 2)
 
-- [ ] `TransactionPin.Change` no domínio (TDD) e `POST /v1/me/pin/change`, com a força bruta na senha escrita antes
-- [ ] `User.ChangePassword` e `POST /v1/me/password/change`, revogando as outras sessões (AUTH-06)
-- [ ] Contrato e cliente Dart regenerados
+- [x] `TransactionPin.Change` no domínio (TDD) e `POST /v1/me/pin/change`, com a força bruta na senha escrita antes
+- [x] `User.ChangePassword` e `POST /v1/me/password/change`, revogando as outras sessões (AUTH-06)
+- [x] Contrato e cliente Dart regenerados
 
 ## Tarefa 3 — Perfil e Segurança no app (dia 3–4)
 

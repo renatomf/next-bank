@@ -1,5 +1,6 @@
 import pg from 'pg';
 import type {
+  Credentials,
   LoginAccount,
   Payee,
   Profile,
@@ -49,6 +50,32 @@ export class PgUsersRepository implements UsersRepository {
     }>(PgUsersRepository.FIND_BY_EMAIL_SQL, [email]);
     const row = rows[0];
     return row ? { id: row.id, passwordHash: row.password_hash, status: row.status } : null;
+  }
+
+  async findCredentials(id: string): Promise<Credentials | null> {
+    const { rows } = await this.#client.query<{ email: string; password_hash: string }>(
+      'SELECT email, password_hash FROM identity.users WHERE id = $1',
+      [id],
+    );
+    const row = rows[0];
+    return row ? { email: row.email, passwordHash: row.password_hash } : null;
+  }
+
+  /** FOR SHARE: blocks a password change until this transaction ends, and waits for one. */
+  async lockPasswordHash(id: string): Promise<string | null> {
+    const { rows } = await this.#client.query<{ password_hash: string }>(
+      'SELECT password_hash FROM identity.users WHERE id = $1 FOR SHARE',
+      [id],
+    );
+    return rows[0]?.password_hash ?? null;
+  }
+
+  /** Only the hash: the plain password never reaches the database. */
+  async updatePasswordHash(id: string, passwordHash: string): Promise<void> {
+    await this.#client.query('UPDATE identity.users SET password_hash = $2 WHERE id = $1', [
+      id,
+      passwordHash,
+    ]);
   }
 
   async findProfile(id: string): Promise<Profile | null> {

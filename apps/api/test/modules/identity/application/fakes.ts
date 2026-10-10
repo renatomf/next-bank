@@ -195,6 +195,20 @@ export class InMemoryDatabase implements UnitOfWork, IdentityRepositoriesFactory
               : null,
           );
         },
+        lockPasswordHash: (id) =>
+          Promise.resolve(tables.users.find((u) => u.state.id === id)?.state.passwordHash ?? null),
+        updatePasswordHash: (id, passwordHash) => {
+          tables.users = tables.users.map((u) =>
+            u.state.id === id ? { ...u, state: { ...u.state, passwordHash } } : u,
+          );
+          return Promise.resolve();
+        },
+        findCredentials: (id) => {
+          const found = tables.users.find((u) => u.state.id === id);
+          return Promise.resolve(
+            found ? { email: found.state.email, passwordHash: found.state.passwordHash } : null,
+          );
+        },
         findPayee: (id) => {
           const found = tables.users.find((u) => u.state.id === id);
           return Promise.resolve(
@@ -215,6 +229,19 @@ export class InMemoryDatabase implements UnitOfWork, IdentityRepositoriesFactory
           const found = tables.sessions.find((session) => session.id === id);
           return Promise.resolve(found ? { ...found } : null);
         },
+        lockActiveByUser: (userId, now) =>
+          Promise.resolve(
+            tables.sessions
+              .filter(
+                (session) =>
+                  session.userId === userId &&
+                  session.revokedAt === null &&
+                  now < session.idleExpiresAt &&
+                  now < session.absoluteExpiresAt,
+              )
+              .sort((a, b) => a.id.localeCompare(b.id))
+              .map((session) => ({ ...session })),
+          ),
         listActive: (userId, now) =>
           Promise.resolve(
             tables.sessions

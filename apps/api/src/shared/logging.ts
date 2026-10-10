@@ -2,6 +2,10 @@
 const SENSITIVE_KEYS = [
   'password',
   'pin',
+  // The PIN and password changes (F-25).
+  'currentPassword',
+  'newPassword',
+  'newPin',
   'cpf',
   'pixKey',
   // The value of a Pix key looked up or paid (a CPF, an e-mail...).

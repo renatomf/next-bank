@@ -14,6 +14,8 @@ export 'package:nextbank_api/src/api/default_api.dart';
 export 'package:nextbank_api/src/model/active_session.dart';
 export 'package:nextbank_api/src/model/auth_tokens.dart';
 export 'package:nextbank_api/src/model/authorize_pix_transfer_request_input.dart';
+export 'package:nextbank_api/src/model/change_password_request_input.dart';
+export 'package:nextbank_api/src/model/change_pin_request_input.dart';
 export 'package:nextbank_api/src/model/create_pin_request_input.dart';
 export 'package:nextbank_api/src/model/create_pix_transfer_request_input.dart';
 export 'package:nextbank_api/src/model/create_pix_transfer_request_input_key.dart';
