@@ -139,8 +139,8 @@ Nenhuma (ver D2 e D9).
 
 ## Tarefa 3 — Perfil e Segurança no app (dia 3–4)
 
-- [ ] `features/security`: repositório e controllers (TDD); telas de sessões, trocar PIN e trocar senha
-- [ ] `features/profile`: tela 13; navegação flutuante (D7)
+- [x] `features/security`: repositório e controllers (TDD); telas de sessões, trocar PIN e trocar senha
+- [x] `features/profile`: tela 13; navegação flutuante (D7)
 
 ### Desenho da tarefa 3
 
