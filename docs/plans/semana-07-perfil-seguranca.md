@@ -284,5 +284,5 @@ packages/design_system/    FloatingNavBar, ConfirmDialog
 - [ ] Sessão encerrada em outro aparelho deixa de funcionar; troca de senha encerra as outras sessões
 - [ ] PIN bloqueado redefinido com a senha
 - [x] Todas as telas em 1.3x num celular pequeno, com rótulos de leitor de tela (varredura automática nos dois temas; TalkBack no checkpoint)
-- [ ] Cobertura ≥ 90% em `domain/` e `application/`; lint e `flutter analyze` sem warnings
+- [x] Cobertura ≥ 90% em `domain/` e `application/` (API: 98,2% das instruções e 94,9% dos ramos em 724 testes); lint e `flutter analyze` sem warnings
 - [ ] Próximo passo: plano da semana 8 (qualidade, deploy e demo pública)
