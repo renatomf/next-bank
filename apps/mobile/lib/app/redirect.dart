@@ -41,6 +41,9 @@ abstract final class AppRoutes {
   /// The detail of the movement [itemId] (screen 12).
   static String statementItem(String itemId) => '$statement/$itemId';
 
+  /// The customer and the way out (screen 13).
+  static const String profile = '/profile';
+
   /// Sessions and credentials (screen 14).
   static const String security = '/security';
 
