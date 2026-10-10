@@ -52,6 +52,7 @@ describe('OpenAPI document', () => {
       'ActiveSession',
       'AuthTokens',
       'AuthorizePixTransferRequestInput',
+      'ChangePasswordRequestInput',
       'ChangePinRequestInput',
       'CreatePinRequestInput',
       'CreatePixTransferRequestInput',
@@ -115,6 +116,23 @@ describe('OpenAPI document', () => {
     }
     for (const status of ['401', '404', '422']) {
       expect(revoke?.responses[status]?.content?.['application/problem+json']?.schema).toEqual({
+        $ref: '#/components/schemas/Problem',
+      });
+    }
+  });
+
+  // ASVS: the password changes with the current one and ends the other sessions (AUTH-06).
+  it('describes POST /v1/me/password/change as a protected command', () => {
+    const operation = document.paths['/v1/me/password/change']?.post;
+
+    expect(operation?.operationId).toBe('changePassword');
+    expect(operation?.security).toEqual([{ bearerAuth: [] }]);
+    // The request body is typed loosely by the OpenAPI types: checked as text.
+    expect(JSON.stringify(operation?.requestBody)).toContain(
+      '#/components/schemas/ChangePasswordRequestInput',
+    );
+    for (const status of ['401', '422', '429']) {
+      expect(operation?.responses[status]?.content?.['application/problem+json']?.schema).toEqual({
         $ref: '#/components/schemas/Problem',
       });
     }
