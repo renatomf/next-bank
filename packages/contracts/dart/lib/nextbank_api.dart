@@ -11,6 +11,7 @@ export 'package:nextbank_api/src/auth/oauth.dart';
 
 export 'package:nextbank_api/src/api/default_api.dart';
 
+export 'package:nextbank_api/src/model/active_session.dart';
 export 'package:nextbank_api/src/model/auth_tokens.dart';
 export 'package:nextbank_api/src/model/authorize_pix_transfer_request_input.dart';
 export 'package:nextbank_api/src/model/create_pin_request_input.dart';
@@ -29,6 +30,7 @@ export 'package:nextbank_api/src/model/pix_transfer.dart';
 export 'package:nextbank_api/src/model/problem.dart';
 export 'package:nextbank_api/src/model/refresh_request_input.dart';
 export 'package:nextbank_api/src/model/register_request_input.dart';
+export 'package:nextbank_api/src/model/session_list.dart';
 export 'package:nextbank_api/src/model/statement.dart';
 export 'package:nextbank_api/src/model/statement_counterparty.dart';
 export 'package:nextbank_api/src/model/statement_item.dart';

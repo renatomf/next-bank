@@ -18,6 +18,9 @@ class FakeAuthRepository implements AuthRepository {
   final List<({String name, String email, String cpf, String password})>
   registrations = [];
   final List<String> pins = [];
+
+  /// The device label sent with each login and registration, in order.
+  final List<String?> deviceLabels = [];
   int logouts = 0;
 
   @override
@@ -27,6 +30,7 @@ class FakeAuthRepository implements AuthRepository {
     required String? deviceLabel,
   }) async {
     logins.add((email: email, password: password));
+    deviceLabels.add(deviceLabel);
     await answer();
     return tokens;
   }
@@ -46,6 +50,7 @@ class FakeAuthRepository implements AuthRepository {
     required String? deviceLabel,
   }) async {
     registrations.add((name: name, email: email, cpf: cpf, password: password));
+    deviceLabels.add(deviceLabel);
     await answer();
     return tokens;
   }

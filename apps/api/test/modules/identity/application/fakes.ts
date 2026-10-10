@@ -215,6 +215,19 @@ export class InMemoryDatabase implements UnitOfWork, IdentityRepositoriesFactory
           const found = tables.sessions.find((session) => session.id === id);
           return Promise.resolve(found ? { ...found } : null);
         },
+        listActive: (userId, now) =>
+          Promise.resolve(
+            tables.sessions
+              .filter(
+                (session) =>
+                  session.userId === userId &&
+                  session.revokedAt === null &&
+                  now < session.idleExpiresAt &&
+                  now < session.absoluteExpiresAt,
+              )
+              .sort((a, b) => b.lastUsedAt.getTime() - a.lastUsedAt.getTime())
+              .map((session) => ({ ...session })),
+          ),
         update: (state) => {
           tables.sessions = tables.sessions.map((session) =>
             session.id === state.id ? { ...state } : session,

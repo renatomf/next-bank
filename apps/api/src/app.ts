@@ -24,6 +24,7 @@ import {
   createIdentityModule,
   loginRoutes,
   meRoutes,
+  meSessionsRoutes,
   registerAuthentication,
   pinRoutes,
   sessionRoutes,
@@ -170,6 +171,10 @@ export function buildApp({ pool, logStream, security }: AppDependencies) {
   });
   void app.register(pinRoutes, { createPin: identity.createPin, verifyPin: identity.verifyPin });
   void app.register(meRoutes, { getProfile: identity.getProfile });
+  void app.register(meSessionsRoutes, {
+    listSessions: identity.listSessions,
+    revokeSession: identity.revokeSession,
+  });
   void app.register(keyLookupRoutes, { lookupPixKey: payments.lookupPixKey });
   void app.register(transferRoutes, {
     createPixTransfer: payments.createPixTransfer,

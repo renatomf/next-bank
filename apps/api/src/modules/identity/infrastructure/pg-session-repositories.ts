@@ -45,10 +45,31 @@ export class PgSessionsRepository implements SessionsRepository {
       idle_expires_at, absolute_expires_at, revoked_at, revoked_reason
     FROM identity.sessions WHERE id = $1`;
 
+  /**
+   * Served by sessions_user_id_active_idx (user_id WHERE revoked_at IS NULL).
+   * Expired sessions are left out here, not in the index, since time moves. The
+   * bound keeps the answer small: sessions expire, so a customer rarely has more.
+   */
+  static readonly LIST_ACTIVE_SQL = `SELECT id, user_id, device_label, created_at, last_used_at,
+      idle_expires_at, absolute_expires_at, revoked_at, revoked_reason
+    FROM identity.sessions
+    WHERE user_id = $1 AND revoked_at IS NULL
+      AND idle_expires_at > $2 AND absolute_expires_at > $2
+    ORDER BY last_used_at DESC, id
+    LIMIT 50`;
+
   readonly #client: pg.ClientBase;
 
   constructor(client: pg.ClientBase) {
     this.#client = client;
+  }
+
+  async listActive(userId: string, now: Date): Promise<SessionState[]> {
+    const { rows } = await this.#client.query<SessionRow>(PgSessionsRepository.LIST_ACTIVE_SQL, [
+      userId,
+      now,
+    ]);
+    return rows.flatMap((row) => toSessionState(row) ?? []);
   }
 
   async insert(session: SessionState): Promise<void> {

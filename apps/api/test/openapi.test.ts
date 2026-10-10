@@ -49,6 +49,7 @@ describe('OpenAPI document', () => {
   // The approved contract: a new schema must be added here on purpose (READ-02).
   it('keeps only referenced schemas, without input duplicates', () => {
     expect(Object.keys(document.components.schemas).sort()).toEqual([
+      'ActiveSession',
       'AuthTokens',
       'AuthorizePixTransferRequestInput',
       'CreatePinRequestInput',
@@ -67,6 +68,7 @@ describe('OpenAPI document', () => {
       'Problem',
       'RefreshRequestInput',
       'RegisterRequestInput',
+      'SessionList',
       'Statement',
       'StatementCounterparty',
       'StatementItem',
@@ -88,6 +90,30 @@ describe('OpenAPI document', () => {
     });
     for (const status of ['401', '422']) {
       expect(operation?.responses[status]?.content?.['application/problem+json']?.schema).toEqual({
+        $ref: '#/components/schemas/Problem',
+      });
+    }
+  });
+
+  // ASVS session: the customer sees and ends their own sessions, from the token.
+  it('describes the active sessions as protected operations of the caller', () => {
+    const list = document.paths['/v1/me/sessions']?.get;
+    const revoke = document.paths['/v1/me/sessions/{sessionId}/revoke']?.post;
+
+    expect(list?.operationId).toBe('listMySessions');
+    expect(list?.parameters ?? []).toEqual([]);
+    expect(list?.responses['200']?.content?.['application/json']?.schema).toEqual({
+      $ref: '#/components/schemas/SessionList',
+    });
+    expect(revoke?.operationId).toBe('revokeMySession');
+    expect(revoke?.parameters).toEqual([
+      expect.objectContaining({ in: 'path', name: 'sessionId', required: true }),
+    ]);
+    for (const operation of [list, revoke]) {
+      expect(operation?.security).toEqual([{ bearerAuth: [] }]);
+    }
+    for (const status of ['401', '404', '422']) {
+      expect(revoke?.responses[status]?.content?.['application/problem+json']?.schema).toEqual({
         $ref: '#/components/schemas/Problem',
       });
     }
@@ -206,8 +232,13 @@ describe('OpenAPI document', () => {
   // READ-01, READ-05: accounts and customers always come from the token. Only these
   // routes take an id in the path (D3): a Pix, by an unguessable UUIDv7, each with
   // its own IDOR test (PIX-01). Any new one must be added here on purpose.
-  it('takes an id in the path only on the approved Pix routes', () => {
-    expect(Object.keys(document.paths).filter((path) => path.includes('{'))).toEqual([
+  it('takes an id in the path only on the approved routes', () => {
+    expect(
+      Object.keys(document.paths)
+        .filter((path) => path.includes('{'))
+        .sort(),
+    ).toEqual([
+      '/v1/me/sessions/{sessionId}/revoke',
       '/v1/pix/transfers/{transferId}',
       '/v1/pix/transfers/{transferId}/authorize',
       '/v1/pix/transfers/{transferId}/cancel',

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/api_messages.dart';
 import 'package:next_bank/core/cpf.dart';
+import 'package:next_bank/core/device_label.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/features/auth/domain/email.dart';
 import 'package:next_bank/features/auth/domain/registration_rules.dart';
@@ -96,7 +97,7 @@ class RegisterController extends Notifier<RegisterState> {
         email: address,
         cpf: cpf,
         password: password,
-        deviceLabel: null,
+        deviceLabel: ref.read(deviceLabelProvider),
       );
       await session.signIn(tokens);
     } on ApiFailure catch (failure) {
