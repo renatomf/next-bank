@@ -100,6 +100,11 @@ export interface UsersRepository {
   findPayee(id: string): Promise<Payee | null>;
   findCredentials(id: string): Promise<Credentials | null>;
   updatePasswordHash(id: string, passwordHash: string): Promise<void>;
+  /**
+   * Reads the password hash and holds the row until the transaction ends, so a
+   * password change and a login opening its session run one after the other.
+   */
+  lockPasswordHash(id: string): Promise<string | null>;
 }
 
 export interface SessionsRepository {

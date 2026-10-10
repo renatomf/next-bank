@@ -93,7 +93,7 @@ export class Login {
     }
 
     store.delete(email);
-    return this.#openSession(account.id, input, now);
+    return this.#openSession(account, input, now);
   }
 
   #failureReason(account: LoginAccount | null, passwordMatches: boolean): FailureReason | null {
@@ -123,13 +123,20 @@ export class Login {
     });
   }
 
-  async #openSession(userId: string, input: LoginInput, now: Date): Promise<LoginResult> {
+  async #openSession(account: LoginAccount, input: LoginInput, now: Date): Promise<LoginResult> {
     const { ids } = this.#deps;
+    const userId = account.id;
     const session = Session.create({ id: ids.next(), userId, deviceLabel: input.deviceLabel, now });
     const refreshToken = this.#deps.refreshTokens.generate();
 
     await this.#deps.unitOfWork.run(async (tx) => {
       const repositories = this.#deps.repositories.for(tx);
+      // The password may have changed while it was being hashed (F-24): the row
+      // lock makes this wait for a change in flight, and a changed hash means
+      // the checked password is no longer the account's, so no session opens
+      // that the change would not end (AUTH-06).
+      const currentHash = await repositories.users.lockPasswordHash(userId);
+      if (currentHash !== account.passwordHash) throw new InvalidCredentials();
       await repositories.sessions.insert(session.state);
       await repositories.refreshTokens.insert({
         id: ids.next(),
