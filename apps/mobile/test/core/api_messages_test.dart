@@ -39,6 +39,7 @@ void main() {
         'Você já tem um PIN. Para trocar, use Perfil > Segurança.',
       ),
       (ApiErrorCode.notFound, 'Não encontrado.'),
+      (ApiErrorCode.passwordIncorrect, 'Senha incorreta.'),
       (ApiErrorCode.pixKeyNotFound, 'Não encontramos essa chave Pix.'),
       (
         ApiErrorCode.samePayerAndPayee,

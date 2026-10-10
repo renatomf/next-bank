@@ -32,6 +32,7 @@ void main() {
       ('InvalidPin', ApiErrorCode.invalidPin),
       ('PinAlreadyCreated', ApiErrorCode.pinAlreadyCreated),
       ('NotFound', ApiErrorCode.notFound),
+      ('PasswordIncorrect', ApiErrorCode.passwordIncorrect),
       ('PixKeyNotFound', ApiErrorCode.pixKeyNotFound),
       ('SamePayerAndPayee', ApiErrorCode.samePayerAndPayee),
       ('InvalidAmount', ApiErrorCode.invalidAmount),
