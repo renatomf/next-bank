@@ -1,0 +1,60 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:next_bank/core/theme/theme_choice.dart';
+import 'package:next_bank/features/profile/presentation/profile_screen.dart';
+
+import '../support/fake_theme_store.dart';
+import '../support/fake_token_store.dart';
+import '../support/pump_app.dart';
+
+/// The brightness the app shows right now.
+Brightness shown(WidgetTester tester) =>
+    Theme.of(tester.element(find.byType(Scaffold).last)).brightness;
+
+/// Signed in, unlocked, on the Profile.
+Future<void> openProfile(WidgetTester tester, FakeThemeStore theme) async {
+  tester.view.physicalSize = const Size(1080, 3600);
+  addTearDown(tester.view.reset);
+  await pumpApp(tester, store: FakeTokenStore(tokens), theme: theme);
+  await unlockWithPin(tester);
+  await tester.tap(find.bySemanticsLabel('Perfil'));
+  await tester.pumpAndSettle();
+}
+
+// The theme picker through the real app (week 7 plan, D9).
+void main() {
+  testWidgets('follows the phone by default', (tester) async {
+    tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
+    addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+
+    await openProfile(tester, FakeThemeStore());
+
+    expect(shown(tester), Brightness.dark);
+  });
+
+  testWidgets('opens with the theme kept on the device', (tester) async {
+    tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
+    addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+
+    await openProfile(tester, FakeThemeStore(ThemeChoice.light));
+
+    expect(shown(tester), Brightness.light);
+  });
+
+  testWidgets('changes the theme on the Profile and keeps it', (tester) async {
+    final theme = FakeThemeStore();
+    await openProfile(tester, theme);
+    expect(shown(tester), Brightness.light);
+
+    await tester.tap(find.text('Escuro'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ProfileScreen), findsOneWidget);
+    expect(shown(tester), Brightness.dark);
+    expect(theme.stored, ThemeChoice.dark);
+    expect(
+      tester.getSemantics(find.text('Escuro')),
+      isSemantics(label: 'Escuro', isSelected: true),
+    );
+  });
+}
