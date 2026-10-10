@@ -209,6 +209,53 @@ packages/design_system/    FloatingNavBar, ConfirmDialog
 - [ ] Acessibilidade e estados de erro nas 14 telas (D8)
 - [ ] Seletor de tema, se houver folga (D9)
 
+### Desenho da tarefa 4
+
+**Ponto de partida:**
+- **Telas:** o app tem 14 telas mais o Splash.
+- **Teste de 1.3x a 320 px:** já existe para todas as telas, exceto o Splash.
+- **Contraste:** só os tokens são testados (`tokens_test.dart`); a tela renderizada não é.
+- **Rótulos de toque e tamanho dos alvos:** não há teste.
+- **Mensagens de erro:** `api_messages_test.dart` já confere cada código com o texto do catálogo.
+- **Tema:** o app só usa o tema escuro (`main.dart`).
+
+**Fontes conferidas**
+
+| Fonte | O que exige | Teste que prova |
+|---|---|---|
+| Brief, seção 8 | Fonte do sistema até 1.3x em celular pequeno | 1.3x a 320 px nas 15 telas; o Splash ganha o seu |
+| Brief, seção 8 | Rótulo de leitor de tela em todo controle; o estado não é dado só pela cor | `labeledTapTargetGuideline` em cada tela |
+| Brief, seção 8 / MASVS-PLATFORM | Alvos de toque de pelo menos 48 dp (Android) e 44 pt (iOS) | `androidTapTargetGuideline` e `iOSTapTargetGuideline` em cada tela |
+| Brief, seção 8 | Contraste AA (4.5:1) de cada texto sobre o seu fundo | `textContrastGuideline` em cada tela, além dos tokens já testados |
+| `domain-model.md` 11 | Os estados de cada tela | Cada estado da tabela ligado ao teste que o mostra; estado sem teste ganha um |
+| `domain-model.md`, catálogo de erros | Cada erro com a mensagem do catálogo | Já coberto por `api_messages_test.dart`; nada novo |
+
+**Estrutura:**
+- Só testes e correções de layout ou semântica; nenhuma peça nova.
+- Um arquivo de varredura, `test/app/accessibility_test.dart`. Ele abre cada uma das 15 telas pelo roteador real, com os fakes que já existem, e aplica as quatro diretrizes do Flutter (`meetsGuideline`).
+- Cada achado vira um teste vermelho, no commit `test:`, antes da correção no design system ou na tela.
+- **Achados:** se uma regra já documentada no brief, seção 8, previa o problema, é falha de desenho e vai para o log em `controles-de-seguranca.md`.
+
+**Tema:** a varredura roda no tema escuro, o único do app. O tema claro segue coberto pelos tokens. Se D9 entrar, a varredura passa a rodar nos dois temas.
+
+**Concorrência:** não se aplica, pois não há estado compartilhado nem chamada nova.
+
+**Contratos:** nenhum endpoint, schema ou configuração novos.
+
+**Dependências novas:** nenhuma.
+
+**D9 (seletor de tema), se entrar, num PR separado:**
+- **Padrão:** seguir o tema do sistema.
+- **Onde se escolhe:** no Perfil, entre "Sistema", "Claro" e "Escuro".
+- **Como se guarda:** só a escolha diferente do padrão, no `flutter_secure_storage` que o app já usa. Não entra `SharedPreferences` (MOB-01).
+- **Valor guardado inválido:** é ignorado e o app volta ao padrão.
+- **Estrutura:** `core/theme/` (preferência e provider), com TDD no notifier.
+
+**Fora do escopo:**
+- **Leitor de tela no aparelho (TalkBack):** fica para o checkpoint da tarefa 5, porque o teste automático não substitui ouvir as telas.
+- **Fonte acima de 1.3x:** o brief limita a 1.3x.
+- **Animações:** ficam para depois (D10).
+
 ## Tarefa 5 — Fechamento
 
 - [ ] `/security-review` (obrigatório: sessão, PIN e senha)
