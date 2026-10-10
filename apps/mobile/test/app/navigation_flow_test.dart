@@ -1,0 +1,200 @@
+import 'package:design_system/design_system.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:next_bank/core/api_failure.dart';
+import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
+import 'package:next_bank/features/profile/presentation/profile_screen.dart';
+import 'package:next_bank/features/security/presentation/change_pin/change_pin_screen.dart';
+import 'package:next_bank/features/security/presentation/sessions/security_screen.dart';
+import 'package:next_bank/features/statement/presentation/list/statement_screen.dart';
+
+import '../support/fake_auth_repository.dart';
+import '../support/fake_monotonic_clock.dart';
+import '../support/fake_security_repository.dart';
+import '../support/fake_token_store.dart';
+import '../support/fake_unlock_repository.dart';
+import '../support/pump_app.dart';
+
+final Finder bar = find.byType(FloatingNavBar);
+
+Future<void> openHome(WidgetTester tester, {FakeMonotonicClock? clock}) async {
+  // Tall enough for every screen to be built at once.
+  tester.view.physicalSize = const Size(1080, 3600);
+  addTearDown(tester.view.reset);
+  await pumpApp(tester, store: FakeTokenStore(tokens), clock: clock);
+  await unlockWithPin(tester);
+}
+
+Future<void> tapBar(WidgetTester tester, String label) async {
+  await tester.tap(
+    find.descendant(of: bar, matching: find.bySemanticsLabel(label)),
+  );
+  await tester.pumpAndSettle();
+}
+
+// The floating bar through the real router (week 7 plan, D7;
+// domain-model.md 10).
+void main() {
+  testWidgets('each destination opens its area and is marked', (tester) async {
+    await openHome(tester);
+    expect(bar, findsOneWidget);
+
+    for (final (label, screen) in [
+      ('Extrato', StatementScreen),
+      ('Segurança', SecurityScreen),
+      ('Perfil', ProfileScreen),
+    ]) {
+      await tapBar(tester, label);
+      expect(find.byType(screen), findsOneWidget, reason: label);
+      expect(
+        tester.getSemantics(
+          find.descendant(of: bar, matching: find.bySemanticsLabel(label)),
+        ),
+        isSemantics(label: label, isSelected: true, isButton: true),
+      );
+    }
+    await tapBar(tester, 'Início');
+    expect(find.text('Últimas movimentações'), findsOneWidget);
+  });
+
+  // D7: the flows open over the areas, without the bar.
+  testWidgets('the Pix opens over the bar, and back returns to it', (
+    tester,
+  ) async {
+    await openHome(tester);
+
+    await tapBar(tester, 'Pix');
+    expect(find.byType(SendPixScreen), findsOneWidget);
+    expect(bar, findsNothing);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(bar, findsOneWidget);
+  });
+
+  testWidgets('the PIN change opens over Security, without the bar', (
+    tester,
+  ) async {
+    await openHome(tester);
+    await tapBar(tester, 'Segurança');
+
+    await tester.tap(find.bySemanticsLabel(RegExp('Trocar PIN')).first);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ChangePinScreen), findsOneWidget);
+    expect(bar, findsNothing);
+  });
+
+  // T3-2: "Ver extrato" leads to the same destination of the bar.
+  testWidgets('"Ver extrato" opens the statement destination', (tester) async {
+    await openHome(tester);
+
+    await tester.tap(find.text('Ver extrato'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(StatementScreen), findsOneWidget);
+    expect(find.bySemanticsLabel('Voltar'), findsNothing);
+    expect(bar, findsOneWidget);
+  });
+
+  testWidgets('the profile shows the customer and the masked account', (
+    tester,
+  ) async {
+    await openHome(tester);
+
+    await tapBar(tester, 'Perfil');
+
+    expect(find.text('Ana Souza'), findsOneWidget);
+    expect(find.text('next bank · Ag 0001 · Conta •••• 0004'), findsOneWidget);
+    await tester.tap(find.bySemanticsLabel(RegExp('^Segurança,')));
+    await tester.pumpAndSettle();
+    expect(find.byType(SecurityScreen), findsOneWidget);
+  });
+
+  // PIX-06: the lock still bars every area.
+  testWidgets('asks for the PIN after 5 minutes away, from any area', (
+    tester,
+  ) async {
+    final clock = FakeMonotonicClock();
+    await openHome(tester, clock: clock);
+    await tapBar(tester, 'Perfil');
+
+    [
+      AppLifecycleState.inactive,
+      AppLifecycleState.hidden,
+      AppLifecycleState.paused,
+    ].forEach(tester.binding.handleAppLifecycleStateChanged);
+    clock.current += const Duration(minutes: 6);
+    [
+      AppLifecycleState.hidden,
+      AppLifecycleState.inactive,
+      AppLifecycleState.resumed,
+    ].forEach(tester.binding.handleAppLifecycleStateChanged);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Digite seu PIN'), findsOneWidget);
+    expect(bar, findsNothing);
+  });
+
+  // D5, end to end: a locked PIN offers only "Sair"; the password signs back
+  // in and resets the PIN on Profile > Segurança > Trocar PIN.
+  testWidgets('recovers a locked PIN with the password', (tester) async {
+    tester.view.physicalSize = const Size(1080, 3600);
+    addTearDown(tester.view.reset);
+    final store = FakeTokenStore(tokens);
+    final unlock = FakeUnlockRepository()
+      ..answer = () async => throw const ApiRejected(ApiErrorCode.pinLocked);
+    final security = FakeSecurityRepository();
+    await pumpApp(
+      tester,
+      store: store,
+      repository: FakeAuthRepository(tokens),
+      unlock: unlock,
+      security: security,
+    );
+    await unlockWithPin(tester, '7413');
+    expect(find.text('PIN bloqueado por 30 minutos.'), findsOneWidget);
+
+    await tester.tap(find.bySemanticsLabel('Sair'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).at(0), 'ana@example.test');
+    await tester.enterText(find.byType(TextField).at(1), 'a long passphrase');
+    await tester.tap(find.widgetWithText(FilledButton, 'Entrar'));
+    await tester.pumpAndSettle();
+    await tapBar(tester, 'Perfil');
+    await tester.tap(find.bySemanticsLabel(RegExp('^Segurança,')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel(RegExp('Trocar PIN')).first);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).at(0), 'a long passphrase');
+    await tester.enterText(find.byType(TextField).at(1), '1597');
+    await tester.enterText(find.byType(TextField).at(2), '1597');
+    await tester.tap(find.bySemanticsLabel('Trocar PIN').last);
+    await tester.pumpAndSettle();
+
+    expect(security.pinChanges, [
+      (password: 'a long passphrase', newPin: '1597'),
+    ]);
+    expect(find.text('PIN alterado.'), findsOneWidget);
+    expect(find.byType(SecurityScreen), findsOneWidget);
+  });
+
+  // Brief, section 8: system font scale up to 1.3x on a small phone. Found
+  // "Sair da conta" running past the edge, unable to wrap.
+  testWidgets('the profile and the bar fit a small phone at 1.3x text', (
+    tester,
+  ) async {
+    await openHome(tester);
+    tester.view
+      ..physicalSize = const Size(320 * 3, 568 * 3)
+      ..devicePixelRatio = 3;
+    tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+
+    await tapBar(tester, 'Perfil');
+
+    expect(tester.takeException(), isNull);
+  });
+}
