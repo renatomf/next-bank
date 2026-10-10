@@ -18,6 +18,10 @@ enum ApiErrorCode {
   /// Wrong e-mail or password (same answer for both).
   invalidCredentials('InvalidCredentials'),
 
+  /// The signed-in customer's password did not match, changing the PIN or
+  /// the password: 422, so the app stays signed in.
+  passwordIncorrect('PasswordIncorrect'),
+
   /// Too many attempts: try again later.
   tooManyAttempts('TooManyAttempts'),
 

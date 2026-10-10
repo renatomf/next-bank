@@ -31,6 +31,7 @@ String _catalogText(ApiErrorCode code) => switch (code) {
   ApiErrorCode.alreadyRegistered =>
     'Não foi possível concluir o cadastro com esses dados.',
   ApiErrorCode.invalidCredentials => 'E-mail ou senha incorretos.',
+  ApiErrorCode.passwordIncorrect => 'Senha incorreta.',
   ApiErrorCode.tooManyAttempts =>
     'Muitas tentativas. Tente de novo em alguns minutos.',
   ApiErrorCode.unauthenticated => 'Faça login para continuar.',
