@@ -61,6 +61,14 @@ export class PgUsersRepository implements UsersRepository {
     return row ? { email: row.email, passwordHash: row.password_hash } : null;
   }
 
+  /** Only the hash: the plain password never reaches the database. */
+  async updatePasswordHash(id: string, passwordHash: string): Promise<void> {
+    await this.#client.query('UPDATE identity.users SET password_hash = $2 WHERE id = $1', [
+      id,
+      passwordHash,
+    ]);
+  }
+
   async findProfile(id: string): Promise<Profile | null> {
     const { rows } = await this.#client.query<{ name: string; has_pin: boolean }>(
       PgUsersRepository.FIND_PROFILE_SQL,

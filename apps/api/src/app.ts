@@ -23,6 +23,7 @@ import {
   type AccessTokenKeys,
   createIdentityModule,
   loginRoutes,
+  mePasswordRoutes,
   meRoutes,
   meSessionsRoutes,
   registerAuthentication,
@@ -175,6 +176,7 @@ export function buildApp({ pool, logStream, security }: AppDependencies) {
     changePin: identity.changePin,
   });
   void app.register(meRoutes, { getProfile: identity.getProfile });
+  void app.register(mePasswordRoutes, { changePassword: identity.changePassword });
   void app.register(meSessionsRoutes, {
     listSessions: identity.listSessions,
     revokeSession: identity.revokeSession,

@@ -2,6 +2,7 @@
 // use only what is exported here (ADR 0002, ADR 0010).
 import type { Clock, IdGenerator, UnitOfWork } from '../../shared/application/ports.ts';
 import { ActiveSessions } from './application/active-sessions.ts';
+import { ChangePassword } from './application/change-password.ts';
 import { ChangePin } from './application/change-pin.ts';
 import { CreatePin } from './application/create-pin.ts';
 import { GetProfile } from './application/get-profile.ts';
@@ -26,6 +27,7 @@ import { RandomRefreshTokens } from './infrastructure/random-refresh-tokens.ts';
 export { AuthTokensSchema, authTokensBody } from './http/auth-tokens.ts';
 export { callerOf, registerAuthentication } from './http/authentication.ts';
 export { loginRoutes } from './http/login-route.ts';
+export { mePasswordRoutes } from './http/me-password-route.ts';
 export { meRoutes } from './http/me-route.ts';
 export { meSessionsRoutes } from './http/me-sessions-routes.ts';
 export { pinRoutes } from './http/pin-route.ts';
@@ -53,6 +55,7 @@ export interface IdentityModule {
   createPin: CreatePin;
   verifyPin: VerifyPin;
   changePin: ChangePin;
+  changePassword: ChangePassword;
   getProfile: GetProfile;
   /** Implements the IdentityPort of Payments. */
   payees: PayeeDirectory;
@@ -77,6 +80,7 @@ export function createIdentityModule(settings: IdentitySettings): IdentityModule
   const pinHasher = new Argon2idHasher({ pepper: settings.pinPepper });
   // One counter for every check of the password: login, PIN change (AUTH-01).
   const loginAttempts = new InMemoryLoginAttempts();
+  const commonPasswords = loadCommonPasswords();
   return {
     registerUser: new RegisterUser({
       repositories,
@@ -84,7 +88,7 @@ export function createIdentityModule(settings: IdentitySettings): IdentityModule
       ids: settings.ids,
       hasher,
       cpfProtector: new AesGcmCpfProtector(settings.piiKeys),
-      commonPasswords: loadCommonPasswords(),
+      commonPasswords,
       refreshTokens,
       accessTokens,
     }),
@@ -147,6 +151,15 @@ export function createIdentityModule(settings: IdentitySettings): IdentityModule
       hasher,
       pinHasher,
       attempts: loginAttempts,
+    }),
+    changePassword: new ChangePassword({
+      unitOfWork: settings.unitOfWork,
+      repositories,
+      clock: settings.clock,
+      ids: settings.ids,
+      hasher,
+      attempts: loginAttempts,
+      commonPasswords,
     }),
     getProfile: new GetProfile({ unitOfWork: settings.unitOfWork, repositories }),
     payees: new PayeeDirectory(repositories),

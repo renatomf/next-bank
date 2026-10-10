@@ -99,6 +99,7 @@ export interface UsersRepository {
   findProfile(id: string): Promise<Profile | null>;
   findPayee(id: string): Promise<Payee | null>;
   findCredentials(id: string): Promise<Credentials | null>;
+  updatePasswordHash(id: string, passwordHash: string): Promise<void>;
 }
 
 export interface SessionsRepository {
@@ -110,6 +111,11 @@ export interface SessionsRepository {
    * logouts of one session run one at a time.
    */
   lockById(id: string): Promise<SessionState | null>;
+  /**
+   * Locks the user's sessions still active at [now], in id order, so a password
+   * change and the refreshes it races with never deadlock.
+   */
+  lockActiveByUser(userId: string, now: Date): Promise<SessionState[]>;
   /** The user's sessions still active at [now], most recently used first. */
   listActive(userId: string, now: Date): Promise<SessionState[]>;
   update(session: SessionState): Promise<void>;
