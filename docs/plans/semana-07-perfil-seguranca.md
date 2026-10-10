@@ -207,7 +207,7 @@ packages/design_system/    FloatingNavBar, ConfirmDialog
 ## Tarefa 4 — Polimento (dia 4–5)
 
 - [x] Acessibilidade e estados de erro nas 14 telas (D8)
-- [ ] Seletor de tema, se houver folga (D9)
+- [x] Seletor de tema, se houver folga (D9)
 
 ### Desenho da tarefa 4
 
