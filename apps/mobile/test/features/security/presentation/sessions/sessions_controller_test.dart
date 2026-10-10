@@ -93,11 +93,9 @@ void main() {
   // met, so the list is read again without an error.
   test('reads the list again when the session was already gone', () async {
     final (container, repository) = await open();
-    repository.answer = () async =>
-        throw const ApiRejected(ApiErrorCode.notFound);
-    repository.sessionsAnswer = () async => [
-      session('this-phone', current: true),
-    ];
+    repository
+      ..answer = (() async => throw const ApiRejected(ApiErrorCode.notFound))
+      ..sessionsAnswer = () async => [session('this-phone', current: true)];
 
     await controllerOf(container).revoke('old-tablet');
 
