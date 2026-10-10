@@ -112,6 +112,29 @@ void main() {
     expect(loginButton, findsOneWidget);
   });
 
+  // Catalog: PinNotCreated leads to the PIN creation, found by the week 7
+  // sweep (D8) only showing the message.
+  testWidgets('leads to the PIN creation when the account has no PIN', (
+    tester,
+  ) async {
+    final profile = FakeProfileRepository();
+    final unlock = FakeUnlockRepository()
+      ..answer = () async {
+        profile.hasPin = false;
+        throw const ApiRejected(ApiErrorCode.pinNotCreated);
+      };
+    await pumpApp(
+      tester,
+      store: FakeTokenStore(tokens),
+      profile: profile,
+      unlock: unlock,
+    );
+
+    await unlockWithPin(tester);
+
+    expect(find.text('Crie seu PIN'), findsOneWidget);
+  });
+
   testWidgets('asks for the PIN again after 5 minutes in the background', (
     tester,
   ) async {

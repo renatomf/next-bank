@@ -9,6 +9,7 @@ import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
 
 import '../support/fake_account_repository.dart';
 import '../support/fake_pix_repository.dart';
+import '../support/fake_profile_repository.dart';
 import '../support/fake_token_store.dart';
 import '../support/pump_app.dart';
 
@@ -258,6 +259,31 @@ void main() {
     expect(find.text('PIN bloqueado por 30 minutos.'), findsOneWidget);
     expect(find.byType(PinField), findsNothing);
     expect(find.bySemanticsLabel('Voltar ao início'), findsOneWidget);
+  });
+
+  // Catalog: PinNotCreated leads to the PIN creation, found by the week 7
+  // sweep (D8) only showing the message.
+  testWidgets('leads to the PIN creation when the account has no PIN', (
+    tester,
+  ) async {
+    final profile = FakeProfileRepository();
+    final pix = FakePixRepository()
+      ..authorizeAnswer = () async {
+        profile.hasPin = false;
+        throw const ApiRejected(ApiErrorCode.pinNotCreated);
+      };
+    await pumpApp(
+      tester,
+      store: FakeTokenStore(tokens),
+      profile: profile,
+      pix: pix,
+    );
+    await unlockWithPin(tester);
+    await fillInPix(tester);
+    await reviewPix(tester);
+    await typePin(tester);
+
+    expect(find.text('Crie seu PIN'), findsOneWidget);
   });
 
   testWidgets('asks to start again when the time to confirm is over', (

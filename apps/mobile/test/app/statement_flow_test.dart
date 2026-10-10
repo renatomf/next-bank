@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:next_bank/app/redirect.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/statement/statement_item.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
@@ -269,6 +271,23 @@ void main() {
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       expect(find.text('Detalhe'), findsOneWidget);
+    });
+
+    // domain-model.md 11, screen 12: a movement the statement does not hold,
+    // e.g. from an old link.
+    testWidgets('says when the movement is not found', (tester) async {
+      await openHome(
+        tester,
+        FakeStatementRepository({
+          null: () async => pageOf([received]),
+        }),
+      );
+
+      GoRouter.of(tester.element(find.byType(Scaffold).last))
+          .go(AppRoutes.statementItem('unknown'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Não encontrado.'), findsOneWidget);
     });
 
     testWidgets('opens from the Home too', (tester) async {

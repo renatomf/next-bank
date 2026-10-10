@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/api_messages.dart';
+import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/app_lock.dart';
 import 'package:next_bank/features/unlock/presentation/unlock_providers.dart';
 
@@ -43,6 +44,11 @@ class UnlockController extends Notifier<UnlockState> {
       state = const UnlockState();
     } on ApiFailure catch (failure) {
       if (!ref.mounted) return;
+      // Catalog: the account has no PIN; the profile read again sends the
+      // router to the PIN creation.
+      if (failure case ApiRejected(code: ApiErrorCode.pinNotCreated)) {
+        ref.invalidate(profileProvider);
+      }
       state = UnlockState(
         blocked: switch (failure) {
           ApiRejected(code: ApiErrorCode.pinLocked) ||
