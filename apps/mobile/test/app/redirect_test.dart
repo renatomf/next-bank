@@ -220,6 +220,7 @@ void main() {
       AppRoutes.security,
       AppRoutes.changePin,
       AppRoutes.changePassword,
+      AppRoutes.profile,
     ];
 
     test('the paths of each screen', () {
@@ -233,6 +234,7 @@ void main() {
         '/security',
         '/security/change-pin',
         '/security/change-password',
+        '/profile',
       ]);
     });
 

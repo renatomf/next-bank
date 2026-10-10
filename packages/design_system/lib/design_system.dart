@@ -12,6 +12,7 @@ export 'src/components/display_title.dart';
 export 'src/components/dither.dart';
 export 'src/components/empty_state.dart';
 export 'src/components/error_state.dart';
+export 'src/components/floating_nav_bar.dart';
 export 'src/components/form_error_text.dart';
 export 'src/components/glow_background.dart';
 export 'src/components/icon_circle_button.dart';

@@ -11,15 +11,14 @@ import 'package:next_bank/features/home/presentation/home_providers.dart';
 
 /// Home (screen 6; mockups home-dark and home-light): the greeting and the
 /// available balance, the Pix shortcut and the latest movements. The floating
-/// navigation arrives with Profile and Security (week 7, decision D12).
+/// bar and the sign-out on the Profile come from the app (week 7 plan, T3-1).
 class HomeScreen extends ConsumerWidget {
-  /// Creates the home; the app provides the header [actions] and where the
-  /// shortcuts go, so features never import each other.
+  /// Creates the home; the app says where the shortcuts go, so features never
+  /// import each other.
   const new({
     required this.onPix,
     required this.onStatement,
     required this.onMovement,
-    this.actions = const [],
     super.key,
   });
 
@@ -31,9 +30,6 @@ class HomeScreen extends ConsumerWidget {
 
   /// Opens the detail of a movement.
   final ValueChanged<String> onMovement;
-
-  /// Buttons at the end of the header, such as sign-out.
-  final List<Widget> actions;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -54,7 +50,7 @@ class HomeScreen extends ConsumerWidget {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
               children: [
-                _Header(greeting: greeting, name: name, actions: actions),
+                _Header(greeting: greeting, name: name),
                 const SizedBox(height: 22),
                 const DisplayTitle(
                   lead: 'Seu dinheiro,',
@@ -92,15 +88,10 @@ class HomeScreen extends ConsumerWidget {
 }
 
 class _Header extends StatelessWidget {
-  const new({
-    required this.greeting,
-    required this.name,
-    required this.actions,
-  });
+  const new({required this.greeting, required this.name});
 
   final String greeting;
   final String name;
-  final List<Widget> actions;
 
   @override
   Widget build(BuildContext context) {
@@ -142,7 +133,6 @@ class _Header extends StatelessWidget {
             ],
           ),
         ),
-        ...actions,
       ],
     );
   }

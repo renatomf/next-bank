@@ -185,12 +185,18 @@ void main() {
     expect(loginButton, findsOneWidget);
   });
 
-  testWidgets('signs out from home back to login (AUTH-06)', (tester) async {
+  // T3-1 (week 7 plan): signing out lives on the Profile, not on the Home.
+  testWidgets('signs out from the profile back to login (AUTH-06)', (
+    tester,
+  ) async {
     final store = FakeTokenStore(tokens);
     final repository = FakeAuthRepository(tokens);
     await pumpApp(tester, store: store, repository: repository);
     await unlockWithPin(tester);
+    expect(signOutButton, findsNothing);
 
+    await tester.tap(find.bySemanticsLabel('Perfil'));
+    await tester.pumpAndSettle();
     await tester.tap(signOutButton);
     await tester.pumpAndSettle();
 
