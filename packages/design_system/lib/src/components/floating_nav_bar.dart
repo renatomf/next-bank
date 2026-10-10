@@ -54,23 +54,25 @@ class FloatingNavBar extends StatelessWidget {
         onTap: () => onSelected(index),
       ),
     );
-    return Container(
-      height: height,
-      padding: const EdgeInsets.symmetric(horizontal: NbSpace.sm),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(NbRadius.pill),
-        border: Border.all(color: colors.border),
-      ),
-      child: Row(
-        children: [
-          for (final (i, destination) in leading.indexed) item(destination, i),
-          Expanded(
-            child: _Action(action: action, onTap: onAction),
-          ),
-          for (final (i, destination) in trailing.indexed)
-            item(destination, leading.length + i),
-        ],
+    // Its own Material: the bar floats outside any Scaffold, and the taps'
+    // ink needs one.
+    return Material(
+      color: colors.surface,
+      shape: StadiumBorder(side: BorderSide(color: colors.border)),
+      child: Container(
+        height: height,
+        padding: const EdgeInsets.symmetric(horizontal: NbSpace.sm),
+        child: Row(
+          children: [
+            for (final (i, destination) in leading.indexed)
+              item(destination, i),
+            Expanded(
+              child: _Action(action: action, onTap: onAction),
+            ),
+            for (final (i, destination) in trailing.indexed)
+              item(destination, leading.length + i),
+          ],
+        ),
       ),
     );
   }
