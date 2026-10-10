@@ -42,6 +42,8 @@ const CATALOG_STATUS: Readonly<Record<string, number>> = {
   RefreshTokenReuseDetected: 401,
   Unauthenticated: 401,
   InvalidCredentials: 401,
+  // 422, not 401: the caller is signed in, and a 401 would sign them out.
+  PasswordIncorrect: 422,
   TooManyAttempts: 429,
   PinIncorrect: 422,
   PinNotCreated: 409,

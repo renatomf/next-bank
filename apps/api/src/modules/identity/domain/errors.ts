@@ -129,3 +129,15 @@ export class CurrentSessionNotRevocable extends DomainError {
     super('The current session ends by signing out');
   }
 }
+
+/**
+ * The signed-in customer's password did not match, when changing the PIN or the
+ * password. Counted with the login's attempts (AUTH-01).
+ */
+export class PasswordIncorrect extends DomainError {
+  readonly code = 'PasswordIncorrect';
+
+  constructor() {
+    super('Password does not match');
+  }
+}

@@ -2,6 +2,7 @@
 // use only what is exported here (ADR 0002, ADR 0010).
 import type { Clock, IdGenerator, UnitOfWork } from '../../shared/application/ports.ts';
 import { ActiveSessions } from './application/active-sessions.ts';
+import { ChangePin } from './application/change-pin.ts';
 import { CreatePin } from './application/create-pin.ts';
 import { GetProfile } from './application/get-profile.ts';
 import { ListSessions } from './application/list-sessions.ts';
@@ -51,6 +52,7 @@ export interface IdentityModule {
   activeSessions: ActiveSessions;
   createPin: CreatePin;
   verifyPin: VerifyPin;
+  changePin: ChangePin;
   getProfile: GetProfile;
   /** Implements the IdentityPort of Payments. */
   payees: PayeeDirectory;
@@ -73,6 +75,8 @@ export function createIdentityModule(settings: IdentitySettings): IdentityModule
   const refreshTokens = new RandomRefreshTokens();
   const accessTokens = new JoseAccessTokens(settings.accessTokenKeys);
   const pinHasher = new Argon2idHasher({ pepper: settings.pinPepper });
+  // One counter for every check of the password: login, PIN change (AUTH-01).
+  const loginAttempts = new InMemoryLoginAttempts();
   return {
     registerUser: new RegisterUser({
       repositories,
@@ -92,7 +96,7 @@ export function createIdentityModule(settings: IdentitySettings): IdentityModule
       hasher,
       refreshTokens,
       accessTokens,
-      attempts: new InMemoryLoginAttempts(),
+      attempts: loginAttempts,
     }),
     refreshSession: new RefreshSession({
       unitOfWork: settings.unitOfWork,
@@ -134,6 +138,15 @@ export function createIdentityModule(settings: IdentitySettings): IdentityModule
       clock: settings.clock,
       ids: settings.ids,
       pinHasher,
+    }),
+    changePin: new ChangePin({
+      unitOfWork: settings.unitOfWork,
+      repositories,
+      clock: settings.clock,
+      ids: settings.ids,
+      hasher,
+      pinHasher,
+      attempts: loginAttempts,
     }),
     getProfile: new GetProfile({ unitOfWork: settings.unitOfWork, repositories }),
     payees: new PayeeDirectory(repositories),

@@ -65,7 +65,7 @@ export class PgTransactionPinsRepository implements TransactionPinsRepository {
     await this.#client.query(
       `UPDATE identity.transaction_pins
        SET failed_attempts = $2, locked_until = $3, recent_locks = $4, reset_required = $5,
-           updated_at = $6
+           updated_at = $6, pin_hash = $7
        WHERE user_id = $1`,
       [
         pin.userId,
@@ -74,6 +74,7 @@ export class PgTransactionPinsRepository implements TransactionPinsRepository {
         pin.recentLocks,
         pin.resetRequired,
         pin.updatedAt,
+        pin.pinHash,
       ],
     );
   }

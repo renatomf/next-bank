@@ -1,6 +1,7 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { PROBLEM_CONTENT_TYPE, ProblemSchema } from '../../../shared/http/problem.ts';
+import type { ChangePin } from '../application/change-pin.ts';
 import type { CreatePin } from '../application/create-pin.ts';
 import type { VerifyPin } from '../application/verify-pin.ts';
 import { callerOf } from './authentication.ts';
@@ -15,12 +16,48 @@ const VerifyPinRequestSchema = z
   .strictObject({ pin: z.string().regex(/^\d{4}$/) })
   .meta({ id: 'VerifyPinRequest' });
 
+// Bounds only: the PIN format and the password are the domain's to check.
+const ChangePinRequestSchema = z
+  .strictObject({ password: z.string().min(1).max(256), newPin: z.string().max(8) })
+  .meta({ id: 'ChangePinRequest' });
+
 const problem = { content: { [PROBLEM_CONTENT_TYPE]: { schema: ProblemSchema } } };
 
-export const pinRoutes: FastifyPluginAsyncZod<{ createPin: CreatePin; verifyPin: VerifyPin }> = (
-  app,
-  { createPin, verifyPin },
-) => {
+export const pinRoutes: FastifyPluginAsyncZod<{
+  createPin: CreatePin;
+  verifyPin: VerifyPin;
+  changePin: ChangePin;
+}> = (app, { createPin, verifyPin, changePin }) => {
+  app.post(
+    '/v1/me/pin/change',
+    {
+      // Sensitive: a token of an ended session is refused even within its 15 minutes.
+      config: { activeSession: true },
+      schema: {
+        operationId: 'changePin',
+        security: [{ bearerAuth: [] }],
+        body: ChangePinRequestSchema,
+        response: {
+          204: z.null().describe('PIN changed'),
+          401: problem,
+          409: problem,
+          422: problem,
+          429: problem,
+        },
+      },
+    },
+    async (request, reply) => {
+      const { userId } = callerOf(request);
+      await changePin.execute({
+        userId,
+        password: request.body.password,
+        newPin: request.body.newPin,
+        requestId: request.id,
+      });
+      return reply.status(204).send(null);
+    },
+  );
+
   app.post(
     '/v1/me/pin',
     {

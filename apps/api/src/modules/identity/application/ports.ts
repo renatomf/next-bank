@@ -74,6 +74,12 @@ export interface LoginAccount {
   status: UserStatus;
 }
 
+/** What confirming the signed-in customer's password needs: the key of the login's counter and the hash. */
+export interface Credentials {
+  email: string;
+  passwordHash: string;
+}
+
 /** What the customer sees about themselves; never the CPF, e-mail or hashes. */
 export interface Profile {
   name: string;
@@ -92,6 +98,7 @@ export interface UsersRepository {
   insert(user: UserState, cpf: StoredCpf): Promise<void>;
   findProfile(id: string): Promise<Profile | null>;
   findPayee(id: string): Promise<Payee | null>;
+  findCredentials(id: string): Promise<Credentials | null>;
 }
 
 export interface SessionsRepository {

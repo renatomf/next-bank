@@ -1,5 +1,6 @@
 import pg from 'pg';
 import type {
+  Credentials,
   LoginAccount,
   Payee,
   Profile,
@@ -49,6 +50,15 @@ export class PgUsersRepository implements UsersRepository {
     }>(PgUsersRepository.FIND_BY_EMAIL_SQL, [email]);
     const row = rows[0];
     return row ? { id: row.id, passwordHash: row.password_hash, status: row.status } : null;
+  }
+
+  async findCredentials(id: string): Promise<Credentials | null> {
+    const { rows } = await this.#client.query<{ email: string; password_hash: string }>(
+      'SELECT email, password_hash FROM identity.users WHERE id = $1',
+      [id],
+    );
+    const row = rows[0];
+    return row ? { email: row.email, passwordHash: row.password_hash } : null;
   }
 
   async findProfile(id: string): Promise<Profile | null> {
