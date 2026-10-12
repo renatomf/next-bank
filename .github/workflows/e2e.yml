@@ -1,0 +1,109 @@
+name: E2E
+
+# The critical flow end to end (CLAUDE.md, Testes; week 8 plan, E2E): the app on
+# an Android emulator against the real API and Postgres. Its own workflow: the
+# emulator is slow, so it runs only when the app, the API or a package changes.
+on:
+  pull_request:
+    paths:
+      - apps/**
+      - packages/**
+      - .github/workflows/e2e.yml
+  push:
+    branches: [main]
+
+# Least privilege for every job (API-09).
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  critical-flow:
+    name: Critical flow (Android)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    services:
+      postgres:
+        image: postgres:17
+        # Authenticated pulls, as in the CI workflow. Read-only token.
+        credentials:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci-postgres
+          POSTGRES_DB: nextbank
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d nextbank"
+          --health-interval 2s --health-timeout 3s --health-retries 15
+    env:
+      # Throwaway credentials for the ephemeral CI database only.
+      PGHOST: localhost
+      PGPASSWORD: ci-postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: nextbank
+      NEXTBANK_MIGRATOR_PASSWORD: ci-migrator
+      NEXTBANK_APP_PASSWORD: ci-app
+      MIGRATION_DATABASE_URL: postgres://nextbank_migrator:ci-migrator@localhost:5432/nextbank?sslmode=disable
+      DATABASE_URL: postgres://nextbank_app:ci-app@localhost:5432/nextbank?sslmode=disable
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Create database roles (same bootstrap as local)
+        run: sh infra/postgres/init-roles.sh
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @nextbank/api db:migrate
+      # Fresh keys for this run only: masked, never stored, gone with the runner.
+      - name: Throwaway API keys
+        working-directory: apps/api
+        run: |
+          node scripts/generate-dev-keys.ts > "$RUNNER_TEMP/keys.env"
+          while IFS='=' read -r name value; do
+            [ -n "$name" ] || continue
+            echo "::add-mask::$value"
+            echo "$name=$value" >> "$GITHUB_ENV"
+          done < "$RUNNER_TEMP/keys.env"
+          rm "$RUNNER_TEMP/keys.env"
+      - name: Start the API
+        working-directory: apps/api
+        run: |
+          nohup node src/server.ts > "$RUNNER_TEMP/api.log" 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:3000/health && exit 0
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/api.log"
+          exit 1
+      - run: pnpm --filter @nextbank/api seed:demo
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: 3.47.5
+          channel: stable
+          cache: true
+      - name: Enable KVM for the emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      # The emulator reaches the runner's own 127.0.0.1 at 10.0.2.2.
+      - uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 34
+          arch: x86_64
+          disable-animations: true
+          working-directory: apps/mobile
+          script: flutter test integration_test --dart-define=API_BASE_URL=http://10.0.2.2:3000
+      - name: API log on failure
+        if: failure()
+        run: cat "$RUNNER_TEMP/api.log"
