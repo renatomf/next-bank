@@ -24,6 +24,21 @@ describe('GET /health', () => {
     expect(response.json()).toEqual({ status: 'ok' });
   });
 
+  // Week 8 plan, task 3b: the smoke test after a deploy waits for this commit,
+  // and the release names the version on errors (CLAUDE.md, Observabilidade).
+  it('names the release it runs, when it knows it', async () => {
+    app = buildApp({
+      pool: createPool(testDatabaseUrl()),
+      logStream: captureLogs().stream,
+      security: testSecurity(),
+      release: '0123abcd',
+    });
+
+    const response = await app.inject({ method: 'GET', url: '/health' });
+
+    expect(response.json()).toEqual({ status: 'ok', release: '0123abcd' });
+  });
+
   it('returns 503 without internal details when the database is down', async () => {
     const logs = captureLogs();
     app = buildApp({

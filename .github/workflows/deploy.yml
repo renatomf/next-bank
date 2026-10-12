@@ -1,0 +1,58 @@
+name: Deploy
+
+# Migrations first, then the code (week 8 plan, D4 and task 3b): Render's own
+# auto-deploy is off, so a new version never runs against an old schema. Runs
+# after the CI is green on main, or by hand.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+# Least privilege for every job (API-09).
+permissions:
+  contents: read
+
+# Deploy and the daily reset never run at once; neither is cut in half.
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy the API
+    # Only once production exists (docs/operations.md), and only after a green CI.
+    if: >-
+      vars.API_URL != '' &&
+      (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: production
+    env:
+      # The commit to deploy: the one the CI checked, or main when run by hand.
+      RELEASE: ${{ github.event.workflow_run.head_sha || github.sha }}
+      API_URL: ${{ vars.API_URL }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ env.RELEASE }}
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      # Direct host, verify-full, migration role: never the API's role (API-07).
+      - name: Apply migrations
+        env:
+          MIGRATION_DATABASE_URL: ${{ secrets.MIGRATION_DATABASE_URL }}
+        run: pnpm --filter @nextbank/api db:migrate
+      - name: Deploy on Render
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: curl -fsS -X POST "$RENDER_DEPLOY_HOOK" > /dev/null
+      - name: Wait for the new release
+        run: sh infra/scripts/wait-for-release.sh "$API_URL" "$RELEASE"
+      - name: Smoke test
+        run: sh infra/scripts/smoke-test.sh "$API_URL"

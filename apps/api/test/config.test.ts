@@ -165,6 +165,16 @@ describe('loadConfig', () => {
     ).toContain('verify-full');
   });
 
+  // Week 8 plan, task 3b: the host tells the commit it deployed.
+  it('takes the release from the host, and none locally', () => {
+    expect(loadConfig(valid).release).toBeUndefined();
+    expect(
+      loadConfig({ ...valid, RENDER_GIT_COMMIT: '0123abcd0123abcd0123abcd0123abcd0123abcd' })
+        .release,
+    ).toBe('0123abcd0123abcd0123abcd0123abcd0123abcd');
+    expect(withEnv({ RENDER_GIT_COMMIT: 'not a commit' })).toThrow(/RENDER_GIT_COMMIT/);
+  });
+
   it('keeps local development free to use a plain connection', () => {
     expect(() => loadConfig({ ...valid, NODE_ENV: 'development' })).not.toThrow();
   });

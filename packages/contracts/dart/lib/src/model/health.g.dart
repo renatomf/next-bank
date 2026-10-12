@@ -9,6 +9,8 @@ part of 'health.dart';
 abstract class _$HealthCWProxy {
   Health status(HealthStatusEnum status);
 
+  Health release(String? release);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Health(...).copyWith.fieldName(value)`.
@@ -17,7 +19,7 @@ abstract class _$HealthCWProxy {
   /// ```dart
   /// Health(...).copyWith(id: 12, name: "My name")
   /// ```
-  Health call({HealthStatusEnum status});
+  Health call({HealthStatusEnum status, String? release});
 }
 
 /// Callable proxy for `copyWith` functionality.
@@ -30,6 +32,9 @@ class _$HealthCWProxyImpl implements _$HealthCWProxy {
   @override
   Health status(HealthStatusEnum status) => call(status: status);
 
+  @override
+  Health release(String? release) => call(release: release);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Health(...).copyWith.fieldName(value)`.
@@ -39,12 +44,19 @@ class _$HealthCWProxyImpl implements _$HealthCWProxy {
   /// Health(...).copyWith(id: 12, name: "My name")
   /// ```
   @override
-  Health call({Object? status = const $CopyWithPlaceholder()}) {
+  Health call({
+    Object? status = const $CopyWithPlaceholder(),
+    Object? release = const $CopyWithPlaceholder(),
+  }) {
     return Health(
       status: status == const $CopyWithPlaceholder() || status == null
           ? _value.status
           // ignore: cast_nullable_to_non_nullable
           : status as HealthStatusEnum,
+      release: release == const $CopyWithPlaceholder()
+          ? _value.release
+          // ignore: cast_nullable_to_non_nullable
+          : release as String?,
     );
   }
 }
@@ -68,12 +80,14 @@ Health _$HealthFromJson(Map<String, dynamic> json) =>
           'status',
           (v) => $enumDecode(_$HealthStatusEnumEnumMap, v),
         ),
+        release: $checkedConvert('release', (v) => v as String?),
       );
       return val;
     });
 
 Map<String, dynamic> _$HealthToJson(Health instance) => <String, dynamic>{
   'status': _$HealthStatusEnumEnumMap[instance.status]!,
+  'release': ?instance.release,
 };
 
 const _$HealthStatusEnumEnumMap = {HealthStatusEnum.ok: 'ok'};
