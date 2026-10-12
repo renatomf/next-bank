@@ -1,0 +1,54 @@
+name: Demo reset
+
+# Every day the public demo goes back to a clean state (DEMO-02, DEMO-03; week 8
+# plan, D5): the demo branch on Neon is restored from its parent "clean", which
+# holds only the roles and an empty database, then migrations and the seed run
+# again. No code ever deletes ledger rows, which only accept inclusion.
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  reset:
+    name: Reset the demo
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: production
+    env:
+      API_URL: ${{ vars.API_URL }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Restore the demo branch from "clean"
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+          NEON_DEMO_BRANCH_ID: ${{ vars.NEON_DEMO_BRANCH_ID }}
+          NEON_CLEAN_BRANCH_ID: ${{ vars.NEON_CLEAN_BRANCH_ID }}
+        run: sh infra/scripts/neon-reset.sh
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - name: Apply migrations
+        env:
+          MIGRATION_DATABASE_URL: ${{ secrets.MIGRATION_DATABASE_URL }}
+        run: pnpm --filter @nextbank/api db:migrate
+      # Through the published API: its keys never leave Render (task 3a).
+      - name: Seed the demo accounts
+        env:
+          MIGRATION_DATABASE_URL: ${{ secrets.MIGRATION_DATABASE_URL }}
+          SEED_API_URL: ${{ vars.API_URL }}
+        run: pnpm --filter @nextbank/api seed:demo
+      - name: Smoke test
+        run: sh infra/scripts/smoke-test.sh "$API_URL"
