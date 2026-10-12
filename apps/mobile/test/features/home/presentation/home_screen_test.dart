@@ -68,9 +68,26 @@ void main() {
 
     expect(find.text('Bom dia,'), findsOneWidget);
     expect(find.text('Ana Souza'), findsOneWidget);
-    expect(find.byType(DisplayTitle), findsOneWidget);
     expect(find.text('Saldo disponível · Conta •••• 0004'), findsOneWidget);
     expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
+  });
+
+  // Week 8 plan, V3: the logo on the right of the greeting, and no slogan.
+  testWidgets('shows the logo beside the greeting, without the slogan', (
+    tester,
+  ) async {
+    await pumpHome(tester);
+    await tester.pumpAndSettle();
+
+    final greeting = tester.getCenter(find.text('Ana Souza'));
+    final logo = find.descendant(
+      of: find.byType(HomeScreen),
+      matching: find.byType(NextLogo),
+    );
+    expect(logo, findsOneWidget);
+    expect(tester.getCenter(logo).dx, greaterThan(greeting.dx));
+    expect((tester.getCenter(logo).dy - greeting.dy).abs(), lessThan(30));
+    expect(find.byType(DisplayTitle), findsNothing);
   });
 
   // MOB-05: the customer can hide the balance from someone beside them.
