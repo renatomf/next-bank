@@ -56,7 +56,7 @@ void main() {
     // visitor signed in.
     test('maps a demo account refusal to its catalog code', () async {
       final failure = await failureFor(
-        ProblemReply(403, 'DemoAccountRestricted'),
+        const ProblemReply(403, 'DemoAccountRestricted'),
       );
 
       expect(failure, isA<ApiRejected>());
