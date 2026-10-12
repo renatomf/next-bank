@@ -386,7 +386,7 @@ Cada item recebe um parágrafo de design no README, sem implementação:
 - **Conta global multimoeda:** cotação com validade, spread, conversão em lançamentos no ledger.
 - **Feature flags** e **observabilidade com métricas e dashboards**.
 - **Animações** de transição entre telas e de feedback (extra da semana 7, que ficou fora pelo plano da semana 7, D10).
-- **Redesenho da Home e da navegação:** um assistente com IA no lugar do slogan, atalhos de serviços (transferir, pagar, cobrar) cada um com a sua tela, e uma revisão geral do layout. Ficou para depois da `v1.0.0` (plano da semana 8, tarefa 3.5); os ajustes de legibilidade entraram antes.
+- **Assistente com IA e atalhos de serviços de verdade:** na V1 eles aparecem na Home só como "Em breve" (plano da semana 8, tarefa 3.5, V7 e V9); depois da `v1.0.0`, cada um ganha a sua tela, e o layout passa por uma revisão geral.
 - **Testes visuais de regressão (golden tests)** do `design_system` e das telas: hoje os testes conferem valores (cor, tamanho, contraste), não a aparência renderizada.
 
 ## 12. Fora do código (mesma prioridade)

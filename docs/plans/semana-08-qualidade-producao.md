@@ -161,6 +161,30 @@ Pedido do desenvolvedor depois do checkpoint da semana 7, com o app do C6 como r
 - [x] V1 a V5 implementados, com a varredura de acessibilidade verde nos dois temas
 - [ ] Checkpoint no celular
 
+### Segunda rodada (V6 a V10), pedida depois da primeira
+
+O desenvolvedor reviu três pontos que a primeira rodada tinha adiado.
+
+**Decisões do desenvolvedor (2026-10-12):**
+- **Exceção à regra de marcas de terceiros:** o símbolo oficial do Pix entra, só o símbolo, sem o texto "powered by Banco Central". O README avisa: "Pix é marca do Banco Central do Brasil; o next bank é um projeto fictício, sem vínculo com o Banco Central ou com o arranjo Pix".
+- **Atalhos e ajuda sem tela:** entram como "Em breve". Ao tocar, mostram o toast "Em breve." Assim continuam botões com ação, acessíveis e honestos com quem testa. As telas de verdade ficam para depois da tag.
+- **Símbolo do Pix:** convertido uma vez para um `CustomPainter` em Dart, sem `flutter_svg`.
+
+| # | O que muda | Onde | Teste |
+|---|---|---|---|
+| V6 | `PixMark`: o símbolo oficial do Pix (#32BCAD) desenhado pelo caminho do SVG oficial, com o rótulo "Pix" para o leitor de tela. Substitui o ícone de transferência no centro da barra e no atalho "Área Pix". O texto ao lado garante o sentido mesmo quando o símbolo tem pouco contraste no tema claro | `design_system` | Widget: desenha no tamanho pedido e é anunciado como "Pix" |
+| V7 | Atalhos em linha de quatro: Área Pix (funciona), Pagar, Transferir e Recarga (avisam "Em breve."). O `ActionTile` passa a aceitar um widget como ícone, para o `PixMark` | Home | Os três "Em breve" mostram o toast e não navegam; varredura de acessibilidade |
+| V8 | Cabeçalho: ícone de perfil (o mesmo da barra) num círculo, o primeiro nome do cliente e o logo à direita. A saudação sai, junto com o `greetingFor` e o teste dela | Home | Widget: ícone, primeiro nome e logo na mesma linha; sem saudação |
+| V9 | Campo "Posso te ajudar?" acima dos atalhos, em pílula, com o ícone `auto_awesome` na cor de destaque. É um botão (não um campo de texto) que avisa "Em breve: assistente com IA." | Home | Toque mostra o aviso; rótulo para o leitor de tela |
+| V10 | Barra do Android como no C6: o app desenha de ponta a ponta (edge-to-edge), a barra do sistema fica transparente e sem a faixa de contraste forçado, e os ícones do sistema ficam claros no tema escuro e escuros no claro. O fundo da `NbNavBar` continua por trás dos botões do Android | `main.dart` | Widget: o estilo da barra do sistema segue o tema, nos dois temas |
+
+- `NbToast` ganha um ícone opcional: o "Em breve" usa o ícone de informação, e os erros continuam com o de erro.
+- **Concorrência, contratos e dependências:** nenhum.
+- **Roadmap:** "Próximos passos" muda para "telas de verdade do assistente e dos atalhos".
+
+- [ ] Desenho da segunda rodada aprovado
+- [ ] V6 a V10 implementados; varredura de acessibilidade nos dois temas; checkpoint no celular
+
 ## Tarefa 4 — App de release (dia 4)
 
 - [ ] Chave de assinatura, `release.yml`, APK ofuscado apontando para HTTPS; checkpoint no celular com o APK
