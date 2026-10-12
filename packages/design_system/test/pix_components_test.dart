@@ -135,7 +135,7 @@ void main() {
           SizedBox(
             width: 80,
             child: ActionTile(
-              icon: Icons.diamond_outlined,
+              icon: const PixMark(),
               label: 'Pix',
               onPressed: () => taps++,
             ),

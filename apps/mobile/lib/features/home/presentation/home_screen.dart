@@ -9,7 +9,6 @@ import 'package:next_bank/core/refresh_failure.dart';
 import 'package:next_bank/core/statement/statement_controller.dart';
 import 'package:next_bank/core/statement/statement_item.dart';
 import 'package:next_bank/core/statement/statement_texts.dart';
-import 'package:next_bank/features/home/presentation/home_providers.dart';
 
 /// Home (screen 6; mockups home-dark and home-light): the greeting and the
 /// available balance, the Pix shortcut and the latest movements. The floating
@@ -36,7 +35,6 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final name = ref.watch(profileProvider).value?.name ?? '';
-    final greeting = greetingFor(ref.watch(nowProvider)());
     toastFailedRefresh(context, ref, accountProvider);
     toastFailedRefresh(context, ref, statementProvider);
     return Scaffold(
@@ -60,22 +58,11 @@ class HomeScreen extends ConsumerWidget {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
               children: [
-                _Header(greeting: greeting, name: name),
+                _Header(firstName: name.split(' ').first),
                 const SizedBox(height: 22),
-                // The mockup's row of four; the other three shortcuts come with
-                // their screens, so the Pix keeps a quarter of the width.
-                Row(
-                  children: [
-                    Expanded(
-                      child: ActionTile(
-                        icon: Icons.swap_horiz,
-                        label: 'Área Pix',
-                        onPressed: onPix,
-                      ),
-                    ),
-                    const Spacer(flex: 3),
-                  ],
-                ),
+                const _HelpField(),
+                const SizedBox(height: NbSpace.lg),
+                _Shortcuts(onPix: onPix),
                 const SizedBox(height: 22),
                 const _Balance(),
                 const SizedBox(height: 22),
@@ -92,54 +79,127 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
+/// The profile icon, as on the navigation bar, the first name and the logo
+/// (week 8 plan, V8).
 class _Header extends StatelessWidget {
-  const new({required this.greeting, required this.name});
+  const new({required this.firstName});
 
-  final String greeting;
-  final String name;
+  final String firstName;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.nbColors;
     return Row(
       children: [
-        // The initial repeats the name, which is read right after it.
+        // The name is read right after it.
         ExcludeSemantics(
           child: Container(
             width: NbSize.touch,
             height: NbSize.touch,
-            alignment: Alignment.center,
             decoration: BoxDecoration(
               color: colors.surface2,
               shape: BoxShape.circle,
               border: Border.all(color: colors.border),
             ),
-            child: Text(
-              name.isEmpty ? '' : name.characters.first.toUpperCase(),
-              style: NbType.avatar.copyWith(color: colors.text),
-            ),
+            child: Icon(Icons.person_outline, color: colors.text),
           ),
         ),
         const SizedBox(width: NbSpace.md),
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                greeting,
-                style: NbType.captionPlain.copyWith(color: colors.textMuted),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                name,
-                style: NbType.bodyStrong.copyWith(color: colors.text),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
+          child: Text(
+            firstName,
+            style: NbType.bodyStrong.copyWith(color: colors.text),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
         const SizedBox(width: NbSpace.md),
         const NextLogo(size: 24),
+      ],
+    );
+  }
+}
+
+/// "Posso te ajudar?": a button shaped like a field, for the assistant that
+/// comes after v1.0.0 (week 8 plan, V9). Honest about it: it says so.
+class _HelpField extends StatelessWidget {
+  const new();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.nbColors;
+    return Semantics(
+      button: true,
+      label: 'Posso te ajudar? Assistente, em breve',
+      excludeSemantics: true,
+      child: Material(
+        color: colors.surface,
+        shape: StadiumBorder(side: BorderSide(color: colors.border)),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => showNbToast(
+            context,
+            'Em breve: assistente com IA.',
+            icon: Icons.info_outline,
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: NbSpace.lg),
+              child: Row(
+                children: [
+                  Icon(Icons.auto_awesome, color: colors.accent),
+                  const SizedBox(width: NbSpace.md),
+                  Expanded(
+                    child: Text(
+                      'Posso te ajudar?',
+                      style: NbType.bodyText.copyWith(color: colors.textMuted),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The Home's row of four (home-dark mockup): the Pix opens its area; the
+/// others come with their screens after v1.0.0 and say so (week 8 plan, V7).
+class _Shortcuts extends StatelessWidget {
+  const new({required this.onPix});
+
+  final VoidCallback onPix;
+
+  @override
+  Widget build(BuildContext context) {
+    void soon() => showNbToast(context, 'Em breve.', icon: Icons.info_outline);
+    final tiles = [
+      ActionTile(icon: const PixMark(), label: 'Área Pix', onPressed: onPix),
+      ActionTile(
+        icon: const Icon(Icons.qr_code_scanner),
+        label: 'Pagar',
+        onPressed: soon,
+      ),
+      ActionTile(
+        icon: const Icon(Icons.swap_horiz),
+        label: 'Transferir',
+        onPressed: soon,
+      ),
+      ActionTile(
+        icon: const Icon(Icons.phone_android),
+        label: 'Recarga',
+        onPressed: soon,
+      ),
+    ];
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final (index, tile) in tiles.indexed) ...[
+          if (index > 0) const SizedBox(width: NbSpace.sm),
+          Expanded(child: tile),
+        ],
       ],
     );
   }

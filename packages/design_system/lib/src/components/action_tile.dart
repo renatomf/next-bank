@@ -16,8 +16,9 @@ class ActionTile extends StatelessWidget {
   /// Height in the mockup; larger text grows it.
   static const double height = 84;
 
-  /// What the shortcut shows.
-  final IconData icon;
+  /// What the shortcut shows: an [Icon], painted in the accent color, or any
+  /// widget such as the Pix symbol (week 8 plan, V6).
+  final Widget icon;
 
   /// Where it goes, also read by screen readers.
   final String label;
@@ -52,7 +53,10 @@ class ActionTile extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(icon, size: 22, color: colors.accent),
+                  IconTheme.merge(
+                    data: IconThemeData(size: 22, color: colors.accent),
+                    child: icon,
+                  ),
                   const SizedBox(height: NbSpace.sm),
                   Text(
                     label,

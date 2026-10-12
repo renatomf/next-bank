@@ -5,10 +5,14 @@ import 'package:flutter/material.dart';
 /// One destination of the [NbNavBar].
 typedef NavDestination = ({IconData icon, String label});
 
+/// The main action of the [NbNavBar]: any widget as its icon, such as the Pix
+/// symbol (week 8 plan, V6).
+typedef NavAction = ({Widget icon, String label});
+
 /// The app's navigation, docked at the bottom above the phone's own buttons
 /// (week 8 plan, V4): every destination with its label under the icon, the
 /// current one on a pill and told to screen readers, and the main action in
-/// the middle on a mint circle. Docked, it never covers the screen above it.
+/// the middle. Docked, it never covers the screen above it.
 class NbNavBar extends StatelessWidget {
   /// Creates the bar: [leading] before the action and [trailing] after it.
   const new({
@@ -28,7 +32,7 @@ class NbNavBar extends StatelessWidget {
   final List<NavDestination> trailing;
 
   /// The main action in the middle, e.g. the Pix.
-  final NavDestination action;
+  final NavAction action;
 
   /// The current destination, counted across [leading] then [trailing];
   /// null when none is.
@@ -172,7 +176,7 @@ class _Destination extends StatelessWidget {
 class _Action extends StatelessWidget {
   const new({required this.action, required this.onTap});
 
-  final NavDestination action;
+  final NavAction action;
   final VoidCallback onTap;
 
   @override
@@ -182,21 +186,15 @@ class _Action extends StatelessWidget {
       label: action.label,
       onTap: onTap,
       labelColor: colors.text,
-      icon: Container(
-        width: 32,
-        height: 32,
-        decoration: const BoxDecoration(
-          color: NbBrand.mint,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: NbBrand.actionGlow,
-              blurRadius: 16,
-              spreadRadius: -4,
-            ),
-          ],
+      // The same 32 high as the destinations' pills, so the labels line up.
+      icon: SizedBox.square(
+        dimension: 32,
+        child: Center(
+          child: IconTheme.merge(
+            data: IconThemeData(size: 28, color: colors.accent),
+            child: action.icon,
+          ),
         ),
-        child: Icon(action.icon, size: 20, color: colors.background),
       ),
     );
   }

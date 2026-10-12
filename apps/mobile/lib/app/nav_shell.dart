@@ -40,9 +40,8 @@ class NavShell extends StatelessWidget {
           (icon: Icons.shield_outlined, label: 'Segurança'),
           (icon: Icons.person_outline, label: 'Perfil'),
         ],
-        // Our own icon: the Pix mark is licensed to participant institutions
-        // only (week 8 plan, V5).
-        action: (icon: Icons.swap_horiz, label: 'Pix'),
+        // The official symbol, by the developer's exception (week 8 plan, V6).
+        action: (icon: const PixMark(), label: 'Pix'),
         selectedIndex: selected < 0 ? null : selected,
         onSelected: (index) => context.go(areas[index]),
         onAction: () => context.push(AppRoutes.pix),

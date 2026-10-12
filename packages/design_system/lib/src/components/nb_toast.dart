@@ -10,7 +10,11 @@ OverlayEntry? _current;
 /// Shows [message] on top of everything, the navigation bar included, for
 /// four seconds or until tapped (week 8 plan, V1). For what went wrong while
 /// the screen keeps showing what it had, such as a failed refresh.
-void showNbToast(BuildContext context, String message) {
+void showNbToast(
+  BuildContext context,
+  String message, {
+  IconData icon = Icons.error_outline,
+}) {
   _current?.remove();
   late final OverlayEntry entry;
   entry = OverlayEntry(
@@ -21,6 +25,7 @@ void showNbToast(BuildContext context, String message) {
           padding: const EdgeInsets.all(NbSpace.screen),
           child: NbToast(
             message: message,
+            icon: icon,
             onDismissed: () {
               if (_current == entry) _current = null;
               if (entry.mounted) entry.remove();
@@ -38,13 +43,22 @@ void showNbToast(BuildContext context, String message) {
 /// the screen. Announced to screen readers as it appears.
 class NbToast extends StatefulWidget {
   /// Creates the notice; [onDismissed] runs when it goes away.
-  const new({required this.message, required this.onDismissed, super.key});
+  const new({
+    required this.message,
+    required this.onDismissed,
+    this.icon = Icons.error_outline,
+    super.key,
+  });
 
   /// How long it stays.
   static const Duration duration = Duration(seconds: 4);
 
   /// What happened, in the customer's words.
   final String message;
+
+  /// The error icon by default; an information icon for notices such as
+  /// "Em breve." (week 8 plan, V7).
+  final IconData icon;
 
   /// Called when it goes away, by itself or tapped.
   final VoidCallback onDismissed;
@@ -91,7 +105,12 @@ class _NbToastState extends State<NbToast> {
             ),
             child: Row(
               children: [
-                Icon(Icons.error_outline, color: colors.danger),
+                Icon(
+                  widget.icon,
+                  color: widget.icon == Icons.error_outline
+                      ? colors.danger
+                      : colors.accent,
+                ),
                 const SizedBox(width: NbSpace.md),
                 Expanded(
                   child: Text(
