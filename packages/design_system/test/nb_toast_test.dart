@@ -66,4 +66,21 @@ void main() {
     expect(find.byType(NbToast), findsOneWidget);
     expect(find.text('Segundo aviso.'), findsOneWidget);
   });
+
+  // Week 8 plan, V7: a notice that is not an error, such as "Em breve."
+  testWidgets('shows an information icon when asked', (tester) async {
+    final context = await pumpHost(tester);
+
+    showNbToast(context, 'Em breve.', icon: Icons.info_outline);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(
+        of: find.byType(NbToast),
+        matching: find.byIcon(Icons.info_outline),
+      ),
+      findsOneWidget,
+    );
+    expect(find.byIcon(Icons.error_outline), findsNothing);
+  });
 }

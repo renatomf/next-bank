@@ -9,7 +9,9 @@ void main() {
       tester.pumpWidget(
         MaterialApp(
           theme: NbTheme.dark(),
-          home: Scaffold(body: Center(child: PixMark(size: size))),
+          home: Scaffold(
+            body: Center(child: PixMark(size: size)),
+          ),
         ),
       );
 

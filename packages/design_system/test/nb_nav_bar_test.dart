@@ -10,7 +10,8 @@ const List<NavDestination> trailing = [
   (icon: Icons.shield_outlined, label: 'Segurança'),
   (icon: Icons.person_outline, label: 'Perfil'),
 ];
-const NavDestination action = (icon: Icons.swap_horiz, label: 'Pix');
+// The action takes any widget, such as the Pix symbol (week 8 plan, V6).
+const NavAction action = (icon: PixMark(), label: 'Pix');
 
 // The app's navigation docked at the bottom, each destination with its label
 // under the icon (week 8 plan, V4; brief, section 8).
