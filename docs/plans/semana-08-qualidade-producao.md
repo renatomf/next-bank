@@ -187,6 +187,22 @@ O desenvolvedor reviu três pontos que a primeira rodada tinha adiado.
 - [ ] Checkpoint no celular da segunda rodada
 - [ ] Aviso da marca Pix no README (tarefa 5)
 
+### Terceira rodada (V11 a V14)
+
+| # | O que muda | Onde | Teste |
+|---|---|---|---|
+| V11 | Ao lado do "Posso te ajudar?", dois botões redondos: "Ajuda" (`help_outline`) e "Notificações" (`notifications_none`). Os dois avisam "Em breve." e têm área de toque de 48 dp | Home | Toque mostra o aviso; rótulos; celular pequeno a 1.3x sem estouro |
+| V12 | Cartão de saldo: a palavra "Saldo" no lugar do logo | `BalanceCard` | Widget: mostra "Saldo" e não tem o logo |
+| V13 | Atalhos do mesmo tamanho: rótulo em uma linha, que encolhe só o necessário para caber ("Transferir" não quebra mais), e os quatro com a mesma altura | `ActionTile` e Home | Widget: os quatro com o mesmo tamanho; rótulo numa linha só |
+| V14 | O olho esconde só o saldo, na Home e na tela do Pix; os valores do extrato e do detalhe ficam sempre visíveis. O saldo **começa escondido** a cada abertura do app, e a escolha continua só na memória | `balanceHiddenProvider`, Home, Extrato e detalhe | Começa escondido; o olho alterna; as movimentações mostram o valor com o saldo escondido |
+
+- **V14 muda a decisão D8 da semana 6** (o olho escondia também os valores das movimentações), a pedido do desenvolvedor. Começar escondido protege mais a abertura do app; já os valores das transações à vista entregam parte da informação. O MOB-05 e a matriz de controles registram a troca.
+- **Código morto:** sem nenhuma tela escondendo valores de movimentação, o parâmetro `hidden` sai do `TransactionItem`, junto com os testes dele.
+- **Concorrência, contratos e dependências:** nenhum.
+
+- [ ] Desenho da terceira rodada aprovado
+- [ ] V11 a V14 implementados; varredura de acessibilidade nos dois temas; checkpoint no celular
+
 ## Tarefa 4 — App de release (dia 4)
 
 - [ ] Chave de assinatura, `release.yml`, APK ofuscado apontando para HTTPS; checkpoint no celular com o APK
