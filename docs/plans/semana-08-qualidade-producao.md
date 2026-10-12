@@ -158,7 +158,8 @@ Pedido do desenvolvedor depois do checkpoint da semana 7, com o app do C6 como r
 - **Fora:** "ajuda com IA", atalhos de serviços e o redesenho geral, depois da tag.
 
 - [x] Desenho aprovado (2026-10-12), feito antes da tarefa 2 para o E2E já rodar sobre a barra nova
-- [ ] V1 a V5 implementados; varredura de acessibilidade e checkpoint no celular
+- [x] V1 a V5 implementados, com a varredura de acessibilidade verde nos dois temas
+- [ ] Checkpoint no celular
 
 ## Tarefa 4 — App de release (dia 4)
 
