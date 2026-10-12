@@ -128,6 +128,38 @@ apps/mobile/
 - [ ] Seed das contas da demo e `demo-reset.yml`
 - [ ] Sentry na API e no app
 
+## Tarefa 3.5 — Ajustes visuais (antes do APK e do vídeo)
+
+Pedido do desenvolvedor depois do checkpoint da semana 7, com o app do C6 como referência **só de layout**. A foto não entra no repositório, porque tem marca e layout de terceiros e um nome real; o visual continua o do next bank.
+
+**Itens e decisões**
+
+| # | Pedido | Decisão |
+|---|---|---|
+| V1 | Erro escondido atrás da barra, em texto branco | Entra, como defeito. O teste que reproduz o problema vem antes da correção |
+| V2 | Olho no campo de senha | Entra |
+| V3 | Logo à direita do "Boa tarde, Ana"; tirar "Seu dinheiro, um passo à frente." | Entra. O slogan sai; o "ajuda com IA" fica para depois da tag |
+| V4 | Barra de navegação como na referência | Entra só a parte de legibilidade: rótulo embaixo de cada ícone e a barra encaixada no rodapé, acima dos botões do Android. O redesenho maior fica para depois da tag |
+| V5 | Logo do Pix | Ícone próprio (`Icons.swap_horiz` com o rótulo "Pix"), sem a marca do Banco Central. A marca é liberada só a instituições participantes do Pix, e o projeto proíbe marcas de terceiros sem licença |
+| — | "Ajuda com IA" e atalhos de serviços sem tela | Depois da tag, em "Próximos passos" do roadmap. Botão sem ação quebra a acessibilidade e frustra quem testa a demo |
+
+**Desenho**
+
+| Peça | Onde | O que muda | Teste |
+|---|---|---|---|
+| `NbToast` | `design_system` | Aviso no topo da tela, por cima do conteúdo, nas cores do tema e com ícone. Some sozinho em 4 s ou com um toque, e o leitor de tela o anuncia (`liveRegion`) | Widget: aparece, é anunciado e some |
+| Erros de recarga | Home, Extrato e Segurança | Quando já há dados na tela e a recarga falha (puxar para atualizar, voltar ao app), os dados ficam e o erro vem em `NbToast`. Sem dados, o bloco de erro com "Tentar de novo" continua no lugar dele, sempre acima da barra | Primeiro o que reproduz: a recarga falha e o erro não pode ficar coberto pela barra |
+| `NbTextField` | `design_system` | Com `obscureText`, ganha o olho "Mostrar senha"/"Ocultar senha" (área de toque de 48 dp). Começa oculto, e o valor não sai do campo (MOB-02) | Widget: alterna, rótulo certo, começa oculto |
+| Cabeçalho da Home | `home_screen.dart` | Saudação à esquerda e `NextLogo` à direita; sem o slogan | Widget e varredura de acessibilidade |
+| `NbNavBar` | `design_system` (substitui a `FloatingNavBar`) | Barra no rodapé, com a cor da superfície e uma borda em cima. Cada destino tem ícone e rótulo; o Pix fica no centro, em destaque. Respeita a área dos botões do Android (`SafeArea`) | Widget: rótulos, selecionado anunciado, sem estouro em 320 px a 1.3x; os testes de navegação continuam |
+
+- **Concorrência:** não se aplica, porque nada disso tem estado compartilhado nem chamada nova.
+- **Contratos e dependências:** nenhum.
+- **Fora:** "ajuda com IA", atalhos de serviços e o redesenho geral, depois da tag.
+
+- [ ] Desenho aprovado
+- [ ] V1 a V5 implementados; varredura de acessibilidade e checkpoint no celular
+
 ## Tarefa 4 — App de release (dia 4)
 
 - [ ] Chave de assinatura, `release.yml`, APK ofuscado apontando para HTTPS; checkpoint no celular com o APK
