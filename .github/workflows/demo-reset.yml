@@ -19,6 +19,8 @@ concurrency:
 jobs:
   reset:
     name: Reset the demo
+    # Only once production exists (docs/operations.md).
+    if: vars.API_URL != ''
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment: production

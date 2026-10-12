@@ -22,7 +22,10 @@ concurrency:
 jobs:
   deploy:
     name: Deploy the API
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    # Only once production exists (docs/operations.md), and only after a green CI.
+    if: >-
+      vars.API_URL != '' &&
+      (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment: production
