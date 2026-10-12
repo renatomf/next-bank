@@ -182,8 +182,10 @@ O desenvolvedor reviu três pontos que a primeira rodada tinha adiado.
 - **Concorrência, contratos e dependências:** nenhum.
 - **Roadmap:** "Próximos passos" muda para "telas de verdade do assistente e dos atalhos".
 
-- [ ] Desenho da segunda rodada aprovado
-- [ ] V6 a V10 implementados; varredura de acessibilidade nos dois temas; checkpoint no celular
+- [x] Desenho da segunda rodada aprovado (2026-10-12)
+- [x] V6 a V10 implementados, com a varredura de acessibilidade verde nos dois temas
+- [ ] Checkpoint no celular da segunda rodada
+- [ ] Aviso da marca Pix no README (tarefa 5)
 
 ## Tarefa 4 — App de release (dia 4)
 
