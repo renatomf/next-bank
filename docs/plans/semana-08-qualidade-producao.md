@@ -153,9 +153,9 @@ apps/mobile/
 
 ## Tarefa 3 — Produção (dias 2–3)
 
-- [ ] Neon (região, papéis criados por SQL, não pelo painel, por causa dos achados do ADR 0009) e Render; `deploy.yml` e smoke test. Código e passo a passo prontos (`infra/neon/bootstrap.sql`, `deploy.yml`, `docs/operations.md`); falta o desenvolvedor criar as contas e rodar o primeiro deploy
+- [x] Neon (Postgres 17, `us-east-1`, papéis por SQL, branches `clean` e `demo`) e Render no ar; `deploy.yml` rodado em 2026-10-12: migrations, deploy hook, release no `/health`
 - [x] ADR 0012: hospedagem da V1 (Render gratuito + Neon em `us-east-1`, despertador, consequências para a performance)
-- [ ] Seed das contas da demo e `demo-reset.yml`: seed por HTTP e workflow prontos; falta a primeira execução em produção
+- [x] Seed das contas da demo e `demo-reset.yml`: restauração pelo Neon, migrations, seed pela API publicada e smoke test verdes em produção (2026-10-12)
 - [ ] Sentry na API e no app
 
 ### Desenho da tarefa 3
