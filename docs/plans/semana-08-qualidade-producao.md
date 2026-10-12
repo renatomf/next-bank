@@ -119,7 +119,7 @@ apps/mobile/
 ## Tarefa 2 — Testes de segurança e E2E (dias 1–2)
 
 - [ ] Mapa: cada teste de segurança obrigatório → arquivo; lacunas com teste
-- [ ] E2E Login → Pix → Comprovante → Extrato em `integration_test`, local e no CI
+- [x] E2E Login → Pix → Comprovante → Extrato em `integration_test`, verde no emulador local (13 s); no CI pelo `e2e.yml`
 
 ### Desenho do E2E
 
@@ -149,7 +149,7 @@ apps/mobile/
 
 **Fora:** iOS (sem Mac) e E2E de cadastro, que o limite de cadastro impede de repetir; o cadastro já é coberto pelos testes de app e de API.
 
-- [ ] Desenho do E2E aprovado
+- [x] Desenho do E2E aprovado (2026-10-12)
 
 ## Tarefa 3 — Produção (dias 2–3)
 
