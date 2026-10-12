@@ -52,6 +52,8 @@ export interface AppDependencies {
   security: { accessTokenKeys: AccessTokenKeys; piiKeys: PiiKeys; pinPepper: Uint8Array };
   /** Proxies in front of the API (config TRUST_PROXY); none by default. */
   trustProxy?: number;
+  /** The commit running, shown by the health check. */
+  release?: string;
 }
 
 // Per client IP (API-02). In memory: one instance in V1 (plan D3). Behind the
@@ -67,7 +69,7 @@ function requestId(request: IncomingMessage): string {
 }
 
 /** Composition root: the only place that connects ports to their implementations. */
-export function buildApp({ pool, logStream, security, trustProxy = 0 }: AppDependencies) {
+export function buildApp({ pool, logStream, security, trustProxy = 0, release }: AppDependencies) {
   const app = Fastify({
     // The client is the hop before the trusted proxies: hop 0 is the socket peer,
     // so only the first [trustProxy] hops are believed. With none, X-Forwarded-For
@@ -146,7 +148,7 @@ export function buildApp({ pool, logStream, security, trustProxy = 0 }: AppDepen
   // Before any route: every route requires a token unless declared public.
   registerAuthentication(app, identity.accessTokenVerifier, identity.activeSessions, clock);
 
-  void app.register(healthRoutes, { pool });
+  void app.register(healthRoutes, { pool, ...(release ? { release } : {}) });
   // Payments reaches Accounts and Identity only through the ports it defines.
   const payments = createPaymentsModule({
     unitOfWork,

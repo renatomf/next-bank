@@ -21,6 +21,8 @@ class Health {
   Health({
 
     required  this.status,
+
+     this.release,
   });
 
   @JsonKey(
@@ -35,15 +37,30 @@ class Health {
 
 
 
+      /// The commit running, when the host tells it
+  @JsonKey(
+    
+    name: r'release',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? release;
+
+
+
 
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is Health &&
-      other.status == status;
+      other.status == status &&
+      other.release == release;
 
     @override
     int get hashCode =>
-        status.hashCode;
+        status.hashCode +
+        release.hashCode;
 
   factory Health.fromJson(Map<String, dynamic> json) => _$HealthFromJson(json);
 

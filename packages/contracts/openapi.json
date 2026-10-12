@@ -192,6 +192,10 @@
           "status": {
             "type": "string",
             "const": "ok"
+          },
+          "release": {
+            "description": "The commit running, when the host tells it",
+            "type": "string"
           }
         },
         "required": [

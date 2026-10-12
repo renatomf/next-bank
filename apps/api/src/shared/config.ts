@@ -42,6 +42,11 @@ const schema = z
     // many hops of X-Forwarded-For are believed (AUTH-01, API-02).
     TRUST_PROXY: z.coerce.number().int().min(0).max(3).default(0),
     NODE_ENV: z.string().optional(),
+    // The commit the host deployed (Render sets it); names the release.
+    RENDER_GIT_COMMIT: z
+      .string()
+      .regex(/^[0-9a-f]{7,40}$/)
+      .optional(),
     // Access token signing key (threat model D4).
     JWT_PRIVATE_KEY: z.string().refine((value) => parseEd25519PrivateKey(value) !== null, {
       message: 'must be an Ed25519 private key (PKCS#8 DER, base64)',
@@ -79,6 +84,8 @@ export interface Config {
   port: number;
   host: string;
   trustProxy: number;
+  /** The commit running, when the host tells it. */
+  release?: string;
   jwt: { privateKey: KeyObject; keyId: string };
   pii: { encryptionKey: Buffer; hmacKey: Buffer; keyVersion: number };
   pinPepper: Buffer;
@@ -100,6 +107,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
     port: data.PORT,
     host: data.HOST,
     trustProxy: data.TRUST_PROXY,
+    ...(data.RENDER_GIT_COMMIT ? { release: data.RENDER_GIT_COMMIT } : {}),
     jwt: {
       privateKey: required(parseEd25519PrivateKey(data.JWT_PRIVATE_KEY)),
       keyId: data.JWT_KEY_ID,

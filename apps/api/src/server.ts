@@ -6,6 +6,7 @@ const config = loadConfig(process.env);
 const app = buildApp({
   pool: createPool(config.databaseUrl),
   trustProxy: config.trustProxy,
+  ...(config.release ? { release: config.release } : {}),
   security: {
     accessTokenKeys: config.jwt,
     piiKeys: {
