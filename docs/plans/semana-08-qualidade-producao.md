@@ -113,8 +113,8 @@ apps/mobile/
 
 ## Tarefa 1 — DEMO-03 (dia 1)
 
-- [ ] Migration `is_demo`; ataque antes da defesa: trocar PIN, trocar senha e encerrar sessão numa conta de demonstração → 403
-- [ ] Mensagem no app; `/security-review`
+- [x] Migration `is_demo`; ataque antes da defesa: trocar PIN, trocar senha e encerrar sessão numa conta de demonstração → 403
+- [x] Mensagem no app; `/security-review` (sem achados; risco residual do bloqueio por palpites registrado no DEMO-03)
 
 ## Tarefa 2 — Testes de segurança e E2E (dias 1–2)
 
