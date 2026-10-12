@@ -282,7 +282,7 @@ packages/design_system/    FloatingNavBar, ConfirmDialog
 
 - [ ] As 14 telas implementadas, no emulador e no celular (navegação, Pix, Perfil, tema, sessões, troca de senha e de PIN conferidos; faltam TalkBack, fonte grande e erros: passos 8 e 9)
 - [x] Sessão encerrada em outro aparelho deixa de funcionar; troca de senha encerra as outras sessões. Confirmado no aparelho em 2026-10-10: a troca no celular encerrou a sessão do emulador (`PASSWORD_CHANGED`), e o emulador foi recusado na primeira operação sensível (tela Segurança: 401 na leitura e na renovação). Até lá, saldo e extrato seguem com o access token por até 15 min (ADR 0004)
-- [ ] PIN bloqueado redefinido com a senha: no aparelho, bloqueio após 5 min, bloqueio por 5 erros com só "Sair" e login com a senha confirmados; falta a troca do PIN enquanto bloqueado (Perfil › Segurança › Trocar PIN)
+- [x] PIN bloqueado redefinido com a senha: confirmado no aparelho em 2026-10-12. Bloqueio após 5 min; bloqueio por 5 erros com só "Sair"; login com a senha; troca do PIN em Perfil › Segurança com o PIN ainda bloqueado, que zerou as tentativas e tirou o bloqueio
 - [x] Todas as telas em 1.3x num celular pequeno, com rótulos de leitor de tela (varredura automática nos dois temas; TalkBack no checkpoint)
 - [x] Cobertura ≥ 90% em `domain/` e `application/` (API: 98,2% das instruções e 94,9% dos ramos em 724 testes); lint e `flutter analyze` sem warnings
 - [ ] Próximo passo: plano da semana 8 (qualidade, deploy e demo pública)
