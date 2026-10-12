@@ -1,6 +1,6 @@
 # Plano — Semana 8: Qualidade e produção
 
-- **Status:** Aprovado (2026-10-12), com as decisões D1 a D10 nos padrões recomendados (Render Starter, API e banco em `us-east-1`, reset diário)
+- **Status:** Aprovado (2026-10-12), com as decisões D1 a D10 nos padrões recomendados (API e banco em `us-east-1`, reset diário). D9 revista no mesmo dia: hospedagem sem custo (Render gratuito + despertador)
 - **Roadmap:** `docs/roadmap.md` (seção 8, semana 8; seção 8.2, demo pública)
 - **Base:**
   - ADRs 0004 (autenticação), 0008 (contrato) e 0009 (SQL puro, achados no Neon: papéis do painel ignoram os `GRANT`s, `verify-full` no deploy);
@@ -55,7 +55,8 @@ apps/mobile/
 ├── ci.yml                  + job E2E (D2)
 ├── deploy.yml              migrations → deploy da API → smoke test (D4)
 ├── release.yml             tag v* → APK assinado e ofuscado nas Releases (D6)
-└── demo-reset.yml          agendado: Neon volta ao branch limpo (D5)
+├── demo-reset.yml          agendado: Neon volta ao branch limpo (D5)
+└── keep-awake.yml          agendado: mantém a API gratuita acordada (D9)
 ```
 
 ## Concorrência
@@ -95,7 +96,7 @@ apps/mobile/
 | D6 | APK de release | Chave de assinatura gerada localmente, guardada só como segredo do GitHub; build no workflow `release.yml` ao criar a tag `v*`, ofuscado e com R8, publicado nas Releases. O `.gitignore` ganha `*.jks`, `*.keystore` e `key.properties` antes de gerar a chave |
 | D7 | Sentry | Entra na API e no app, com remoção de PII no `beforeSend` (CPF, tokens, senha, PIN, corpo das requisições). Plano gratuito |
 | D8 | Performance | Carga nominal com `autocannon` contra a API publicada (leituras e Pix das contas de demonstração), p95 lido do próprio resultado e conferido no `responseTime` dos logs; início a frio medido no celular com `flutter run --profile --trace-startup`. Resultados num doc de performance |
-| D9 | Plano do Render | **Starter (pago, cerca de US$ 7/mês):** o gratuito dorme após 15 min sem uso e a primeira requisição leva quase 1 min, o que quebra a promessa de "avaliável em menos de um minuto". Alternativa: gratuito, com aviso no README |
+| D9 | Plano do Render | **Gratuito, sem custo nem cartão** (decisão do desenvolvedor). O gratuito dorme após 15 min sem uso; o workflow `keep-awake.yml` chama o `/health` a cada ~10 min para mantê-lo acordado (as 750 h gratuitas por mês cobrem um serviço ligado o mês todo). O agendamento do GitHub pode atrasar: o README avisa que a primeira abertura pode levar até 1 min. A instância gratuita tem pouca CPU, e o Argon2id do login e do PIN não é afrouxado; se o p95 do Pix passar de 400 ms, o número medido e o desvio entram no ADR 0012, como consequência da hospedagem gratuita |
 | D10 | Extras do roadmap | Profiling e emulador no navegador ficam em "Próximos passos" |
 
 ## Fora desta semana
@@ -123,6 +124,7 @@ apps/mobile/
 ## Tarefa 3 — Produção (dias 2–3)
 
 - [ ] Neon (região, papéis criados por SQL, não pelo painel, por causa dos achados do ADR 0009) e Render; `deploy.yml` e smoke test
+- [ ] ADR 0012: hospedagem da V1 (Render gratuito + Neon em `us-east-1`, despertador, consequências para a performance)
 - [ ] Seed das contas da demo e `demo-reset.yml`
 - [ ] Sentry na API e no app
 
