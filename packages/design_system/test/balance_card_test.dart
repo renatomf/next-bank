@@ -38,7 +38,9 @@ void main() {
 
       expect(find.text('Saldo disponível · Conta •••• 0004'), findsOneWidget);
       expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
-      expect(find.byType(NextLogo), findsOneWidget);
+      // Week 8 plan, V12: the word "Saldo" where the logo was.
+      expect(find.text('Saldo'), findsOneWidget);
+      expect(find.byType(NextLogo), findsNothing);
       // The full number never shows on the card.
       expect(find.textContaining('100000'), findsNothing);
     });
@@ -124,7 +126,7 @@ void main() {
     // Found on the Home: in a list, the card merged into one node read as a
     // button ("next bank, Ocultar saldo, Saldo disponível…, R$ …"). Each
     // part must stay its own node for screen readers.
-    testWidgets('keeps logo, eye button and balance apart inside a list', (
+    testWidgets('keeps title, eye button and balance apart inside a list', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -146,7 +148,7 @@ void main() {
       );
 
       expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
-      expect(find.bySemanticsLabel('next bank'), findsOneWidget);
+      expect(find.bySemanticsLabel('Saldo'), findsOneWidget);
       expect(
         tester.getSemantics(find.bySemanticsLabel('Ocultar saldo')),
         isSemantics(label: 'Ocultar saldo', isButton: true),

@@ -16,12 +16,14 @@ import '../../../support/fake_account_repository.dart';
 import '../../../support/fake_profile_repository.dart';
 import '../../../support/fake_statement_repository.dart';
 import '../../../support/fake_token_store.dart';
+import '../../../support/pump_app.dart';
 
 Future<void> pumpHome(
   WidgetTester tester, {
   FakeAccountRepository? account,
   FakeStatementRepository? statement,
   DateTime? now,
+  VoidCallback? onPix,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -38,7 +40,11 @@ Future<void> pumpHome(
       ],
       child: MaterialApp(
         theme: NbTheme.dark(),
-        home: HomeScreen(onPix: () {}, onStatement: () {}, onMovement: (_) {}),
+        home: HomeScreen(
+          onPix: onPix ?? () {},
+          onStatement: () {},
+          onMovement: (_) {},
+        ),
       ),
     ),
   );
@@ -60,34 +66,138 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('greets the customer and shows the available balance', (
+  testWidgets('shows the customer and the available balance', (tester) async {
+    await pumpHome(tester);
+    await tester.pumpAndSettle();
+    await showBalance(tester);
+
+    expect(find.text('Ana'), findsOneWidget);
+    expect(find.text('Saldo disponível · Conta •••• 0004'), findsOneWidget);
+    expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
+  });
+
+  // Week 8 plan, V3 and V8: the profile icon, the first name and the logo on
+  // one line; no greeting and no slogan.
+  testWidgets('heads the Home with the profile icon, the name and the logo', (
     tester,
   ) async {
     await pumpHome(tester);
     await tester.pumpAndSettle();
 
-    expect(find.text('Bom dia,'), findsOneWidget);
-    expect(find.text('Ana Souza'), findsOneWidget);
-    expect(find.byType(DisplayTitle), findsOneWidget);
-    expect(find.text('Saldo disponível · Conta •••• 0004'), findsOneWidget);
-    expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
+    final name = tester.getCenter(find.text('Ana'));
+    final icon = tester.getCenter(find.byIcon(Icons.person_outline));
+    // The balance card has its own logo; the header's comes first.
+    final logo = tester.getCenter(
+      find
+          .descendant(
+            of: find.byType(HomeScreen),
+            matching: find.byType(NextLogo),
+          )
+          .first,
+    );
+    expect(icon.dx, lessThan(name.dx));
+    expect(logo.dx, greaterThan(name.dx));
+    expect((icon.dy - name.dy).abs(), lessThan(30));
+    expect((logo.dy - name.dy).abs(), lessThan(30));
+    for (final greeting in ['Bom dia,', 'Boa tarde,', 'Boa noite,']) {
+      expect(find.text(greeting), findsNothing);
+    }
+    expect(find.byType(DisplayTitle), findsNothing);
   });
 
-  // MOB-05: the customer can hide the balance from someone beside them.
-  testWidgets('hides the balance and shows it again', (tester) async {
+  // Week 8 plan, V6 and V7: four shortcuts; only the Pix opens a screen, the
+  // others say they are coming.
+  testWidgets('opens the Pix from its shortcut, with its symbol', (
+    tester,
+  ) async {
+    var opened = 0;
+    await pumpHome(tester, onPix: () => opened++);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(
+        of: find.widgetWithText(ActionTile, 'Área Pix'),
+        matching: find.byType(PixMark),
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Área Pix'));
+    await tester.pumpAndSettle();
+
+    expect(opened, 1);
+  });
+
+  for (final shortcut in ['Pagar', 'Transferir', 'Recarga']) {
+    testWidgets('says "$shortcut" is coming, without leaving', (tester) async {
+      var opened = 0;
+      await pumpHome(tester, onPix: () => opened++);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(shortcut));
+      await tester.pumpAndSettle();
+
+      expect(find.widgetWithText(NbToast, 'Em breve.'), findsOneWidget);
+      expect(opened, 0);
+    });
+  }
+
+  // Week 8 plan, V11: help and notifications beside the help field.
+  for (final button in ['Ajuda', 'Notificações']) {
+    testWidgets('says "$button" is coming', (tester) async {
+      await pumpHome(tester);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.bySemanticsLabel(button));
+      await tester.pumpAndSettle();
+
+      expect(find.widgetWithText(NbToast, 'Em breve.'), findsOneWidget);
+    });
+  }
+
+  // Week 8 plan, V13: the four shortcuts share one size, labels on one line.
+  testWidgets('lays the shortcuts out in one size', (tester) async {
     await pumpHome(tester);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.bySemanticsLabel('Ocultar saldo'));
-    await tester.pump();
+    final sizes = tester
+        .widgetList(find.byType(ActionTile))
+        .map((tile) => tester.getSize(find.byWidget(tile)))
+        .toSet();
+    expect(sizes, hasLength(1));
+  });
+
+  // Week 8 plan, V9: the help field is a button that says it is coming.
+  testWidgets('says the assistant is coming', (tester) async {
+    await pumpHome(tester);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Posso te ajudar?'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.widgetWithText(NbToast, 'Em breve: assistente com IA.'),
+      findsOneWidget,
+    );
+  });
+
+  // MOB-05, week 8 plan V14: the balance starts hidden at every opening, and
+  // the eye shows it and hides it again.
+  testWidgets('starts with the balance hidden, and the eye toggles it', (
+    tester,
+  ) async {
+    await pumpHome(tester);
+    await tester.pumpAndSettle();
 
     expect(find.bySemanticsLabel('Saldo oculto'), findsOneWidget);
     expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsNothing);
 
     await tester.tap(find.bySemanticsLabel('Mostrar saldo'));
     await tester.pump();
-
     expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
+
+    await tester.tap(find.bySemanticsLabel('Ocultar saldo'));
+    await tester.pump();
+    expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsNothing);
   });
 
   testWidgets('says the balance could not load and tries again', (
@@ -106,26 +216,10 @@ void main() {
     await tester.tap(find.text('Tentar de novo'));
     await tester.pumpAndSettle();
 
+    await showBalance(tester);
     expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
     expect(account.fetches, 2);
   });
-
-  for (final (hour, greeting) in [
-    (5, 'Bom dia,'),
-    (11, 'Bom dia,'),
-    (12, 'Boa tarde,'),
-    (17, 'Boa tarde,'),
-    (18, 'Boa noite,'),
-    (23, 'Boa noite,'),
-    (0, 'Boa noite,'),
-  ]) {
-    testWidgets('says "$greeting" at $hour h', (tester) async {
-      await pumpHome(tester, now: DateTime(2026, 10, 7, hour));
-      await tester.pumpAndSettle();
-
-      expect(find.text(greeting), findsOneWidget);
-    });
-  }
 
   testWidgets('fits a small phone at 1.3x text', (tester) async {
     tester.view

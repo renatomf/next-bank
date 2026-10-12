@@ -1,7 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:next_bank/core/account/account_providers.dart';
 import 'package:next_bank/core/clock.dart';
 import 'package:next_bank/core/statement/statement_controller.dart';
 import 'package:next_bank/core/statement/statement_item.dart';
@@ -101,12 +100,7 @@ class _Detail extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: NbSpace.xs),
-        Center(
-          child: MoneyText(
-            cents: item.amountCents,
-            hidden: ref.watch(balanceHiddenProvider),
-          ),
-        ),
+        Center(child: MoneyText(cents: item.amountCents)),
         const SizedBox(height: NbSpace.sm),
         Center(
           child: Text(

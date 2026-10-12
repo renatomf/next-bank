@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/theme/theme_choice.dart';
 import 'package:next_bank/features/profile/presentation/profile_screen.dart';
@@ -57,4 +58,25 @@ void main() {
       isSemantics(label: 'Escuro', isSelected: true),
     );
   });
+
+  // Week 8 plan, V10: the phone's own buttons sit over the app's bar, as in
+  // the reference, with icons that read on each theme.
+  for (final (brightness, icons) in [
+    (Brightness.dark, Brightness.light),
+    (Brightness.light, Brightness.dark),
+  ]) {
+    testWidgets('draws under the system buttons in ${brightness.name} mode', (
+      tester,
+    ) async {
+      tester.platformDispatcher.platformBrightnessTestValue = brightness;
+      addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+
+      await openProfile(tester, FakeThemeStore());
+
+      final style = SystemChrome.latestStyle;
+      expect(style?.systemNavigationBarColor, Colors.transparent);
+      expect(style?.systemNavigationBarContrastEnforced, isFalse);
+      expect(style?.systemNavigationBarIconBrightness, icons);
+    });
+  }
 }

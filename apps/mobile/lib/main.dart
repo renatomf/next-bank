@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/app/router.dart';
 import 'package:next_bank/core/account/account_providers.dart';
@@ -27,6 +30,10 @@ import 'package:next_bank/features/unlock/presentation/unlock_providers.dart';
 /// Composition root: the only place that binds domain interfaces
 /// to their implementations.
 void main() {
+  // Edge to edge: the app draws under the phone's own buttons, as in the
+  // reference (week 8 plan, V10). Android 15 does it by default.
+  WidgetsFlutterBinding.ensureInitialized();
+  unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
   runApp(
     ProviderScope(
       overrides: [
@@ -108,6 +115,26 @@ class _NextBankAppState extends ConsumerState<NextBankApp> {
       darkTheme: NbTheme.dark(),
       themeMode: choice.mode,
       routerConfig: ref.watch(routerProvider),
+      builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
+        value: _systemBarsFor(Theme.of(context).brightness),
+        child: child ?? const SizedBox.shrink(),
+      ),
     );
   }
+}
+
+/// The phone's own buttons over the app's navigation bar, with no band of
+/// forced contrast behind them, in icons that read on the theme (week 8 plan,
+/// V10).
+SystemUiOverlayStyle _systemBarsFor(Brightness theme) {
+  final icons = theme == Brightness.dark ? Brightness.light : Brightness.dark;
+  return SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: icons,
+    statusBarBrightness: theme,
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarDividerColor: Colors.transparent,
+    systemNavigationBarIconBrightness: icons,
+    systemNavigationBarContrastEnforced: false,
+  );
 }

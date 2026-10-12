@@ -128,9 +128,88 @@ apps/mobile/
 - [ ] Seed das contas da demo e `demo-reset.yml`
 - [ ] Sentry na API e no app
 
+## Tarefa 3.5 — Ajustes visuais (antes do APK e do vídeo)
+
+Pedido do desenvolvedor depois do checkpoint da semana 7, com o app do C6 como referência **só de layout**. A foto não entra no repositório, porque tem marca e layout de terceiros e um nome real; o visual continua o do next bank.
+
+**Itens e decisões**
+
+| # | Pedido | Decisão |
+|---|---|---|
+| V1 | Erro escondido atrás da barra, em texto branco | Entra, como defeito. O teste que reproduz o problema vem antes da correção |
+| V2 | Olho no campo de senha | Entra |
+| V3 | Logo à direita do "Boa tarde, Ana"; tirar "Seu dinheiro, um passo à frente." | Entra. O slogan sai; o "ajuda com IA" fica para depois da tag |
+| V4 | Barra de navegação como na referência | Entra só a parte de legibilidade: rótulo embaixo de cada ícone e a barra encaixada no rodapé, acima dos botões do Android. O redesenho maior fica para depois da tag |
+| V5 | Logo do Pix | Ícone próprio (`Icons.swap_horiz` com o rótulo "Pix"), sem a marca do Banco Central. A marca é liberada só a instituições participantes do Pix, e o projeto proíbe marcas de terceiros sem licença |
+| — | "Ajuda com IA" e atalhos de serviços sem tela | Depois da tag, em "Próximos passos" do roadmap. Botão sem ação quebra a acessibilidade e frustra quem testa a demo |
+
+**Desenho**
+
+| Peça | Onde | O que muda | Teste |
+|---|---|---|---|
+| `NbToast` | `design_system` | Aviso no topo da tela, por cima do conteúdo, nas cores do tema e com ícone. Some sozinho em 4 s ou com um toque, e o leitor de tela o anuncia (`liveRegion`) | Widget: aparece, é anunciado e some |
+| Erros de recarga | Home, Extrato e Segurança | Quando já há dados na tela e a recarga falha (puxar para atualizar, voltar ao app), os dados ficam e o erro vem em `NbToast`. Sem dados, o bloco de erro com "Tentar de novo" continua no lugar dele, sempre acima da barra | Primeiro o que reproduz: a recarga falha e o erro não pode ficar coberto pela barra |
+| `NbTextField` | `design_system` | Com `obscureText`, ganha o olho "Mostrar senha"/"Ocultar senha" (área de toque de 48 dp). Começa oculto, e o valor não sai do campo (MOB-02) | Widget: alterna, rótulo certo, começa oculto |
+| Cabeçalho da Home | `home_screen.dart` | Saudação à esquerda e `NextLogo` à direita; sem o slogan | Widget e varredura de acessibilidade |
+| `NbNavBar` | `design_system` (substitui a `FloatingNavBar`) | Barra no rodapé, com a cor da superfície e uma borda em cima. Cada destino tem ícone e rótulo; o Pix fica no centro, em destaque. Respeita a área dos botões do Android (`SafeArea`) | Widget: rótulos, selecionado anunciado, sem estouro em 320 px a 1.3x; os testes de navegação continuam |
+
+- **Concorrência:** não se aplica, porque nada disso tem estado compartilhado nem chamada nova.
+- **Contratos e dependências:** nenhum.
+- **Fora:** "ajuda com IA", atalhos de serviços e o redesenho geral, depois da tag.
+
+- [x] Desenho aprovado (2026-10-12), feito antes da tarefa 2 para o E2E já rodar sobre a barra nova
+- [x] V1 a V5 implementados, com a varredura de acessibilidade verde nos dois temas
+- [ ] Checkpoint no celular
+
+### Segunda rodada (V6 a V10), pedida depois da primeira
+
+O desenvolvedor reviu três pontos que a primeira rodada tinha adiado.
+
+**Decisões do desenvolvedor (2026-10-12):**
+- **Exceção à regra de marcas de terceiros:** o símbolo oficial do Pix entra, só o símbolo, sem o texto "powered by Banco Central". O README avisa: "Pix é marca do Banco Central do Brasil; o next bank é um projeto fictício, sem vínculo com o Banco Central ou com o arranjo Pix".
+- **Atalhos e ajuda sem tela:** entram como "Em breve". Ao tocar, mostram o toast "Em breve." Assim continuam botões com ação, acessíveis e honestos com quem testa. As telas de verdade ficam para depois da tag.
+- **Símbolo do Pix:** convertido uma vez para um `CustomPainter` em Dart, sem `flutter_svg`.
+
+| # | O que muda | Onde | Teste |
+|---|---|---|---|
+| V6 | `PixMark`: o símbolo oficial do Pix (#32BCAD) desenhado pelo caminho do SVG oficial, com o rótulo "Pix" para o leitor de tela. Substitui o ícone de transferência no centro da barra e no atalho "Área Pix". O texto ao lado garante o sentido mesmo quando o símbolo tem pouco contraste no tema claro | `design_system` | Widget: desenha no tamanho pedido e é anunciado como "Pix" |
+| V7 | Atalhos em linha de quatro: Área Pix (funciona), Pagar, Transferir e Recarga (avisam "Em breve."). O `ActionTile` passa a aceitar um widget como ícone, para o `PixMark` | Home | Os três "Em breve" mostram o toast e não navegam; varredura de acessibilidade |
+| V8 | Cabeçalho: ícone de perfil (o mesmo da barra) num círculo, o primeiro nome do cliente e o logo à direita. A saudação sai, junto com o `greetingFor` e o teste dela | Home | Widget: ícone, primeiro nome e logo na mesma linha; sem saudação |
+| V9 | Campo "Posso te ajudar?" acima dos atalhos, em pílula, com o ícone `auto_awesome` na cor de destaque. É um botão (não um campo de texto) que avisa "Em breve: assistente com IA." | Home | Toque mostra o aviso; rótulo para o leitor de tela |
+| V10 | Barra do Android como no C6: o app desenha de ponta a ponta (edge-to-edge), a barra do sistema fica transparente e sem a faixa de contraste forçado, e os ícones do sistema ficam claros no tema escuro e escuros no claro. O fundo da `NbNavBar` continua por trás dos botões do Android | `main.dart` | Widget: o estilo da barra do sistema segue o tema, nos dois temas |
+
+- `NbToast` ganha um ícone opcional: o "Em breve" usa o ícone de informação, e os erros continuam com o de erro.
+- **Concorrência, contratos e dependências:** nenhum.
+- **Roadmap:** "Próximos passos" muda para "telas de verdade do assistente e dos atalhos".
+
+- [x] Desenho da segunda rodada aprovado (2026-10-12)
+- [x] V6 a V10 implementados, com a varredura de acessibilidade verde nos dois temas
+- [ ] Checkpoint no celular da segunda rodada
+- [ ] Aviso da marca Pix no README (tarefa 5)
+
+### Terceira rodada (V11 a V14)
+
+| # | O que muda | Onde | Teste |
+|---|---|---|---|
+| V11 | Ao lado do "Posso te ajudar?", dois botões redondos: "Ajuda" (`help_outline`) e "Notificações" (`notifications_none`). Os dois avisam "Em breve." e têm área de toque de 48 dp | Home | Toque mostra o aviso; rótulos; celular pequeno a 1.3x sem estouro |
+| V12 | Cartão de saldo: a palavra "Saldo" no lugar do logo | `BalanceCard` | Widget: mostra "Saldo" e não tem o logo |
+| V13 | Atalhos do mesmo tamanho: rótulo em uma linha, que encolhe só o necessário para caber ("Transferir" não quebra mais), e os quatro com a mesma altura | `ActionTile` e Home | Widget: os quatro com o mesmo tamanho; rótulo numa linha só |
+| V14 | O olho esconde só o saldo, na Home e na tela do Pix; os valores do extrato e do detalhe ficam sempre visíveis. O saldo **começa escondido** a cada abertura do app, e a escolha continua só na memória | `balanceHiddenProvider`, Home, Extrato e detalhe | Começa escondido; o olho alterna; as movimentações mostram o valor com o saldo escondido |
+
+- **V14 muda a decisão D8 da semana 6** (o olho escondia também os valores das movimentações), a pedido do desenvolvedor. Começar escondido protege mais a abertura do app; já os valores das transações à vista entregam parte da informação. O MOB-05 e a matriz de controles registram a troca.
+- **Código morto:** sem nenhuma tela escondendo valores de movimentação, o parâmetro `hidden` sai do `TransactionItem`, junto com os testes dele.
+- **Concorrência, contratos e dependências:** nenhum.
+
+- [x] Desenho da terceira rodada aprovado (2026-10-12)
+- [x] V11 a V14 implementados, com a varredura de acessibilidade verde nos dois temas
+- [ ] Checkpoint no celular da terceira rodada
+- [x] V15: degradê na barra de navegação, do `surface2` no topo ao `background` no rodapé, nos tons de cada tema, como na referência; os rótulos seguem AA na varredura de contraste
+
 ## Tarefa 4 — App de release (dia 4)
 
 - [ ] Chave de assinatura, `release.yml`, APK ofuscado apontando para HTTPS; checkpoint no celular com o APK
+- [ ] Ícone do app (adaptativo: "next" em Sora Bold e o ponto verde-menta) e splash nativa (fundo da marca e ícone, Android 12+)
+- [ ] Visual da tela Splash, pedido pelo desenvolvedor com uma imagem de referência (seda de vidro verde), o logo e um slogan. Decisões pendentes: o fundo recriado em código com o `Silk` (sem asset) ou a imagem, só com licença comprovada; o slogan "Finance at your fingertips" ou em pt-BR; nenhuma espera artificial (abertura a frio < 2 s)
 
 ## Tarefa 5 — Medição, README e tag (dias 4–5)
 

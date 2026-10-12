@@ -2,6 +2,7 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/api_failure.dart';
+import 'package:next_bank/features/home/presentation/home_screen.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
 import 'package:next_bank/features/profile/presentation/profile_screen.dart';
 import 'package:next_bank/features/security/presentation/change_pin/change_pin_screen.dart';
@@ -15,7 +16,7 @@ import '../support/fake_token_store.dart';
 import '../support/fake_unlock_repository.dart';
 import '../support/pump_app.dart';
 
-final Finder bar = find.byType(FloatingNavBar);
+final Finder bar = find.byType(NbNavBar);
 
 Future<void> openHome(WidgetTester tester, {FakeMonotonicClock? clock}) async {
   // Tall enough for every screen to be built at once.
@@ -55,6 +56,26 @@ void main() {
     }
     await tapBar(tester, 'Início');
     expect(find.text('Últimas movimentações'), findsOneWidget);
+  });
+
+  // Week 8 plan, V1 and V4: docked at the bottom, the bar never covers the
+  // screen; each destination shows its label.
+  testWidgets('docks at the bottom, with the screens ending above it', (
+    tester,
+  ) async {
+    await openHome(tester);
+
+    for (final label in ['Início', 'Extrato', 'Pix', 'Segurança', 'Perfil']) {
+      expect(
+        find.descendant(of: bar, matching: find.text(label)),
+        findsOneWidget,
+        reason: label,
+      );
+    }
+    expect(
+      tester.getRect(find.byType(HomeScreen)).bottom,
+      lessThanOrEqualTo(tester.getRect(bar).top),
+    );
   });
 
   // D7: the flows open over the areas, without the bar.

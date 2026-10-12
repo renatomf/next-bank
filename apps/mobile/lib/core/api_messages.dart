@@ -70,3 +70,9 @@ String _catalogText(ApiErrorCode code) => switch (code) {
 String _attemptsLeft(int remaining) => remaining == 1
     ? 'PIN incorreto. Resta 1 tentativa.'
     : 'PIN incorreto. Restam $remaining tentativas.';
+
+/// What a toast says when a refresh fails while the screen keeps its content:
+/// the catalog text for an API failure, a generic one for anything else.
+String refreshFailureMessage(Object error) => error is ApiFailure
+    ? messageFor(error)
+    : 'Não foi possível atualizar. Tente de novo.';

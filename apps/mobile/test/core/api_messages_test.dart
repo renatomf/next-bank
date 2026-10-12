@@ -126,4 +126,21 @@ void main() {
       );
     });
   });
+
+  // Week 8 plan, V1: the toast of a failed refresh.
+  group('refreshFailureMessage', () {
+    test('tells an API failure with its catalog text', () {
+      expect(
+        refreshFailureMessage(const ApiUnreachable()),
+        'Sem conexão. Tente de novo.',
+      );
+    });
+
+    test('falls back to a generic text for anything else', () {
+      expect(
+        refreshFailureMessage(StateError('unexpected')),
+        'Não foi possível atualizar. Tente de novo.',
+      );
+    });
+  });
 }

@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 /// One movement in a list (brief, section 7; home-dark mockup): an arrow in a
 /// circle, a title, a caption and the amount with its sign. In or out reads
 /// from the arrow and the sign, never from color alone (brief, section 8).
-/// While [hidden], the amount shows no digit (MOB-05).
 class TransactionItem extends StatelessWidget {
   /// Creates the row; a null [onTap] makes it read-only.
   const new({
@@ -14,7 +13,6 @@ class TransactionItem extends StatelessWidget {
     required this.caption,
     required this.amountCents,
     required this.incoming,
-    this.hidden = false,
     this.onTap,
     super.key,
   });
@@ -31,9 +29,6 @@ class TransactionItem extends StatelessWidget {
   /// True when the money came in.
   final bool incoming;
 
-  /// True while the customer chose to hide amounts.
-  final bool hidden;
-
   /// Opens the movement's detail.
   final VoidCallback? onTap;
 
@@ -42,10 +37,7 @@ class TransactionItem extends StatelessWidget {
     final colors = context.nbColors;
     final sign = incoming ? '+' : '−';
     final reais = formatReais(amountCents).full;
-    final amount = hidden ? r'R$ ••••' : reais;
-    final spoken = hidden
-        ? 'valor oculto'
-        : '${incoming ? 'entrada' : 'saída'} de $reais';
+    final spoken = '${incoming ? 'entrada' : 'saída'} de $reais';
     return Semantics(
       container: true,
       button: onTap != null,
@@ -74,7 +66,7 @@ class TransactionItem extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: NbSpace.md),
-              // The words get more room than the amount, and the title stays
+              // The words get more room than the reais, and the title stays
               // on one line, shrinking only when it must.
               Expanded(
                 flex: 3,
@@ -113,7 +105,7 @@ class TransactionItem extends StatelessWidget {
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerRight,
                   child: Text(
-                    '$sign $amount',
+                    '$sign $reais',
                     style: NbType.bodyStrong.copyWith(color: colors.text),
                   ),
                 ),

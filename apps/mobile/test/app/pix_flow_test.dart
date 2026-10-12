@@ -161,6 +161,7 @@ void main() {
       return await complete();
     };
     await openHome(tester, pix, account: account);
+    await showBalance(tester);
     expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
 
     await fillInPix(tester);
@@ -343,11 +344,10 @@ void main() {
     expect(find.byType(ContactCard), findsNothing);
   });
 
-  // MOB-05: the balance hidden on the Home stays hidden on the Pix.
+  // MOB-05, week 8 plan V14: the balance, hidden at every opening, stays
+  // hidden on the Pix.
   testWidgets('keeps the balance hidden on the Pix', (tester) async {
     await openHome(tester, FakePixRepository());
-    await tester.tap(find.bySemanticsLabel('Ocultar saldo'));
-    await tester.pumpAndSettle();
 
     await tester.tap(find.bySemanticsLabel('Área Pix'));
     await tester.pumpAndSettle();

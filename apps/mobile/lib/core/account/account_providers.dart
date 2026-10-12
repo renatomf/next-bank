@@ -18,15 +18,17 @@ final FutureProvider<AccountSummary> accountProvider =
       retry: (_, _) => null,
     );
 
-/// Whether the customer hid the balance (MOB-05), on every screen that shows
-/// it. Kept only in memory: visible again when the app restarts (decision D8).
+/// Whether the balance is hidden (MOB-05), on every screen that shows it: the
+/// Home and the Pix. Hidden at every opening and kept only in memory; the
+/// movements always show their amounts (week 8 plan, V14, changing week 6's
+/// D8).
 final NotifierProvider<BalanceVisibility, bool> balanceHiddenProvider =
     NotifierProvider(BalanceVisibility.new);
 
 /// Hides or shows the balance.
 class BalanceVisibility extends Notifier<bool> {
   @override
-  bool build() => false;
+  bool build() => true;
 
   /// Flips between hidden and shown.
   void toggle() => state = !state;

@@ -109,8 +109,11 @@ void main() {
       expect(find.text('Pix recebido'), findsOneWidget);
     });
 
-    // T4-1, MOB-05: amounts reveal the balance as much as the balance does.
-    testWidgets('hides the amounts with the balance', (tester) async {
+    // Week 8 plan, V14 (changing week 6's D8): the eye hides only the
+    // balance; the movements keep their amounts.
+    testWidgets('shows the amounts while the balance is hidden', (
+      tester,
+    ) async {
       await openHome(
         tester,
         FakeStatementRepository({
@@ -118,11 +121,8 @@ void main() {
         }),
       );
 
-      await tester.tap(find.bySemanticsLabel('Ocultar saldo'));
-      await tester.pumpAndSettle();
-
-      expect(find.textContaining('350'), findsNothing);
-      expect(find.text(r'+ R$ ••••'), findsOneWidget);
+      expect(find.bySemanticsLabel('Saldo oculto'), findsOneWidget);
+      expect(find.text(r'+ R$ 350,00'), findsOneWidget);
     });
   });
 
@@ -338,5 +338,45 @@ void main() {
     await tester.tap(statementRows().first);
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+  });
+
+  // Week 8 plan, V1: a failed pull keeps the list and says so on top.
+  testWidgets('keeps the list when a pull fails, saying so on top', (
+    tester,
+  ) async {
+    var offline = false;
+    await openHome(
+      tester,
+      FakeStatementRepository({
+        null: () async {
+          if (offline) throw const ApiUnreachable();
+          return pageOf([received, sent]);
+        },
+      }),
+    );
+    await openStatement(tester);
+
+    offline = true;
+    await tester.fling(
+      find
+          .descendant(
+            of: find.byType(StatementScreen),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+      const Offset(0, 400),
+      1000,
+    );
+    await tester.pumpAndSettle();
+
+    expect(statementRows(), findsNWidgets(2));
+    expect(find.byType(ErrorState), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byType(NbToast),
+        matching: find.text('Sem conexão. Tente de novo.'),
+      ),
+      findsOneWidget,
+    );
   });
 }
