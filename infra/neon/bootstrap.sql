@@ -21,8 +21,26 @@ ALTER ROLE nextbank_app SET idle_in_transaction_session_timeout = '10s';
 -- database; the grant is taken back right after (ADR 0009).
 GRANT nextbank_migrator TO CURRENT_USER WITH SET TRUE;
 CREATE DATABASE nextbank OWNER nextbank_migrator;
-REVOKE nextbank_migrator FROM CURRENT_USER;
 
 -- Only the two roles reach the database; even the Neon owner is left out.
+-- Done AS the database owner: a privilege can only be revoked by its grantor,
+-- and the Neon owner is not a superuser, so from it these two statements would
+-- only warn and change nothing (F-28).
+SET ROLE nextbank_migrator;
 REVOKE ALL ON DATABASE nextbank FROM PUBLIC;
 GRANT CONNECT ON DATABASE nextbank TO nextbank_app;
+RESET ROLE;
+
+-- The membership given above goes back.
+REVOKE nextbank_migrator FROM CURRENT_USER;
+
+-- Fails the run if the grants did not take: only the migrator (owner) and the
+-- app may connect, and PUBLIC keeps nothing.
+DO $$
+BEGIN
+  IF has_database_privilege('public', 'nextbank', 'CONNECT')
+    OR NOT has_database_privilege('nextbank_app', 'nextbank', 'CONNECT') THEN
+    RAISE EXCEPTION 'the grants on nextbank did not take (F-28)';
+  END IF;
+END
+$$;

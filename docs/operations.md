@@ -26,7 +26,7 @@ Este documento descreve como a V1 é publicada e mantida, com custo zero: Neon (
    ```powershell
    docker run --rm -i -v ${PWD}/infra/neon:/sql postgres:17 psql "<URL do dono>" -v ON_ERROR_STOP=1 -v migrator_password="<senha 1>" -v app_password="<senha 2>" -f /sql/bootstrap.sql
    ```
-   Isso cria `nextbank_migrator`, `nextbank_app` e o banco `nextbank` **por SQL**. Nunca crie esses papéis pelo painel, porque papéis do painel ignoram os `GRANT`s (ADR 0009).
+   Isso cria `nextbank_migrator`, `nextbank_app` e o banco `nextbank` **por SQL**. As últimas linhas da saída devem ser `SET`, `REVOKE`, `GRANT`, `RESET`, `REVOKE ROLE` e `DO`; o `DO` final confere as permissões e interrompe com erro se elas não valeram (F-28). Nunca crie esses papéis pelo painel, porque papéis do painel ignoram os `GRANT`s (ADR 0009).
 
 ## 2. Neon: branch da demo
 
