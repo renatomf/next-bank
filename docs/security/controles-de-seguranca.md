@@ -32,7 +32,7 @@
 | Força bruta e credential stuffing | ✅ | PIN: 5 erros → 30 min, e o 3º bloqueio em 24 h exige redefinir com a senha (#35, `CHECK` no banco). Login: 5 erros por conta em 1 min bloqueiam a conta por 1, 2, 4, 8 e até 15 min, de qualquer IP, contando também e-mails inexistentes; 10 tentativas por IP por minuto contra credential stuffing (`login-attempts.test.ts`, `login-route.test.ts`, AUTH-01). Mesmo corpo 401 e uma verificação Argon2id em todo caminho, com hash fictício para e-mail inexistente (AUTH-02). | 3 |
 | Session fixation | ✅ | Impossível por desenho: a sessão e os tokens são sempre criados pelo servidor no login, nunca aceitos do cliente; cada login abre uma sessão nova (`login.test.ts`, `login-route.test.ts`). | 3 |
 | Session hijacking | 🟡 | Access token de 15 min, reuso de refresh detectado (#34), tokens só no Keychain/Keystore (MOB-01, semana 3), só HTTPS (MOB-03). Vínculo do aparelho (device binding): 🔭. | 3 |
-| Logout e invalidação de sessão | 🟡 | `POST /v1/auth/logout` (autenticado): revoga a sessão, idempotente, e o refresh token deixa de valer na hora (✅, AUTH-06). O access token expira em até 15 min (risco aceito, ADR 0004). Troca de senha revogando todas as sessões: semana 7. | 3, 7 |
+| Logout e invalidação de sessão | ✅ | `POST /v1/auth/logout` (autenticado): revoga a sessão, idempotente, e o refresh token deixa de valer na hora (✅, AUTH-06). O access token expira em até 15 min (risco aceito, ADR 0004). Troca de senha (`POST /v1/me/password/change`) revoga as outras sessões na mesma transação (✅, semana 7), e um login correndo com a troca não abre sessão com a senha antiga (F-24). O cliente vê e encerra as próprias sessões na tela Segurança. | 3, 7 |
 | Autenticação por padrão | ✅ | Toda rota exige `Authorization: Bearer` válido, salvo as declaradas públicas (`/health`, cadastro, login, refresh); esquecer a marcação fecha a rota. 401 `Unauthenticated` com `WWW-Authenticate: Bearer` (`session-routes.test.ts`). | 3 |
 
 ## 2. Segurança da API
@@ -122,12 +122,12 @@
 
 | Evento sugerido | Evento no next bank | Status | Sem. |
 |---|---|---|---|
-| `LOGIN_SUCCESS` / `LOGIN_FAILED` | `LOGIN_SUCCEEDED` / `LOGIN_FAILED` | ⏳ | 3 |
-| `USER_CREATED` | `USER_REGISTERED` | ⏳ | 3 |
-| `TOKEN_REVOKED` | `SESSION_REVOKED`, `REFRESH_REUSE_DETECTED` | ⏳ | 3 |
-| `PASSWORD_CHANGED` | `PASSWORD_CHANGED` | ⏳ | 7 |
-| — | `PIN_CREATED`, `PIN_LOCKED`, `PIN_CHANGED` | ⏳ | 3, 7 |
-| `PAYMENT_CREATED` / `FAILED` / `COMPLETED` | `PIX_CREATED`, `PIX_FAILED`, `PIX_COMPLETED`, `PIX_CANCELLED` | ⏳ | 5 |
+| `LOGIN_SUCCESS` / `LOGIN_FAILED` | `LOGIN_SUCCEEDED` / `LOGIN_FAILED` | ✅ | 3 |
+| `USER_CREATED` | `USER_REGISTERED` | ✅ | 3 |
+| `TOKEN_REVOKED` | `SESSION_REVOKED`, `REFRESH_REUSE_DETECTED` | ✅ | 3 |
+| `PASSWORD_CHANGED` | `PASSWORD_CHANGED` | ✅ | 7 |
+| — | `PIN_CREATED`, `PIN_LOCKED`, `PIN_CHANGED` | ✅ | 3, 7 |
+| `PAYMENT_CREATED` / `FAILED` / `COMPLETED` | `PIX_CREATED`, `PIX_FAILED`, `PIX_COMPLETED`, `PIX_CANCELLED` | ✅ | 5 |
 | `MFA_ENABLED` | — | ➖ | Não há MFA no login na V1 |
 | `ROLE_CHANGED` | — | ➖ | Não há papéis na V1; chega com o backoffice (Fase 3) |
 | `SENSITIVE_DATA_ACCESSED` | — | 🔭 | Faz sentido quando a equipe puder ver CPF no backoffice (Fase 3) |

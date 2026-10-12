@@ -22,7 +22,7 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 | Hash de senha com Argon2id nos parâmetros recomendados (AUTH-08) | ✅ | 3 |
 | Proteção contra força bruta e credential stuffing (AUTH-01) | ✅ | 3 |
 | Mesma resposta e tempo para usuário inexistente e senha errada (AUTH-02) | ✅ | 3 |
-| Troca de senha exige a senha atual e encerra as outras sessões (AUTH-06) | ⏳ | 7 |
+| Troca de senha exige a senha atual e encerra as outras sessões (AUTH-06) | ✅ | 7 |
 | Segundo fator de autenticação | 🚫 | — |
 
 ### Sessão
@@ -32,7 +32,7 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 | Rotação de refresh token com detecção de reuso (AUTH-03) | ✅ | 3 |
 | Expiração por inatividade e absoluta (D5) | ✅ | 3 |
 | Logout e revogação efetivos no servidor (AUTH-06) | ✅ | 3 |
-| Cliente vê e encerra as próprias sessões | ⏳ | 7 |
+| Cliente vê e encerra as próprias sessões (tela Segurança; `GET /v1/me/sessions` e `POST /v1/me/sessions/{id}/revoke`, com teste de IDOR) | ✅ | 7 |
 | JWT com algoritmo fixo e validação completa de claims (AUTH-05) | ✅ | 3 |
 
 ### Controle de acesso
