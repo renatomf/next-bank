@@ -22,6 +22,7 @@ export 'src/components/nb_text_field.dart';
 export 'src/components/nb_toast.dart';
 export 'src/components/next_logo.dart';
 export 'src/components/pin_field.dart';
+export 'src/components/pix_mark.dart';
 export 'src/components/primary_button.dart';
 export 'src/components/receipt_card.dart';
 export 'src/components/screen_header.dart';
