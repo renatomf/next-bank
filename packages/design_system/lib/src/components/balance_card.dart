@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'package:design_system/src/components/dither.dart';
 import 'package:design_system/src/components/icon_circle_button.dart';
 import 'package:design_system/src/components/money_text.dart';
-import 'package:design_system/src/components/next_logo.dart';
 import 'package:design_system/src/components/silk.dart';
 import 'package:design_system/src/components/skeleton.dart';
 import 'package:design_system/src/tokens.dart';
@@ -71,7 +70,19 @@ class BalanceCard extends StatelessWidget {
                 right: NbSpace.screen,
                 child: Row(
                   children: [
-                    const NextLogo(size: 20, color: NbBalanceCardColors.text),
+                    // The word, not the logo: the Home already shows it (week 8
+                    // plan, V12).
+                    // Its own node, so a list never merges it with the rest.
+                    Semantics(
+                      container: true,
+                      header: true,
+                      child: Text(
+                        'Saldo',
+                        style: NbType.sectionTitle.copyWith(
+                          color: NbBalanceCardColors.text,
+                        ),
+                      ),
+                    ),
                     const Spacer(),
                     IconCircleButton(
                       icon: hidden

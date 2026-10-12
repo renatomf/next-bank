@@ -60,7 +60,7 @@ class HomeScreen extends ConsumerWidget {
               children: [
                 _Header(firstName: name.split(' ').first),
                 const SizedBox(height: 22),
-                const _HelpField(),
+                const _HelpRow(),
                 const SizedBox(height: NbSpace.lg),
                 _Shortcuts(onPix: onPix),
                 const SizedBox(height: 22),
@@ -193,14 +193,17 @@ class _Shortcuts extends StatelessWidget {
         onPressed: soon,
       ),
     ];
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (final (index, tile) in tiles.indexed) ...[
-          if (index > 0) const SizedBox(width: NbSpace.sm),
-          Expanded(child: tile),
+    // One height for the four, the tallest one's (week 8 plan, V13).
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final (index, tile) in tiles.indexed) ...[
+            if (index > 0) const SizedBox(width: NbSpace.sm),
+            Expanded(child: tile),
+          ],
         ],
-      ],
+      ),
     );
   }
 }
@@ -251,7 +254,6 @@ class _LatestMovements extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.nbColors;
     final now = ref.watch(nowProvider)();
-    final hidden = ref.watch(balanceHiddenProvider);
     final content = switch (ref.watch(statementProvider)) {
       AsyncValue(value: StatementView(items: [])) => const EmptyState(
         icon: Icons.receipt_long_outlined,
@@ -267,7 +269,6 @@ class _LatestMovements extends ConsumerWidget {
               caption: statementCaption(item, now),
               amountCents: item.amountCents,
               incoming: item.direction == MoneyDirection.incoming,
-              hidden: hidden,
               onTap: () => onMovement(item.id),
             ),
           ],
@@ -318,6 +319,34 @@ class _LatestMovements extends ConsumerWidget {
             border: Border.all(color: colors.border),
           ),
           child: content,
+        ),
+      ],
+    );
+  }
+}
+
+/// The help field with the help and notification buttons beside it, both
+/// coming after v1.0.0 and saying so (week 8 plan, V11).
+class _HelpRow extends StatelessWidget {
+  const new();
+
+  @override
+  Widget build(BuildContext context) {
+    void soon() => showNbToast(context, 'Em breve.', icon: Icons.info_outline);
+    return Row(
+      children: [
+        const Expanded(child: _HelpField()),
+        const SizedBox(width: NbSpace.sm),
+        IconCircleButton(
+          icon: Icons.help_outline,
+          label: 'Ajuda',
+          onPressed: soon,
+        ),
+        const SizedBox(width: NbSpace.sm),
+        IconCircleButton(
+          icon: Icons.notifications_none,
+          label: 'Notificações',
+          onPressed: soon,
         ),
       ],
     );

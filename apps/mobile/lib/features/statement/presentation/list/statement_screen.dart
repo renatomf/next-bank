@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:next_bank/core/account/account_providers.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/clock.dart';
 import 'package:next_bank/core/refresh_failure.dart';
@@ -101,7 +100,6 @@ class _List extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final now = ref.watch(nowProvider)();
-    final hidden = ref.watch(balanceHiddenProvider);
     final items = view.items;
     return ListView.builder(
       // Pull to refresh works even when the page does not fill the screen.
@@ -112,7 +110,6 @@ class _List extends ConsumerWidget {
           ? _Movement(
               item: items[index],
               now: now,
-              hidden: hidden,
               onTap: () => onItem(items[index].id),
             )
           : _Footer(view: view),
@@ -121,16 +118,10 @@ class _List extends ConsumerWidget {
 }
 
 class _Movement extends StatelessWidget {
-  const new({
-    required this.item,
-    required this.now,
-    required this.hidden,
-    required this.onTap,
-  });
+  const new({required this.item, required this.now, required this.onTap});
 
   final StatementItem item;
   final DateTime now;
-  final bool hidden;
   final VoidCallback onTap;
 
   @override
@@ -139,7 +130,6 @@ class _Movement extends StatelessWidget {
     caption: statementCaption(item, now),
     amountCents: item.amountCents,
     incoming: item.direction == MoneyDirection.incoming,
-    hidden: hidden,
     onTap: onTap,
   );
 }

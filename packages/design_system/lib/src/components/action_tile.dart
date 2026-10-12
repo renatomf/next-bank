@@ -47,7 +47,7 @@ class ActionTile extends StatelessWidget {
             onTap: onPressed,
             child: Padding(
               padding: const EdgeInsets.symmetric(
-                horizontal: NbSpace.sm,
+                horizontal: NbSpace.xs,
                 vertical: NbSpace.md,
               ),
               child: Column(
@@ -58,10 +58,16 @@ class ActionTile extends StatelessWidget {
                     child: icon,
                   ),
                   const SizedBox(height: NbSpace.sm),
-                  Text(
-                    label,
-                    textAlign: TextAlign.center,
-                    style: NbType.caption.copyWith(color: colors.text),
+                  // One line, shrinking only as much as a narrow tile needs, so
+                  // the four shortcuts keep one size (week 8 plan, V13).
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      textAlign: TextAlign.center,
+                      style: NbType.caption.copyWith(color: colors.text),
+                    ),
                   ),
                 ],
               ),
