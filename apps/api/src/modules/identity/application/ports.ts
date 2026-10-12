@@ -78,6 +78,8 @@ export interface LoginAccount {
 export interface Credentials {
   email: string;
   passwordHash: string;
+  /** A shared account of the public demo (DEMO-03). */
+  isDemo: boolean;
 }
 
 /** What the customer sees about themselves; never the CPF, e-mail or hashes. */

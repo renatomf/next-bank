@@ -1,4 +1,4 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, LightMyRequestResponse } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../../../../src/app.ts';
 import { createPool } from '../../../../src/shared/db.ts';
@@ -81,7 +81,7 @@ function post(tokens: Tokens, url: string, payload?: Record<string, unknown>) {
   });
 }
 
-function expectRestricted(response: { statusCode: number; json: <T>() => T }) {
+function expectRestricted(response: LightMyRequestResponse) {
   expect(response.statusCode).toBe(403);
   expect(response.json<{ code: string }>().code).toBe('DemoAccountRestricted');
 }

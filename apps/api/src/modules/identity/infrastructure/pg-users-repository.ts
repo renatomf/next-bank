@@ -53,12 +53,13 @@ export class PgUsersRepository implements UsersRepository {
   }
 
   async findCredentials(id: string): Promise<Credentials | null> {
-    const { rows } = await this.#client.query<{ email: string; password_hash: string }>(
-      'SELECT email, password_hash FROM identity.users WHERE id = $1',
-      [id],
-    );
+    const { rows } = await this.#client.query<{
+      email: string;
+      password_hash: string;
+      is_demo: boolean;
+    }>('SELECT email, password_hash, is_demo FROM identity.users WHERE id = $1', [id]);
     const row = rows[0];
-    return row ? { email: row.email, passwordHash: row.password_hash } : null;
+    return row ? { email: row.email, passwordHash: row.password_hash, isDemo: row.is_demo } : null;
   }
 
   /** FOR SHARE: blocks a password change until this transaction ends, and waits for one. */

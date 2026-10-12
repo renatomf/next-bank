@@ -954,6 +954,16 @@
               }
             }
           },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
           "409": {
             "description": "Default Response",
             "content": {
@@ -1181,6 +1191,16 @@
               }
             }
           },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Default Response",
             "content": {
@@ -1271,6 +1291,16 @@
             "description": "Session ended"
           },
           "401": {
+            "description": "Default Response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
             "description": "Default Response",
             "content": {
               "application/problem+json": {
