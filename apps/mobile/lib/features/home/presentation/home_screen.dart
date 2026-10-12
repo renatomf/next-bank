@@ -62,11 +62,6 @@ class HomeScreen extends ConsumerWidget {
               children: [
                 _Header(greeting: greeting, name: name),
                 const SizedBox(height: 22),
-                const DisplayTitle(
-                  lead: 'Seu dinheiro,',
-                  trail: 'um passo à frente.',
-                ),
-                const SizedBox(height: 22),
                 // The mockup's row of four; the other three shortcuts come with
                 // their screens, so the Pix keeps a quarter of the width.
                 Row(
@@ -143,6 +138,8 @@ class _Header extends StatelessWidget {
             ],
           ),
         ),
+        const SizedBox(width: NbSpace.md),
+        const NextLogo(size: 24),
       ],
     );
   }

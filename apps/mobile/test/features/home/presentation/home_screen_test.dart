@@ -80,11 +80,13 @@ void main() {
     await tester.pumpAndSettle();
 
     final greeting = tester.getCenter(find.text('Ana Souza'));
-    final logo = find.descendant(
-      of: find.byType(HomeScreen),
-      matching: find.byType(NextLogo),
-    );
-    expect(logo, findsOneWidget);
+    // The balance card has its own; the header's comes first.
+    final logo = find
+        .descendant(
+          of: find.byType(HomeScreen),
+          matching: find.byType(NextLogo),
+        )
+        .first;
     expect(tester.getCenter(logo).dx, greaterThan(greeting.dx));
     expect((tester.getCenter(logo).dy - greeting.dy).abs(), lessThan(30));
     expect(find.byType(DisplayTitle), findsNothing);
