@@ -32,6 +32,9 @@ String _catalogText(ApiErrorCode code) => switch (code) {
     'Não foi possível concluir o cadastro com esses dados.',
   ApiErrorCode.invalidCredentials => 'E-mail ou senha incorretos.',
   ApiErrorCode.passwordIncorrect => 'Senha incorreta.',
+  ApiErrorCode.demoAccountRestricted =>
+    'Esta é uma conta de demonstração. Para testar essa função, crie sua '
+        'própria conta.',
   ApiErrorCode.tooManyAttempts =>
     'Muitas tentativas. Tente de novo em alguns minutos.',
   ApiErrorCode.unauthenticated => 'Faça login para continuar.',

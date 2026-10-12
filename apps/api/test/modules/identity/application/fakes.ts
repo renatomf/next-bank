@@ -104,6 +104,8 @@ export class FakeAccessTokens implements AccessTokenIssuer {
 export interface StoredUser {
   state: UserState;
   cpf: { ciphertext: Uint8Array; blindIndex: Uint8Array; masked: string; keyVersion: number };
+  /** Set by the demo seed only (DEMO-03). */
+  isDemo?: boolean;
 }
 
 interface Tables {
@@ -206,7 +208,13 @@ export class InMemoryDatabase implements UnitOfWork, IdentityRepositoriesFactory
         findCredentials: (id) => {
           const found = tables.users.find((u) => u.state.id === id);
           return Promise.resolve(
-            found ? { email: found.state.email, passwordHash: found.state.passwordHash } : null,
+            found
+              ? {
+                  email: found.state.email,
+                  passwordHash: found.state.passwordHash,
+                  isDemo: found.isDemo ?? false,
+                }
+              : null,
           );
         },
         findPayee: (id) => {

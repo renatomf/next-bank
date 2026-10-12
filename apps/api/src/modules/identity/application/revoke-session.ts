@@ -1,6 +1,6 @@
 import type { Clock, IdGenerator, UnitOfWork } from '../../../shared/application/ports.ts';
 import { NotFound } from '../../../shared/domain/not-found.ts';
-import { CurrentSessionNotRevocable } from '../domain/errors.ts';
+import { CurrentSessionNotRevocable, DemoAccountRestricted } from '../domain/errors.ts';
 import { Session } from '../domain/session.ts';
 import type { IdentityRepositoriesFactory } from './ports.ts';
 
@@ -36,6 +36,9 @@ export class RevokeSession {
     const now = this.#deps.clock.now();
     await this.#deps.unitOfWork.run(async (tx) => {
       const repositories = this.#deps.repositories.for(tx);
+      const caller = await repositories.users.findCredentials(input.userId);
+      // Visitors share a demo account: none may end another's session.
+      if (caller?.isDemo === true) throw new DemoAccountRestricted();
       // Locked like a refresh, so the two cannot interleave.
       const state = await repositories.sessions.lockById(input.sessionId);
       // Someone else's, missing or already over: the same answer (IDOR).

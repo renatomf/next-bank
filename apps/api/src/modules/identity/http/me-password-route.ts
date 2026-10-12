@@ -30,6 +30,7 @@ export const mePasswordRoutes: FastifyPluginAsyncZod<{ changePassword: ChangePas
         response: {
           204: z.null().describe('Password changed; every other session ended'),
           401: problem,
+          403: problem,
           422: problem,
           429: problem,
         },

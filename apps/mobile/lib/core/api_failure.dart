@@ -25,6 +25,10 @@ enum ApiErrorCode {
   /// Too many attempts: try again later.
   tooManyAttempts('TooManyAttempts'),
 
+  /// A shared demo account cannot change its credentials or end sessions
+  /// (DEMO-03): 403, so the app stays signed in.
+  demoAccountRestricted('DemoAccountRestricted'),
+
   /// Missing, invalid or expired access token.
   unauthenticated('Unauthenticated'),
 

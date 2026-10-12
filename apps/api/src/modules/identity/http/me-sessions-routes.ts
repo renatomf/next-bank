@@ -71,6 +71,7 @@ export const meSessionsRoutes: FastifyPluginAsyncZod<{
         response: {
           204: z.null().describe('Session ended'),
           401: problem,
+          403: problem,
           404: problem,
           422: problem,
         },

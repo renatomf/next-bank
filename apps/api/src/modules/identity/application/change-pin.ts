@@ -1,5 +1,5 @@
 import type { Clock, IdGenerator, UnitOfWork } from '../../../shared/application/ports.ts';
-import { PinNotCreated, Unauthenticated } from '../domain/errors.ts';
+import { DemoAccountRestricted, PinNotCreated, Unauthenticated } from '../domain/errors.ts';
 import { Pin } from '../domain/pin.ts';
 import { TransactionPin } from '../domain/transaction-pin.ts';
 import { confirmPassword } from './confirm-password.ts';
@@ -46,6 +46,8 @@ export class ChangePin {
     );
     // The token names a user that no longer exists: nothing to change.
     if (credentials === null) throw new Unauthenticated();
+    // Before the password: a refused change spends none of its attempts.
+    if (credentials.isDemo) throw new DemoAccountRestricted();
     await confirmPassword(this.#deps, credentials, input.password, now);
 
     const pinHash = await this.#deps.pinHasher.hash(newPin.value);

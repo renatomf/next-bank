@@ -40,6 +40,7 @@ export const pinRoutes: FastifyPluginAsyncZod<{
         response: {
           204: z.null().describe('PIN changed'),
           401: problem,
+          403: problem,
           409: problem,
           422: problem,
           429: problem,

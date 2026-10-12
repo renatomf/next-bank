@@ -141,3 +141,15 @@ export class PasswordIncorrect extends DomainError {
     super('Password does not match');
   }
 }
+
+/**
+ * A shared demo account tried to change its password or PIN, or to end another
+ * session: one visitor would take the demo down for everyone (DEMO-03).
+ */
+export class DemoAccountRestricted extends DomainError {
+  readonly code = 'DemoAccountRestricted';
+
+  constructor() {
+    super('Demo accounts cannot change credentials or end sessions');
+  }
+}

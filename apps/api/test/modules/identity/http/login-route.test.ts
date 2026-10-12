@@ -3,7 +3,12 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../../../../src/app.ts';
 import { JoseAccessTokens } from '../../../../src/modules/identity/infrastructure/jose-access-tokens.ts';
 import { createPool } from '../../../../src/shared/db.ts';
-import { captureLogs, testDatabaseUrl, testSecurity } from '../../../helpers.ts';
+import {
+  captureLogs,
+  testDatabaseUrl,
+  testMigrationDatabaseUrl,
+  testSecurity,
+} from '../../../helpers.ts';
 import { fictitiousCpf, uniqueEmail } from '../fixtures.ts';
 
 // POST /v1/auth/login against the real database, keys and Argon2id
@@ -11,6 +16,8 @@ import { fictitiousCpf, uniqueEmail } from '../fixtures.ts';
 const PASSWORD = 'violet staple orbit 42';
 const security = testSecurity();
 const pool = createPool(testDatabaseUrl());
+// Accounts are locked by operations, never by the API: only setup may do it.
+const migrator = createPool(testMigrationDatabaseUrl());
 const logs = captureLogs();
 let app: FastifyInstance;
 let nextIp = 1;
@@ -21,6 +28,7 @@ beforeAll(() => {
 
 afterAll(async () => {
   await app.close();
+  await migrator.end();
 });
 
 function newIp(): string {
@@ -106,7 +114,7 @@ describe('POST /v1/auth/login', () => {
 
   it('refuses a locked account with the same 401 body', async () => {
     const email = await registeredEmail();
-    await pool.query(`UPDATE identity.users SET status = 'LOCKED' WHERE email = $1`, [email]);
+    await migrator.query(`UPDATE identity.users SET status = 'LOCKED' WHERE email = $1`, [email]);
 
     const locked = await login({ email, password: PASSWORD });
     const unknownEmail = await login({ email: uniqueEmail(), password: PASSWORD });
