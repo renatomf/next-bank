@@ -1,3 +1,4 @@
+import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +7,7 @@ import 'package:next_bank/app/router.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/features/security/presentation/change_password/change_password_screen.dart';
 import 'package:next_bank/features/security/presentation/change_pin/change_pin_screen.dart';
+import 'package:next_bank/features/security/presentation/sessions/security_screen.dart';
 
 import '../support/fake_security_repository.dart';
 import '../support/fake_token_store.dart';
@@ -202,5 +204,35 @@ void main() {
     router.go(AppRoutes.changePassword);
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+  });
+
+  // Week 8 plan, V1: a failed pull keeps the sessions and says so on top.
+  testWidgets('keeps the sessions when a pull fails, saying so on top', (
+    tester,
+  ) async {
+    final security = await openSecurity(tester);
+
+    security.sessionsAnswer = () async => throw const ApiUnreachable();
+    await tester.fling(
+      find
+          .descendant(
+            of: find.byType(SecurityScreen),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+      const Offset(0, 400),
+      1000,
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('iOS'), findsOneWidget);
+    expect(find.byType(ErrorState), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byType(NbToast),
+        matching: find.text('Sem conexão. Tente de novo.'),
+      ),
+      findsOneWidget,
+    );
   });
 }

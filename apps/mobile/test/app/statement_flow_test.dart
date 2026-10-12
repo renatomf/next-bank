@@ -339,4 +339,44 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });
+
+  // Week 8 plan, V1: a failed pull keeps the list and says so on top.
+  testWidgets('keeps the list when a pull fails, saying so on top', (
+    tester,
+  ) async {
+    var offline = false;
+    await openHome(
+      tester,
+      FakeStatementRepository({
+        null: () async {
+          if (offline) throw const ApiUnreachable();
+          return pageOf([received, sent]);
+        },
+      }),
+    );
+    await openStatement(tester);
+
+    offline = true;
+    await tester.fling(
+      find
+          .descendant(
+            of: find.byType(StatementScreen),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+      const Offset(0, 400),
+      1000,
+    );
+    await tester.pumpAndSettle();
+
+    expect(statementRows(), findsNWidgets(2));
+    expect(find.byType(ErrorState), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byType(NbToast),
+        matching: find.text('Sem conexão. Tente de novo.'),
+      ),
+      findsOneWidget,
+    );
+  });
 }
