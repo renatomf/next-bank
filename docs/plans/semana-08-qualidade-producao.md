@@ -118,7 +118,7 @@ apps/mobile/
 
 ## Tarefa 2 — Testes de segurança e E2E (dias 1–2)
 
-- [ ] Mapa: cada teste de segurança obrigatório → arquivo; lacunas com teste
+- [x] Mapa: cada teste de segurança obrigatório → arquivo (`controles-de-seguranca.md`, seção 9.1); nenhuma lacuna
 - [ ] E2E Login → Pix → Comprovante → Extrato em `integration_test`, local e no CI
 
 ## Tarefa 3 — Produção (dias 2–3)
