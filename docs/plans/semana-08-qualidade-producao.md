@@ -121,6 +121,36 @@ apps/mobile/
 - [ ] Mapa: cada teste de segurança obrigatório → arquivo; lacunas com teste
 - [ ] E2E Login → Pix → Comprovante → Extrato em `integration_test`, local e no CI
 
+### Desenho do E2E
+
+**Fluxo:** o app de verdade, num emulador Android, contra a API e o Postgres de verdade:
+1. login de Ana com a senha;
+2. Home, mostrando o saldo;
+3. Área Pix: R$ 1,00 para a chave CPF de Bruno, revisão e PIN;
+4. comprovante "Concluído";
+5. "Voltar ao início": o saldo caiu exatamente R$ 1,00;
+6. "Ver extrato": o "Pix enviado" está lá, e o detalhe dele abre o mesmo comprovante.
+
+| Peça | Onde | O que faz |
+|---|---|---|
+| Teste | `apps/mobile/integration_test/critical_flow_test.dart` | Dirige o app pelo `main()` real, com os repositórios HTTP. Espera cada tela pelo que aparece nela, sem tempo fixo. Não depende do saldo inicial: compara o saldo antes e depois |
+| Contas | `apps/api/scripts/seed-demo.ts` (adiantado da tarefa 3) | Cria Ana e Bruno pelos casos de uso reais (cadastro e PIN, com CPFs fictícios fixos e documentados) e os marca como demonstração com o papel de migração. É idempotente: rodar de novo mantém as contas |
+| CI | `.github/workflows/e2e.yml` | Em PR que toque `apps/`, `packages/` ou o próprio workflow, e no push na `main`: Postgres → papéis → migrations → chaves geradas na hora → API em segundo plano → `/health` → seed → emulador (API 34, x86_64, KVM) → `flutter test integration_test` com `API_BASE_URL=http://10.0.2.2:3000` |
+| Local | README do app | Os mesmos passos com o Docker e o emulador da máquina |
+
+**Decisões:**
+- **As contas vêm do seed, e não de um cadastro feito pelo teste.** O cadastro tem limite de 3 por IP por hora (AUTH-09), e o E2E precisa poder rodar de novo; esse limite não é afrouxado por causa dos testes. Ana, de demonstração, faz Pix normalmente; só não troca credenciais (DEMO-03).
+- **Valor de R$ 1,00:** as execuções repetidas gastam pouco do saldo de demonstração, que o reset diário recompõe.
+- **Segurança:** as chaves da API no CI são geradas na hora e descartadas com o runner; nada vai para o git nem para os segredos. O seed só roda com a URL do papel de migração, e nunca é chamado pela API.
+
+**Dependências novas:**
+- `integration_test`, que vem com o SDK do Flutter;
+- `reactivecircus/android-emulator-runner` v2.38.0 (Apache-2.0), fixada por SHA, como as outras actions.
+
+**Fora:** iOS (sem Mac) e E2E de cadastro, que o limite de cadastro impede de repetir; o cadastro já é coberto pelos testes de app e de API.
+
+- [ ] Desenho do E2E aprovado
+
 ## Tarefa 3 — Produção (dias 2–3)
 
 - [ ] Neon (região, papéis criados por SQL, não pelo painel, por causa dos achados do ADR 0009) e Render; `deploy.yml` e smoke test
