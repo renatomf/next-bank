@@ -40,6 +40,11 @@ void main() {
       ),
       (ApiErrorCode.notFound, 'Não encontrado.'),
       (ApiErrorCode.passwordIncorrect, 'Senha incorreta.'),
+      (
+        ApiErrorCode.demoAccountRestricted,
+        'Esta é uma conta de demonstração. Para testar essa função, crie sua '
+            'própria conta.',
+      ),
       (ApiErrorCode.pixKeyNotFound, 'Não encontramos essa chave Pix.'),
       (
         ApiErrorCode.samePayerAndPayee,

@@ -52,6 +52,17 @@ void main() {
       });
     }
 
+    // DEMO-03: a shared demo account refused with 403, which keeps the
+    // visitor signed in.
+    test('maps a demo account refusal to its catalog code', () async {
+      final failure = await failureFor(
+        ProblemReply(403, 'DemoAccountRestricted'),
+      );
+
+      expect(failure, isA<ApiRejected>());
+      expect((failure as ApiRejected).code, ApiErrorCode.demoAccountRestricted);
+    });
+
     // F-16, PIX-05: the Unlock screen tells how many attempts are left.
     test('keeps the attempts left of a wrong PIN', () async {
       final failure = await failureFor(
