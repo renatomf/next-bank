@@ -200,8 +200,9 @@ O desenvolvedor reviu três pontos que a primeira rodada tinha adiado.
 - **Código morto:** sem nenhuma tela escondendo valores de movimentação, o parâmetro `hidden` sai do `TransactionItem`, junto com os testes dele.
 - **Concorrência, contratos e dependências:** nenhum.
 
-- [ ] Desenho da terceira rodada aprovado
-- [ ] V11 a V14 implementados; varredura de acessibilidade nos dois temas; checkpoint no celular
+- [x] Desenho da terceira rodada aprovado (2026-10-12)
+- [x] V11 a V14 implementados, com a varredura de acessibilidade verde nos dois temas
+- [ ] Checkpoint no celular da terceira rodada
 
 ## Tarefa 4 — App de release (dia 4)
 
