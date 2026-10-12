@@ -275,6 +275,7 @@ O extrato não é um agregado: é uma consulta (lado de leitura do CQRS) que lê
 | `PinResetRequired` | 423 | Revisar Pix, Desbloqueio | "PIN bloqueado por segurança. Redefina o PIN com sua senha em Perfil > Segurança." |
 | `PinAlreadyCreated` | 409 | Criar PIN | "Você já tem um PIN. Para trocar, use Perfil > Segurança." |
 | `PinNotCreated` | 409 | Pix, Desbloqueio | "Crie seu PIN para continuar." (o app leva à tela "Criar PIN") |
+| `DemoAccountRestricted` | 403 | Trocar PIN, Trocar senha, Segurança | "Esta é uma conta de demonstração. Para testar essa função, crie sua própria conta." (DEMO-03; plano da semana 8) |
 | `PixKeyNotFound` | 404 | Pix | "Não encontramos essa chave Pix." |
 | `SamePayerAndPayee` | 422 | Pix | "Você não pode enviar Pix para a própria conta." |
 | `InvalidAmount` | 422 | Pix | "Informe um valor válido." |
