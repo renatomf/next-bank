@@ -274,13 +274,13 @@ packages/design_system/    FloatingNavBar, ConfirmDialog
 
 - [x] `/security-review` (obrigatório: sessão, PIN e senha): feito em cada PR (F-24 e F-25) e numa releitura final da revogação de sessão, da troca de senha e das rotas, sem achados novos
 - [x] Threat model, matriz de controles e checklist ASVS/MASVS
-- [ ] `domain-model.md`, CHANGELOG e checkpoint no aparelho
+- [x] `domain-model.md`, CHANGELOG e checkpoint no aparelho
 
 ---
 
 ## Checkpoint de fim de semana
 
-- [ ] As 14 telas implementadas, no emulador e no celular (navegação, Pix, Perfil, tema, sessões, troca de senha e de PIN conferidos; faltam TalkBack, fonte grande e erros: passos 8 e 9)
+- [x] As 14 telas implementadas, no emulador e no celular: navegação, Pix, Perfil, tema, sessões, trocas de senha e de PIN, TalkBack, fonte grande e erros (chave inexistente, valor alto, sem conexão com "Tentar de novo") conferidos em 2026-10-12
 - [x] Sessão encerrada em outro aparelho deixa de funcionar; troca de senha encerra as outras sessões. Confirmado no aparelho em 2026-10-10: a troca no celular encerrou a sessão do emulador (`PASSWORD_CHANGED`), e o emulador foi recusado na primeira operação sensível (tela Segurança: 401 na leitura e na renovação). Até lá, saldo e extrato seguem com o access token por até 15 min (ADR 0004)
 - [x] PIN bloqueado redefinido com a senha: confirmado no aparelho em 2026-10-12. Bloqueio após 5 min; bloqueio por 5 erros com só "Sair"; login com a senha; troca do PIN em Perfil › Segurança com o PIN ainda bloqueado, que zerou as tentativas e tirou o bloqueio
 - [x] Todas as telas em 1.3x num celular pequeno, com rótulos de leitor de tela (varredura automática nos dois temas; TalkBack no checkpoint)
