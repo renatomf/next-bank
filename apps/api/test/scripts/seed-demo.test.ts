@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { DEMO_ACCOUNTS, seedDemoAccounts } from '../../scripts/seed-demo.ts';
+import { DEMO_ACCOUNTS, inProcess, overHttp, seedDemoAccounts } from '../../scripts/seed-demo.ts';
 import { buildApp } from '../../src/app.ts';
 import { createPool } from '../../src/shared/db.ts';
 import {
@@ -37,7 +37,7 @@ function login(email: string, password: string) {
 
 describe('seedDemoAccounts', () => {
   it('creates Ana and Bruno, signed in by password and unlocked by PIN', async () => {
-    await seedDemoAccounts(app, migrator);
+    await seedDemoAccounts(inProcess(app), migrator);
 
     for (const account of DEMO_ACCOUNTS) {
       const signedIn = await login(account.email, account.password);
@@ -54,7 +54,7 @@ describe('seedDemoAccounts', () => {
   });
 
   it('marks them as demo accounts (DEMO-03)', async () => {
-    await seedDemoAccounts(app, migrator);
+    await seedDemoAccounts(inProcess(app), migrator);
 
     const { rows } = await migrator.query<{ email: string; is_demo: boolean }>(
       'SELECT email, is_demo FROM identity.users WHERE email = ANY($1) ORDER BY email',
@@ -68,8 +68,8 @@ describe('seedDemoAccounts', () => {
   });
 
   it('keeps one account each, whatever the number of runs', async () => {
-    await seedDemoAccounts(app, migrator);
-    await seedDemoAccounts(app, migrator);
+    await seedDemoAccounts(inProcess(app), migrator);
+    await seedDemoAccounts(inProcess(app), migrator);
 
     const { rows } = await migrator.query<{ count: string }>(
       'SELECT count(*) FROM identity.users WHERE email = ANY($1)',
@@ -90,8 +90,30 @@ describe('seedDemoAccounts', () => {
     };
     const before = await activeSessions();
 
-    await seedDemoAccounts(app, migrator);
+    await seedDemoAccounts(inProcess(app), migrator);
 
     expect(await activeSessions()).toBe(before);
+  });
+
+  // Week 8 plan, task 3a: the daily reset seeds through the published API, so
+  // the production keys never leave the host.
+  it('seeds through the API over HTTP as well', async () => {
+    const published = buildApp({
+      pool: createPool(testDatabaseUrl()),
+      logStream: captureLogs().stream,
+      security: testSecurity(),
+    });
+    await published.listen({ port: 0, host: '127.0.0.1' });
+    const address = published.server.address();
+    if (address === null || typeof address === 'string') throw new Error('no port');
+    try {
+      await seedDemoAccounts(overHttp(`http://127.0.0.1:${String(address.port)}`), migrator);
+    } finally {
+      await published.close();
+    }
+
+    const ana = DEMO_ACCOUNTS[0];
+    if (ana === undefined) throw new Error('no demo account');
+    expect((await login(ana.email, ana.password)).statusCode).toBe(200);
   });
 });

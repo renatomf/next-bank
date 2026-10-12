@@ -5,6 +5,7 @@ import { createPool } from './shared/db.ts';
 const config = loadConfig(process.env);
 const app = buildApp({
   pool: createPool(config.databaseUrl),
+  trustProxy: config.trustProxy,
   security: {
     accessTokenKeys: config.jwt,
     piiKeys: {

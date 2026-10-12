@@ -38,6 +38,10 @@ const schema = z
     PORT: z.coerce.number().int().min(1).max(65_535).default(3000),
     // Safe default: localhost only. In a container, the deploy sets HOST=0.0.0.0.
     HOST: z.string().min(1).default('127.0.0.1'),
+    // Proxies in front of the API: 0 locally, 1 behind the deploy's. Only that
+    // many hops of X-Forwarded-For are believed (AUTH-01, API-02).
+    TRUST_PROXY: z.coerce.number().int().min(0).max(3).default(0),
+    NODE_ENV: z.string().optional(),
     // Access token signing key (threat model D4).
     JWT_PRIVATE_KEY: z.string().refine((value) => parseEd25519PrivateKey(value) !== null, {
       message: 'must be an Ed25519 private key (PKCS#8 DER, base64)',
@@ -61,12 +65,20 @@ const schema = z
       message: 'must differ from the CPF keys',
       path: ['PIN_PEPPER'],
     },
+  )
+  // ADR 0009: in production the database certificate is always checked.
+  .refine(
+    (env) =>
+      env.NODE_ENV !== 'production' ||
+      URL.parse(env.DATABASE_URL)?.searchParams.get('sslmode') === 'verify-full',
+    { message: 'must use sslmode=verify-full in production', path: ['DATABASE_URL'] },
   );
 
 export interface Config {
   databaseUrl: string;
   port: number;
   host: string;
+  trustProxy: number;
   jwt: { privateKey: KeyObject; keyId: string };
   pii: { encryptionKey: Buffer; hmacKey: Buffer; keyVersion: number };
   pinPepper: Buffer;
@@ -87,6 +99,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
     databaseUrl: data.DATABASE_URL,
     port: data.PORT,
     host: data.HOST,
+    trustProxy: data.TRUST_PROXY,
     jwt: {
       privateKey: required(parseEd25519PrivateKey(data.JWT_PRIVATE_KEY)),
       keyId: data.JWT_KEY_ID,

@@ -50,10 +50,12 @@ export interface AppDependencies {
   logStream?: LogDestination;
   /** Signing and CPF keys: required, there is no insecure default. */
   security: { accessTokenKeys: AccessTokenKeys; piiKeys: PiiKeys; pinPepper: Uint8Array };
+  /** Proxies in front of the API (config TRUST_PROXY); none by default. */
+  trustProxy?: number;
 }
 
 // Per client IP (API-02). In memory: one instance in V1 (plan D3). Behind the
-// deploy proxy, trustProxy must be set or every client shares one counter.
+// deploy proxy, trustProxy (config TRUST_PROXY) keeps one counter per client.
 const GLOBAL_RATE_LIMIT = { max: 100, timeWindow: '1 minute' };
 
 // Accept only short ids without control characters (API-10).
@@ -65,8 +67,12 @@ function requestId(request: IncomingMessage): string {
 }
 
 /** Composition root: the only place that connects ports to their implementations. */
-export function buildApp({ pool, logStream, security }: AppDependencies) {
+export function buildApp({ pool, logStream, security, trustProxy = 0 }: AppDependencies) {
   const app = Fastify({
+    // The client is the hop before the trusted proxies: hop 0 is the socket peer,
+    // so only the first [trustProxy] hops are believed. With none, X-Forwarded-For
+    // is ignored and a client cannot pick its own rate-limit counter (API-02).
+    trustProxy: (_address: string, hop: number) => hop < trustProxy,
     logger: {
       level: 'info',
       redact: { paths: REDACT_PATHS, censor: '[REDACTED]' },

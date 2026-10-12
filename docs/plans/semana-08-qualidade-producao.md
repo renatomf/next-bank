@@ -158,6 +158,45 @@ apps/mobile/
 - [ ] Seed das contas da demo e `demo-reset.yml`
 - [ ] Sentry na API e no app
 
+### Desenho da tarefa 3
+
+Três PRs: (a) API pronta para produção; (b) infraestrutura e workflows; (c) Sentry, com o próprio desenho quando chegar a vez.
+
+**(a) API pronta para produção (código, com testes antes)**
+
+| Peça | O que muda | Teste |
+|---|---|---|
+| `TRUST_PROXY` | Número de proxies confiáveis: 0 no local, 1 no Render. Sem ele, atrás do proxy todos os clientes dividiriam um contador de tentativas, e um atacante bloquearia o login de todos pelo IP (AUTH-01, API-02). Só o último salto do `X-Forwarded-For` vale, para que o cliente não forje o próprio IP | Rotas de login: com 1 proxy, IPs diferentes no `X-Forwarded-For` têm contadores diferentes; um `X-Forwarded-For` forjado antes do salto confiável não muda o contador; com 0, o cabeçalho é ignorado |
+| TLS no banco | Com `NODE_ENV=production`, a API recusa subir se a `DATABASE_URL` não tiver `sslmode=verify-full` (achado do ADR 0009) | Configuração: produção sem `verify-full` → erro ao iniciar; local continua aceitando `disable` |
+| Seed por HTTP | O `seedDemoAccounts` passa a falar por uma porta mínima (requisição → status e JSON), com dois adaptadores: em processo (`app.inject`, testes) e HTTP (`fetch` para a API publicada). No reset diário, o seed fala com a API publicada, e as chaves de produção (JWT, PII, pepper do PIN) **ficam só no Render**, nunca nos segredos do GitHub | O teste do seed roda pelos dois adaptadores (o HTTP contra uma API de teste ouvindo numa porta local) |
+
+**(b) Infraestrutura e workflows**
+
+| Peça | O que faz |
+|---|---|
+| `infra/neon/bootstrap.sql` | Cria `nextbank_migrator` e `nextbank_app` **por SQL**, com o dono do Neon, nunca pelo painel: papéis do painel entram no `neon_superuser` e ignoram os `GRANT`s (ADR 0009). Mesmos limites de tempo do local |
+| `.github/workflows/deploy.yml` | No push na `main` (depois do CI) e manual: migrations com o papel de migração pelo host direto do Neon (`verify-full`) → deploy hook do Render (deploy automático do Render desligado, para a migration vir sempre antes do código) → smoke test (`/health` e login de Ana, até 5 min) |
+| `.github/workflows/keep-awake.yml` | A cada ~10 min, `GET /health` na API publicada (D9) |
+| `.github/workflows/demo-reset.yml` | Todo dia às 06:00 UTC e manual: o branch da demo no Neon volta ao branch `clean` (só papéis, sem dados) pela API do Neon → migrations → seed por HTTP → smoke test. Nenhum código apaga lançamentos do ledger (D5) |
+| ADR 0012 | Hospedagem da V1: Render gratuito + Neon gratuito em `us-east-1`, despertador, deploy pelo GitHub e as consequências (primeira abertura lenta, CPU fraca para o Argon2id, p95 a medir) |
+| `docs/operations.md` | Passo a passo do que **o desenvolvedor** faz nas contas (Neon, Render, segredos do GitHub) e como gerar as chaves de produção localmente, sem que passem pelo git |
+
+**Segredos e onde ficam**
+
+| Valor | Onde fica | Quem cria |
+|---|---|---|
+| Chaves da API (JWT, PII, pepper do PIN), `DATABASE_URL` (pooler, `verify-full`) | Só nas variáveis de ambiente do Render | Desenvolvedor, com `generate-dev-keys.ts` na própria máquina |
+| `MIGRATION_DATABASE_URL` (host direto, `verify-full`), `NEON_API_KEY`, `RENDER_DEPLOY_HOOK` | Segredos do GitHub (ambiente `production`) | Desenvolvedor |
+| `API_URL`, `NEON_PROJECT_ID`, IDs dos branches | Variáveis do GitHub (não são segredo) | Desenvolvedor |
+
+**Concorrência:** um reset durante um Pix derruba as conexões; o app recebe erro e "Tentar de novo", e as contas voltam limpas. Deploy e reset não rodam ao mesmo tempo: os dois usam o mesmo grupo de `concurrency`.
+
+**Dependências novas:** nenhuma (`fetch` é nativo do Node).
+
+**Fora:** domínio próprio, staging (roadmap, seção 3: um ambiente publicado) e alarmes (o Sentry vem no PR c).
+
+- [ ] Desenho da tarefa 3 aprovado
+
 ## Tarefa 3.5 — Ajustes visuais (antes do APK e do vídeo)
 
 Pedido do desenvolvedor depois do checkpoint da semana 7, com o app do C6 como referência **só de layout**. A foto não entra no repositório, porque tem marca e layout de terceiros e um nome real; o visual continua o do next bank.
