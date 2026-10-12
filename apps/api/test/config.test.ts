@@ -142,4 +142,30 @@ describe('loadConfig', () => {
       );
     });
   });
+
+  // Week 8 plan, task 3a: behind the deploy proxy, the client is the hop
+  // before it (AUTH-01, API-02).
+  it('trusts no proxy by default, and the number of hops set', () => {
+    expect(loadConfig(valid).trustProxy).toBe(0);
+    expect(loadConfig({ ...valid, TRUST_PROXY: '1' }).trustProxy).toBe(1);
+    expect(withEnv({ TRUST_PROXY: '-1' })).toThrow(/TRUST_PROXY/);
+    expect(withEnv({ TRUST_PROXY: 'true' })).toThrow(/TRUST_PROXY/);
+  });
+
+  // ADR 0009: in production the database certificate is always checked.
+  it('refuses production without sslmode=verify-full', () => {
+    const production = { ...valid, NODE_ENV: 'production' };
+    expect(() => loadConfig(production)).toThrow(/DATABASE_URL: .*verify-full/);
+    expect(() =>
+      loadConfig({ ...production, DATABASE_URL: `${valid.DATABASE_URL}?sslmode=require` }),
+    ).toThrow(/verify-full/);
+    expect(
+      loadConfig({ ...production, DATABASE_URL: `${valid.DATABASE_URL}?sslmode=verify-full` })
+        .databaseUrl,
+    ).toContain('verify-full');
+  });
+
+  it('keeps local development free to use a plain connection', () => {
+    expect(() => loadConfig({ ...valid, NODE_ENV: 'development' })).not.toThrow();
+  });
 });
