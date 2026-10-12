@@ -83,3 +83,10 @@ Future<void> unlockWithPin(WidgetTester tester, [String pin = '2580']) async {
   await tester.enterText(find.byType(PinField), pin);
   await tester.pumpAndSettle();
 }
+
+/// Shows the balance, hidden at every opening of the app (week 8 plan, V14),
+/// as the customer does with the eye.
+Future<void> showBalance(WidgetTester tester) async {
+  await tester.tap(find.bySemanticsLabel('Mostrar saldo').first);
+  await tester.pumpAndSettle();
+}

@@ -62,6 +62,7 @@ void main() {
       statement: statement,
     );
     await unlockWithPin(tester);
+    await showBalance(tester);
   }
 
   testWidgets('reads the balance and movements again when the app comes back', (

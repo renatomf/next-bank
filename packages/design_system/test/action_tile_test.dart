@@ -27,4 +27,28 @@ void main() {
     final context = tester.element(find.byIcon(Icons.qr_code_scanner));
     expect(IconTheme.of(context).color, NbColors.dark.accent);
   });
+
+  // Week 8 plan, V13: a long label stays on one line in a narrow tile.
+  testWidgets('keeps a long label on one line', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: NbTheme.dark(),
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              width: 64,
+              child: ActionTile(
+                icon: const Icon(Icons.swap_horiz),
+                label: 'Transferir',
+                onPressed: () {},
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(tester.widget<Text>(find.text('Transferir')).maxLines, 1);
+    expect(tester.takeException(), isNull);
+  });
 }

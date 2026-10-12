@@ -16,6 +16,7 @@ import '../../../support/fake_account_repository.dart';
 import '../../../support/fake_profile_repository.dart';
 import '../../../support/fake_statement_repository.dart';
 import '../../../support/fake_token_store.dart';
+import '../../../support/pump_app.dart';
 
 Future<void> pumpHome(
   WidgetTester tester, {
@@ -68,6 +69,7 @@ void main() {
   testWidgets('shows the customer and the available balance', (tester) async {
     await pumpHome(tester);
     await tester.pumpAndSettle();
+    await showBalance(tester);
 
     expect(find.text('Ana'), findsOneWidget);
     expect(find.text('Saldo disponível · Conta •••• 0004'), findsOneWidget);
@@ -139,6 +141,31 @@ void main() {
     });
   }
 
+  // Week 8 plan, V11: help and notifications beside the help field.
+  for (final button in ['Ajuda', 'Notificações']) {
+    testWidgets('says "$button" is coming', (tester) async {
+      await pumpHome(tester);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.bySemanticsLabel(button));
+      await tester.pumpAndSettle();
+
+      expect(find.widgetWithText(NbToast, 'Em breve.'), findsOneWidget);
+    });
+  }
+
+  // Week 8 plan, V13: the four shortcuts share one size, labels on one line.
+  testWidgets('lays the shortcuts out in one size', (tester) async {
+    await pumpHome(tester);
+    await tester.pumpAndSettle();
+
+    final sizes = tester
+        .widgetList(find.byType(ActionTile))
+        .map((tile) => tester.getSize(find.byWidget(tile)))
+        .toSet();
+    expect(sizes, hasLength(1));
+  });
+
   // Week 8 plan, V9: the help field is a button that says it is coming.
   testWidgets('says the assistant is coming', (tester) async {
     await pumpHome(tester);
@@ -153,21 +180,24 @@ void main() {
     );
   });
 
-  // MOB-05: the customer can hide the balance from someone beside them.
-  testWidgets('hides the balance and shows it again', (tester) async {
+  // MOB-05, week 8 plan V14: the balance starts hidden at every opening, and
+  // the eye shows it and hides it again.
+  testWidgets('starts with the balance hidden, and the eye toggles it', (
+    tester,
+  ) async {
     await pumpHome(tester);
     await tester.pumpAndSettle();
-
-    await tester.tap(find.bySemanticsLabel('Ocultar saldo'));
-    await tester.pump();
 
     expect(find.bySemanticsLabel('Saldo oculto'), findsOneWidget);
     expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsNothing);
 
     await tester.tap(find.bySemanticsLabel('Mostrar saldo'));
     await tester.pump();
-
     expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
+
+    await tester.tap(find.bySemanticsLabel('Ocultar saldo'));
+    await tester.pump();
+    expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsNothing);
   });
 
   testWidgets('says the balance could not load and tries again', (
@@ -186,6 +216,7 @@ void main() {
     await tester.tap(find.text('Tentar de novo'));
     await tester.pumpAndSettle();
 
+    await showBalance(tester);
     expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
     expect(account.fetches, 2);
   });

@@ -75,6 +75,7 @@ void main() {
     await unlockWithPin(tester);
 
     expect(unlock.pins, ['2580']);
+    await showBalance(tester);
     expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
   });
 
@@ -162,6 +163,7 @@ void main() {
     comeBack(tester);
     await tester.pumpAndSettle();
 
+    await showBalance(tester);
     expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
   });
 
@@ -175,6 +177,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.logins.single.email, 'ana@example.test');
+    await showBalance(tester);
     expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
   });
 
@@ -188,6 +191,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.logins, hasLength(1));
+    await showBalance(tester);
     expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
   });
 

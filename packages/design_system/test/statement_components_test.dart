@@ -12,17 +12,12 @@ Widget host(Widget child) => MaterialApp(
 // The statement's components, each point checked against home-dark (F-14).
 void main() {
   group('TransactionItem', () {
-    Widget item({
-      bool incoming = true,
-      bool hidden = false,
-      VoidCallback? onTap,
-    }) => host(
+    Widget item({bool incoming = true, VoidCallback? onTap}) => host(
       TransactionItem(
         title: incoming ? 'Pix recebido' : 'Pix enviado',
         caption: 'Mariana Costa · Hoje, 09:12',
         amountCents: 35000,
         incoming: incoming,
-        hidden: hidden,
         onTap: onTap,
       ),
     );
@@ -51,20 +46,6 @@ void main() {
       expect(
         find.bySemanticsLabel(
           r'Pix enviado, Mariana Costa · Hoje, 09:12, saída de R$ 350,00',
-        ),
-        findsOneWidget,
-      );
-    });
-
-    // MOB-05: the amounts reveal the balance as much as the balance does.
-    testWidgets('hides the amount, keeping the sign', (tester) async {
-      await tester.pumpWidget(item(hidden: true));
-
-      expect(find.textContaining('350'), findsNothing);
-      expect(find.text(r'+ R$ ••••'), findsOneWidget);
-      expect(
-        find.bySemanticsLabel(
-          'Pix recebido, Mariana Costa · Hoje, 09:12, valor oculto',
         ),
         findsOneWidget,
       );
