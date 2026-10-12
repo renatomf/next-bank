@@ -137,4 +137,24 @@ void main() {
     await expectLater(tester, meetsGuideline(textContrastGuideline));
     semantics.dispose();
   });
+
+  // Week 8 plan, V15: a gradient in the theme's tones, as in the reference.
+  testWidgets("paints a gradient in the theme's tones", (tester) async {
+    await pumpBar(tester);
+
+    final box = tester.widget<DecoratedBox>(
+      find
+          .descendant(
+            of: find.byType(NbNavBar),
+            matching: find.byType(DecoratedBox),
+          )
+          .first,
+    );
+    final gradient = (box.decoration as BoxDecoration).gradient;
+    expect(gradient, isA<LinearGradient>());
+    expect(gradient!.colors, [
+      NbColors.dark.surface2,
+      NbColors.dark.background,
+    ]);
+  });
 }

@@ -54,10 +54,17 @@ class NbNavBar extends StatelessWidget {
         onTap: () => onSelected(index),
       ),
     );
+    // Transparent Material for the ink; the gradient, in the theme's tones,
+    // runs down behind the phone's own buttons (week 8 plan, V15).
     return Material(
-      color: colors.surface,
+      type: MaterialType.transparency,
       child: DecoratedBox(
         decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [colors.surface2, colors.background],
+          ),
           border: Border(top: BorderSide(color: colors.border)),
         ),
         // The phone's own buttons stay below, as in any app.

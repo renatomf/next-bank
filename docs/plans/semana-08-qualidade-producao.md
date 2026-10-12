@@ -203,6 +203,7 @@ O desenvolvedor reviu três pontos que a primeira rodada tinha adiado.
 - [x] Desenho da terceira rodada aprovado (2026-10-12)
 - [x] V11 a V14 implementados, com a varredura de acessibilidade verde nos dois temas
 - [ ] Checkpoint no celular da terceira rodada
+- [x] V15: degradê na barra de navegação, do `surface2` no topo ao `background` no rodapé, nos tons de cada tema, como na referência; os rótulos seguem AA na varredura de contraste
 
 ## Tarefa 4 — App de release (dia 4)
 
