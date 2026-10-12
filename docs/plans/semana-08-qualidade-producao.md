@@ -1,6 +1,6 @@
 # Plano — Semana 8: Qualidade e produção
 
-- **Status:** Em revisão
+- **Status:** Aprovado (2026-10-12), com as decisões D1 a D10 nos padrões recomendados (Render Starter, API e banco em `us-east-1`, reset diário)
 - **Roadmap:** `docs/roadmap.md` (seção 8, semana 8; seção 8.2, demo pública)
 - **Base:**
   - ADRs 0004 (autenticação), 0008 (contrato) e 0009 (SQL puro, achados no Neon: papéis do painel ignoram os `GRANT`s, `verify-full` no deploy);
@@ -108,7 +108,7 @@ apps/mobile/
 
 ## Tarefa 0 — Plano (antes do código)
 
-- [ ] Este plano aprovado; F-27 no log de achados; `DemoAccountRestricted` no catálogo do `domain-model.md`
+- [x] Este plano aprovado; F-27 no log de achados; `DemoAccountRestricted` no catálogo do `domain-model.md`
 
 ## Tarefa 1 — DEMO-03 (dia 1)
 
