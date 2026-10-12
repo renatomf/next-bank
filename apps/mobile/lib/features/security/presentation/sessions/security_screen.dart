@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/clock.dart';
+import 'package:next_bank/core/refresh_failure.dart';
 import 'package:next_bank/core/statement/statement_texts.dart';
 import 'package:next_bank/features/security/domain/active_session.dart';
 import 'package:next_bank/features/security/presentation/sessions/sessions_controller.dart';
@@ -33,11 +35,19 @@ class SecurityScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final text = Theme.of(context).textTheme;
     final back = onBack;
+    toastFailedRefresh(context, ref, sessionsControllerProvider);
     return Scaffold(
       body: GlowBackground(
         child: SafeArea(
           child: RefreshIndicator(
-            onRefresh: () => ref.refresh(sessionsControllerProvider.future),
+            onRefresh: () async {
+              try {
+                ref.invalidate(sessionsControllerProvider);
+                await ref.read(sessionsControllerProvider.future);
+              } on ApiFailure {
+                // Told by the toast; the sessions stay.
+              }
+            },
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(NbSpace.screen),
@@ -89,7 +99,7 @@ class _Sessions extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return switch (ref.watch(sessionsControllerProvider)) {
-      AsyncData(:final value) => Column(
+      AsyncValue(:final value?) => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (value.error case final error?) ...[

@@ -4,7 +4,9 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/account/account_providers.dart';
+import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/clock.dart';
+import 'package:next_bank/core/refresh_failure.dart';
 import 'package:next_bank/core/statement/statement_controller.dart';
 import 'package:next_bank/core/statement/statement_item.dart';
 import 'package:next_bank/core/statement/statement_texts.dart';
@@ -26,6 +28,7 @@ class StatementScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final statement = ref.watch(statementProvider);
     final controller = ref.read(statementProvider.notifier);
+    toastFailedRefresh(context, ref, statementProvider);
     final back = onBack;
     return Scaffold(
       body: GlowBackground(
@@ -54,7 +57,7 @@ class StatementScreen extends ConsumerWidget {
               ),
               Expanded(
                 child: switch (statement) {
-                  AsyncData(value: final view) when view.items.isEmpty =>
+                  AsyncValue(value: final view?) when view.items.isEmpty =>
                     const _Padded(
                       child: EmptyState(
                         icon: Icons.receipt_long_outlined,
@@ -62,8 +65,14 @@ class StatementScreen extends ConsumerWidget {
                         message: 'Seus Pix enviados e recebidos aparecem aqui.',
                       ),
                     ),
-                  AsyncData(value: final view) => RefreshIndicator(
-                    onRefresh: controller.refresh,
+                  AsyncValue(value: final view?) => RefreshIndicator(
+                    onRefresh: () async {
+                      try {
+                        await controller.refresh();
+                      } on ApiFailure {
+                        // Told by the toast; the list stays.
+                      }
+                    },
                     child: _List(view: view, onItem: onItem),
                   ),
                   AsyncError() => _Padded(

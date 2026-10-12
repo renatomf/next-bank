@@ -2,8 +2,10 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/account/account_providers.dart';
+import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/clock.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
+import 'package:next_bank/core/refresh_failure.dart';
 import 'package:next_bank/core/statement/statement_controller.dart';
 import 'package:next_bank/core/statement/statement_item.dart';
 import 'package:next_bank/core/statement/statement_texts.dart';
@@ -35,16 +37,24 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final name = ref.watch(profileProvider).value?.name ?? '';
     final greeting = greetingFor(ref.watch(nowProvider)());
+    toastFailedRefresh(context, ref, accountProvider);
+    toastFailedRefresh(context, ref, statementProvider);
     return Scaffold(
       body: GlowBackground(
         child: SafeArea(
           // Pulled down, the Home reads the balance and the movements again,
           // as when money arrives with the app open.
           child: RefreshIndicator(
-            onRefresh: () => Future.wait([
-              ref.refresh(accountProvider.future),
-              ref.read(statementProvider.notifier).refresh(),
-            ]),
+            onRefresh: () async {
+              try {
+                await Future.wait([
+                  ref.refresh(accountProvider.future),
+                  ref.read(statementProvider.notifier).refresh(),
+                ]);
+              } on ApiFailure {
+                // Told by the toast; the screen keeps what it had.
+              }
+            },
             // Mockup: 28 px on top, 20 on the sides, 22 between sections.
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -146,7 +156,7 @@ class _Balance extends ConsumerWidget {
     final hidden = ref.watch(balanceHiddenProvider);
     void toggle() => ref.read(balanceHiddenProvider.notifier).toggle();
     return switch (ref.watch(accountProvider)) {
-      AsyncData(value: final account) => BalanceCard(
+      AsyncValue(value: final account?) => BalanceCard(
         accountNumber: account.number,
         balanceCents: account.availableBalanceCents,
         hidden: hidden,
@@ -186,12 +196,12 @@ class _LatestMovements extends ConsumerWidget {
     final now = ref.watch(nowProvider)();
     final hidden = ref.watch(balanceHiddenProvider);
     final content = switch (ref.watch(statementProvider)) {
-      AsyncData(value: StatementView(items: [])) => const EmptyState(
+      AsyncValue(value: StatementView(items: [])) => const EmptyState(
         icon: Icons.receipt_long_outlined,
         title: 'Sem movimentações',
         message: 'Seus Pix enviados e recebidos aparecem aqui.',
       ),
-      AsyncData(:final value) => Column(
+      AsyncValue(:final value?) => Column(
         children: [
           for (final (index, item) in value.items.take(count).indexed) ...[
             if (index > 0) Divider(height: 1, color: colors.border),
