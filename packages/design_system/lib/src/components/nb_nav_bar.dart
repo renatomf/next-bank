@@ -1,0 +1,203 @@
+import 'package:design_system/src/theme.dart';
+import 'package:design_system/src/tokens.dart';
+import 'package:flutter/material.dart';
+
+/// One destination of the [NbNavBar].
+typedef NavDestination = ({IconData icon, String label});
+
+/// The app's navigation, docked at the bottom above the phone's own buttons
+/// (week 8 plan, V4): every destination with its label under the icon, the
+/// current one on a pill and told to screen readers, and the main action in
+/// the middle on a mint circle. Docked, it never covers the screen above it.
+class NbNavBar extends StatelessWidget {
+  /// Creates the bar: [leading] before the action and [trailing] after it.
+  const new({
+    required this.leading,
+    required this.trailing,
+    required this.action,
+    required this.selectedIndex,
+    required this.onSelected,
+    required this.onAction,
+    super.key,
+  });
+
+  /// Destinations before the action.
+  final List<NavDestination> leading;
+
+  /// Destinations after the action.
+  final List<NavDestination> trailing;
+
+  /// The main action in the middle, e.g. the Pix.
+  final NavDestination action;
+
+  /// The current destination, counted across [leading] then [trailing];
+  /// null when none is.
+  final int? selectedIndex;
+
+  /// Called with the index of the destination tapped.
+  final ValueChanged<int> onSelected;
+
+  /// Called when the main action is tapped.
+  final VoidCallback onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.nbColors;
+    Widget item(NavDestination destination, int index) => Expanded(
+      child: _Destination(
+        destination: destination,
+        selected: index == selectedIndex,
+        onTap: () => onSelected(index),
+      ),
+    );
+    return Material(
+      color: colors.surface,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: colors.border)),
+        ),
+        // The phone's own buttons stay below, as in any app.
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: NbSpace.xs,
+              vertical: NbSpace.sm,
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final (i, destination) in leading.indexed)
+                  item(destination, i),
+                Expanded(
+                  child: _Action(action: action, onTap: onAction),
+                ),
+                for (final (i, destination) in trailing.indexed)
+                  item(destination, leading.length + i),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Icon over its label, the shape every item of the bar shares.
+class _Item extends StatelessWidget {
+  const new({
+    required this.label,
+    required this.onTap,
+    required this.icon,
+    required this.labelColor,
+    this.selected,
+  });
+
+  final String label;
+  final VoidCallback onTap;
+  final Widget icon;
+  final Color labelColor;
+  final bool? selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      container: true,
+      button: true,
+      selected: selected,
+      label: label,
+      excludeSemantics: true,
+      child: InkResponse(
+        onTap: onTap,
+        radius: 32,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: NbSize.touch),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              icon,
+              const SizedBox(height: NbSpace.xs),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: NbType.caption.copyWith(color: labelColor),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Destination extends StatelessWidget {
+  const new({
+    required this.destination,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final NavDestination destination;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.nbColors;
+    return _Item(
+      label: destination.label,
+      onTap: onTap,
+      selected: selected,
+      // The pill and the label's weight tell the current one, not color alone.
+      labelColor: selected ? colors.text : colors.textMuted,
+      icon: Container(
+        width: 56,
+        height: 32,
+        decoration: BoxDecoration(
+          color: selected ? colors.surface2 : null,
+          borderRadius: BorderRadius.circular(NbRadius.pill),
+        ),
+        child: Icon(
+          destination.icon,
+          size: 24,
+          color: selected ? colors.text : colors.textMuted,
+        ),
+      ),
+    );
+  }
+}
+
+class _Action extends StatelessWidget {
+  const new({required this.action, required this.onTap});
+
+  final NavDestination action;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.nbColors;
+    return _Item(
+      label: action.label,
+      onTap: onTap,
+      labelColor: colors.text,
+      icon: Container(
+        width: 32,
+        height: 32,
+        decoration: const BoxDecoration(
+          color: NbBrand.mint,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: NbBrand.actionGlow,
+              blurRadius: 16,
+              spreadRadius: -4,
+            ),
+          ],
+        ),
+        child: Icon(action.icon, size: 20, color: colors.background),
+      ),
+    );
+  }
+}

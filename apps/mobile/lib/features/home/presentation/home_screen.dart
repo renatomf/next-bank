@@ -68,7 +68,7 @@ class HomeScreen extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: ActionTile(
-                        icon: Icons.diamond_outlined,
+                        icon: Icons.swap_horiz,
                         label: 'Área Pix',
                         onPressed: onPix,
                       ),

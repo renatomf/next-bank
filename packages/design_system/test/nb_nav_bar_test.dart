@@ -26,10 +26,7 @@ void main() {
       MaterialApp(
         theme: NbTheme.dark(),
         home: MediaQuery(
-          data: MediaQueryData(
-            size: const Size(400, 800),
-            padding: EdgeInsets.only(bottom: bottomInset),
-          ),
+          data: MediaQueryData(padding: EdgeInsets.only(bottom: bottomInset)),
           child: Scaffold(
             body: const SizedBox.expand(),
             bottomNavigationBar: NbNavBar(
@@ -98,9 +95,9 @@ void main() {
   ) async {
     await pumpBar(tester, bottomInset: 24);
 
-    final bar = tester.getRect(find.byType(NbNavBar));
-    expect(bar.bottom, 800);
-    expect(tester.getRect(find.text('Início')).bottom, lessThan(800 - 24));
+    final screen = tester.getSize(find.byType(Scaffold)).height;
+    expect(tester.getRect(find.byType(NbNavBar)).bottom, screen);
+    expect(tester.getRect(find.text('Início')).bottom, lessThan(screen - 24));
   });
 
   testWidgets('fits a small phone at 1.3x text', (tester) async {
@@ -130,9 +127,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('meets the touch target and contrast guidelines', (
-    tester,
-  ) async {
+  testWidgets('meets the touch target and contrast guidelines', (tester) async {
     final semantics = tester.ensureSemantics();
     await pumpBar(tester);
 
