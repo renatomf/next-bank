@@ -208,6 +208,8 @@ O desenvolvedor reviu três pontos que a primeira rodada tinha adiado.
 ## Tarefa 4 — App de release (dia 4)
 
 - [ ] Chave de assinatura, `release.yml`, APK ofuscado apontando para HTTPS; checkpoint no celular com o APK
+- [ ] Ícone do app (adaptativo: "next" em Sora Bold e o ponto verde-menta) e splash nativa (fundo da marca e ícone, Android 12+)
+- [ ] Visual da tela Splash, pedido pelo desenvolvedor com uma imagem de referência (seda de vidro verde), o logo e um slogan. Decisões pendentes: o fundo recriado em código com o `Silk` (sem asset) ou a imagem, só com licença comprovada; o slogan "Finance at your fingertips" ou em pt-BR; nenhuma espera artificial (abertura a frio < 2 s)
 
 ## Tarefa 5 — Medição, README e tag (dias 4–5)
 
