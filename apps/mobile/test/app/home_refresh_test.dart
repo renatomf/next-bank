@@ -1,5 +1,7 @@
+import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/statement/statement_item.dart';
 
 import '../support/fake_account_repository.dart';
@@ -96,5 +98,49 @@ void main() {
 
     expect(find.bySemanticsLabel(r'R$ 10.100,00'), findsOneWidget);
     expect(find.text('Pix recebido'), findsOneWidget);
+  });
+
+  // Found on a device (week 8 plan, V1): offline, a pull replaced the balance
+  // and the movements with error blocks, the last one behind the bar. What is
+  // on screen stays, and the failure comes as a toast on top.
+  testWidgets('keeps what it shows when a refresh fails, saying so on top', (
+    tester,
+  ) async {
+    var offline = false;
+    final statement = FakeStatementRepository({
+      null: () async {
+        if (offline) throw const ApiUnreachable();
+        return (items: [movement('received')], nextCursor: null);
+      },
+    });
+    await openHome(tester, statement);
+
+    offline = true;
+    account.answer = () async => throw const ApiUnreachable();
+    await tester.fling(
+      find.byType(Scrollable).first,
+      const Offset(0, 400),
+      1000,
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
+    expect(find.text('Pix recebido'), findsOneWidget);
+    expect(find.byType(ErrorState), findsNothing);
+    final toast = find.byType(NbToast);
+    expect(toast, findsOneWidget);
+    expect(
+      find.descendant(
+        of: toast,
+        matching: find.text('Sem conexão. Tente de novo.'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      tester.getRect(toast).top,
+      lessThan(
+        tester.view.physicalSize.height / tester.view.devicePixelRatio / 4,
+      ),
+    );
   });
 }
