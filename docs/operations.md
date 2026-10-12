@@ -57,7 +57,7 @@ Este documento descreve como a V1 é publicada e mantida, com custo zero: Neon (
    - **Region:** Virginia (US East).
    - **Branch:** `main`.
    - **Runtime:** Node.
-   - **Build command:** `corepack enable && pnpm install --frozen-lockfile`
+   - **Build command:** `corepack pnpm install --frozen-lockfile` (o `corepack enable` falha no Render, onde o `/usr/bin` é somente leitura)
    - **Start command:** `cd apps/api && node src/server.ts`
    - **Instance type:** Free.
    - **Health check path:** `/health`.
