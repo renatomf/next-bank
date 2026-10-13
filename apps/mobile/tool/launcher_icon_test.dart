@@ -63,8 +63,13 @@ Widget _icon({
   ),
 );
 
+/// The dot weighs less than the letter, so the pair centred by its edges
+/// still looks left of centre: it moves this fraction of the icon right.
+const double _opticalShift = 0.03;
+
 /// How far to move the logo so what is drawn ("n" and dot) sits in the
-/// middle: the text box keeps room for tall letters the "n" never uses.
+/// middle, plus [_opticalShift]: the text box keeps room for tall letters
+/// the "n" never uses.
 Future<Offset> _centering(
   WidgetTester tester,
   double size,
@@ -93,7 +98,7 @@ Future<Offset> _centering(
     }
   }
   return Offset(
-    size / 2 - (left + right + 1) / 2,
+    size / 2 - (left + right + 1) / 2 + size * _opticalShift,
     size / 2 - (top + bottom + 1) / 2,
   );
 }
