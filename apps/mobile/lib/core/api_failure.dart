@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 
 /// Error codes of the API catalog (domain-model.md, section 9) the app knows.
@@ -153,8 +155,14 @@ ApiFailure apiFailureOf(DioException error) {
         }
       }
       return const ApiUnexpected();
-    case DioExceptionType.badCertificate ||
-        DioExceptionType.cancel ||
+    // A refused certificate (MOB-03), as behind an interception proxy, leaves
+    // no safe connection: the customer can only try another network. The
+    // handshake failure of dart:io reaches Dio as unknown.
+    case DioExceptionType.badCertificate:
+      return const ApiUnreachable();
+    case DioExceptionType.unknown when error.error is TlsException:
+      return const ApiUnreachable();
+    case DioExceptionType.cancel ||
         DioExceptionType.transformTimeout ||
         DioExceptionType.unknown:
       return const ApiUnexpected();

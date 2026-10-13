@@ -319,8 +319,8 @@ O desenvolvedor reviu três pontos que a primeira rodada tinha adiado.
 
 ## Tarefa 4 — App de release (dia 4)
 
-- [ ] Chave de assinatura, `release.yml`, APK ofuscado apontando para HTTPS; checkpoint no celular com o APK
-- [ ] Ícone do app (adaptativo: "next" em Sora Bold e o ponto verde-menta) e splash nativa (fundo da marca e ícone, Android 12+)
+- [x] Chave de assinatura, `release.yml`, APK ofuscado apontando para HTTPS; checkpoint no celular com o APK (2026-10-13, Galaxy S21): com um proxy de interceptação e certificado de usuário, o Chrome foi interceptado e o next bank recusou a conexão; sem o proxy, Ana entrou. Nenhuma das 43 classes do app com 12 letras ou mais aparece no binário ofuscado. Achado F-31 (mensagem da falha de TLS), corrigido
+- [x] Ícone do app (adaptativo: "n." do `NextLogo`, centralizado com ajuste óptico) e splash nativa (fundo da marca e ícone, Android 12+)
 - [ ] Visual da tela Splash, pedido pelo desenvolvedor com uma imagem de referência (seda de vidro verde), o logo e um slogan. Decisões pendentes: o fundo recriado em código com o `Silk` (sem asset) ou a imagem, só com licença comprovada; o slogan "Finance at your fingertips" ou em pt-BR; nenhuma espera artificial (abertura a frio < 2 s)
 
 ### Desenho da tarefa 4
