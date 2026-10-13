@@ -57,6 +57,7 @@ Forças em jogo:
 **Negativas**
 - ➖ **Primeira abertura lenta:** o agendamento do GitHub pode atrasar e deixar a API dormir. A primeira requisição depois disso leva até 1 minuto. O README avisa.
 - ➖ **CPU fraca:** o Argon2id do login e do PIN é pesado de propósito e não é afrouxado. O p95 do login e do Pix pode passar do orçamento de 400 ms. O número medido fica registrado no documento de performance como consequência desta decisão, e não como uma regressão escondida.
+  - **Medido em 2026-10-13** ([performance.md](../performance.md)): a autorização do Pix teve p95 de 861 ms visto do Brasil (cerca de 194 ms no servidor, no p50), acima do orçamento de 400 ms. As leituras levam cerca de 10 ms no servidor, mas, somadas aos ~175 ms da rede até os EUA, passam de 200 ms no p95 visto do Brasil.
 - ➖ **Distância para o Brasil:** um cliente no Brasil paga a ida e volta até os EUA uma vez por requisição, cerca de 120 ms.
 - ➖ **Limites do plano gratuito:** o Render gratuito dá 750 horas por mês, o que basta para um serviço sempre ligado. Mudanças nos planos gratuitos podem exigir revisar esta decisão.
 - ➖ **Sem staging:** um erro de deploy aparece na própria demo. O smoke test e o CI reduzem o risco, mas não o eliminam.
