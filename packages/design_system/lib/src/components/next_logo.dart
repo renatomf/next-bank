@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 /// developer's choice over the mockup, where it was centered and glowing.
 class NextLogo extends StatelessWidget {
   /// Creates the logo at [size] (the wordmark's font size).
-  const new({this.size = 36, this.color, super.key});
+  const new({this.size = 36, this.color, this.word = 'next', super.key});
 
   /// Font size of the wordmark.
   final double size;
@@ -15,6 +15,10 @@ class NextLogo extends StatelessWidget {
   /// Wordmark color; defaults to the theme's text. The balance card, always
   /// dark, sets its own.
   final Color? color;
+
+  /// The word before the dot: "next" everywhere, "n" in the app icon (week 8
+  /// plan, task 4).
+  final String word;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +32,7 @@ class NextLogo extends StatelessWidget {
       excludeSemantics: true,
       child: Text.rich(
         TextSpan(
-          text: 'next',
+          text: word,
           children: [
             // A box has no baseline of its own, so its bottom rests on the
             // text's baseline, like a period.
