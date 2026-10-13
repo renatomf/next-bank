@@ -6,13 +6,15 @@
 
 Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat model) · ➖ não se aplica
 
+**Conferido item a item em 2026-10-13, antes da `v1.0.0`.** A evidência de cada item (teste, gate do CI ou verificação) está na matriz `controles-de-seguranca.md`.
+
 ## OWASP ASVS — API (nível 2)
 
 ### Arquitetura e design
 | Item | Status | Sem. |
 |---|---|---|
-| Threat model mantido e revisado a cada feature | ⏳ | 1+ |
-| Controles de segurança centralizados (auth, autorização, validação) e não espalhados | ⏳ | 2 |
+| Threat model mantido e revisado a cada feature | ✅ | 1+ |
+| Controles de segurança centralizados (auth, autorização, validação) e não espalhados | ✅ | 2 |
 | Fronteiras entre módulos verificadas automaticamente | ✅ | 2 |
 
 ### Autenticação
@@ -46,7 +48,7 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 ### Validação de entrada e codificação
 | Item | Status | Sem. |
 |---|---|---|
-| Schemas estritos em toda entrada; campos desconhecidos recusados (PIX-04) | ⏳ | 2+ |
+| Schemas estritos em toda entrada; campos desconhecidos recusados (PIX-04) | ✅ | 2+ |
 | Valores monetários como inteiros validados (PIX-04) | ✅ | 4–5 |
 | Só queries parametrizadas (API-01) | ✅ | 2+ |
 | Limite de tamanho de corpo (API-02) | ✅ | 2 |
@@ -55,9 +57,9 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 | Item | Status | Sem. |
 |---|---|---|
 | Dados pessoais sensíveis cifrados com AES-256-GCM (API-06) | ✅ | 3 |
-| Chaves fora do código e com versão para rotação | ⏳ | 3 |
+| Chaves fora do código e com versão para rotação | ✅ | 3 |
 | Chaves em KMS/HSM | 🚫 | — |
-| Só bibliotecas criptográficas consolidadas; geração de aleatórios segura | ⏳ | 3 |
+| Só bibliotecas criptográficas consolidadas; geração de aleatórios segura | ✅ | 3 |
 
 ### Erros, logs e auditoria
 | Item | Status | Sem. |
@@ -71,13 +73,13 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 | Item | Status | Sem. |
 |---|---|---|
 | Respostas só com campos necessários; documentos mascarados (READ-02) | ✅ | 4–6 |
-| Dados sensíveis fora de URLs e de cache HTTP (`Cache-Control: no-store`) | ⏳ | 2 |
-| Minimização de dados pessoais (LGPD) | ⏳ | 1+ |
+| Dados sensíveis fora de URLs e de cache HTTP (`Cache-Control: no-store`) | ✅ | 2 |
+| Minimização de dados pessoais (LGPD) | ✅ | 1+ |
 
 ### Comunicação
 | Item | Status | Sem. |
 |---|---|---|
-| TLS em todas as conexões, inclusive com o banco (`verify-full`) (API-07) | ⏳ | 2 |
+| TLS em todas as conexões, inclusive com o banco (`verify-full`) (API-07) | ✅ | 2 |
 | HSTS e headers de segurança | ✅ | 2 |
 
 ### Lógica de negócio
@@ -100,16 +102,16 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 | Dependências com lockfile e varredura de vulnerabilidades (API-09) | ✅ | 2 |
 | Segredos fora do repositório; varredura de segredos (API-08) | ✅ | 2 |
 | Pipeline com permissões mínimas e actions fixadas por SHA (API-09) | ✅ | 2 |
-| Modo debug e endpoints de diagnóstico desligados em produção | ⏳ | 8 |
+| Modo debug e endpoints de diagnóstico desligados em produção (conferido na API publicada: sem rota de documentação ou diagnóstico, erros sem detalhe interno) | ✅ | 8 |
 
 ## OWASP MASVS v2 — App Flutter
 
 | Categoria | Item | Status | Sem. |
 |---|---|---|---|
-| **STORAGE** | Tokens só em Keychain/Keystore (MOB-01) | ⏳ | 3 |
-| | Nada sensível em logs, cache ou preferências (MOB-02) | ⏳ | 2+ |
-| **CRYPTO** | Nenhuma criptografia caseira; nenhuma chave embutida no app (MOB-04) | ⏳ | 2+ |
-| **AUTH** | Autenticação e autorização decididas no servidor | ⏳ | 3 |
+| **STORAGE** | Tokens só em Keychain/Keystore (MOB-01) | ✅ | 3 |
+| | Nada sensível em logs, cache ou preferências (MOB-02) | ✅ | 2+ |
+| **CRYPTO** | Nenhuma criptografia caseira; nenhuma chave embutida no app (MOB-04) | ✅ | 2+ |
+| **AUTH** | Autenticação e autorização decididas no servidor | ✅ | 3 |
 | | PIN validado no servidor; biometria só como conveniência local (PIX-06) | ✅ | 3, 6 (biometria: extra, D4) |
 | | Desbloqueio após tempo em segundo plano (D5) | ✅ | 5, 6 (F-16, F-21) |
 | **NETWORK** | Só HTTPS; tráfego em texto puro desabilitado (MOB-03) | ✅ | 2 |
@@ -119,6 +121,6 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 | | Opção de ocultar saldo (MOB-05) | ✅ | 4 |
 | **CODE** | Dependências atualizadas e verificadas (API-09) | ✅ | 2 |
 | | Validação de dados vindos da API antes do uso | ✅ | 2, 4, 6 |
-| **RESILIENCE** | Build de release ofuscado (MOB-04) | ⏳ | 8 |
+| **RESILIENCE** | Build de release ofuscado (MOB-04) | ✅ | 8 |
 | | Verificação de integridade do app (Play Integrity / App Attest) | 🚫 | — |
-| **PRIVACY** | Coleta mínima de dados; Sentry sem PII (MOB-02) | ⏳ | 2 |
+| **PRIVACY** | Coleta mínima de dados; Sentry sem PII (MOB-02) | ✅ | 2 |
