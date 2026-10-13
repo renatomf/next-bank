@@ -346,7 +346,7 @@ O desenvolvedor reviu três pontos que a primeira rodada tinha adiado.
 | Versão | `pubspec.yaml` | `version` vem da tag (`v1.0.0` → `1.0.0`) e o build number do número da execução |
 | Ícone | `android/app/src/main/res` | Ícone adaptativo: fundo na cor da marca e, na frente, o logo desenhado pelo próprio `NextLogo`, renderizado uma vez em PNG para cada densidade por um teste gerador (como fizemos para conferir o símbolo do Pix). Sem dependência nova; é código gerado, sem TDD |
 | Splash nativa | `res/values*/styles.xml` | Fundo da cor da marca (claro e escuro) e o ícone no centro (Android 12+), para o app não piscar branco ao abrir |
-| Cache do NDK | `ci.yml`, `e2e.yml`, `release.yml` | Desde o Sentry, todo build Android baixa o NDK (~1 GB); o cache evita o download e a falha vista no CI |
+| Cache do NDK | `ci.yml`, `e2e.yml` | Desde o Sentry, todo build Android baixa o NDK (~1 GB); o cache evita o download e a falha vista no CI. O `release.yml` não usa cache: o job que assina compila só com o que ele mesmo baixa, para nada restaurado de outra execução entrar no APK assinado |
 
 **Segredos novos (só no GitHub, ambiente `release`):** `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` e `SENTRY_DSN_APP`. A chave é gerada pelo desenvolvedor com o `keytool` na própria máquina e guardada com backup: sem ela, um APK novo não atualiza o instalado.
 
