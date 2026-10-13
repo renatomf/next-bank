@@ -23,7 +23,7 @@ class NextLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dot = size * 0.2;
+    final dot = size * 0.17;
     return Semantics(
       container: true,
       label: 'next bank',
