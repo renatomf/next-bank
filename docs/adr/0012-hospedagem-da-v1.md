@@ -36,7 +36,7 @@ Forças em jogo:
 **Render**
 - Um serviço web com o runtime de Node, sem Dockerfile, e com o deploy automático desligado.
 - As chaves da API (JWT, PII, pepper do PIN) ficam só nas variáveis de ambiente do Render.
-- `TRUST_PROXY=1`, para que o IP do cliente seja o salto antes do proxy (API-14).
+- `TRUST_PROXY=3`, para que o IP do cliente seja o salto antes da Cloudflare e dos dois proxies do Render (API-14). O guia supunha um proxy só; a verificação no primeiro deploy mediu três (F-29).
 
 **Deploy (`deploy.yml`)**
 - Depois do CI verde na `main`, aplica as migrations com o papel de migração pelo host direto do Neon (`verify-full`).
