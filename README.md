@@ -34,7 +34,7 @@ https://github.com/user-attachments/assets/a2748bde-302c-45a7-a953-d19fa6b02b93
 
 1. Baixe o APK na [última Release](https://github.com/renatomf/next-bank/releases/latest) (Android 7.0 ou mais recente).
 2. Confira se o arquivo é o publicado: compare o resultado de `Get-FileHash next-bank-v1.0.0.apk` (Windows) ou `sha256sum next-bank-v1.0.0.apk` (Linux e macOS) com o arquivo `.sha256` da mesma Release.
-3. Instale (o Android pede para permitir a instalação deste arquivo) e entre com uma conta de demonstração:
+3. Instale e entre com uma conta de demonstração. O Android pede para permitir a instalação deste arquivo, e o Play Protect pode bloqueá-la por não conhecer o desenvolvedor: toque em **Mais detalhes › Instalar assim mesmo**.
 
 | Conta | E-mail | Senha | PIN |
 |---|---|---|---|
