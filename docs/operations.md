@@ -106,6 +106,14 @@ O `TRUST_PROXY=1` supõe um único proxy do Render na frente da API.
    - **Iguais:** está certo.
    - **IP interno do Render:** há mais saltos. Ajuste o `TRUST_PROXY` e repita a verificação.
 
+## 7. Sentry: erros inesperados
+
+1. Crie a conta em <https://sentry.io> no plano gratuito (**Developer**) e dois projetos: `next-bank-api` (plataforma **Node.js**) e `next-bank-app` (**Flutter**). Nas perguntas iniciais, recuse rastreio de desempenho e replay de sessão.
+2. Em cada projeto, copie o **DSN** (Settings › Client Keys). O DSN não é segredo em sentido estrito (vai dentro do APK), mas fica fora do git.
+3. **API:** no Render, acrescente `SENTRY_DSN` (o DSN do `next-bank-api`) e `SENTRY_ENVIRONMENT=production`, e faça um deploy. Sem `SENTRY_DSN`, os erros ficam só nos logs.
+4. **App:** o DSN do `next-bank-app` entra no build de release por `--dart-define=SENTRY_DSN=...` (tarefa 4, `release.yml`, como segredo do GitHub). Builds sem DSN não enviam nada.
+5. O que chega ao Sentry: só erros inesperados (500 na API; falhas do Flutter no app), com o release e o ambiente. Nunca usuário, corpo de requisição, cabeçalhos de credencial, senha, PIN, tokens ou CPF: um removedor limpa cada evento antes de sair (`sentry-error-reporter.ts`, `error_reporting.dart`).
+
 ## Rotina
 
 - **Deploy:** automático depois de cada merge na `main` com o CI verde, ou manual pelo workflow.

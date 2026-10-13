@@ -75,7 +75,7 @@ void main() {
 
   testWidgets('login → Pix → receipt → statement', (tester) async {
     final semantics = tester.ensureSemantics();
-    app.main();
+    await app.main();
 
     // A session left by an earlier run opens on the Unlock screen: leave it.
     await waitFor(

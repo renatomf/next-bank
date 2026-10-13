@@ -8,6 +8,7 @@ import 'package:next_bank/app/router.dart';
 import 'package:next_bank/core/account/account_providers.dart';
 import 'package:next_bank/core/account/http_account_repository.dart';
 import 'package:next_bank/core/api_client.dart';
+import 'package:next_bank/core/error_reporting.dart';
 import 'package:next_bank/core/profile/http_profile_repository.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/app_lock.dart';
@@ -29,43 +30,48 @@ import 'package:next_bank/features/unlock/presentation/unlock_providers.dart';
 
 /// Composition root: the only place that binds domain interfaces
 /// to their implementations.
-void main() {
+Future<void> main() async {
   // Edge to edge: the app draws under the phone's own buttons, as in the
   // reference (week 8 plan, V10). Android 15 does it by default.
   WidgetsFlutterBinding.ensureInitialized();
   unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
-  runApp(
-    ProviderScope(
-      overrides: [
-        tokenStoreProvider.overrideWithValue(SecureTokenStore()),
-        themeStoreProvider.overrideWithValue(SecureThemeStore()),
-        profileRepositoryProvider.overrideWith(
-          (ref) =>
-              HttpProfileRepository(ref.watch(apiProvider).getDefaultApi()),
-        ),
-        authRepositoryProvider.overrideWith(
-          (ref) => HttpAuthRepository(ref.watch(apiProvider).getDefaultApi()),
-        ),
-        accountRepositoryProvider.overrideWith(
-          (ref) =>
-              HttpAccountRepository(ref.watch(apiProvider).getDefaultApi()),
-        ),
-        pixRepositoryProvider.overrideWith(
-          (ref) => HttpPixRepository(ref.watch(apiProvider).getDefaultApi()),
-        ),
-        statementRepositoryProvider.overrideWith(
-          (ref) =>
-              HttpStatementRepository(ref.watch(apiProvider).getDefaultApi()),
-        ),
-        securityRepositoryProvider.overrideWith(
-          (ref) =>
-              HttpSecurityRepository(ref.watch(apiProvider).getDefaultApi()),
-        ),
-        unlockRepositoryProvider.overrideWith(
-          (ref) => HttpUnlockRepository(ref.watch(apiProvider).getDefaultApi()),
-        ),
-      ],
-      child: const NextBankApp(),
+  // Unexpected errors reach Sentry only in builds with a DSN (week 8 plan,
+  // PR c).
+  await runWithErrorReporting(
+    () => runApp(
+      ProviderScope(
+        overrides: [
+          tokenStoreProvider.overrideWithValue(SecureTokenStore()),
+          themeStoreProvider.overrideWithValue(SecureThemeStore()),
+          profileRepositoryProvider.overrideWith(
+            (ref) =>
+                HttpProfileRepository(ref.watch(apiProvider).getDefaultApi()),
+          ),
+          authRepositoryProvider.overrideWith(
+            (ref) => HttpAuthRepository(ref.watch(apiProvider).getDefaultApi()),
+          ),
+          accountRepositoryProvider.overrideWith(
+            (ref) =>
+                HttpAccountRepository(ref.watch(apiProvider).getDefaultApi()),
+          ),
+          pixRepositoryProvider.overrideWith(
+            (ref) => HttpPixRepository(ref.watch(apiProvider).getDefaultApi()),
+          ),
+          statementRepositoryProvider.overrideWith(
+            (ref) =>
+                HttpStatementRepository(ref.watch(apiProvider).getDefaultApi()),
+          ),
+          securityRepositoryProvider.overrideWith(
+            (ref) =>
+                HttpSecurityRepository(ref.watch(apiProvider).getDefaultApi()),
+          ),
+          unlockRepositoryProvider.overrideWith(
+            (ref) =>
+                HttpUnlockRepository(ref.watch(apiProvider).getDefaultApi()),
+          ),
+        ],
+        child: const NextBankApp(),
+      ),
     ),
   );
 }

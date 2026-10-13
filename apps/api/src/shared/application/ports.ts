@@ -41,3 +41,18 @@ export interface Transaction {
 export interface UnitOfWork {
   run<T>(work: (tx: Transaction) => Promise<T>): Promise<T>;
 }
+
+/** The request an unexpected error broke: never its body, headers or user. */
+export interface ReportedRequest {
+  requestId: string;
+  method: string;
+  route: string;
+}
+
+/**
+ * Where unexpected errors go to be looked at (CLAUDE.md, Observabilidade).
+ * Refusals from the catalog are the API working and never reach it.
+ */
+export interface ErrorReporter {
+  report(error: unknown, request: ReportedRequest): void;
+}

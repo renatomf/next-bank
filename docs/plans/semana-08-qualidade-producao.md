@@ -158,6 +158,49 @@ apps/mobile/
 - [x] Seed das contas da demo e `demo-reset.yml`: restauração pelo Neon, migrations, seed pela API publicada e smoke test verdes em produção (2026-10-12)
 - [ ] Sentry na API e no app
 
+### Desenho do PR (c): Sentry
+
+**Fontes conferidas**
+
+| Fonte | Regra | Teste |
+|---|---|---|
+| CLAUDE.md, Observabilidade | Todo erro inesperado chega ao Sentry, com release e ambiente | API: um erro 500 vira um evento com `release` e `environment`; um erro do catálogo (4xx) não vira evento |
+| CLAUDE.md, LGPD | CPF, tokens, senhas e PIN removidos no `beforeSend` | Removedor (API e app): um evento com CPF, `Authorization`, senha, PIN, refresh token e corpo de requisição sai sem nenhum deles |
+| MOB-02 | Nada sensível em logs, cache ou relatórios de erro do app | Removedor do app, mais `sendDefaultPii: false` |
+| API-03 | Respostas nunca expõem detalhes internos | O cliente continua recebendo o problema genérico; o detalhe vai só para o Sentry, já limpo |
+
+**Estrutura**
+- **API:** porta `ErrorReporter` em `shared/application`, com dois adaptadores em `shared/infrastructure`: `SentryErrorReporter` e `NoopErrorReporter`, usado sem DSN, no local e nos testes. O tratador de erros HTTP chama o reporter **só no ramo do erro inesperado**. O removedor (`scrubEvent`) é uma função pura, testada sozinha.
+- **App:** `core/error_reporting.dart` inicia o Sentry só quando há `SENTRY_DSN` (`--dart-define`). O `beforeSend` e o `beforeBreadcrumb` passam pelo mesmo tipo de removedor, também uma função pura testada. Erros do Flutter e da zona chegam pelo próprio SDK.
+- **Configuração da API:** `SENTRY_DSN` e `SENTRY_ENVIRONMENT`, opcionais. O release vem do `RENDER_GIT_COMMIT`, já usado no `/health`.
+- **Configuração do app:** `SENTRY_DSN` e `APP_ENVIRONMENT` por `--dart-define`. O release é a versão do app.
+
+**O que o removedor tira** (a mesma lista do `redact` do Pino):
+- cabeçalhos `authorization` e `cookie`;
+- o corpo inteiro das requisições;
+- os campos `password`, `currentPassword`, `newPassword`, `pin`, `newPin`, `refreshToken`, `accessToken`, `cpf` e `key`;
+- qualquer sequência com cara de CPF (11 dígitos, com ou sem máscara) nas mensagens.
+
+`sendDefaultPii` fica falso nos dois lados, e não há rastreio de desempenho (`tracesSampleRate` 0): o Sentry recebe só erros.
+
+**Dependências novas** (conferidas em 2026-10-13)
+
+| Pacote | Versão escolhida | Licença | Por quê nessa versão |
+|---|---|---|---|
+| `@sentry/node` | `^10.76` | MIT | Linha 10, madura e ainda corrigida. A 11 tem 3 semanas e 7 versões, então espera |
+| `sentry_flutter` | `^9.30.1` | MIT (Flutter Favorite, 150/160 pontos) | A 10.0.0 é uma versão maior com 4 dias. A 9.30.1 tem 3 semanas e é estável |
+
+**Segredos e configuração**
+- O DSN não é segredo no sentido estrito, porque vai dentro do APK, mas fica fora do git: no Render (API) e no `--dart-define` do release (app).
+- O `.gitignore` já tem `.sentryclirc` e `sentry.properties`.
+- Fora deste PR: o envio de símbolos e de source maps, que exigiria um token.
+
+**Conta:** o desenvolvedor cria no Sentry (plano gratuito, Developer) uma organização e dois projetos, `next-bank-api` (Node) e `next-bank-app` (Flutter), e anota os dois DSNs.
+
+**Fora:** rastreio de desempenho, replay de sessão, alertas por e-mail além do padrão e o envio de símbolos de ofuscação.
+
+- [x] Desenho do Sentry aprovado (2026-10-13); API e app implementados com testes antes (748 e 624 testes); falta o desenvolvedor criar a conta e pôr o DSN no Render
+
 ### Desenho da tarefa 3
 
 Três PRs: (a) API pronta para produção; (b) infraestrutura e workflows; (c) Sentry, com o próprio desenho quando chegar a vez.

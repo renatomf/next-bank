@@ -1,6 +1,7 @@
 import { STATUS_CODES } from 'node:http';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
+import type { ErrorReporter } from '../application/ports.ts';
 import { DomainError } from '../domain/domain-error.ts';
 import { MoneySchema } from './money.ts';
 
@@ -114,11 +115,17 @@ function clientErrorStatus(error: unknown): number | undefined {
     : undefined;
 }
 
-export function registerProblemHandlers(app: FastifyInstance): void {
+export function registerProblemHandlers(app: FastifyInstance, reporter: ErrorReporter): void {
   app.setErrorHandler((error, request, reply) => {
     const { status, code, details } = classify(error);
     if (status >= 500) {
       request.log.error({ err: error }, 'unexpected error');
+      // Only the unexpected: a refusal from the catalog is the API working.
+      reporter.report(error, {
+        requestId: request.id,
+        method: request.method,
+        route: request.routeOptions.url ?? 'unknown',
+      });
     } else {
       request.log.info({ err: error }, 'request rejected');
     }
