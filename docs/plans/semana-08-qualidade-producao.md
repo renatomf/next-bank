@@ -363,7 +363,7 @@ O desenvolvedor reviu três pontos que a primeira rodada tinha adiado.
 - [x] Performance medida e registrada (D8): `docs/performance.md`; a autorização do Pix passa do orçamento e o desvio está no ADR 0012
 - [x] README: vídeo, APK, contas da demo, diagramas (implantação no `c4.md`) e retenção dos dados
 - [x] Threat model (MOB-08), matriz conferida item a item (F-32: ZAP baseline rodado), checklist e CHANGELOG `1.0.0`
-- [ ] Tag `v1.0.0` e conferência do APK publicado (SHA-256 e instalação)
+- [x] Tag `v1.0.0` (2026-10-13) e conferência do APK publicado: SHA-256 bate, assinado com a chave de release (`CN=next bank`), instalado pelo navegador num Galaxy S21 (o Play Protect bloqueia na primeira vez: "Mais detalhes › Instalar assim mesmo") e login de Ana. Na primeira tentativa, "Sem conexão": a API dormia, porque o `keep-awake.yml` rodou só 3 vezes no dia
 
 ### Desenho da tarefa 5
 
