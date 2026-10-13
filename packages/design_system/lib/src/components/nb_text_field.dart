@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 
 /// Text field with its label above (brief, section 7). Error messages are text,
 /// never color only (brief, section 8).
-class NbTextField extends StatelessWidget {
+class NbTextField extends StatefulWidget {
   /// Creates the field.
   const new({
     required this.label,
@@ -36,7 +36,7 @@ class NbTextField extends StatelessWidget {
   /// Keyboard to show.
   final TextInputType? keyboardType;
 
-  /// Hides the text (passwords).
+  /// Hides the text (passwords), with an eye to show it (week 8 plan, V2).
   final bool obscureText;
 
   /// Lets the platform fill the field (e-mail, password).
@@ -62,8 +62,17 @@ class NbTextField extends StatelessWidget {
   /// fictitious CPF the app draws.
   final bool readOnly;
 
-  /// Optional widget at the end of the field (e.g. a button).
+  /// Optional widget at the end of the field (e.g. a button); a hidden field
+  /// shows its eye there instead.
   final Widget? suffix;
+
+  @override
+  State<NbTextField> createState() => _NbTextFieldState();
+}
+
+class _NbTextFieldState extends State<NbTextField> {
+  // Only whether the text is shown: the value stays in the field (MOB-02).
+  bool _shown = false;
 
   @override
   Widget build(BuildContext context) {
@@ -71,26 +80,41 @@ class NbTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: NbType.bodyText.copyWith(color: colors.textMuted)),
+        Text(
+          widget.label,
+          style: NbType.bodyText.copyWith(color: colors.textMuted),
+        ),
         const SizedBox(height: NbSpace.sm),
         TextField(
-          controller: controller,
-          keyboardType: keyboardType,
-          obscureText: obscureText,
-          enableSuggestions: !obscureText,
-          autocorrect: !obscureText,
-          autofillHints: autofillHints,
-          textInputAction: textInputAction,
-          inputFormatters: inputFormatters,
-          onChanged: onChanged,
-          onSubmitted: onSubmitted,
-          enabled: enabled,
-          readOnly: readOnly,
+          controller: widget.controller,
+          keyboardType: widget.keyboardType,
+          obscureText: widget.obscureText && !_shown,
+          // A password, even shown, is never suggested nor corrected.
+          enableSuggestions: !widget.obscureText,
+          autocorrect: !widget.obscureText,
+          autofillHints: widget.autofillHints,
+          textInputAction: widget.textInputAction,
+          inputFormatters: widget.inputFormatters,
+          onChanged: widget.onChanged,
+          onSubmitted: widget.onSubmitted,
+          enabled: widget.enabled,
+          readOnly: widget.readOnly,
           style: NbType.bodyText.copyWith(color: colors.text),
           decoration: InputDecoration(
-            errorText: errorText,
+            errorText: widget.errorText,
             errorMaxLines: 3,
-            suffixIcon: suffix,
+            suffixIcon: widget.obscureText
+                ? IconButton(
+                    icon: Icon(
+                      _shown
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: colors.textMuted,
+                      semanticLabel: _shown ? 'Ocultar senha' : 'Mostrar senha',
+                    ),
+                    onPressed: () => setState(() => _shown = !_shown),
+                  )
+                : widget.suffix,
             semanticCounterText: '',
           ),
         ),

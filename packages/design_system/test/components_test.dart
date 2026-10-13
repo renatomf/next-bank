@@ -276,6 +276,21 @@ void main() {
     expect(find.bySemanticsLabel('next bank'), findsOneWidget);
   });
 
+  // Week 8 plan, task 4: the app icon is the "n." of the logo.
+  testWidgets('NextLogo draws another word, still read as "next bank"', (
+    tester,
+  ) async {
+    await tester.pumpWidget(host(const NextLogo(word: 'n')));
+
+    expect(
+      find.byWidgetPredicate(
+        (widget) => widget is Text && widget.textSpan?.toPlainText() == 'n￼',
+      ),
+      findsOneWidget,
+    );
+    expect(find.bySemanticsLabel('next bank'), findsOneWidget);
+  });
+
   testWidgets('InfoNotice shows its message with an icon', (tester) async {
     await tester.pumpWidget(
       host(const InfoNotice(message: 'Demonstração: não use dados reais.')),

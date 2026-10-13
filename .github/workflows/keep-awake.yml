@@ -1,0 +1,25 @@
+name: Keep awake
+
+# Render's free plan sleeps after 15 minutes without requests, and the first
+# one after that takes about a minute (week 8 plan, D9; ADR 0012). A request
+# every 10 minutes keeps the demo answering at once; GitHub may delay a
+# scheduled run, so the README warns about a slow first opening.
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    name: Ping the API
+    # Only once production exists (docs/operations.md).
+    if: vars.API_URL != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - name: Health check
+        env:
+          API_URL: ${{ vars.API_URL }}
+        run: curl -fsS --retry 3 --retry-delay 20 --max-time 90 "$API_URL/health" > /dev/null

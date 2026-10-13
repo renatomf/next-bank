@@ -142,4 +142,60 @@ describe('loadConfig', () => {
       );
     });
   });
+
+  // Week 8 plan, task 3a: behind the deploy proxy, the client is the hop
+  // before it (AUTH-01, API-02).
+  it('trusts no proxy by default, and the number of hops set', () => {
+    expect(loadConfig(valid).trustProxy).toBe(0);
+    expect(loadConfig({ ...valid, TRUST_PROXY: '1' }).trustProxy).toBe(1);
+    expect(withEnv({ TRUST_PROXY: '-1' })).toThrow(/TRUST_PROXY/);
+    expect(withEnv({ TRUST_PROXY: 'true' })).toThrow(/TRUST_PROXY/);
+  });
+
+  // ADR 0009: in production the database certificate is always checked.
+  it('refuses production without sslmode=verify-full', () => {
+    const production = { ...valid, NODE_ENV: 'production' };
+    expect(() => loadConfig(production)).toThrow(/DATABASE_URL: .*verify-full/);
+    expect(() =>
+      loadConfig({ ...production, DATABASE_URL: `${valid.DATABASE_URL}?sslmode=require` }),
+    ).toThrow(/verify-full/);
+    expect(
+      loadConfig({ ...production, DATABASE_URL: `${valid.DATABASE_URL}?sslmode=verify-full` })
+        .databaseUrl,
+    ).toContain('verify-full');
+  });
+
+  // Week 8 plan, task 3b: the host tells the commit it deployed.
+  it('takes the release from the host, and none locally', () => {
+    expect(loadConfig(valid).release).toBeUndefined();
+    expect(
+      loadConfig({ ...valid, RENDER_GIT_COMMIT: '0123abcd0123abcd0123abcd0123abcd0123abcd' })
+        .release,
+    ).toBe('0123abcd0123abcd0123abcd0123abcd0123abcd');
+    expect(withEnv({ RENDER_GIT_COMMIT: 'not a commit' })).toThrow(/RENDER_GIT_COMMIT/);
+  });
+
+  // Week 8 plan, PR c: errors reach Sentry only where a DSN is set.
+  it('reports errors only with a Sentry DSN, naming the environment', () => {
+    expect(loadConfig(valid).sentry).toBeUndefined();
+    expect(
+      loadConfig({
+        ...valid,
+        SENTRY_DSN: 'https://public@o1.ingest.sentry.io/2',
+        NODE_ENV: 'development',
+      }).sentry,
+    ).toEqual({ dsn: 'https://public@o1.ingest.sentry.io/2', environment: 'development' });
+    expect(
+      loadConfig({
+        ...valid,
+        SENTRY_DSN: 'https://public@o1.ingest.sentry.io/2',
+        SENTRY_ENVIRONMENT: 'demo',
+      }).sentry?.environment,
+    ).toBe('demo');
+    expect(withEnv({ SENTRY_DSN: 'not a url' })).toThrow(/SENTRY_DSN/);
+  });
+
+  it('keeps local development free to use a plain connection', () => {
+    expect(() => loadConfig({ ...valid, NODE_ENV: 'development' })).not.toThrow();
+  });
 });

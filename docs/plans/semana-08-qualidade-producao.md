@@ -119,21 +119,286 @@ apps/mobile/
 ## Tarefa 2 — Testes de segurança e E2E (dias 1–2)
 
 - [x] Mapa: cada teste de segurança obrigatório → arquivo (`controles-de-seguranca.md`, seção 9.1); nenhuma lacuna
-- [ ] E2E Login → Pix → Comprovante → Extrato em `integration_test`, local e no CI
+- [x] E2E Login → Pix → Comprovante → Extrato em `integration_test`, verde no emulador local (13 s); no CI pelo `e2e.yml`
+
+### Desenho do E2E
+
+**Fluxo:** o app de verdade, num emulador Android, contra a API e o Postgres de verdade:
+1. login de Ana com a senha;
+2. Home, mostrando o saldo;
+3. Área Pix: R$ 1,00 para a chave CPF de Bruno, revisão e PIN;
+4. comprovante "Concluído";
+5. "Voltar ao início": o saldo caiu exatamente R$ 1,00;
+6. "Ver extrato": o "Pix enviado" está lá, e o detalhe dele abre o mesmo comprovante.
+
+| Peça | Onde | O que faz |
+|---|---|---|
+| Teste | `apps/mobile/integration_test/critical_flow_test.dart` | Dirige o app pelo `main()` real, com os repositórios HTTP. Espera cada tela pelo que aparece nela, sem tempo fixo. Não depende do saldo inicial: compara o saldo antes e depois |
+| Contas | `apps/api/scripts/seed-demo.ts` (adiantado da tarefa 3) | Cria Ana e Bruno pelos casos de uso reais (cadastro e PIN, com CPFs fictícios fixos e documentados) e os marca como demonstração com o papel de migração. É idempotente: rodar de novo mantém as contas |
+| CI | `.github/workflows/e2e.yml` | Em PR que toque `apps/`, `packages/` ou o próprio workflow, e no push na `main`: Postgres → papéis → migrations → chaves geradas na hora → API em segundo plano → `/health` → seed → emulador (API 34, x86_64, KVM) → `flutter test integration_test` com `API_BASE_URL=http://10.0.2.2:3000` |
+| Local | README do app | Os mesmos passos com o Docker e o emulador da máquina |
+
+**Decisões:**
+- **As contas vêm do seed, e não de um cadastro feito pelo teste.** O cadastro tem limite de 3 por IP por hora (AUTH-09), e o E2E precisa poder rodar de novo; esse limite não é afrouxado por causa dos testes. Ana, de demonstração, faz Pix normalmente; só não troca credenciais (DEMO-03).
+- **Valor de R$ 1,00:** as execuções repetidas gastam pouco do saldo de demonstração, que o reset diário recompõe.
+- **Segurança:** as chaves da API no CI são geradas na hora e descartadas com o runner; nada vai para o git nem para os segredos. O seed só roda com a URL do papel de migração, e nunca é chamado pela API.
+
+**Dependências novas:**
+- `integration_test`, que vem com o SDK do Flutter;
+- `reactivecircus/android-emulator-runner` v2.38.0 (Apache-2.0), fixada por SHA, como as outras actions.
+
+**Fora:** iOS (sem Mac) e E2E de cadastro, que o limite de cadastro impede de repetir; o cadastro já é coberto pelos testes de app e de API.
+
+- [x] Desenho do E2E aprovado (2026-10-12)
 
 ## Tarefa 3 — Produção (dias 2–3)
 
-- [ ] Neon (região, papéis criados por SQL, não pelo painel, por causa dos achados do ADR 0009) e Render; `deploy.yml` e smoke test
-- [ ] ADR 0012: hospedagem da V1 (Render gratuito + Neon em `us-east-1`, despertador, consequências para a performance)
-- [ ] Seed das contas da demo e `demo-reset.yml`
+- [x] Neon (Postgres 17, `us-east-1`, papéis por SQL, branches `clean` e `demo`) e Render no ar; `deploy.yml` rodado em 2026-10-12: migrations, deploy hook, release no `/health`
+- [x] ADR 0012: hospedagem da V1 (Render gratuito + Neon em `us-east-1`, despertador, consequências para a performance)
+- [x] Seed das contas da demo e `demo-reset.yml`: restauração pelo Neon, migrations, seed pela API publicada e smoke test verdes em produção (2026-10-12)
 - [ ] Sentry na API e no app
+
+### Desenho do PR (c): Sentry
+
+**Fontes conferidas**
+
+| Fonte | Regra | Teste |
+|---|---|---|
+| CLAUDE.md, Observabilidade | Todo erro inesperado chega ao Sentry, com release e ambiente | API: um erro 500 vira um evento com `release` e `environment`; um erro do catálogo (4xx) não vira evento |
+| CLAUDE.md, LGPD | CPF, tokens, senhas e PIN removidos no `beforeSend` | Removedor (API e app): um evento com CPF, `Authorization`, senha, PIN, refresh token e corpo de requisição sai sem nenhum deles |
+| MOB-02 | Nada sensível em logs, cache ou relatórios de erro do app | Removedor do app, mais `sendDefaultPii: false` |
+| API-03 | Respostas nunca expõem detalhes internos | O cliente continua recebendo o problema genérico; o detalhe vai só para o Sentry, já limpo |
+
+**Estrutura**
+- **API:** porta `ErrorReporter` em `shared/application`, com dois adaptadores em `shared/infrastructure`: `SentryErrorReporter` e `NoopErrorReporter`, usado sem DSN, no local e nos testes. O tratador de erros HTTP chama o reporter **só no ramo do erro inesperado**. O removedor (`scrubEvent`) é uma função pura, testada sozinha.
+- **App:** `core/error_reporting.dart` inicia o Sentry só quando há `SENTRY_DSN` (`--dart-define`). O `beforeSend` e o `beforeBreadcrumb` passam pelo mesmo tipo de removedor, também uma função pura testada. Erros do Flutter e da zona chegam pelo próprio SDK.
+- **Configuração da API:** `SENTRY_DSN` e `SENTRY_ENVIRONMENT`, opcionais. O release vem do `RENDER_GIT_COMMIT`, já usado no `/health`.
+- **Configuração do app:** `SENTRY_DSN` e `APP_ENVIRONMENT` por `--dart-define`. O release é a versão do app.
+
+**O que o removedor tira** (a mesma lista do `redact` do Pino):
+- cabeçalhos `authorization` e `cookie`;
+- o corpo inteiro das requisições;
+- os campos `password`, `currentPassword`, `newPassword`, `pin`, `newPin`, `refreshToken`, `accessToken`, `cpf` e `key`;
+- qualquer sequência com cara de CPF (11 dígitos, com ou sem máscara) nas mensagens.
+
+`sendDefaultPii` fica falso nos dois lados, e não há rastreio de desempenho (`tracesSampleRate` 0): o Sentry recebe só erros.
+
+**Dependências novas** (conferidas em 2026-10-13)
+
+| Pacote | Versão escolhida | Licença | Por quê nessa versão |
+|---|---|---|---|
+| `@sentry/node` | `^10.76` | MIT | Linha 10, madura e ainda corrigida. A 11 tem 3 semanas e 7 versões, então espera |
+| `sentry_flutter` | `^9.30.1` | MIT (Flutter Favorite, 150/160 pontos) | A 10.0.0 é uma versão maior com 4 dias. A 9.30.1 tem 3 semanas e é estável |
+
+**Segredos e configuração**
+- O DSN não é segredo no sentido estrito, porque vai dentro do APK, mas fica fora do git: no Render (API) e no `--dart-define` do release (app).
+- O `.gitignore` já tem `.sentryclirc` e `sentry.properties`.
+- Fora deste PR: o envio de símbolos e de source maps, que exigiria um token.
+
+**Conta:** o desenvolvedor cria no Sentry (plano gratuito, Developer) uma organização e dois projetos, `next-bank-api` (Node) e `next-bank-app` (Flutter), e anota os dois DSNs.
+
+**Fora:** rastreio de desempenho, replay de sessão, alertas por e-mail além do padrão e o envio de símbolos de ofuscação.
+
+- [x] Desenho do Sentry aprovado (2026-10-13); API e app implementados com testes antes (748 e 624 testes); falta o desenvolvedor criar a conta e pôr o DSN no Render
+
+### Desenho da tarefa 3
+
+Três PRs: (a) API pronta para produção; (b) infraestrutura e workflows; (c) Sentry, com o próprio desenho quando chegar a vez.
+
+**(a) API pronta para produção (código, com testes antes)**
+
+| Peça | O que muda | Teste |
+|---|---|---|
+| `TRUST_PROXY` | Número de proxies confiáveis: 0 no local, 1 no Render. Sem ele, atrás do proxy todos os clientes dividiriam um contador de tentativas, e um atacante bloquearia o login de todos pelo IP (AUTH-01, API-02). Só o último salto do `X-Forwarded-For` vale, para que o cliente não forje o próprio IP | Rotas de login: com 1 proxy, IPs diferentes no `X-Forwarded-For` têm contadores diferentes; um `X-Forwarded-For` forjado antes do salto confiável não muda o contador; com 0, o cabeçalho é ignorado |
+| TLS no banco | Com `NODE_ENV=production`, a API recusa subir se a `DATABASE_URL` não tiver `sslmode=verify-full` (achado do ADR 0009) | Configuração: produção sem `verify-full` → erro ao iniciar; local continua aceitando `disable` |
+| Seed por HTTP | O `seedDemoAccounts` passa a falar por uma porta mínima (requisição → status e JSON), com dois adaptadores: em processo (`app.inject`, testes) e HTTP (`fetch` para a API publicada). No reset diário, o seed fala com a API publicada, e as chaves de produção (JWT, PII, pepper do PIN) **ficam só no Render**, nunca nos segredos do GitHub | O teste do seed roda pelos dois adaptadores (o HTTP contra uma API de teste ouvindo numa porta local) |
+
+**(b) Infraestrutura e workflows**
+
+| Peça | O que faz |
+|---|---|
+| `infra/neon/bootstrap.sql` | Cria `nextbank_migrator` e `nextbank_app` **por SQL**, com o dono do Neon, nunca pelo painel: papéis do painel entram no `neon_superuser` e ignoram os `GRANT`s (ADR 0009). Mesmos limites de tempo do local |
+| `.github/workflows/deploy.yml` | No push na `main` (depois do CI) e manual: migrations com o papel de migração pelo host direto do Neon (`verify-full`) → deploy hook do Render (deploy automático do Render desligado, para a migration vir sempre antes do código) → smoke test (`/health` e login de Ana, até 5 min) |
+| `.github/workflows/keep-awake.yml` | A cada ~10 min, `GET /health` na API publicada (D9) |
+| `.github/workflows/demo-reset.yml` | Todo dia às 06:00 UTC e manual: o branch da demo no Neon volta ao branch `clean` (só papéis, sem dados) pela API do Neon → migrations → seed por HTTP → smoke test. Nenhum código apaga lançamentos do ledger (D5) |
+| ADR 0012 | Hospedagem da V1: Render gratuito + Neon gratuito em `us-east-1`, despertador, deploy pelo GitHub e as consequências (primeira abertura lenta, CPU fraca para o Argon2id, p95 a medir) |
+| `docs/operations.md` | Passo a passo do que **o desenvolvedor** faz nas contas (Neon, Render, segredos do GitHub) e como gerar as chaves de produção localmente, sem que passem pelo git |
+
+**Segredos e onde ficam**
+
+| Valor | Onde fica | Quem cria |
+|---|---|---|
+| Chaves da API (JWT, PII, pepper do PIN), `DATABASE_URL` (pooler, `verify-full`) | Só nas variáveis de ambiente do Render | Desenvolvedor, com `generate-dev-keys.ts` na própria máquina |
+| `MIGRATION_DATABASE_URL` (host direto, `verify-full`), `NEON_API_KEY`, `RENDER_DEPLOY_HOOK` | Segredos do GitHub (ambiente `production`) | Desenvolvedor |
+| `API_URL`, `NEON_PROJECT_ID`, IDs dos branches | Variáveis do GitHub (não são segredo) | Desenvolvedor |
+
+**Concorrência:** um reset durante um Pix derruba as conexões; o app recebe erro e "Tentar de novo", e as contas voltam limpas. Deploy e reset não rodam ao mesmo tempo: os dois usam o mesmo grupo de `concurrency`.
+
+**Dependências novas:** nenhuma (`fetch` é nativo do Node).
+
+**Fora:** domínio próprio, staging (roadmap, seção 3: um ambiente publicado) e alarmes (o Sentry vem no PR c).
+
+- [ ] Desenho da tarefa 3 aprovado
+
+## Tarefa 3.5 — Ajustes visuais (antes do APK e do vídeo)
+
+Pedido do desenvolvedor depois do checkpoint da semana 7, com o app do C6 como referência **só de layout**. A foto não entra no repositório, porque tem marca e layout de terceiros e um nome real; o visual continua o do next bank.
+
+**Itens e decisões**
+
+| # | Pedido | Decisão |
+|---|---|---|
+| V1 | Erro escondido atrás da barra, em texto branco | Entra, como defeito. O teste que reproduz o problema vem antes da correção |
+| V2 | Olho no campo de senha | Entra |
+| V3 | Logo à direita do "Boa tarde, Ana"; tirar "Seu dinheiro, um passo à frente." | Entra. O slogan sai; o "ajuda com IA" fica para depois da tag |
+| V4 | Barra de navegação como na referência | Entra só a parte de legibilidade: rótulo embaixo de cada ícone e a barra encaixada no rodapé, acima dos botões do Android. O redesenho maior fica para depois da tag |
+| V5 | Logo do Pix | Ícone próprio (`Icons.swap_horiz` com o rótulo "Pix"), sem a marca do Banco Central. A marca é liberada só a instituições participantes do Pix, e o projeto proíbe marcas de terceiros sem licença |
+| — | "Ajuda com IA" e atalhos de serviços sem tela | Depois da tag, em "Próximos passos" do roadmap. Botão sem ação quebra a acessibilidade e frustra quem testa a demo |
+
+**Desenho**
+
+| Peça | Onde | O que muda | Teste |
+|---|---|---|---|
+| `NbToast` | `design_system` | Aviso no topo da tela, por cima do conteúdo, nas cores do tema e com ícone. Some sozinho em 4 s ou com um toque, e o leitor de tela o anuncia (`liveRegion`) | Widget: aparece, é anunciado e some |
+| Erros de recarga | Home, Extrato e Segurança | Quando já há dados na tela e a recarga falha (puxar para atualizar, voltar ao app), os dados ficam e o erro vem em `NbToast`. Sem dados, o bloco de erro com "Tentar de novo" continua no lugar dele, sempre acima da barra | Primeiro o que reproduz: a recarga falha e o erro não pode ficar coberto pela barra |
+| `NbTextField` | `design_system` | Com `obscureText`, ganha o olho "Mostrar senha"/"Ocultar senha" (área de toque de 48 dp). Começa oculto, e o valor não sai do campo (MOB-02) | Widget: alterna, rótulo certo, começa oculto |
+| Cabeçalho da Home | `home_screen.dart` | Saudação à esquerda e `NextLogo` à direita; sem o slogan | Widget e varredura de acessibilidade |
+| `NbNavBar` | `design_system` (substitui a `FloatingNavBar`) | Barra no rodapé, com a cor da superfície e uma borda em cima. Cada destino tem ícone e rótulo; o Pix fica no centro, em destaque. Respeita a área dos botões do Android (`SafeArea`) | Widget: rótulos, selecionado anunciado, sem estouro em 320 px a 1.3x; os testes de navegação continuam |
+
+- **Concorrência:** não se aplica, porque nada disso tem estado compartilhado nem chamada nova.
+- **Contratos e dependências:** nenhum.
+- **Fora:** "ajuda com IA", atalhos de serviços e o redesenho geral, depois da tag.
+
+- [x] Desenho aprovado (2026-10-12), feito antes da tarefa 2 para o E2E já rodar sobre a barra nova
+- [x] V1 a V5 implementados, com a varredura de acessibilidade verde nos dois temas
+- [ ] Checkpoint no celular
+
+### Segunda rodada (V6 a V10), pedida depois da primeira
+
+O desenvolvedor reviu três pontos que a primeira rodada tinha adiado.
+
+**Decisões do desenvolvedor (2026-10-12):**
+- **Exceção à regra de marcas de terceiros:** o símbolo oficial do Pix entra, só o símbolo, sem o texto "powered by Banco Central". O README avisa: "Pix é marca do Banco Central do Brasil; o next bank é um projeto fictício, sem vínculo com o Banco Central ou com o arranjo Pix".
+- **Atalhos e ajuda sem tela:** entram como "Em breve". Ao tocar, mostram o toast "Em breve." Assim continuam botões com ação, acessíveis e honestos com quem testa. As telas de verdade ficam para depois da tag.
+- **Símbolo do Pix:** convertido uma vez para um `CustomPainter` em Dart, sem `flutter_svg`.
+
+| # | O que muda | Onde | Teste |
+|---|---|---|---|
+| V6 | `PixMark`: o símbolo oficial do Pix (#32BCAD) desenhado pelo caminho do SVG oficial, com o rótulo "Pix" para o leitor de tela. Substitui o ícone de transferência no centro da barra e no atalho "Área Pix". O texto ao lado garante o sentido mesmo quando o símbolo tem pouco contraste no tema claro | `design_system` | Widget: desenha no tamanho pedido e é anunciado como "Pix" |
+| V7 | Atalhos em linha de quatro: Área Pix (funciona), Pagar, Transferir e Recarga (avisam "Em breve."). O `ActionTile` passa a aceitar um widget como ícone, para o `PixMark` | Home | Os três "Em breve" mostram o toast e não navegam; varredura de acessibilidade |
+| V8 | Cabeçalho: ícone de perfil (o mesmo da barra) num círculo, o primeiro nome do cliente e o logo à direita. A saudação sai, junto com o `greetingFor` e o teste dela | Home | Widget: ícone, primeiro nome e logo na mesma linha; sem saudação |
+| V9 | Campo "Posso te ajudar?" acima dos atalhos, em pílula, com o ícone `auto_awesome` na cor de destaque. É um botão (não um campo de texto) que avisa "Em breve: assistente com IA." | Home | Toque mostra o aviso; rótulo para o leitor de tela |
+| V10 | Barra do Android como no C6: o app desenha de ponta a ponta (edge-to-edge), a barra do sistema fica transparente e sem a faixa de contraste forçado, e os ícones do sistema ficam claros no tema escuro e escuros no claro. O fundo da `NbNavBar` continua por trás dos botões do Android | `main.dart` | Widget: o estilo da barra do sistema segue o tema, nos dois temas |
+
+- `NbToast` ganha um ícone opcional: o "Em breve" usa o ícone de informação, e os erros continuam com o de erro.
+- **Concorrência, contratos e dependências:** nenhum.
+- **Roadmap:** "Próximos passos" muda para "telas de verdade do assistente e dos atalhos".
+
+- [x] Desenho da segunda rodada aprovado (2026-10-12)
+- [x] V6 a V10 implementados, com a varredura de acessibilidade verde nos dois temas
+- [ ] Checkpoint no celular da segunda rodada
+- [ ] Aviso da marca Pix no README (tarefa 5)
+
+### Terceira rodada (V11 a V14)
+
+| # | O que muda | Onde | Teste |
+|---|---|---|---|
+| V11 | Ao lado do "Posso te ajudar?", dois botões redondos: "Ajuda" (`help_outline`) e "Notificações" (`notifications_none`). Os dois avisam "Em breve." e têm área de toque de 48 dp | Home | Toque mostra o aviso; rótulos; celular pequeno a 1.3x sem estouro |
+| V12 | Cartão de saldo: a palavra "Saldo" no lugar do logo | `BalanceCard` | Widget: mostra "Saldo" e não tem o logo |
+| V13 | Atalhos do mesmo tamanho: rótulo em uma linha, que encolhe só o necessário para caber ("Transferir" não quebra mais), e os quatro com a mesma altura | `ActionTile` e Home | Widget: os quatro com o mesmo tamanho; rótulo numa linha só |
+| V14 | O olho esconde só o saldo, na Home e na tela do Pix; os valores do extrato e do detalhe ficam sempre visíveis. O saldo **começa escondido** a cada abertura do app, e a escolha continua só na memória | `balanceHiddenProvider`, Home, Extrato e detalhe | Começa escondido; o olho alterna; as movimentações mostram o valor com o saldo escondido |
+
+- **V14 muda a decisão D8 da semana 6** (o olho escondia também os valores das movimentações), a pedido do desenvolvedor. Começar escondido protege mais a abertura do app; já os valores das transações à vista entregam parte da informação. O MOB-05 e a matriz de controles registram a troca.
+- **Código morto:** sem nenhuma tela escondendo valores de movimentação, o parâmetro `hidden` sai do `TransactionItem`, junto com os testes dele.
+- **Concorrência, contratos e dependências:** nenhum.
+
+- [x] Desenho da terceira rodada aprovado (2026-10-12)
+- [x] V11 a V14 implementados, com a varredura de acessibilidade verde nos dois temas
+- [ ] Checkpoint no celular da terceira rodada
+- [x] V15: degradê na barra de navegação, do `surface2` no topo ao `background` no rodapé, nos tons de cada tema, como na referência; os rótulos seguem AA na varredura de contraste
 
 ## Tarefa 4 — App de release (dia 4)
 
-- [ ] Chave de assinatura, `release.yml`, APK ofuscado apontando para HTTPS; checkpoint no celular com o APK
+- [x] Chave de assinatura, `release.yml`, APK ofuscado apontando para HTTPS; checkpoint no celular com o APK (2026-10-13, Galaxy S21): com um proxy de interceptação e certificado de usuário, o Chrome foi interceptado e o next bank recusou a conexão; sem o proxy, Ana entrou. Nenhuma das 43 classes do app com 12 letras ou mais aparece no binário ofuscado. Achado F-31 (mensagem da falha de TLS), corrigido
+- [x] Ícone do app (adaptativo: "n." do `NextLogo`, centralizado com ajuste óptico) e splash nativa (fundo da marca e ícone, Android 12+)
+- [ ] Visual da tela Splash, pedido pelo desenvolvedor com uma imagem de referência (seda de vidro verde), o logo e um slogan. Decisões pendentes: o fundo recriado em código com o `Silk` (sem asset) ou a imagem, só com licença comprovada; o slogan "Finance at your fingertips" ou em pt-BR; nenhuma espera artificial (abertura a frio < 2 s)
+
+### Desenho da tarefa 4
+
+**Fontes conferidas**
+
+| Fonte | Regra | Como se prova |
+|---|---|---|
+| MOB-06 / CLAUDE.md, Mobile | Build de release ofuscado | `--obfuscate --split-debug-info` e R8 (`isMinifyEnabled`, `isShrinkResources`) no `release.yml`; checkpoint: nomes de classes e funções ilegíveis no APK |
+| MOB-03 | Só HTTPS no release | `API_BASE_URL` de produção (`https://`); o `api_config.dart` já recusa `http` no release (teste existente) |
+| MOB-03 (tráfego) | Nenhum certificado do usuário aceito | Checkpoint com uma ferramenta de interceptação: o APK de release responde "Sem conexão" |
+| CLAUDE.md, Segredos | A chave de assinatura nunca entra no git | `.gitignore` já tem `*.jks`, `*.keystore` e `key.properties`; a chave vive só nos segredos do GitHub (base64) e no backup do desenvolvedor |
+| CLAUDE.md, Observabilidade | Release com Sentry | `SENTRY_DSN` do app como segredo, passado por `--dart-define` |
+| Roadmap 8.2 | APK nas Releases a cada versão | `release.yml` publica o APK e o SHA-256 dele na Release da tag |
+
+**Peças**
+
+| Peça | Onde | O que faz |
+|---|---|---|
+| Assinatura | `android/app/build.gradle.kts` | `signingConfigs.release` lê a chave de variáveis de ambiente (`ANDROID_KEYSTORE_PATH`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`). Sem elas, o release local cai na chave de debug, como hoje, e nunca é publicado |
+| R8 | mesmo arquivo | `isMinifyEnabled` e `isShrinkResources` no release, com as regras de ProGuard que os plugins já trazem |
+| `release.yml` | `.github/workflows/` | Na tag `v*`: testes, decodifica a chave num arquivo temporário do runner, `flutter build apk --release --obfuscate --split-debug-info` com `API_BASE_URL`, `SENTRY_DSN` e `APP_ENVIRONMENT=production`, publica o APK, o SHA-256 e os símbolos de ofuscação (estes como artefato privado do workflow, não na Release) |
+| Versão | `pubspec.yaml` | `version` vem da tag (`v1.0.0` → `1.0.0`) e o build number do número da execução |
+| Ícone | `android/app/src/main/res` | Ícone adaptativo: fundo na cor da marca e, na frente, o logo desenhado pelo próprio `NextLogo`, renderizado uma vez em PNG para cada densidade por um teste gerador (como fizemos para conferir o símbolo do Pix). Sem dependência nova; é código gerado, sem TDD |
+| Splash nativa | `res/values*/styles.xml` | Fundo da cor da marca (claro e escuro) e o ícone no centro (Android 12+), para o app não piscar branco ao abrir |
+| Cache do NDK | `ci.yml`, `e2e.yml` | Desde o Sentry, todo build Android baixa o NDK (~1 GB); o cache evita o download e a falha vista no CI. O `release.yml` não usa cache: o job que assina compila só com o que ele mesmo baixa, para nada restaurado de outra execução entrar no APK assinado |
+
+**Segredos novos (só no GitHub, ambiente `release`):** `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` e `SENTRY_DSN_APP`. A chave é gerada pelo desenvolvedor com o `keytool` na própria máquina e guardada com backup: sem ela, um APK novo não atualiza o instalado.
+
+**Concorrência e contratos:** nenhum.
+
+**Dependências novas:** nenhuma.
+
+**Fora:** Play Store (a V1 publica o APK nas Releases), iOS (sem Mac), o visual novo da tela Splash (decisões pendentes acima) e o envio dos símbolos de ofuscação ao Sentry.
+
+- [x] Desenho da tarefa 4 aprovado
 
 ## Tarefa 5 — Medição, README e tag (dias 4–5)
 
-- [ ] Performance medida e registrada (D8)
+- [x] Performance medida e registrada (D8): `docs/performance.md`; a autorização do Pix passa do orçamento e o desvio está no ADR 0012
 - [ ] README: vídeo, APK, contas da demo, diagramas e retenção dos dados
 - [ ] Threat model, matriz, checklist, CHANGELOG; tag `v1.0.0`
+
+### Desenho da tarefa 5
+
+**Fontes conferidas**
+
+| Fonte | Regra | Como se prova |
+|---|---|---|
+| CLAUDE.md, Performance | p95 < 200 ms nas leituras e < 400 ms no Pix, no ambiente publicado e com carga nominal | Script de medição contra a API publicada; resultado em `docs/performance.md` |
+| CLAUDE.md, Performance | Abertura a frio < 2 s em aparelho intermediário | `flutter run --profile --trace-startup` no celular (checkpoint); `timeToFirstFrameMicros` no mesmo documento |
+| ADR 0012 / D9 | Se o Pix passar de 400 ms por causa do plano gratuito, o desvio é registrado, não escondido | Número medido e desvio no ADR 0012, se houver |
+| API-02 | Limite global de 100 requisições por minuto por IP | O script espaça as requisições (uma a cada 0,75 s) e falha se receber 429, em vez de medir respostas de erro |
+| DEMO-02 | Dados de visitantes não se acumulam | Os Pix da medição (R$ 0,01 de Bruno para Ana) somem no reset diário |
+| MOB-03, MOB-06 | Só HTTPS; release ofuscado | Checkpoint no celular com o APK de release: interceptação recusada, nomes ilegíveis |
+| Roadmap 8.2 | APK nas Releases | Tag `v1.0.0` → `release.yml`; SHA-256 conferido no APK baixado |
+
+**Peças**
+
+| Peça | Onde | O que faz |
+|---|---|---|
+| Medição | `apps/api/scripts/measure-latency.ts` (+ `pnpm measure`) | Entra como Bruno uma vez (Ana é a conta dos visitantes, e a cota de consultas de chave dela fica para eles: PIX-07) e mede, em sequência: `/health` (base da rede), `GET /v1/me/account` e `GET /v1/me/statement` (leituras), e o Pix inteiro (`key-lookups`, criar com `idempotency-key` novo, `authorize` com o PIN). Imprime p50, p95 e máximo por rota numa tabela em Markdown. Endereço por `MEASURE_API_URL` (obrigatório, sem padrão) |
+| Percentil | mesmo script, função pura `percentile` | TDD: lista vazia, um valor, p95 de 100 valores, ordem de entrada irrelevante |
+| Resultado | `docs/performance.md` (novo) | Como medir, onde (do Brasil, ~120 ms de ida e volta), a tabela, a latência da rede descontada pelo `/health`, e a abertura a frio |
+| README (pt e en) | `README.md`, `README.en.md` | Status "V1 publicada"; como baixar o APK e conferir o SHA-256; contas da demo (Ana e Bruno, públicas de propósito); retenção (tudo volta ao estado limpo às 03:00 de Brasília); primeira abertura pode levar até 1 min; aviso da marca Pix; vídeo; link para o plano atual |
+| Vídeo | anexo do GitHub (`user-attachments`) | Gravado por você no celular; enviado arrastando no editor do GitHub, que hospeda o arquivo. Nada de vídeo pesado no git |
+| Documentos de segurança | `threat-model.md`, `checklist-asvs-masvs.md`, `controles-de-seguranca.md` | Status das ameaças e controles da semana 8 (API-14, DEMO-02, DEMO-03, MOB-03, MOB-06) |
+| CHANGELOG e roadmap | `CHANGELOG.md`, `docs/roadmap.md` | `[Não publicado]` vira `[1.0.0] — data`; fase 1 marcada como entregue |
+| Tag | `v1.0.0` na `main` | Dispara o `release.yml`; criada só com tudo acima mergeado e o checkpoint aprovado |
+
+**Concorrência:** nenhuma nova. A medição roda em sequência, com um cliente só, porque o limite por IP impediria mais que isso de uma máquina. Os testes de concorrência já cobrem os acessos simultâneos.
+
+**Contratos:** nenhum endpoint, erro, schema ou query novos. Configuração nova só no script: `MEASURE_API_URL`.
+
+**Dependências novas:** nenhuma. **Desvio de D8:** o `autocannon` sai do plano. Com o limite de 100 requisições por minuto por IP, um gerador de carga só produziria 429, e a última versão dele é de 2024-10. `fetch` e `performance.now()` bastam.
+
+**Ordem:** (1) PR da medição: script, teste, `docs/performance.md` e, se for o caso, o desvio no ADR 0012; (2) checkpoint no celular com um APK de release gerado localmente: abertura a frio, interceptação, ofuscação; (3) PR da documentação da V1: README, segurança, CHANGELOG, roadmap; (4) merge do #110 e do #116; (5) tag `v1.0.0` e conferência do APK publicado.
+
+**Fora:** carga com vários clientes (exigiria liberar o limite por IP na produção), medição contínua no CI, a tela Splash nova e os PRs do Dependabot que mudam versão maior (#104), que ficam para depois da tag.
+
+- [x] Desenho da tarefa 5 aprovado

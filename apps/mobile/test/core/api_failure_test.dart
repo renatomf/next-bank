@@ -123,6 +123,12 @@ void main() {
       expect(await failureFor(const NetworkFailure()), isA<ApiUnreachable>());
     });
 
+    // Found in the week 8 checkpoint: behind an interception proxy the app
+    // refused the connection but said "Algo deu errado" (F-31).
+    test('treats a refused certificate as unreachable (MOB-03)', () async {
+      expect(await failureFor(const TlsFailure()), isA<ApiUnreachable>());
+    });
+
     test('treats a body that is not a problem as unexpected', () async {
       expect(
         await failureFor(const JsonReply(422, {'message': 'nope'})),

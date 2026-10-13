@@ -36,6 +36,8 @@ import { healthRoutes } from './shared/http/health.ts';
 import { registerProblemHandlers } from './shared/http/problem.ts';
 import type { PiiKeys } from './shared/infrastructure/aes-gcm-pii-protector.ts';
 import { PgUnitOfWork } from './shared/infrastructure/pg-unit-of-work.ts';
+import type { ErrorReporter } from './shared/application/ports.ts';
+import { NoopErrorReporter } from './shared/infrastructure/sentry-error-reporter.ts';
 import { SystemClock, UuidV7Generator } from './shared/infrastructure/system-ports.ts';
 import { REDACT_PATHS } from './shared/logging.ts';
 
@@ -50,10 +52,16 @@ export interface AppDependencies {
   logStream?: LogDestination;
   /** Signing and CPF keys: required, there is no insecure default. */
   security: { accessTokenKeys: AccessTokenKeys; piiKeys: PiiKeys; pinPepper: Uint8Array };
+  /** Proxies in front of the API (config TRUST_PROXY); none by default. */
+  trustProxy?: number;
+  /** The commit running, shown by the health check. */
+  release?: string;
+  /** Where unexpected errors go; nowhere but the logs by default. */
+  errorReporter?: ErrorReporter;
 }
 
 // Per client IP (API-02). In memory: one instance in V1 (plan D3). Behind the
-// deploy proxy, trustProxy must be set or every client shares one counter.
+// deploy proxy, trustProxy (config TRUST_PROXY) keeps one counter per client.
 const GLOBAL_RATE_LIMIT = { max: 100, timeWindow: '1 minute' };
 
 // Accept only short ids without control characters (API-10).
@@ -65,8 +73,19 @@ function requestId(request: IncomingMessage): string {
 }
 
 /** Composition root: the only place that connects ports to their implementations. */
-export function buildApp({ pool, logStream, security }: AppDependencies) {
+export function buildApp({
+  pool,
+  logStream,
+  security,
+  trustProxy = 0,
+  release,
+  errorReporter = new NoopErrorReporter(),
+}: AppDependencies) {
   const app = Fastify({
+    // The client is the hop before the trusted proxies: hop 0 is the socket peer,
+    // so only the first [trustProxy] hops are believed. With none, X-Forwarded-For
+    // is ignored and a client cannot pick its own rate-limit counter (API-02).
+    trustProxy: (_address: string, hop: number) => hop < trustProxy,
     logger: {
       level: 'info',
       redact: { paths: REDACT_PATHS, censor: '[REDACTED]' },
@@ -80,7 +99,7 @@ export function buildApp({ pool, logStream, security }: AppDependencies) {
 
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
-  registerProblemHandlers(app);
+  registerProblemHandlers(app, errorReporter);
 
   app.addHook('onRequest', (request, reply, done) => {
     void reply.header('x-request-id', request.id);
@@ -140,7 +159,7 @@ export function buildApp({ pool, logStream, security }: AppDependencies) {
   // Before any route: every route requires a token unless declared public.
   registerAuthentication(app, identity.accessTokenVerifier, identity.activeSessions, clock);
 
-  void app.register(healthRoutes, { pool });
+  void app.register(healthRoutes, { pool, ...(release ? { release } : {}) });
   // Payments reaches Accounts and Identity only through the ports it defines.
   const payments = createPaymentsModule({
     unitOfWork,

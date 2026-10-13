@@ -12,7 +12,7 @@
 |---|---|
 | Card de saldo com textura de seda e painel de vidro por cima | Logo, marca e cores de bancos reais |
 | Atalhos em blocos arredondados com ícone + rótulo | Cópia literal de layout e textos |
-| Navegação inferior flutuante em pílula, com ação central em destaque | Features fora da V1 (cartões, TED, agendamento) |
+| Navegação inferior encaixada no rodapé, com rótulo em cada destino e ação central em destaque (era flutuante em pílula até a semana 7; plano da semana 8, V4) | Features fora da V1 (cartões, TED, agendamento) |
 | Títulos grandes com segunda linha mais leve | Cor de marca usada como texto em fundo claro |
 | Botão primário em pílula com seta ↗ | Status (sucesso) na mesma cor da marca |
 
@@ -45,7 +45,7 @@
 | `success` | `#C4F27A` | `#3B6E0E` | Status concluído |
 | `successSoft` | `rgba(196,242,122,0.12)` | `rgba(120,190,40,0.16)` | Fundo do selo de status |
 | `danger` | `#FF6B6B` | `#C62828` | Erro, falha (a validar na semana 6) |
-| `navBg` | `rgba(18,26,33,0.88)` + blur 16 | `rgba(255,255,255,0.92)` + blur 16 | Navegação flutuante |
+| `navBg` | `rgba(18,26,33,0.88)` + blur 16 | `rgba(255,255,255,0.92)` + blur 16 | Fundo da navegação (sem uso desde a barra encaixada, que usa `surface`) |
 | `glow` | Menta a 10%, radial no topo | Menta a 22%, radial no topo | Brilho ambiente no fundo |
 
 ### 2.3 Card de saldo (assinatura, igual nos dois modos)
@@ -119,7 +119,7 @@ Por decisão do desenvolvedor sobre o mockup, o ponto não tem glow e fica na li
 | `PrimaryButton` (pílula 56, seta ↗) e `SecondaryButton` | Pix, Comprovante |
 | `StatusBadge` | Comprovante |
 | `ReceiptCard` (divisórias tracejadas, ID em mono) | Comprovante |
-| `FloatingNavBar` com ação central | Home |
+| `NbNavBar` com ação central e rótulos (substituiu a `FloatingNavBar` na semana 8) | Início, Extrato, Segurança e Perfil |
 | `SecureHint` (cadeado + texto) | Pix |
 
 **Documentos na tela:** CPF sempre com os seis dígitos do meio, `***.456.789-**`, como a API devolve e o DICT do Pix mostra. Os mockups de Pix e comprovante usam `•••.842.•••-09`; vale a máscara da API (plano da semana 6, D7). Conta sempre com os quatro últimos dígitos: `•••• 0004`.

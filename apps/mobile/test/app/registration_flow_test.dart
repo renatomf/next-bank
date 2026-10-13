@@ -156,6 +156,7 @@ void main() {
     await enterPin(tester, '2580');
 
     expect(repository.pins, ['2580']);
+    await showBalance(tester);
     expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
   });
 

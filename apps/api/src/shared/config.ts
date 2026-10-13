@@ -38,6 +38,18 @@ const schema = z
     PORT: z.coerce.number().int().min(1).max(65_535).default(3000),
     // Safe default: localhost only. In a container, the deploy sets HOST=0.0.0.0.
     HOST: z.string().min(1).default('127.0.0.1'),
+    // Proxies in front of the API: 0 locally, 1 behind the deploy's. Only that
+    // many hops of X-Forwarded-For are believed (AUTH-01, API-02).
+    TRUST_PROXY: z.coerce.number().int().min(0).max(3).default(0),
+    NODE_ENV: z.string().optional(),
+    // Error tracking (week 8 plan, PR c): only where a DSN is set.
+    SENTRY_DSN: z.url({ protocol: /^https$/ }).optional(),
+    SENTRY_ENVIRONMENT: z.string().min(1).max(64).optional(),
+    // The commit the host deployed (Render sets it); names the release.
+    RENDER_GIT_COMMIT: z
+      .string()
+      .regex(/^[0-9a-f]{7,40}$/)
+      .optional(),
     // Access token signing key (threat model D4).
     JWT_PRIVATE_KEY: z.string().refine((value) => parseEd25519PrivateKey(value) !== null, {
       message: 'must be an Ed25519 private key (PKCS#8 DER, base64)',
@@ -61,12 +73,24 @@ const schema = z
       message: 'must differ from the CPF keys',
       path: ['PIN_PEPPER'],
     },
+  )
+  // ADR 0009: in production the database certificate is always checked.
+  .refine(
+    (env) =>
+      env.NODE_ENV !== 'production' ||
+      URL.parse(env.DATABASE_URL)?.searchParams.get('sslmode') === 'verify-full',
+    { message: 'must use sslmode=verify-full in production', path: ['DATABASE_URL'] },
   );
 
 export interface Config {
   databaseUrl: string;
   port: number;
   host: string;
+  trustProxy: number;
+  /** The commit running, when the host tells it. */
+  release?: string;
+  /** Where unexpected errors go, when a DSN is set. */
+  sentry?: { dsn: string; environment: string };
   jwt: { privateKey: KeyObject; keyId: string };
   pii: { encryptionKey: Buffer; hmacKey: Buffer; keyVersion: number };
   pinPepper: Buffer;
@@ -87,6 +111,16 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
     databaseUrl: data.DATABASE_URL,
     port: data.PORT,
     host: data.HOST,
+    trustProxy: data.TRUST_PROXY,
+    ...(data.RENDER_GIT_COMMIT ? { release: data.RENDER_GIT_COMMIT } : {}),
+    ...(data.SENTRY_DSN
+      ? {
+          sentry: {
+            dsn: data.SENTRY_DSN,
+            environment: data.SENTRY_ENVIRONMENT ?? data.NODE_ENV ?? 'development',
+          },
+        }
+      : {}),
     jwt: {
       privateKey: required(parseEd25519PrivateKey(data.JWT_PRIVATE_KEY)),
       keyId: data.JWT_KEY_ID,

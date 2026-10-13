@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
@@ -29,6 +30,12 @@ final class ProblemReply extends Reply {
 
 /// No answer at all, like a dropped connection.
 final class NetworkFailure extends Reply {
+  const new();
+}
+
+/// A certificate the app refuses, as behind an interception proxy (MOB-03):
+/// the TLS handshake fails before any HTTP answer.
+final class TlsFailure extends Reply {
   const new();
 }
 
@@ -70,6 +77,10 @@ class ScriptedServer implements HttpClientAdapter {
       NetworkFailure() => throw DioException.connectionError(
         requestOptions: options,
         reason: 'connection refused',
+      ),
+      // Thrown as dart:io throws it; Dio wraps it the way it does on a phone.
+      TlsFailure() => throw const HandshakeException(
+        'CERTIFICATE_VERIFY_FAILED',
       ),
       JsonReply(:final status, :final body) => _json(status, body),
       ProblemReply(:final status, :final code, :final extra) =>
