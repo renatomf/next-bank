@@ -199,7 +199,7 @@ apps/mobile/
 
 **Fora:** rastreio de desempenho, replay de sessão, alertas por e-mail além do padrão e o envio de símbolos de ofuscação.
 
-- [ ] Desenho do Sentry aprovado
+- [x] Desenho do Sentry aprovado (2026-10-13); API e app implementados com testes antes (748 e 624 testes); falta o desenvolvedor criar a conta e pôr o DSN no Render
 
 ### Desenho da tarefa 3
 
