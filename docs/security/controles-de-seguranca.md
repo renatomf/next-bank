@@ -104,7 +104,7 @@
 
 | Controle | Status | Como / evidência | Sem. |
 |---|---|---|---|
-| IAM com menor privilégio | ⏳ | Contas do Render, do Neon e do GitHub com 2FA; tokens de API com escopo mínimo; o papel do banco é criado por SQL, nunca pelo painel (API-11). | 8 |
+| IAM com menor privilégio | ✅ | 2FA ativado nas contas do GitHub, do Render, do Neon e do Sentry (confirmado pelo desenvolvedor em 2026-10-13). Papéis do banco criados por SQL, nunca pelo painel (API-11, F-28); a API usa só o `nextbank_app`, e as migrations, o `nextbank_migrator`. O deploy hook do Render só dispara deploys; o `GITHUB_TOKEN` é de leitura, com escrita só no job que publica a Release. Ressalva: a API key do Neon (usada só pelo reset da demo) vale para a conta inteira, e fica só no ambiente `production` do GitHub; uma chave restrita ao projeto: 🔭. | 8 |
 | Firewall / security groups | ✅ | Local: Postgres só em `127.0.0.1`. Publicado: TLS `verify-full`, senha forte e papel de menor privilégio. Lista de IPs permitidos no Neon: 🔭 (depende do plano). | 2, 8 |
 | WAF | 🔭 | Na V1, o rate limit da aplicação e a proteção básica do provedor bastam. Evolução: WAF na frente da API. | — |
 | Gerenciador de segredos | ✅ | Segredos do CI nos secrets do GitHub, os de deploy e de release em ambientes protegidos (`production`, e `release` só para tags `v*`); os da API nas variáveis de ambiente do Render. Nenhum segredo no git (gitleaks no CI e no pre-commit). KMS/HSM: 🔭. | 8 |
