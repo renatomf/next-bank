@@ -361,8 +361,9 @@ O desenvolvedor reviu três pontos que a primeira rodada tinha adiado.
 ## Tarefa 5 — Medição, README e tag (dias 4–5)
 
 - [x] Performance medida e registrada (D8): `docs/performance.md`; a autorização do Pix passa do orçamento e o desvio está no ADR 0012
-- [ ] README: vídeo, APK, contas da demo, diagramas e retenção dos dados
-- [ ] Threat model, matriz, checklist, CHANGELOG; tag `v1.0.0`
+- [x] README: vídeo, APK, contas da demo, diagramas (implantação no `c4.md`) e retenção dos dados
+- [x] Threat model (MOB-08), matriz conferida item a item (F-32: ZAP baseline rodado), checklist e CHANGELOG `1.0.0`
+- [ ] Tag `v1.0.0` e conferência do APK publicado (SHA-256 e instalação)
 
 ### Desenho da tarefa 5
 

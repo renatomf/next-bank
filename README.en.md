@@ -9,7 +9,7 @@
   <img src="docs/design/mockups/pix-dark.png" width="230" alt="Pix transfer screen">
   <img src="docs/design/mockups/comprovante-dark.png" width="230" alt="Pix receipt">
 </p>
-<p align="center"><sub>V1 visual concept — the final screens are built in Flutter.</sub></p>
+<p align="center"><sub>V1 visual concept. The app screens evolved from it.</sub></p>
 
 **next bank** is a digital bank for people who want full control of their money: no queues, no fine print, no surprises.
 
@@ -22,7 +22,35 @@ Open an account in minutes, track every cent in real time and send Pix (Brazil's
 - **📊 Every cent in the right place.** Balance and statement come from an append-only ledger. What the app shows always adds up.
 - **✨ Simple outside, solid inside.** A light, dark-themed experience over engineering built not to fail.
 
-> 🚧 **Work in progress:** week 1 of 8 of the first version.
+> ✅ **V1 released:** sign-up, login, account, Pix with PIN, receipt and statement, in an Android app connected to a published API.
+
+## See it working
+
+The real app, on the published demo (1 min 40 s, no sound):
+
+https://github.com/user-attachments/assets/a2748bde-302c-45a7-a953-d19fa6b02b93
+
+## Try it in a minute
+
+1. Download the APK from the [latest Release](https://github.com/renatomf/next-bank/releases/latest) (Android 7.0 or newer).
+2. Check that the file is the published one: compare the output of `Get-FileHash next-bank-v1.0.0.apk` (Windows) or `sha256sum next-bank-v1.0.0.apk` (Linux and macOS) with the `.sha256` file of the same Release.
+3. Install it (Android asks you to allow installing this file) and sign in with a demo account:
+
+| Account | E-mail | Password | PIN |
+|---|---|---|---|
+| Ana | `ana.demo@example.com` | `demo-ana-next-bank` | `2580` |
+| Bruno | `bruno.demo@example.com` | `demo-bruno-next-bank` | `1470` |
+
+4. **A Pix in 30 seconds:** sign in as Ana, tap **Pix**, use Bruno's CPF key (`529.982.247-25`), choose the amount and confirm with PIN `2580`. The receipt shows up at once, and the Pix is already in both statements.
+
+**Good to know**
+
+- **First launch:** the API runs on a free server that sleeps when idle. If it is asleep, the first answer can take up to a minute.
+- **Shared accounts:** the demo accounts cannot change their password or PIN, nor end sessions, so no visitor can lock the others out.
+- **Everything resets daily at 06:00 UTC:** accounts created by visitors and all Pix are removed, and Ana and Bruno get their starting balance back.
+- **Your own account:** sign-up generates a valid fictitious CPF (Brazil's taxpayer id). Do not use real data.
+- **Play money:** Pix happens between next bank accounts; no real money moves.
+- **Android only:** there is no iOS release, since it cannot be tested without a Mac.
 
 ---
 
@@ -63,6 +91,7 @@ The detailed documentation is written in Portuguese:
 - [C4 diagrams](docs/architecture/c4.md) · [Sequence diagrams](docs/architecture/sequences.md)
 - [Threat model](docs/security/threat-model.md) · [OWASP ASVS/MASVS checklist](docs/security/checklist-asvs-masvs.md)
 - [Visual brief and design tokens](docs/design/brief.md)
+- [Operations: publishing and running the demo](docs/operations.md) · [Measured performance](docs/performance.md)
 - [Changelog](CHANGELOG.md)
 
 ---
@@ -70,3 +99,5 @@ The detailed documentation is written in Portuguese:
 Built by **Renato Marques** · [github.com/renatomf](https://github.com/renatomf)
 
 <sub>Portfolio project for study and demonstration purposes. It is not a financial institution, does not move real money and uses only fictitious data. See [LICENSE](LICENSE).</sub>
+
+<sub>Pix is a trademark of Banco Central do Brasil. next bank is a fictitious project, not affiliated with Banco Central, and uses the Pix symbol only to identify the feature in the app.</sub>
