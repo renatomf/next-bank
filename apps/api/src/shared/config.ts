@@ -42,6 +42,9 @@ const schema = z
     // many hops of X-Forwarded-For are believed (AUTH-01, API-02).
     TRUST_PROXY: z.coerce.number().int().min(0).max(3).default(0),
     NODE_ENV: z.string().optional(),
+    // Error tracking (week 8 plan, PR c): only where a DSN is set.
+    SENTRY_DSN: z.url({ protocol: /^https$/ }).optional(),
+    SENTRY_ENVIRONMENT: z.string().min(1).max(64).optional(),
     // The commit the host deployed (Render sets it); names the release.
     RENDER_GIT_COMMIT: z
       .string()
@@ -86,6 +89,8 @@ export interface Config {
   trustProxy: number;
   /** The commit running, when the host tells it. */
   release?: string;
+  /** Where unexpected errors go, when a DSN is set. */
+  sentry?: { dsn: string; environment: string };
   jwt: { privateKey: KeyObject; keyId: string };
   pii: { encryptionKey: Buffer; hmacKey: Buffer; keyVersion: number };
   pinPepper: Buffer;
@@ -108,6 +113,14 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
     host: data.HOST,
     trustProxy: data.TRUST_PROXY,
     ...(data.RENDER_GIT_COMMIT ? { release: data.RENDER_GIT_COMMIT } : {}),
+    ...(data.SENTRY_DSN
+      ? {
+          sentry: {
+            dsn: data.SENTRY_DSN,
+            environment: data.SENTRY_ENVIRONMENT ?? data.NODE_ENV ?? 'development',
+          },
+        }
+      : {}),
     jwt: {
       privateKey: required(parseEd25519PrivateKey(data.JWT_PRIVATE_KEY)),
       keyId: data.JWT_KEY_ID,

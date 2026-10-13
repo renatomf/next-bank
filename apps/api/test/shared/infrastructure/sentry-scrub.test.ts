@@ -50,6 +50,6 @@ describe('scrubEvent', () => {
     });
 
     expect(event.message).toBe('lookup of [CPF] failed');
-    expect(event.exception?.values?.[0]?.value).toBe('cpf [CPF] is busy');
+    expect(event.exception.values[0]?.value).toBe('cpf [CPF] is busy');
   });
 });

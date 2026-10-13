@@ -1,5 +1,5 @@
 // Personal data and secrets never reach the log (API-04).
-const SENSITIVE_KEYS = [
+export const SENSITIVE_KEYS = [
   'password',
   'pin',
   // The PIN and password changes (F-25).
