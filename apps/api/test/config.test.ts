@@ -175,6 +175,26 @@ describe('loadConfig', () => {
     expect(withEnv({ RENDER_GIT_COMMIT: 'not a commit' })).toThrow(/RENDER_GIT_COMMIT/);
   });
 
+  // Week 8 plan, PR c: errors reach Sentry only where a DSN is set.
+  it('reports errors only with a Sentry DSN, naming the environment', () => {
+    expect(loadConfig(valid).sentry).toBeUndefined();
+    expect(
+      loadConfig({
+        ...valid,
+        SENTRY_DSN: 'https://public@o1.ingest.sentry.io/2',
+        NODE_ENV: 'development',
+      }).sentry,
+    ).toEqual({ dsn: 'https://public@o1.ingest.sentry.io/2', environment: 'development' });
+    expect(
+      loadConfig({
+        ...valid,
+        SENTRY_DSN: 'https://public@o1.ingest.sentry.io/2',
+        SENTRY_ENVIRONMENT: 'demo',
+      }).sentry?.environment,
+    ).toBe('demo');
+    expect(withEnv({ SENTRY_DSN: 'not a url' })).toThrow(/SENTRY_DSN/);
+  });
+
   it('keeps local development free to use a plain connection', () => {
     expect(() => loadConfig({ ...valid, NODE_ENV: 'development' })).not.toThrow();
   });
