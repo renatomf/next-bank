@@ -3,9 +3,9 @@ import 'package:design_system/src/tokens.dart';
 import 'package:flutter/material.dart';
 
 /// The "next" wordmark followed by a mint dot (brief, section 6). The dot
-/// rests exactly on the text's baseline, level with the foot of the last
-/// letter and close to it, without a glow: the developer's choice over the
-/// mockup, where it was centered and glowing.
+/// sits level with the foot of the last letter, a little apart from it,
+/// without a glow: the developer's choice over the mockup, where it was
+/// centered and glowing.
 class NextLogo extends StatelessWidget {
   /// Creates the logo at [size] (the wordmark's font size).
   const new({this.size = 36, this.color, this.word = 'next', super.key});
@@ -24,6 +24,10 @@ class NextLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dot = size * 0.17;
+    // The foot of the "t" curves below the baseline, so after it the dot
+    // moves down by as much and a little further right, level with the
+    // letter. After the flat foot of the icon's "n" it rests on the baseline.
+    final roundFoot = word.endsWith('t');
     return Semantics(
       container: true,
       label: 'next bank',
@@ -37,15 +41,18 @@ class NextLogo extends StatelessWidget {
             WidgetSpan(
               alignment: PlaceholderAlignment.baseline,
               baseline: TextBaseline.alphabetic,
-              // Its bottom on the baseline, level with the foot of the
-              // letter, and close to it (week 8 plan, task 4).
-              child: Container(
-                width: dot,
-                height: dot,
-                margin: EdgeInsets.only(left: size * 0.02),
-                decoration: const BoxDecoration(
-                  color: NbBrand.mint,
-                  shape: BoxShape.circle,
+              child: Transform.translate(
+                offset: Offset(0, roundFoot ? size * 0.025 : 0),
+                child: Container(
+                  width: dot,
+                  height: dot,
+                  margin: EdgeInsets.only(
+                    left: size * (roundFoot ? 0.05 : 0.02),
+                  ),
+                  decoration: const BoxDecoration(
+                    color: NbBrand.mint,
+                    shape: BoxShape.circle,
+                  ),
                 ),
               ),
             ),
