@@ -18,26 +18,38 @@ Este documento descreve como a V1 é publicada e mantida, com custo zero: Neon (
 
 1. Crie a conta em <https://neon.tech> e um projeto: nome `next-bank`, **Postgres 17**, região **AWS US East 1 (N. Virginia)**.
 2. Renomeie o branch padrão para `clean`. Ele nunca recebe dados.
-3. Gere duas senhas fortes na sua máquina (uma para cada papel):
+3. Gere as duas senhas **direto em variáveis** e guarde-as no gerenciador de senhas (nunca no chat, no git ou num arquivo):
    ```powershell
-   node -e "console.log(require('crypto').randomBytes(24).toString('base64url'))"
+   $mig = node -e "console.log(require('crypto').randomBytes(24).toString('base64url'))"
+   $app = node -e "console.log(require('crypto').randomBytes(24).toString('base64url'))"
+   "migrator: $mig"; "app: $app"
    ```
-4. Copie a connection string do **dono** do projeto (`neondb_owner`), do branch `clean`, banco `neondb`, e rode o bootstrap com o `psql` do container local:
+4. No **Connect** do Neon, escolha branch `clean`, banco `neondb`, role `neondb_owner`, **pooling desligado** (o bootstrap usa `SET ROLE`, que o pooler em modo transação quebra), e clique no ícone de copiar. **Não cole a URL em lugar nenhum**: o PowerShell a lê da área de transferência, inclusive se vier no formato `psql '...'`:
    ```powershell
-   docker run --rm -i -v ${PWD}/infra/neon:/sql postgres:17 psql "<URL do dono>" -v ON_ERROR_STOP=1 -v migrator_password="<senha 1>" -v app_password="<senha 2>" -f /sql/bootstrap.sql
+   $owner = [regex]::Match(((Get-Clipboard) -join ''), "postgresql://[^'`"\s]+").Value.TrimEnd(':')
+   $owner.StartsWith("postgresql://neondb_owner:")   # True
+   $owner.Contains("-pooler")                        # False
+   docker run --rm -i -v "${PWD}/infra/neon:/sql" postgres:17 psql $owner -v ON_ERROR_STOP=1 -v migrator_password=$mig -v app_password=$app -f /sql/bootstrap.sql
+   Remove-Variable owner; Set-Clipboard -Value " "
    ```
-   Isso cria `nextbank_migrator`, `nextbank_app` e o banco `nextbank` **por SQL**. Nunca crie esses papéis pelo painel, porque papéis do painel ignoram os `GRANT`s (ADR 0009).
+   Isso cria `nextbank_migrator`, `nextbank_app` e o banco `nextbank` **por SQL**. As últimas linhas da saída devem ser `SET`, `REVOKE`, `GRANT`, `RESET`, `REVOKE ROLE` e `DO`; o `DO` final confere as permissões e interrompe com erro se elas não valeram (F-28). Nunca crie esses papéis pelo painel, porque papéis do painel ignoram os `GRANT`s (ADR 0009).
 
 ## 2. Neon: branch da demo
 
-1. Crie um branch **filho de `clean`** chamado `demo`, com compute.
-2. Monte as duas URLs do branch `demo` (banco `nextbank`), sempre com `sslmode=verify-full`:
-   - **API** (`nextbank_app`, host com `-pooler`):
-     `postgresql://nextbank_app:<senha 2>@<host-pooler>/nextbank?sslmode=verify-full`
-   - **Migrations** (`nextbank_migrator`, host **direto**, sem `-pooler`):
-     `postgresql://nextbank_migrator:<senha 1>@<host-direto>/nextbank?sslmode=verify-full`
-3. Anote o **Project ID** e os IDs dos branches `clean` e `demo`, em Settings › General e na lista de branches. Eles não são segredo.
-4. Crie uma **API key** do Neon (Account settings › API keys). Ela **é** segredo.
+1. Em **Branches › New branch**: nome `demo`, pai `clean`, **Branch data and schema** (traz os papéis e as permissões), **Auto-delete desligado** (senão a demo some em um dia) e com compute.
+2. Monte as duas URLs do branch `demo` (banco `nextbank`), sempre com `sslmode=verify-full`, a partir dos hosts do compute (o com `-pooler` e o direto):
+   ```powershell
+   $apiUrl = "postgresql://nextbank_app:$app@<host-com-pooler>/nextbank?sslmode=verify-full"
+   $migUrl = "postgresql://nextbank_migrator:$mig@<host-direto>/nextbank?sslmode=verify-full"
+   ```
+3. Teste as duas conferindo o certificado. A imagem `postgres:17` vem sem os certificados raiz, por isso o teste os instala antes; a API (Node) e o dbmate (no runner do GitHub) já trazem os seus e usam as URLs como estão:
+   ```powershell
+   docker run --rm -e PGURL=$apiUrl postgres:17 sh -c 'apt-get update -qq >/dev/null && apt-get install -yqq ca-certificates >/dev/null 2>&1 && psql "$PGURL&sslrootcert=system" -Atc "select current_user"'   # nextbank_app
+   docker run --rm -e PGURL=$migUrl postgres:17 sh -c 'apt-get update -qq >/dev/null && apt-get install -yqq ca-certificates >/dev/null 2>&1 && psql "$PGURL&sslrootcert=system" -Atc "select current_user"'   # nextbank_migrator
+   ```
+4. Guarde as duas URLs no gerenciador de senhas (`Set-Clipboard -Value $apiUrl`, cole; depois o mesmo com `$migUrl`) e limpe: `Remove-Variable mig, app, apiUrl, migUrl; Set-Clipboard -Value " "`.
+5. Anote o **Project ID** e os IDs dos branches `clean` e `demo`, em Settings › General e na lista de branches. Eles não são segredo.
+6. Crie uma **API key** do Neon (Account settings › API keys). Ela **é** segredo.
 
 ## 3. Render: o serviço da API
 
@@ -45,7 +57,7 @@ Este documento descreve como a V1 é publicada e mantida, com custo zero: Neon (
    - **Region:** Virginia (US East).
    - **Branch:** `main`.
    - **Runtime:** Node.
-   - **Build command:** `corepack enable && pnpm install --frozen-lockfile`
+   - **Build command:** `corepack pnpm install --frozen-lockfile` (o `corepack enable` falha no Render, onde o `/usr/bin` é somente leitura)
    - **Start command:** `cd apps/api && node src/server.ts`
    - **Instance type:** Free.
    - **Health check path:** `/health`.
