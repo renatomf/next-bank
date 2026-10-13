@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Brand colours for what Android draws before Flutter does (week 8 plan,
+     task 4): the same backgrounds as NbColors, so opening never flashes white. -->
+<resources>
+    <color name="ic_launcher_background">#0A0F14</color>
+    <color name="brand_background">#F2F6F6</color>
+</resources>
