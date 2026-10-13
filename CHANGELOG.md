@@ -6,6 +6,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não publicado]
 
+## [1.0.1] — 2026-10-13
+
 ### Alterado
 - **Despertador da API:** um monitor do UptimeRobot chama o `/health` a cada 5 min e avisa por e-mail se a API cair. O workflow agendado do GitHub (`keep-awake.yml`) rodou só 3 vezes no dia da `v1.0.0`, e a API dormia (ADR 0012, revisão).
 - **README:** como passar pelo bloqueio do Play Protect ao instalar o APK.
