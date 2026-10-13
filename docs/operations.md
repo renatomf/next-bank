@@ -74,7 +74,7 @@ Este documento descreve como a V1 é publicada e mantida, com custo zero: Neon (
    | `NODE_ENV` | `production` (exige `sslmode=verify-full`) |
    | `NODE_VERSION` | `24` |
    | `HOST` | `0.0.0.0` |
-   | `TRUST_PROXY` | `1` (ver a verificação no passo 6) |
+   | `TRUST_PROXY` | `3` (Cloudflare e dois proxies do Render; ver a verificação no passo 6) |
    | `DATABASE_URL` | a URL da **API** do passo 2 |
    | `JWT_PRIVATE_KEY`, `JWT_KEY_ID`, `PII_ENCRYPTION_KEY`, `PII_HMAC_KEY`, `PII_KEY_VERSION`, `PIN_PEPPER` | do `generate-dev-keys.ts` |
 
@@ -97,14 +97,28 @@ Em **Settings › Secrets and variables › Actions › Variables**, no nível d
 2. Em **Actions › Demo reset › Run workflow**: cria Ana e Bruno. O smoke test confirma o login de Ana.
 3. Abra `<API_URL>/health` no navegador. A resposta deve ser `{"status":"ok","release":"<commit>"}`.
 
-## 6. Verificação do IP do cliente (API-14), obrigatória no primeiro deploy
+## 6. Verificação do IP do cliente (API-14), obrigatória a cada mudança de hospedagem
 
-O `TRUST_PROXY=1` supõe um único proxy do Render na frente da API.
+Entre o cliente e a API há **três** saltos: a Cloudflare e dois proxies do Render. `TRUST_PROXY=3`, verificado em 2026-10-13. Com `1`, a API enxergava um endereço interno do Render (`10.x`) como cliente; com `2`, um servidor da Cloudflare (`104.x`, `172.70.x`), diferente a cada requisição. Nos dois casos, os visitantes dividiam contadores de tentativas que não eram deles (F-29).
 
-1. Pelo celular, fora do Wi-Fi de casa, faça um login de propósito com a senha errada.
-2. Nos logs do Render, procure a requisição `POST /v1/auth/login` e compare o `remoteAddress` com o IP público do celular (por exemplo, em um site de "qual é meu IP").
-   - **Iguais:** está certo.
-   - **IP interno do Render:** há mais saltos. Ajuste o `TRUST_PROXY` e repita a verificação.
+A verificação é feita **do computador**, e não do celular: na rede móvel (CGNAT), a operadora pode mostrar um IP diferente para cada site, e a comparação não serve. Em Git Bash:
+
+```sh
+ts=$(date +%s)
+curl -4 -s -o /dev/null -w "%{http_code}\n" -X POST "$API_URL/v1/auth/login" \
+  -H 'content-type: application/json' -H "x-request-id: api14-plain-$ts" \
+  -d '{"email":"ana.demo@example.com","password":"wrong-on-purpose"}'
+curl -4 -s -o /dev/null -w "%{http_code}\n" -X POST "$API_URL/v1/auth/login" \
+  -H 'content-type: application/json' -H "x-request-id: api14-spoof-$ts" \
+  -H 'x-forwarded-for: 203.0.113.66' \
+  -d '{"email":"ana.demo@example.com","password":"wrong-on-purpose"}'
+curl -4 -s https://api.ipify.org; echo; echo "$ts"
+```
+
+Nos logs do Render, busque `api14-plain-<ts>` e `api14-spoof-<ts>` e confira o `remoteAddress` das duas linhas `incoming request`:
+- **As duas com o IPv4 público do computador:** certo.
+- **`10.x` ou outro endereço interno:** há mais saltos. Suba o `TRUST_PROXY` em 1 (máximo 3) e repita.
+- **`203.0.113.66` na linha forjada:** o cliente escolhe o próprio IP. Desça o `TRUST_PROXY` em 1 e repita.
 
 ## Rotina
 
