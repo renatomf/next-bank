@@ -323,6 +323,41 @@ O desenvolvedor reviu três pontos que a primeira rodada tinha adiado.
 - [ ] Ícone do app (adaptativo: "next" em Sora Bold e o ponto verde-menta) e splash nativa (fundo da marca e ícone, Android 12+)
 - [ ] Visual da tela Splash, pedido pelo desenvolvedor com uma imagem de referência (seda de vidro verde), o logo e um slogan. Decisões pendentes: o fundo recriado em código com o `Silk` (sem asset) ou a imagem, só com licença comprovada; o slogan "Finance at your fingertips" ou em pt-BR; nenhuma espera artificial (abertura a frio < 2 s)
 
+### Desenho da tarefa 4
+
+**Fontes conferidas**
+
+| Fonte | Regra | Como se prova |
+|---|---|---|
+| MOB-06 / CLAUDE.md, Mobile | Build de release ofuscado | `--obfuscate --split-debug-info` e R8 (`isMinifyEnabled`, `isShrinkResources`) no `release.yml`; checkpoint: nomes de classes e funções ilegíveis no APK |
+| MOB-03 | Só HTTPS no release | `API_BASE_URL` de produção (`https://`); o `api_config.dart` já recusa `http` no release (teste existente) |
+| MOB-03 (tráfego) | Nenhum certificado do usuário aceito | Checkpoint com uma ferramenta de interceptação: o APK de release responde "Sem conexão" |
+| CLAUDE.md, Segredos | A chave de assinatura nunca entra no git | `.gitignore` já tem `*.jks`, `*.keystore` e `key.properties`; a chave vive só nos segredos do GitHub (base64) e no backup do desenvolvedor |
+| CLAUDE.md, Observabilidade | Release com Sentry | `SENTRY_DSN` do app como segredo, passado por `--dart-define` |
+| Roadmap 8.2 | APK nas Releases a cada versão | `release.yml` publica o APK e o SHA-256 dele na Release da tag |
+
+**Peças**
+
+| Peça | Onde | O que faz |
+|---|---|---|
+| Assinatura | `android/app/build.gradle.kts` | `signingConfigs.release` lê a chave de variáveis de ambiente (`ANDROID_KEYSTORE_PATH`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`). Sem elas, o release local cai na chave de debug, como hoje, e nunca é publicado |
+| R8 | mesmo arquivo | `isMinifyEnabled` e `isShrinkResources` no release, com as regras de ProGuard que os plugins já trazem |
+| `release.yml` | `.github/workflows/` | Na tag `v*`: testes, decodifica a chave num arquivo temporário do runner, `flutter build apk --release --obfuscate --split-debug-info` com `API_BASE_URL`, `SENTRY_DSN` e `APP_ENVIRONMENT=production`, publica o APK, o SHA-256 e os símbolos de ofuscação (estes como artefato privado do workflow, não na Release) |
+| Versão | `pubspec.yaml` | `version` vem da tag (`v1.0.0` → `1.0.0`) e o build number do número da execução |
+| Ícone | `android/app/src/main/res` | Ícone adaptativo: fundo na cor da marca e, na frente, o logo desenhado pelo próprio `NextLogo`, renderizado uma vez em PNG para cada densidade por um teste gerador (como fizemos para conferir o símbolo do Pix). Sem dependência nova; é código gerado, sem TDD |
+| Splash nativa | `res/values*/styles.xml` | Fundo da cor da marca (claro e escuro) e o ícone no centro (Android 12+), para o app não piscar branco ao abrir |
+| Cache do NDK | `ci.yml`, `e2e.yml`, `release.yml` | Desde o Sentry, todo build Android baixa o NDK (~1 GB); o cache evita o download e a falha vista no CI |
+
+**Segredos novos (só no GitHub, ambiente `release`):** `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` e `SENTRY_DSN_APP`. A chave é gerada pelo desenvolvedor com o `keytool` na própria máquina e guardada com backup: sem ela, um APK novo não atualiza o instalado.
+
+**Concorrência e contratos:** nenhum.
+
+**Dependências novas:** nenhuma.
+
+**Fora:** Play Store (a V1 publica o APK nas Releases), iOS (sem Mac), o visual novo da tela Splash (decisões pendentes acima) e o envio dos símbolos de ofuscação ao Sentry.
+
+- [x] Desenho da tarefa 4 aprovado
+
 ## Tarefa 5 — Medição, README e tag (dias 4–5)
 
 - [ ] Performance medida e registrada (D8)
