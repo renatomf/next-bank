@@ -114,6 +114,27 @@ O `TRUST_PROXY=1` supõe um único proxy do Render na frente da API.
 4. **App:** o DSN do `next-bank-app` entra no build de release por `--dart-define=SENTRY_DSN=...` (tarefa 4, `release.yml`, como segredo do GitHub). Builds sem DSN não enviam nada.
 5. O que chega ao Sentry: só erros inesperados (500 na API; falhas do Flutter no app), com o release e o ambiente. Nunca usuário, corpo de requisição, cabeçalhos de credencial, senha, PIN, tokens ou CPF: um removedor limpa cada evento antes de sair (`sentry-error-reporter.ts`, `error_reporting.dart`).
 
+## 8. Release do app: chave de assinatura
+
+O `release.yml` publica o APK na Release de cada tag `v*`, assinado com a chave do app. A chave é a identidade do app: **sem ela, nenhuma versão nova atualiza a instalada**, e quem a tiver pode publicar um APK que se passa pelo next bank. Ela vive só na sua máquina (com backup no gerenciador de senhas) e nos segredos do GitHub.
+
+1. Gere a chave **fora do repositório**. O `keytool` vem com o JDK do Android Studio (`<Android Studio>\jbr\bin`) e pede as senhas sem mostrá-las; use a mesma senha para a chave e para o arquivo:
+   ```powershell
+   keytool -genkeypair -keystore "$env:USERPROFILE\next-bank-release.jks" -alias next-bank -keyalg RSA -keysize 4096 -validity 10000
+   ```
+   Guarde o arquivo `.jks` e a senha no gerenciador de senhas.
+2. Em **Settings › Environments**, crie o ambiente `release` e, em **Deployment branches and tags**, permita só tags `v*`.
+3. Crie os segredos do ambiente pelo `gh`, que lê da entrada sem mostrar nada na tela:
+   ```powershell
+   [Convert]::ToBase64String([IO.File]::ReadAllBytes("$env:USERPROFILE\next-bank-release.jks")) | gh secret set ANDROID_KEYSTORE_BASE64 --env release
+   gh secret set ANDROID_KEYSTORE_PASSWORD --env release   # cole a senha quando pedir
+   gh secret set ANDROID_KEY_PASSWORD --env release        # a mesma senha
+   gh secret set ANDROID_KEY_ALIAS --env release --body next-bank
+   gh secret set SENTRY_DSN_APP --env release              # o DSN do next-bank-app (seção 7)
+   ```
+4. Publicar uma versão: crie e envie a tag (`git tag v1.0.0`, `git push origin v1.0.0`). O workflow recusa publicar sem a chave, sem o DSN ou sem `API_URL` em HTTPS. Os símbolos de ofuscação ficam como artefato privado da execução por 90 dias.
+5. Quem baixa confere o APK pelo SHA-256 publicado junto: `Get-FileHash next-bank-v1.0.0.apk`.
+
 ## Rotina
 
 - **Deploy:** automático depois de cada merge na `main` com o CI verde, ou manual pelo workflow.
