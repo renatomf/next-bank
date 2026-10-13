@@ -90,6 +90,12 @@ jobs:
           flutter-version: 3.47.5
           channel: stable
           cache: true
+      # The NDK the Android build asks for (Flutter 3.47.5 and its plugins): cached,
+      # since downloading it on every build is slow and has failed here. Bump it with Flutter.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /usr/local/lib/android/sdk/ndk/28.2.13676358
+          key: ndk-${{ runner.os }}-28.2.13676358
       - name: Enable KVM for the emulator
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \

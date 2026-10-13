@@ -1,0 +1,105 @@
+name: Release
+
+# The Android APK of each version (roadmap 8.2; week 8 plan, task 4): on a tag
+# v*, the tests run again, and the APK is built signed, obfuscated (MOB-06) and
+# pointed at the production API over HTTPS (MOB-03), then published on the
+# GitHub Release with its SHA-256.
+on:
+  push:
+    tags: ['v*']
+
+# Least privilege (API-09); only the job that publishes may write.
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  apk:
+    name: Android APK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    # The signing key and the app's Sentry DSN live only in this environment.
+    environment: release
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: apps/mobile
+    env:
+      TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Refuse to publish anything that is not complete: a version tag, the
+      # signing key, an HTTPS API and the Sentry DSN.
+      - name: Check the tag and the release configuration
+        env:
+          API_URL: ${{ vars.API_URL }}
+          HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' && secrets.ANDROID_KEYSTORE_PASSWORD != '' && secrets.ANDROID_KEY_ALIAS != '' && secrets.ANDROID_KEY_PASSWORD != '' }}
+          HAS_SENTRY: ${{ secrets.SENTRY_DSN_APP != '' }}
+        run: |
+          echo "$TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$' || { echo "Tag must be vMAJOR.MINOR.PATCH"; exit 1; }
+          case "$API_URL" in https://*) ;; *) echo "API_URL must be set and use https"; exit 1 ;; esac
+          [ "$HAS_KEYSTORE" = true ] || { echo "Signing secrets missing in the release environment"; exit 1; }
+          [ "$HAS_SENTRY" = true ] || { echo "SENTRY_DSN_APP missing in the release environment"; exit 1; }
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: 3.47.5
+          channel: stable
+          cache: true
+      # No cache here, unlike CI: the job that signs builds only from what it
+      # downloads itself, so nothing restored from another run reaches the APK.
+      - run: flutter pub get --enforce-lockfile
+      - run: flutter analyze --fatal-infos
+      - run: flutter test
+      # The key exists on disk only for the build, in the runner's temporary
+      # directory, and is removed even if the build fails.
+      - name: Build the signed APK
+        env:
+          API_URL: ${{ vars.API_URL }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN_APP }}
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: |
+          export ANDROID_KEYSTORE_PATH="$RUNNER_TEMP/release.jks"
+          trap 'rm -f "$ANDROID_KEYSTORE_PATH"' EXIT
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$ANDROID_KEYSTORE_PATH"
+          flutter build apk --release \
+            --obfuscate --split-debug-info=build/symbols \
+            --build-name="${TAG#v}" --build-number="$BUILD_NUMBER" \
+            --dart-define=API_BASE_URL="$API_URL" \
+            --dart-define=SENTRY_DSN="$SENTRY_DSN" \
+            --dart-define=APP_ENVIRONMENT=production
+      - name: Name the APK and its checksum
+        run: |
+          mkdir -p "$RUNNER_TEMP/dist"
+          cp build/app/outputs/flutter-apk/app-release.apk "$RUNNER_TEMP/dist/next-bank-$TAG.apk"
+          cd "$RUNNER_TEMP/dist"
+          sha256sum "next-bank-$TAG.apk" > "next-bank-$TAG.apk.sha256"
+          cat "next-bank-$TAG.apk.sha256"
+      # The symbols turn obfuscated stack traces back into names: kept private,
+      # with the run, never on the public Release.
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: obfuscation-symbols-${{ github.ref_name }}
+          path: apps/mobile/build/symbols
+          retention-days: 90
+          if-no-files-found: error
+      - name: Publish the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "$TAG"
+          "$RUNNER_TEMP/dist/next-bank-$TAG.apk"
+          "$RUNNER_TEMP/dist/next-bank-$TAG.apk.sha256"
+          --repo "$GITHUB_REPOSITORY"
+          --title "$TAG"
+          --generate-notes
+          --verify-tag
