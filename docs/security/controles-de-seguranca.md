@@ -188,6 +188,31 @@
 
 ---
 
+## 9.1 Mapa dos testes de segurança obrigatórios
+
+O CLAUDE.md exige testes de autorização (IDOR), idempotência, concorrência, rate limit, reuso de refresh token e bloqueio de PIN. Cada linha liga a exigência ao teste que a prova, sempre contra o Postgres real. Conferido na semana 8 (tarefa 2), sem lacunas. Um teste novo de segurança entra aqui.
+
+| Exigência | O que o teste prova | Arquivo (`apps/api/test/`) |
+|---|---|---|
+| **IDOR (todo recurso)** | Conta: nunca mostra a de outro cliente e recusa qualquer parâmetro que aponte para outra (READ-01, READ-05) | `modules/accounts/http/my-account-route.test.ts` |
+| | Extrato: nunca mostra item de outro cliente | `modules/accounts/http/statement-route.test.ts` |
+| | Sessões: nunca lista nem encontra a sessão de outro cliente (404) | `modules/identity/http/me-sessions-routes.test.ts` |
+| | Pix: autorizar, ver o comprovante ou cancelar o Pix de outro → o mesmo 404 de um Pix inexistente (PIX-01) | `modules/payments/http/authorize-route.test.ts`, `receipt-cancel-routes.test.ts` |
+| **Idempotência** | 10 requisições simultâneas com a mesma `Idempotency-Key` criam um Pix só; a mesma chave com outro pedido → `IdempotencyKeyReused` | `modules/payments/http/create-transfer-route.test.ts` |
+| | Autorização repetida recebe a mesma resposta e gera um lançamento só | `modules/payments/http/authorize-route.test.ts` |
+| | Logout idempotente | `modules/identity/http/session-routes.test.ts` |
+| **Concorrência (saldo)** | Dois Pix de R$ 80,00 sobre R$ 100,00 autorizados ao mesmo tempo: o saldo é gasto uma vez (T-DB-08) | `modules/payments/infrastructure/pg-pix-concurrency.test.ts` |
+| | 50 Pix A→B e 50 B→A ao mesmo tempo sem deadlock (T-DB-09); 1.000 Pix aleatórios e todo saldo bate com o ledger (T-DB-14) | `modules/payments/infrastructure/pg-pix-concurrency.test.ts` |
+| | Duas autorizações simultâneas do mesmo Pix: uma passa, a outra recebe 409 | `modules/payments/http/authorize-route.test.ts` |
+| **Rate limit** | Login: 6ª tentativa errada numa conta em 1 min, de qualquer IP, e 11ª de um IP → 429 (AUTH-01); rajada simultânea de muitos IPs respeita o limite (F-11) | `modules/identity/http/login-route.test.ts` |
+| | Cadastro: 3 por IP por hora (AUTH-09) | `application/onboarding/register-route.test.ts` |
+| | Consulta de chave Pix: 30 por hora por cliente (PIX-07) | `modules/payments/http/key-lookup-route.test.ts` |
+| | Senha errada na troca de PIN e de senha conta no limite do login | `modules/identity/http/pin-change-route.test.ts`, `password-change-route.test.ts` |
+| **Reuso de refresh token** | Um token já trocado que volta depois de 10 s revoga a sessão inteira (AUTH-03); dois refresh simultâneos deixam um token ativo só | `modules/identity/http/session-routes.test.ts` |
+| **Bloqueio de PIN** | Bloqueia no 5º PIN errado, contado junto no Desbloqueio e no Pix, e recusa até o certo (PIX-05); 10 palpites paralelos contam uma vez cada | `modules/identity/http/pin-verify-route.test.ts`, `modules/payments/http/authorize-route.test.ts` |
+| **Sessão encerrada (AUTH-04)** | Access token ainda válido de uma sessão encerrada é recusado nas operações sensíveis | `authorize-route.test.ts`, `pin-verify-route.test.ts`, `receipt-cancel-routes.test.ts`, `me-sessions-routes.test.ts` |
+| **Contas de demonstração (DEMO-03)** | Não trocam senha nem PIN, nem encerram sessões (403), sem gastar tentativas | `modules/identity/http/demo-accounts-route.test.ts` |
+
 ## 10. Registro de achados
 
 Achados das revisões de segurança e da construção, no formato de relatório de auditoria. Achado novo entra aqui com severidade e status.
