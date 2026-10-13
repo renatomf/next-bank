@@ -36,6 +36,8 @@ import { healthRoutes } from './shared/http/health.ts';
 import { registerProblemHandlers } from './shared/http/problem.ts';
 import type { PiiKeys } from './shared/infrastructure/aes-gcm-pii-protector.ts';
 import { PgUnitOfWork } from './shared/infrastructure/pg-unit-of-work.ts';
+import type { ErrorReporter } from './shared/application/ports.ts';
+import { NoopErrorReporter } from './shared/infrastructure/sentry-error-reporter.ts';
 import { SystemClock, UuidV7Generator } from './shared/infrastructure/system-ports.ts';
 import { REDACT_PATHS } from './shared/logging.ts';
 
@@ -54,6 +56,8 @@ export interface AppDependencies {
   trustProxy?: number;
   /** The commit running, shown by the health check. */
   release?: string;
+  /** Where unexpected errors go; nowhere but the logs by default. */
+  errorReporter?: ErrorReporter;
 }
 
 // Per client IP (API-02). In memory: one instance in V1 (plan D3). Behind the
@@ -69,7 +73,14 @@ function requestId(request: IncomingMessage): string {
 }
 
 /** Composition root: the only place that connects ports to their implementations. */
-export function buildApp({ pool, logStream, security, trustProxy = 0, release }: AppDependencies) {
+export function buildApp({
+  pool,
+  logStream,
+  security,
+  trustProxy = 0,
+  release,
+  errorReporter = new NoopErrorReporter(),
+}: AppDependencies) {
   const app = Fastify({
     // The client is the hop before the trusted proxies: hop 0 is the socket peer,
     // so only the first [trustProxy] hops are believed. With none, X-Forwarded-For
@@ -88,7 +99,7 @@ export function buildApp({ pool, logStream, security, trustProxy = 0, release }:
 
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
-  registerProblemHandlers(app);
+  registerProblemHandlers(app, errorReporter);
 
   app.addHook('onRequest', (request, reply, done) => {
     void reply.header('x-request-id', request.id);

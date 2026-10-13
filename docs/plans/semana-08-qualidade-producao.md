@@ -158,6 +158,49 @@ apps/mobile/
 - [x] Seed das contas da demo e `demo-reset.yml`: restauração pelo Neon, migrations, seed pela API publicada e smoke test verdes em produção (2026-10-12)
 - [ ] Sentry na API e no app
 
+### Desenho do PR (c): Sentry
+
+**Fontes conferidas**
+
+| Fonte | Regra | Teste |
+|---|---|---|
+| CLAUDE.md, Observabilidade | Todo erro inesperado chega ao Sentry, com release e ambiente | API: um erro 500 vira um evento com `release` e `environment`; um erro do catálogo (4xx) não vira evento |
+| CLAUDE.md, LGPD | CPF, tokens, senhas e PIN removidos no `beforeSend` | Removedor (API e app): um evento com CPF, `Authorization`, senha, PIN, refresh token e corpo de requisição sai sem nenhum deles |
+| MOB-02 | Nada sensível em logs, cache ou relatórios de erro do app | Removedor do app, mais `sendDefaultPii: false` |
+| API-03 | Respostas nunca expõem detalhes internos | O cliente continua recebendo o problema genérico; o detalhe vai só para o Sentry, já limpo |
+
+**Estrutura**
+- **API:** porta `ErrorReporter` em `shared/application`, com dois adaptadores em `shared/infrastructure`: `SentryErrorReporter` e `NoopErrorReporter`, usado sem DSN, no local e nos testes. O tratador de erros HTTP chama o reporter **só no ramo do erro inesperado**. O removedor (`scrubEvent`) é uma função pura, testada sozinha.
+- **App:** `core/error_reporting.dart` inicia o Sentry só quando há `SENTRY_DSN` (`--dart-define`). O `beforeSend` e o `beforeBreadcrumb` passam pelo mesmo tipo de removedor, também uma função pura testada. Erros do Flutter e da zona chegam pelo próprio SDK.
+- **Configuração da API:** `SENTRY_DSN` e `SENTRY_ENVIRONMENT`, opcionais. O release vem do `RENDER_GIT_COMMIT`, já usado no `/health`.
+- **Configuração do app:** `SENTRY_DSN` e `APP_ENVIRONMENT` por `--dart-define`. O release é a versão do app.
+
+**O que o removedor tira** (a mesma lista do `redact` do Pino):
+- cabeçalhos `authorization` e `cookie`;
+- o corpo inteiro das requisições;
+- os campos `password`, `currentPassword`, `newPassword`, `pin`, `newPin`, `refreshToken`, `accessToken`, `cpf` e `key`;
+- qualquer sequência com cara de CPF (11 dígitos, com ou sem máscara) nas mensagens.
+
+`sendDefaultPii` fica falso nos dois lados, e não há rastreio de desempenho (`tracesSampleRate` 0): o Sentry recebe só erros.
+
+**Dependências novas** (conferidas em 2026-10-13)
+
+| Pacote | Versão escolhida | Licença | Por quê nessa versão |
+|---|---|---|---|
+| `@sentry/node` | `^10.76` | MIT | Linha 10, madura e ainda corrigida. A 11 tem 3 semanas e 7 versões, então espera |
+| `sentry_flutter` | `^9.30.1` | MIT (Flutter Favorite, 150/160 pontos) | A 10.0.0 é uma versão maior com 4 dias. A 9.30.1 tem 3 semanas e é estável |
+
+**Segredos e configuração**
+- O DSN não é segredo no sentido estrito, porque vai dentro do APK, mas fica fora do git: no Render (API) e no `--dart-define` do release (app).
+- O `.gitignore` já tem `.sentryclirc` e `sentry.properties`.
+- Fora deste PR: o envio de símbolos e de source maps, que exigiria um token.
+
+**Conta:** o desenvolvedor cria no Sentry (plano gratuito, Developer) uma organização e dois projetos, `next-bank-api` (Node) e `next-bank-app` (Flutter), e anota os dois DSNs.
+
+**Fora:** rastreio de desempenho, replay de sessão, alertas por e-mail além do padrão e o envio de símbolos de ofuscação.
+
+- [x] Desenho do Sentry aprovado (2026-10-13); API e app implementados com testes antes (748 e 624 testes); falta o desenvolvedor criar a conta e pôr o DSN no Render
+
 ### Desenho da tarefa 3
 
 Três PRs: (a) API pronta para produção; (b) infraestrutura e workflows; (c) Sentry, com o próprio desenho quando chegar a vez.
@@ -276,12 +319,86 @@ O desenvolvedor reviu três pontos que a primeira rodada tinha adiado.
 
 ## Tarefa 4 — App de release (dia 4)
 
-- [ ] Chave de assinatura, `release.yml`, APK ofuscado apontando para HTTPS; checkpoint no celular com o APK
-- [ ] Ícone do app (adaptativo: "next" em Sora Bold e o ponto verde-menta) e splash nativa (fundo da marca e ícone, Android 12+)
+- [x] Chave de assinatura, `release.yml`, APK ofuscado apontando para HTTPS; checkpoint no celular com o APK (2026-10-13, Galaxy S21): com um proxy de interceptação e certificado de usuário, o Chrome foi interceptado e o next bank recusou a conexão; sem o proxy, Ana entrou. Nenhuma das 43 classes do app com 12 letras ou mais aparece no binário ofuscado. Achado F-31 (mensagem da falha de TLS), corrigido
+- [x] Ícone do app (adaptativo: "n." do `NextLogo`, centralizado com ajuste óptico) e splash nativa (fundo da marca e ícone, Android 12+)
 - [ ] Visual da tela Splash, pedido pelo desenvolvedor com uma imagem de referência (seda de vidro verde), o logo e um slogan. Decisões pendentes: o fundo recriado em código com o `Silk` (sem asset) ou a imagem, só com licença comprovada; o slogan "Finance at your fingertips" ou em pt-BR; nenhuma espera artificial (abertura a frio < 2 s)
+
+### Desenho da tarefa 4
+
+**Fontes conferidas**
+
+| Fonte | Regra | Como se prova |
+|---|---|---|
+| MOB-06 / CLAUDE.md, Mobile | Build de release ofuscado | `--obfuscate --split-debug-info` e R8 (`isMinifyEnabled`, `isShrinkResources`) no `release.yml`; checkpoint: nomes de classes e funções ilegíveis no APK |
+| MOB-03 | Só HTTPS no release | `API_BASE_URL` de produção (`https://`); o `api_config.dart` já recusa `http` no release (teste existente) |
+| MOB-03 (tráfego) | Nenhum certificado do usuário aceito | Checkpoint com uma ferramenta de interceptação: o APK de release responde "Sem conexão" |
+| CLAUDE.md, Segredos | A chave de assinatura nunca entra no git | `.gitignore` já tem `*.jks`, `*.keystore` e `key.properties`; a chave vive só nos segredos do GitHub (base64) e no backup do desenvolvedor |
+| CLAUDE.md, Observabilidade | Release com Sentry | `SENTRY_DSN` do app como segredo, passado por `--dart-define` |
+| Roadmap 8.2 | APK nas Releases a cada versão | `release.yml` publica o APK e o SHA-256 dele na Release da tag |
+
+**Peças**
+
+| Peça | Onde | O que faz |
+|---|---|---|
+| Assinatura | `android/app/build.gradle.kts` | `signingConfigs.release` lê a chave de variáveis de ambiente (`ANDROID_KEYSTORE_PATH`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`). Sem elas, o release local cai na chave de debug, como hoje, e nunca é publicado |
+| R8 | mesmo arquivo | `isMinifyEnabled` e `isShrinkResources` no release, com as regras de ProGuard que os plugins já trazem |
+| `release.yml` | `.github/workflows/` | Na tag `v*`: testes, decodifica a chave num arquivo temporário do runner, `flutter build apk --release --obfuscate --split-debug-info` com `API_BASE_URL`, `SENTRY_DSN` e `APP_ENVIRONMENT=production`, publica o APK, o SHA-256 e os símbolos de ofuscação (estes como artefato privado do workflow, não na Release) |
+| Versão | `pubspec.yaml` | `version` vem da tag (`v1.0.0` → `1.0.0`) e o build number do número da execução |
+| Ícone | `android/app/src/main/res` | Ícone adaptativo: fundo na cor da marca e, na frente, o logo desenhado pelo próprio `NextLogo`, renderizado uma vez em PNG para cada densidade por um teste gerador (como fizemos para conferir o símbolo do Pix). Sem dependência nova; é código gerado, sem TDD |
+| Splash nativa | `res/values*/styles.xml` | Fundo da cor da marca (claro e escuro) e o ícone no centro (Android 12+), para o app não piscar branco ao abrir |
+| Cache do NDK | `ci.yml`, `e2e.yml` | Desde o Sentry, todo build Android baixa o NDK (~1 GB); o cache evita o download e a falha vista no CI. O `release.yml` não usa cache: o job que assina compila só com o que ele mesmo baixa, para nada restaurado de outra execução entrar no APK assinado |
+
+**Segredos novos (só no GitHub, ambiente `release`):** `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` e `SENTRY_DSN_APP`. A chave é gerada pelo desenvolvedor com o `keytool` na própria máquina e guardada com backup: sem ela, um APK novo não atualiza o instalado.
+
+**Concorrência e contratos:** nenhum.
+
+**Dependências novas:** nenhuma.
+
+**Fora:** Play Store (a V1 publica o APK nas Releases), iOS (sem Mac), o visual novo da tela Splash (decisões pendentes acima) e o envio dos símbolos de ofuscação ao Sentry.
+
+- [x] Desenho da tarefa 4 aprovado
 
 ## Tarefa 5 — Medição, README e tag (dias 4–5)
 
-- [ ] Performance medida e registrada (D8)
+- [x] Performance medida e registrada (D8): `docs/performance.md`; a autorização do Pix passa do orçamento e o desvio está no ADR 0012
 - [ ] README: vídeo, APK, contas da demo, diagramas e retenção dos dados
 - [ ] Threat model, matriz, checklist, CHANGELOG; tag `v1.0.0`
+
+### Desenho da tarefa 5
+
+**Fontes conferidas**
+
+| Fonte | Regra | Como se prova |
+|---|---|---|
+| CLAUDE.md, Performance | p95 < 200 ms nas leituras e < 400 ms no Pix, no ambiente publicado e com carga nominal | Script de medição contra a API publicada; resultado em `docs/performance.md` |
+| CLAUDE.md, Performance | Abertura a frio < 2 s em aparelho intermediário | `flutter run --profile --trace-startup` no celular (checkpoint); `timeToFirstFrameMicros` no mesmo documento |
+| ADR 0012 / D9 | Se o Pix passar de 400 ms por causa do plano gratuito, o desvio é registrado, não escondido | Número medido e desvio no ADR 0012, se houver |
+| API-02 | Limite global de 100 requisições por minuto por IP | O script espaça as requisições (uma a cada 0,75 s) e falha se receber 429, em vez de medir respostas de erro |
+| DEMO-02 | Dados de visitantes não se acumulam | Os Pix da medição (R$ 0,01 de Bruno para Ana) somem no reset diário |
+| MOB-03, MOB-06 | Só HTTPS; release ofuscado | Checkpoint no celular com o APK de release: interceptação recusada, nomes ilegíveis |
+| Roadmap 8.2 | APK nas Releases | Tag `v1.0.0` → `release.yml`; SHA-256 conferido no APK baixado |
+
+**Peças**
+
+| Peça | Onde | O que faz |
+|---|---|---|
+| Medição | `apps/api/scripts/measure-latency.ts` (+ `pnpm measure`) | Entra como Bruno uma vez (Ana é a conta dos visitantes, e a cota de consultas de chave dela fica para eles: PIX-07) e mede, em sequência: `/health` (base da rede), `GET /v1/me/account` e `GET /v1/me/statement` (leituras), e o Pix inteiro (`key-lookups`, criar com `idempotency-key` novo, `authorize` com o PIN). Imprime p50, p95 e máximo por rota numa tabela em Markdown. Endereço por `MEASURE_API_URL` (obrigatório, sem padrão) |
+| Percentil | mesmo script, função pura `percentile` | TDD: lista vazia, um valor, p95 de 100 valores, ordem de entrada irrelevante |
+| Resultado | `docs/performance.md` (novo) | Como medir, onde (do Brasil, ~120 ms de ida e volta), a tabela, a latência da rede descontada pelo `/health`, e a abertura a frio |
+| README (pt e en) | `README.md`, `README.en.md` | Status "V1 publicada"; como baixar o APK e conferir o SHA-256; contas da demo (Ana e Bruno, públicas de propósito); retenção (tudo volta ao estado limpo às 03:00 de Brasília); primeira abertura pode levar até 1 min; aviso da marca Pix; vídeo; link para o plano atual |
+| Vídeo | anexo do GitHub (`user-attachments`) | Gravado por você no celular; enviado arrastando no editor do GitHub, que hospeda o arquivo. Nada de vídeo pesado no git |
+| Documentos de segurança | `threat-model.md`, `checklist-asvs-masvs.md`, `controles-de-seguranca.md` | Status das ameaças e controles da semana 8 (API-14, DEMO-02, DEMO-03, MOB-03, MOB-06) |
+| CHANGELOG e roadmap | `CHANGELOG.md`, `docs/roadmap.md` | `[Não publicado]` vira `[1.0.0] — data`; fase 1 marcada como entregue |
+| Tag | `v1.0.0` na `main` | Dispara o `release.yml`; criada só com tudo acima mergeado e o checkpoint aprovado |
+
+**Concorrência:** nenhuma nova. A medição roda em sequência, com um cliente só, porque o limite por IP impediria mais que isso de uma máquina. Os testes de concorrência já cobrem os acessos simultâneos.
+
+**Contratos:** nenhum endpoint, erro, schema ou query novos. Configuração nova só no script: `MEASURE_API_URL`.
+
+**Dependências novas:** nenhuma. **Desvio de D8:** o `autocannon` sai do plano. Com o limite de 100 requisições por minuto por IP, um gerador de carga só produziria 429, e a última versão dele é de 2024-10. `fetch` e `performance.now()` bastam.
+
+**Ordem:** (1) PR da medição: script, teste, `docs/performance.md` e, se for o caso, o desvio no ADR 0012; (2) checkpoint no celular com um APK de release gerado localmente: abertura a frio, interceptação, ofuscação; (3) PR da documentação da V1: README, segurança, CHANGELOG, roadmap; (4) merge do #110 e do #116; (5) tag `v1.0.0` e conferência do APK publicado.
+
+**Fora:** carga com vários clientes (exigiria liberar o limite por IP na produção), medição contínua no CI, a tela Splash nova e os PRs do Dependabot que mudam versão maior (#104), que ficam para depois da tag.
+
+- [x] Desenho da tarefa 5 aprovado
