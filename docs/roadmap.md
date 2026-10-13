@@ -262,6 +262,8 @@ As telas são construídas **direto no Flutter**, dentro de cada fatia (sem mock
 
 ## 8. Fase 1 — V1 Core (8 semanas)
 
+> ✅ **Entregue:** `v1.0.0`, em 2026-10-13. O que entrou está no [CHANGELOG](../CHANGELOG.md), e a performance medida, em [performance.md](performance.md).
+
 Fluxo de cada fatia: **ADR → testes de domínio (TDD) → backend → contrato → mobile → documentação.**
 
 Cada semana tem itens **obrigatórios** e **extras**. Se a semana estourar, os extras vão para o backlog.
@@ -294,7 +296,7 @@ Quem avalia o projeto precisa vê-lo funcionando **em menos de um minuto**, sem 
 - **APK** publicado nas Releases do GitHub a cada versão
 - **Contas de demonstração prontas** (ex.: Ana e Bruno, com saldo), documentadas no README, para um Pix entre elas em 30 segundos
 - **Cadastro sem dados reais:** o app gera um CPF fictício válido; o aviso pede para não usar dados pessoais
-- **Reset semanal** do banco da demo, apagando contas de visitantes e recriando as contas de demonstração
+- **Reset diário** do banco da demo (semanal no plano original; diário desde a semana 8, D5), apagando contas de visitantes e recriando as contas de demonstração
 - *Extra:* app rodando num emulador dentro do navegador
 
 ### 8.3 ADRs da V1

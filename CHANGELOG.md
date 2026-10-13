@@ -6,6 +6,48 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não publicado]
 
+## [1.0.0] — 2026-10-13
+
+Primeira versão publicada: o app Android ligado à API em produção, com a demo pública.
+
+### Adicionado — Semana 8: Qualidade e produção
+- **Demo pública:**
+  - contas de demonstração Ana e Bruno, criadas pelas próprias rotas da API (`pnpm seed:demo`), com saldo e com a chave CPF de Bruno para um Pix entre elas;
+  - as contas de demonstração não trocam senha nem PIN e não encerram sessões: `403 DemoAccountRestricted`, com o convite para criar a própria conta (DEMO-03).
+- **Produção, sem custo** (ADR 0012):
+  - API no Render e banco no Neon, os dois em `us-east-1`;
+  - certificado do banco sempre conferido (`sslmode=verify-full`);
+  - a API identifica o cliente atrás da Cloudflare e do Render (`TRUST_PROXY=3`), para o rate limit valer por cliente (API-14).
+- **Workflows:**
+  - `deploy.yml`: migrations, deploy e smoke test;
+  - `demo-reset.yml`: a demo volta ao estado limpo todo dia;
+  - `keep-awake.yml`: mantém a API gratuita acordada;
+  - `release.yml`: APK assinado e ofuscado nas Releases, com SHA-256.
+- **`/health` com o release:** mostra o commit publicado.
+- **Sentry na API e no app:** só erros inesperados, sem usuário, corpo de requisição, credenciais, tokens nem CPF.
+- **E2E do fluxo crítico:** login, Pix, comprovante e extrato num emulador Android, contra a API e o Postgres de verdade (`integration_test`, `e2e.yml`).
+- **Mapa dos testes de segurança obrigatórios:** cada item aponta para o arquivo que o prova (`controles-de-seguranca.md`, seção 9.1).
+- **Performance medida** ([performance.md](docs/performance.md)):
+  - leituras com cerca de 10 ms no servidor;
+  - abertura a frio do app em 0,7 s;
+  - a autorização do Pix passa do orçamento por causa do Argon2id na CPU gratuita, desvio registrado no ADR 0012.
+- **App de release:**
+  - assinado com chave guardada só nos segredos do CI;
+  - ofuscado (Dart e R8);
+  - só HTTPS, e recusa certificados de usuário (conferido com um proxy de interceptação).
+- **Ícone e abertura:** ícone adaptativo "n." desenhado pelo próprio logo, e splash nativa na cor da marca, nos temas claro e escuro.
+- **Home e navegação revistas:**
+  - barra de navegação embaixo, com rótulos e degradê no tom de cada tema;
+  - logo ao lado da saudação, atalhos do mesmo tamanho e o olho escondendo só o saldo, escondido desde a abertura;
+  - símbolo oficial do Pix (com o aviso de marca no README);
+  - campo de senha com o botão de mostrar o que foi digitado.
+
+### Corrigido — Semana 8
+- Uma falha ao renovar a sessão mantém a tela e mostra um aviso por cima, em vez de trocar a tela.
+- Atrás de um proxy de interceptação, o app dizia "Algo deu errado"; agora diz "Sem conexão" (F-31).
+- No Neon, as permissões do banco não valiam quando aplicadas pelo dono do projeto; o bootstrap passa a agir como dono do banco e confere o resultado (F-28).
+- Em produção, a API via um endereço interno ou da Cloudflare no lugar do cliente (F-29).
+
 ### Adicionado — Semana 7: Perfil, Segurança e polimento
 - **Sessões na API:**
   - `GET /v1/me/sessions` lista as sessões ativas do cliente, com o rótulo do aparelho e qual é a atual;
