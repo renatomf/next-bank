@@ -24,6 +24,12 @@ Open an account in minutes, track every cent in real time and send Pix (Brazil's
 
 > ✅ **V1 released:** sign-up, login, account, Pix with PIN, receipt and statement, in an Android app connected to a published API.
 
+## See it working
+
+The real app, on the published demo (1 min 40 s, no sound):
+
+https://github.com/user-attachments/assets/a2748bde-302c-45a7-a953-d19fa6b02b93
+
 ## Try it in a minute
 
 1. Download the APK from the [latest Release](https://github.com/renatomf/next-bank/releases/latest) (Android 7.0 or newer).

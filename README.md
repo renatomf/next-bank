@@ -24,6 +24,12 @@ Abra sua conta em minutos, acompanhe cada centavo em tempo real e envie Pix com 
 
 > ✅ **V1 publicada:** cadastro, login, conta, Pix com PIN, comprovante e extrato, num app Android ligado a uma API publicada.
 
+## Veja funcionando
+
+O app de verdade, na demo publicada (1 min 40 s, sem áudio):
+
+https://github.com/user-attachments/assets/a2748bde-302c-45a7-a953-d19fa6b02b93
+
 ## Experimente em um minuto
 
 1. Baixe o APK na [última Release](https://github.com/renatomf/next-bank/releases/latest) (Android 7.0 ou mais recente).
