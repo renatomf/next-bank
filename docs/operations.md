@@ -1,6 +1,6 @@
 # Operação: publicar e manter a demo
 
-Este documento descreve como a V1 é publicada e mantida, com custo zero: Neon (banco), Render (API) e GitHub Actions (deploy, despertador e reset). A decisão e as consequências estão no [ADR 0012](adr/0012-hospedagem-da-v1.md).
+Este documento descreve como a V1 é publicada e mantida, com custo zero: Neon (banco), Render (API) e GitHub Actions (deploy e reset) e UptimeRobot (despertador). A decisão e as consequências estão no [ADR 0012](adr/0012-hospedagem-da-v1.md).
 
 > **Regra de ouro:** senhas, chaves e URLs de banco são criadas **na sua máquina** e coladas direto no Neon, no Render ou nos segredos do GitHub. Nunca entram no git, em issue, em chat ou em log. Segredo vazado é segredo comprometido: troque na hora.
 
@@ -11,7 +11,7 @@ Este documento descreve como a V1 é publicada e mantida, com custo zero: Neon (
 | Banco | Neon, projeto `next-bank`, AWS `us-east-1`, Postgres 17 | Branch `clean` (raiz: papéis e banco vazio) e branch `demo` (filho: a demo de verdade) |
 | API | Render, serviço web `next-bank-api`, região Virginia, plano gratuito | Chaves da API e `DATABASE_URL`, só nas variáveis de ambiente do Render |
 | Deploy | `.github/workflows/deploy.yml` | Migrations → deploy hook → espera o commit novo → smoke test |
-| Despertador | `.github/workflows/keep-awake.yml` | Chama o `/health` a cada ~10 min |
+| Despertador | UptimeRobot, monitor `next bank API` | Chama o `/health` a cada 5 min e avisa por e-mail se a API cair |
 | Reset diário | `.github/workflows/demo-reset.yml` | `demo` volta a `clean` → migrations → seed → smoke test, às 06:00 UTC |
 
 ## 1. Neon: projeto e branch limpo
@@ -149,10 +149,20 @@ O `release.yml` publica o APK na Release de cada tag `v*`, assinado com a chave 
 4. Publicar uma versão: crie e envie a tag (`git tag v1.0.0`, `git push origin v1.0.0`). O workflow recusa publicar sem a chave, sem o DSN ou sem `API_URL` em HTTPS. Os símbolos de ofuscação ficam como artefato privado da execução por 90 dias.
 5. Quem baixa confere o APK pelo SHA-256 publicado junto: `Get-FileHash next-bank-v1.0.0.apk`.
 
+## 9. UptimeRobot: despertador
+
+O plano gratuito do Render dorme depois de 15 min sem uso. O UptimeRobot chama o `/health` a cada 5 min e mantém a API acordada; as 750 horas gratuitas por mês do Render cobrem um serviço ligado o mês todo.
+
+1. Crie a conta em <https://uptimerobot.com>, no plano **Free**, e ative o 2FA (My Settings › Two-factor authentication).
+2. **+ New monitor**: tipo **HTTP(s)**, URL `https://next-bank-api.onrender.com/health`, intervalo de **5 minutes**, nome `next bank API`.
+3. Em notificações, deixe o seu e-mail: ele avisa se a API cair.
+
+O monitor só conhece a URL pública do `/health`. Nenhum segredo vai para o UptimeRobot.
+
 ## Rotina
 
 - **Deploy:** automático depois de cada merge na `main` com o CI verde, ou manual pelo workflow.
 - **Reset:** todo dia às 06:00 UTC, ou manual. As contas de visitantes somem, e Ana e Bruno voltam com o saldo de demonstração.
-- **Despertador:** a cada ~10 min. Se o GitHub atrasar, a primeira abertura pode levar até 1 minuto.
+- **Despertador:** a cada 5 min, pelo UptimeRobot. Se chegar o e-mail de que a API caiu, veja os logs do Render e o `/health`.
 - **Trocar uma chave da API:** gere de novo na sua máquina, atualize no Render e faça um deploy manual. Trocar `PII_*` ou o `PIN_PEPPER` invalida os CPFs e PINs já gravados. Na demo, rode o reset logo em seguida.
 - **Segredo vazado:** troque-o na origem (Neon, Render ou GitHub) na hora. Apagar um commit não basta, porque o repositório é público.

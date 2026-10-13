@@ -42,8 +42,9 @@ Forças em jogo:
 - Depois do CI verde na `main`, aplica as migrations com o papel de migração pelo host direto do Neon (`verify-full`).
 - Em seguida chama o deploy hook do Render, espera o `/health` mostrar o commit novo e roda o smoke test com a conta de Ana.
 
-**Despertador (`keep-awake.yml`)**
-- A cada ~10 min, chama o `/health`, para a API não dormir.
+**Despertador (UptimeRobot)**
+- Um monitor gratuito do UptimeRobot chama o `/health` a cada 5 min, para a API não dormir, e avisa por e-mail se ela cair.
+- *Revisão de 2026-10-13:* a primeira versão usava um workflow agendado do GitHub (`keep-awake.yml`, a cada ~10 min). No dia da `v1.0.0` ele rodou só 3 vezes, porque o GitHub atrasa os agendamentos de repositórios com pouco tráfego, e a API dormia: o APK recém-publicado mostrou "Sem conexão" na primeira tentativa. O workflow foi removido.
 
 ## Consequências
 
@@ -55,7 +56,8 @@ Forças em jogo:
 - ➕ O reset diário não escreve código de exclusão: o banco inteiro volta a um ponto limpo.
 
 **Negativas**
-- ➖ **Primeira abertura lenta:** o agendamento do GitHub pode atrasar e deixar a API dormir. A primeira requisição depois disso leva até 1 minuto. O README avisa.
+- ➖ **Primeira abertura lenta, se o despertador falhar:** se o UptimeRobot parar, a API dorme, e a primeira requisição depois disso leva até 1 minuto. O README avisa.
+- ➖ **Mais um serviço externo:** o despertador depende do plano gratuito do UptimeRobot, que pode mudar. Ele só conhece a URL pública do `/health`; nenhum segredo sai para ele.
 - ➖ **CPU fraca:** o Argon2id do login e do PIN é pesado de propósito e não é afrouxado. O p95 do login e do Pix pode passar do orçamento de 400 ms. O número medido fica registrado no documento de performance como consequência desta decisão, e não como uma regressão escondida.
   - **Medido em 2026-10-13** ([performance.md](../performance.md)): a autorização do Pix teve p95 de 861 ms visto do Brasil (cerca de 194 ms no servidor, no p50), acima do orçamento de 400 ms. As leituras levam cerca de 10 ms no servidor, mas, somadas aos ~175 ms da rede até os EUA, passam de 200 ms no p95 visto do Brasil.
 - ➖ **Distância para o Brasil:** um cliente no Brasil paga a ida e volta até os EUA uma vez por requisição, cerca de 120 ms.
