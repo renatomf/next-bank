@@ -16,7 +16,8 @@
     "db:migrate": "dbmate -e MIGRATION_DATABASE_URL --no-dump-schema up",
     "db:status": "dbmate -e MIGRATION_DATABASE_URL status",
     "contract": "node scripts/generate-openapi.ts ../../packages/contracts/openapi.json",
-    "seed:demo": "node --env-file-if-exists=.env scripts/seed-demo.ts"
+    "seed:demo": "node --env-file-if-exists=.env scripts/seed-demo.ts",
+    "measure": "node scripts/measure-latency.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

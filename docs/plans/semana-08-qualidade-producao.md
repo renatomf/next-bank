@@ -360,6 +360,45 @@ O desenvolvedor reviu três pontos que a primeira rodada tinha adiado.
 
 ## Tarefa 5 — Medição, README e tag (dias 4–5)
 
-- [ ] Performance medida e registrada (D8)
+- [x] Performance medida e registrada (D8): `docs/performance.md`; a autorização do Pix passa do orçamento e o desvio está no ADR 0012
 - [ ] README: vídeo, APK, contas da demo, diagramas e retenção dos dados
 - [ ] Threat model, matriz, checklist, CHANGELOG; tag `v1.0.0`
+
+### Desenho da tarefa 5
+
+**Fontes conferidas**
+
+| Fonte | Regra | Como se prova |
+|---|---|---|
+| CLAUDE.md, Performance | p95 < 200 ms nas leituras e < 400 ms no Pix, no ambiente publicado e com carga nominal | Script de medição contra a API publicada; resultado em `docs/performance.md` |
+| CLAUDE.md, Performance | Abertura a frio < 2 s em aparelho intermediário | `flutter run --profile --trace-startup` no celular (checkpoint); `timeToFirstFrameMicros` no mesmo documento |
+| ADR 0012 / D9 | Se o Pix passar de 400 ms por causa do plano gratuito, o desvio é registrado, não escondido | Número medido e desvio no ADR 0012, se houver |
+| API-02 | Limite global de 100 requisições por minuto por IP | O script espaça as requisições (uma a cada 0,75 s) e falha se receber 429, em vez de medir respostas de erro |
+| DEMO-02 | Dados de visitantes não se acumulam | Os Pix da medição (R$ 0,01 de Bruno para Ana) somem no reset diário |
+| MOB-03, MOB-06 | Só HTTPS; release ofuscado | Checkpoint no celular com o APK de release: interceptação recusada, nomes ilegíveis |
+| Roadmap 8.2 | APK nas Releases | Tag `v1.0.0` → `release.yml`; SHA-256 conferido no APK baixado |
+
+**Peças**
+
+| Peça | Onde | O que faz |
+|---|---|---|
+| Medição | `apps/api/scripts/measure-latency.ts` (+ `pnpm measure`) | Entra como Bruno uma vez (Ana é a conta dos visitantes, e a cota de consultas de chave dela fica para eles: PIX-07) e mede, em sequência: `/health` (base da rede), `GET /v1/me/account` e `GET /v1/me/statement` (leituras), e o Pix inteiro (`key-lookups`, criar com `idempotency-key` novo, `authorize` com o PIN). Imprime p50, p95 e máximo por rota numa tabela em Markdown. Endereço por `MEASURE_API_URL` (obrigatório, sem padrão) |
+| Percentil | mesmo script, função pura `percentile` | TDD: lista vazia, um valor, p95 de 100 valores, ordem de entrada irrelevante |
+| Resultado | `docs/performance.md` (novo) | Como medir, onde (do Brasil, ~120 ms de ida e volta), a tabela, a latência da rede descontada pelo `/health`, e a abertura a frio |
+| README (pt e en) | `README.md`, `README.en.md` | Status "V1 publicada"; como baixar o APK e conferir o SHA-256; contas da demo (Ana e Bruno, públicas de propósito); retenção (tudo volta ao estado limpo às 03:00 de Brasília); primeira abertura pode levar até 1 min; aviso da marca Pix; vídeo; link para o plano atual |
+| Vídeo | anexo do GitHub (`user-attachments`) | Gravado por você no celular; enviado arrastando no editor do GitHub, que hospeda o arquivo. Nada de vídeo pesado no git |
+| Documentos de segurança | `threat-model.md`, `checklist-asvs-masvs.md`, `controles-de-seguranca.md` | Status das ameaças e controles da semana 8 (API-14, DEMO-02, DEMO-03, MOB-03, MOB-06) |
+| CHANGELOG e roadmap | `CHANGELOG.md`, `docs/roadmap.md` | `[Não publicado]` vira `[1.0.0] — data`; fase 1 marcada como entregue |
+| Tag | `v1.0.0` na `main` | Dispara o `release.yml`; criada só com tudo acima mergeado e o checkpoint aprovado |
+
+**Concorrência:** nenhuma nova. A medição roda em sequência, com um cliente só, porque o limite por IP impediria mais que isso de uma máquina. Os testes de concorrência já cobrem os acessos simultâneos.
+
+**Contratos:** nenhum endpoint, erro, schema ou query novos. Configuração nova só no script: `MEASURE_API_URL`.
+
+**Dependências novas:** nenhuma. **Desvio de D8:** o `autocannon` sai do plano. Com o limite de 100 requisições por minuto por IP, um gerador de carga só produziria 429, e a última versão dele é de 2024-10. `fetch` e `performance.now()` bastam.
+
+**Ordem:** (1) PR da medição: script, teste, `docs/performance.md` e, se for o caso, o desvio no ADR 0012; (2) checkpoint no celular com um APK de release gerado localmente: abertura a frio, interceptação, ofuscação; (3) PR da documentação da V1: README, segurança, CHANGELOG, roadmap; (4) merge do #110 e do #116; (5) tag `v1.0.0` e conferência do APK publicado.
+
+**Fora:** carga com vários clientes (exigiria liberar o limite por IP na produção), medição contínua no CI, a tela Splash nova e os PRs do Dependabot que mudam versão maior (#104), que ficam para depois da tag.
+
+- [x] Desenho da tarefa 5 aprovado
