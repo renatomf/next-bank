@@ -15,7 +15,6 @@ class AmountCard extends StatelessWidget {
     required this.balanceCents,
     required this.balanceHidden,
     required this.onEdit,
-    required this.onToggleBalance,
     super.key,
   });
 
@@ -30,9 +29,6 @@ class AmountCard extends StatelessWidget {
 
   /// Asks the screen to let the customer type the amount.
   final VoidCallback onEdit;
-
-  /// Asks the screen to hide or show the balance, as the Home's eye does.
-  final VoidCallback onToggleBalance;
 
   @override
   Widget build(BuildContext context) {
@@ -124,20 +120,6 @@ class AmountCard extends StatelessWidget {
                             ),
                           ),
                         ),
-                      const SizedBox(width: NbSpace.sm),
-                      IconCircleButton(
-                        icon: balanceHidden
-                            ? Icons.visibility_off_outlined
-                            : Icons.visibility_outlined,
-                        label: balanceHidden
-                            ? 'Mostrar saldo'
-                            : 'Ocultar saldo',
-                        onPressed: onToggleBalance,
-                        background: NbBalanceCardColors.button,
-                        foreground: NbBalanceCardColors.text,
-                        borderColor: NbBalanceCardColors.buttonBorder,
-                        iconSize: 18,
-                      ),
                     ],
                   ),
                 ],
