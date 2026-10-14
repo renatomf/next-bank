@@ -12,7 +12,8 @@ class BiometricsTile extends ConsumerWidget {
   /// Creates the tile.
   const new({super.key});
 
-  static const String _caption = 'Desbloqueie o app e confirme Pix com ela';
+  static const String _caption =
+      'Abra o app com digital ou rosto e confirme Pix com a biometria';
 
   Future<void> _turnOn(BuildContext context, WidgetRef ref) async {
     final pin = await showModalBottomSheet<String>(

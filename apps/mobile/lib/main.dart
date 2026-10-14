@@ -12,8 +12,10 @@ import 'package:next_bank/core/error_reporting.dart';
 import 'package:next_bank/core/profile/http_profile_repository.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/app_lock.dart';
+import 'package:next_bank/core/session/biometric_check.dart';
 import 'package:next_bank/core/session/biometric_pin_store.dart';
 import 'package:next_bank/core/session/greeting_name_store.dart';
+import 'package:next_bank/core/session/local_auth_biometric_check.dart';
 import 'package:next_bank/core/session/secure_biometric_pin_store.dart';
 import 'package:next_bank/core/session/secure_greeting_name_store.dart';
 import 'package:next_bank/core/session/secure_token_store.dart';
@@ -51,6 +53,7 @@ Future<void> main() async {
           biometricPinStoreProvider.overrideWithValue(
             SecureBiometricPinStore(),
           ),
+          biometricCheckProvider.overrideWithValue(LocalAuthBiometricCheck()),
           greetingNameStoreProvider.overrideWithValue(
             SecureGreetingNameStore(),
           ),

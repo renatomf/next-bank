@@ -3,6 +3,7 @@ import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/api_messages.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/app_lock.dart';
+import 'package:next_bank/core/session/biometric_check.dart';
 import 'package:next_bank/core/session/biometric_pin_store.dart';
 import 'package:next_bank/features/unlock/presentation/unlock_providers.dart';
 
@@ -30,35 +31,33 @@ final NotifierProvider<UnlockController, UnlockState> unlockControllerProvider =
 
 /// Unlocks the app with the PIN checked on the server (F-16, PIX-06).
 class UnlockController extends Notifier<UnlockState> {
+  // A prompt is open: a second tap must not open another.
+  bool _prompting = false;
+
   @override
   UnlockState build() => const UnlockState();
 
-  /// Sends the PIN once; ignored while a check runs, so a double submit
-  /// costs one attempt.
-  Future<void> submit(String pin) => _check(pin, fromBiometrics: false);
-
-  /// Asks biometrics for the kept PIN and checks it on the server like a
-  /// typed one (ADR 0004). A cancel leaves the PIN to type; a PIN no longer
-  /// kept, such as after a new fingerprint, says so (MOB-11).
+  /// Opens the app when the phone's prompt, face or fingerprint, recognizes
+  /// the customer: a local convenience the server never sees (ADR 0004,
+  /// ADR 0013). Only while a PIN is kept, that is, once biometrics were
+  /// turned on with the PIN (MOB-11). A failed prompt leaves the PIN to type.
   Future<void> useBiometrics() async {
-    if (state.verifying || state.blocked) return;
-    final store = ref.read(biometricPinStoreProvider);
-    switch (await store.read()) {
-      case BiometricPin(:final pin):
-        if (!ref.mounted) return;
-        await _check(pin, fromBiometrics: true);
-      case BiometricCancelled():
-        return;
-      case BiometricPinLost():
-        await store.clear();
-        if (!ref.mounted) return;
-        state = const UnlockState(
-          error: 'A biometria foi desativada neste aparelho. Digite seu PIN.',
-        );
+    if (_prompting || state.verifying || state.blocked) return;
+    _prompting = true;
+    try {
+      if (!await ref.read(biometricPinStoreProvider).hasPin()) return;
+      final recognized = await ref.read(biometricCheckProvider).confirm();
+      if (recognized && ref.mounted) {
+        ref.read(appLockProvider.notifier).unlock();
+      }
+    } finally {
+      _prompting = false;
     }
   }
 
-  Future<void> _check(String pin, {required bool fromBiometrics}) async {
+  /// Sends the PIN once; ignored while a check runs, so a double submit
+  /// costs one attempt.
+  Future<void> submit(String pin) async {
     if (state.verifying || state.blocked) return;
     state = const UnlockState(verifying: true);
     try {
@@ -78,13 +77,8 @@ class UnlockController extends Notifier<UnlockState> {
         ApiRejected(code: ApiErrorCode.pinResetRequired) => true,
         _ => false,
       };
-      // A kept PIN the server refuses is out of date, and a locked PIN must
-      // be reset with the password: either way, it is no longer kept.
-      final refused =
-          fromBiometrics &&
-          failure is ApiRejected &&
-          failure.code == ApiErrorCode.pinIncorrect;
-      if (blocked || refused) {
+      // A locked PIN must be reset with the password: it is no longer kept.
+      if (blocked) {
         await ref.read(biometricPinStoreProvider).clear();
         if (!ref.mounted) return;
       }
