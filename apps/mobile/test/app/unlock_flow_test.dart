@@ -107,7 +107,7 @@ void main() {
     await tester.tap(find.bySemanticsLabel('Cartão'));
     await tester.pump();
 
-    expect(find.text('Em breve'), findsOneWidget);
+    expect(find.text('Em breve.'), findsOneWidget);
   });
 
   testWidgets('"Entrar com outra conta" signs out', (tester) async {

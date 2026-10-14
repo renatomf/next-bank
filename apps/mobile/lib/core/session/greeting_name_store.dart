@@ -18,3 +18,8 @@ abstract interface class GreetingNameStore {
 final Provider<GreetingNameStore> greetingNameStoreProvider = Provider(
   (ref) => throw UnimplementedError('Bound in main.dart'),
 );
+
+/// The first name the Unlock screen greets with, if one is kept.
+final FutureProvider<String?> greetingNameProvider = FutureProvider.autoDispose(
+  (ref) => ref.watch(greetingNameStoreProvider).read(),
+);

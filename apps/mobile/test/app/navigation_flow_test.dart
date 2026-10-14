@@ -8,6 +8,7 @@ import 'package:next_bank/features/profile/presentation/profile_screen.dart';
 import 'package:next_bank/features/security/presentation/change_pin/change_pin_screen.dart';
 import 'package:next_bank/features/security/presentation/sessions/security_screen.dart';
 import 'package:next_bank/features/statement/presentation/list/statement_screen.dart';
+import 'package:next_bank/features/unlock/presentation/unlock_screen.dart';
 
 import '../support/fake_auth_repository.dart';
 import '../support/fake_monotonic_clock.dart';
@@ -153,7 +154,7 @@ void main() {
     ].forEach(tester.binding.handleAppLifecycleStateChanged);
     await tester.pumpAndSettle();
 
-    expect(find.text('Digite seu PIN'), findsOneWidget);
+    expect(find.byType(UnlockScreen), findsOneWidget);
     expect(bar, findsNothing);
   });
 
@@ -176,7 +177,7 @@ void main() {
     await unlockWithPin(tester, '7413');
     expect(find.text('PIN bloqueado por 30 minutos.'), findsOneWidget);
 
-    await tester.tap(find.bySemanticsLabel('Sair'));
+    await tester.tap(find.text('Entrar com outra conta'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).at(0), 'ana@example.test');
     await tester.enterText(find.byType(TextField).at(1), 'a long passphrase');
