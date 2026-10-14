@@ -31,6 +31,9 @@ class FakeSecurityRepository implements SecurityRepository {
   /// PIN changes asked, in order.
   final List<({String password, String newPin})> pinChanges = [];
 
+  /// PINs checked before enabling biometrics, in order.
+  final List<String> verifiedPins = [];
+
   /// Password changes asked, in order.
   final List<({String currentPassword, String newPassword})> passwordChanges =
       [];
@@ -44,6 +47,12 @@ class FakeSecurityRepository implements SecurityRepository {
   @override
   Future<void> revoke(String id) {
     revoked.add(id);
+    return answer();
+  }
+
+  @override
+  Future<void> verifyPin(String pin) {
+    verifiedPins.add(pin);
     return answer();
   }
 

@@ -83,11 +83,11 @@ void main() {
       find.byWidgetPredicate(
         (widget) =>
             widget is FilledButton ||
-            (widget is Text && widget.data == 'Digite seu PIN'),
+            (widget is Text && widget.data == 'Entrar com outra conta'),
       ),
     );
-    if (find.text('Digite seu PIN').evaluate().isNotEmpty) {
-      await tester.tap(find.bySemanticsLabel('Sair'));
+    if (find.text('Entrar com outra conta').evaluate().isNotEmpty) {
+      await tester.tap(find.text('Entrar com outra conta'));
       await waitFor(tester, find.widgetWithText(FilledButton, 'Entrar'));
     }
 

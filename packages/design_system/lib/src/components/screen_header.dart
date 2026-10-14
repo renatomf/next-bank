@@ -3,7 +3,8 @@ import 'package:design_system/src/tokens.dart';
 import 'package:flutter/material.dart';
 
 /// The header of an inner screen (pix-dark and comprovante-dark mockups): a
-/// round button on the left and the title centered.
+/// round button on the left, the title centered and, optionally, an action
+/// on the right, such as the Pix's balance eye.
 class ScreenHeader extends StatelessWidget {
   /// Creates the header.
   const new({
@@ -11,6 +12,7 @@ class ScreenHeader extends StatelessWidget {
     required this.icon,
     required this.iconLabel,
     required this.onPressed,
+    this.action,
     super.key,
   });
 
@@ -25,6 +27,9 @@ class ScreenHeader extends StatelessWidget {
 
   /// Called on tap.
   final VoidCallback onPressed;
+
+  /// A round button on the right, as wide as the one on the left.
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
@@ -41,8 +46,8 @@ class ScreenHeader extends StatelessWidget {
             ),
           ),
         ),
-        // Keeps the title centered on the screen.
-        const SizedBox(width: NbSize.touch),
+        // The action, or its space: either way the title stays centered.
+        action ?? const SizedBox(width: NbSize.touch),
       ],
     );
   }

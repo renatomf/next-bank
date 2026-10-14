@@ -6,6 +6,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/account/account_providers.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/app_lock.dart';
+import 'package:next_bank/core/session/biometric_check.dart';
+import 'package:next_bank/core/session/biometric_pin_store.dart';
+import 'package:next_bank/core/session/greeting_name_store.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/core/share/image_sharer.dart';
 import 'package:next_bank/core/share/widget_png.dart';
@@ -19,6 +22,9 @@ import 'package:next_bank/main.dart';
 
 import 'fake_account_repository.dart';
 import 'fake_auth_repository.dart';
+import 'fake_biometric_check.dart';
+import 'fake_biometric_pin_store.dart';
+import 'fake_greeting_name_store.dart';
 import 'fake_image_sharer.dart';
 import 'fake_monotonic_clock.dart';
 import 'fake_pix_repository.dart';
@@ -46,6 +52,9 @@ Future<ProviderContainer> pumpApp(
   FakeThemeStore? theme,
   FakeImageSharer? sharer,
   FakeWidgetPainter? painter,
+  FakeBiometricPinStore? biometrics,
+  FakeBiometricCheck? check,
+  FakeGreetingNameStore? greeting,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -75,6 +84,13 @@ Future<ProviderContainer> pumpApp(
         monotonicClockProvider.overrideWithValue(clock ?? FakeMonotonicClock()),
         randomProvider.overrideWithValue(Random(42)),
         themeStoreProvider.overrideWithValue(theme ?? FakeThemeStore()),
+        biometricPinStoreProvider.overrideWithValue(
+          biometrics ?? FakeBiometricPinStore(available: false),
+        ),
+        biometricCheckProvider.overrideWithValue(check ?? FakeBiometricCheck()),
+        greetingNameStoreProvider.overrideWithValue(
+          greeting ?? FakeGreetingNameStore(),
+        ),
         imageSharerProvider.overrideWithValue(sharer ?? FakeImageSharer()),
         widgetPainterProvider.overrideWithValue(
           (painter ?? FakeWidgetPainter()).call,
@@ -89,6 +105,11 @@ Future<ProviderContainer> pumpApp(
 
 /// Types the PIN on the Unlock screen, as the customer does on opening.
 Future<void> unlockWithPin(WidgetTester tester, [String pin = '2580']) async {
+  // With biometrics on, the Unlock screen offers them first.
+  if (find.byType(PinField).evaluate().isEmpty) {
+    await tester.tap(find.text('Usar PIN'));
+    await tester.pumpAndSettle();
+  }
   await tester.enterText(find.byType(PinField), pin);
   await tester.pumpAndSettle();
 }

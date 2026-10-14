@@ -9,6 +9,10 @@ abstract interface class SecurityRepository {
   /// Ends the session [id], one that is not this device's.
   Future<void> revoke(String id);
 
+  /// Checks the transaction PIN, before it is kept for biometrics (v1.1.0
+  /// plan, task 2). Counts on the same attempts as the Pix (PIX-05).
+  Future<void> verifyPin(String pin);
+
   /// A new transaction PIN, with the password; it also lifts a locked PIN.
   Future<void> changePin({required String password, required String newPin});
 

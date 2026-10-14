@@ -1,6 +1,10 @@
+import 'dart:math';
+
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'support/glass_art.dart';
 
 Widget host(Widget child) => MaterialApp(
   theme: NbTheme.dark(),
@@ -68,6 +72,58 @@ void main() {
       await tester.tap(find.bySemanticsLabel('Digitar o valor'));
 
       expect(edits, 1);
+    });
+
+    // The balance card's mint glow underneath, so both cards look alike.
+    testWidgets('glows mint underneath like the balance card', (tester) async {
+      await tester.pumpWidget(host(card()));
+
+      final glows = tester
+          .widgetList<DecoratedBox>(
+            find.descendant(
+              of: find.byType(AmountCard),
+              matching: find.byType(DecoratedBox),
+            ),
+          )
+          .map((box) => box.decoration)
+          .whereType<BoxDecoration>()
+          .expand((decoration) => decoration.boxShadow ?? const <BoxShadow>[])
+          .map((shadow) => shadow.color);
+      expect(glows, contains(NbBalanceCardColors.shadow));
+    });
+
+    // v1.1.0 checkpoint (2026-10-14): the same mint glass art as the
+    // balance card, its texts as they were.
+    testWidgets('shows the mint glass art behind the amount', (tester) async {
+      await tester.pumpWidget(host(card(cents: 35000)));
+
+      expect(
+        find.descendant(
+          of: find.byType(AmountCard),
+          matching: find.byType(GlassArt),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    // Brief, section 8: the texts sit right on the art, so the whole card
+    // takes the deep tint; AA over the brightest pixel the art can give.
+    group('contrast (AA)', () {
+      final ground = Color.alphaBlend(
+        NbBalanceCardColors.tintDeep,
+        brightestArt(),
+      );
+      for (final (name, color) in [
+        ('amount and labels', NbBalanceCardColors.text),
+        (r'"R$" and cents', NbBalanceCardColors.textMuted),
+      ]) {
+        test('$name on the deep tint', () {
+          final la = color.computeLuminance();
+          final lb = ground.computeLuminance();
+          final ratio = (max(la, lb) + 0.05) / (min(la, lb) + 0.05);
+          expect(ratio, greaterThanOrEqualTo(4.5));
+        });
+      }
     });
   });
 

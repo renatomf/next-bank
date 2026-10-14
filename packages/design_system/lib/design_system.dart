@@ -13,6 +13,7 @@ export 'src/components/dither.dart';
 export 'src/components/empty_state.dart';
 export 'src/components/error_state.dart';
 export 'src/components/form_error_text.dart';
+export 'src/components/glass_art.dart';
 export 'src/components/glow_background.dart';
 export 'src/components/icon_circle_button.dart';
 export 'src/components/info_notice.dart';

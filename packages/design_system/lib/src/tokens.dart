@@ -18,26 +18,12 @@ abstract final class NbBrand {
 /// Home mockup's CSS: the card is always dark, in both modes, so its colors
 /// do not come from the theme.
 abstract final class NbBalanceCardColors {
-  /// Top of the base gradient.
-  static const Color baseTop = Color(0xFF0B2A26);
-
-  /// Bottom of the base gradient.
-  static const Color baseBottom = Color(0xFF06110F);
-
-  /// Mint light in the top-right corner: mint at 75%.
-  static const Color glowTop = Color(0xBF00FFC8);
-
-  /// Light in the bottom-left corner: #00BEA0 at 65%.
-  static const Color glowBottom = Color(0xA600BEA0);
-
-  /// The diagonal silk sheen: rgba(220, 255, 248, 0.16).
-  static const Color sheen = Color(0x29DCFFF8);
-
   /// Card border: mint at 22%.
   static const Color border = Color(0x3800FFC8);
 
-  /// Card shadow: mint at 35%.
-  static const Color shadow = Color(0x5900FFC8);
+  /// Card glow underneath: mint at 25%, softened from the mockup's 35% at
+  /// the v1.1.0 checkpoint (developer's request).
+  static const Color shadow = Color(0x4000FFC8);
 
   /// Glass panel under the balance: it keeps the text readable over the
   /// lights.
@@ -60,6 +46,23 @@ abstract final class NbBalanceCardColors {
 
   /// Loading placeholders on the glass.
   static const Color placeholder = Color(0x29FFFFFF);
+
+  /// Deep tint over the glass art, where text sits right on it (the balance
+  /// card's title, the whole Pix amount card): #06110F at 78%.
+  static const Color tintDeep = Color(0xC706110F);
+
+  /// Light tint over the glass art, where text sits on glass: #06110F at
+  /// 35%, enough for AA on the glass even over the art's brightest pixel.
+  static const Color tintLight = Color(0x5906110F);
+}
+
+/// Bundled art (v1.1.0 checkpoint, 2026-10-14), made by the developer.
+abstract final class NbArt {
+  /// Green glass waves, shown through `GlassArt`.
+  static const AssetImage glass = AssetImage(
+    'assets/images/bg_splash.jpg',
+    package: 'design_system',
+  );
 }
 
 /// Theme colors for one mode (brief, section 2.2), read with

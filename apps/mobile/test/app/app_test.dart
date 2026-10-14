@@ -8,6 +8,7 @@ import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/core/session/session_end_reason.dart';
 import 'package:next_bank/core/session/session_tokens.dart';
 import 'package:next_bank/features/auth/presentation/auth_providers.dart';
+import 'package:next_bank/features/unlock/presentation/unlock_screen.dart';
 import 'package:next_bank/main.dart';
 
 import '../support/fake_auth_repository.dart';
@@ -30,7 +31,8 @@ class FlakyTokenStore extends FakeTokenStore {
 
 final Finder loginButton = find.widgetWithText(FilledButton, 'Entrar');
 final Finder signOutButton = find.bySemanticsLabel('Sair');
-final Finder unlockTitle = find.text('Digite seu PIN');
+final Finder unlockTitle = find.byType(UnlockScreen);
+final Finder otherAccountButton = find.text('Entrar com outra conta');
 
 /// The states a phone goes through to the background, in the order Flutter
 /// requires.
@@ -65,7 +67,7 @@ void main() {
 
     expect(unlockTitle, findsOneWidget);
     expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsNothing);
-    expect(signOutButton, findsOneWidget);
+    expect(otherAccountButton, findsOneWidget);
   });
 
   testWidgets('reaches home once the server accepts the PIN', (tester) async {
@@ -106,7 +108,7 @@ void main() {
 
     expect(find.text('PIN bloqueado por 30 minutos.'), findsOneWidget);
     expect(find.byType(PinField), findsNothing);
-    await tester.tap(signOutButton);
+    await tester.tap(otherAccountButton);
     await tester.pumpAndSettle();
 
     expect(store.stored, isNull);

@@ -7,6 +7,7 @@ import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/features/auth/presentation/auth_providers.dart';
 import 'package:next_bank/features/auth/presentation/sign_out/sign_out_controller.dart';
 
+import '../../../../support/device_stores.dart';
 import '../../../../support/fake_auth_repository.dart';
 import '../../../../support/fake_token_store.dart';
 
@@ -16,6 +17,7 @@ setUpSignedIn() async {
   final store = FakeTokenStore(tokens);
   final container = ProviderContainer(
     overrides: [
+      ...deviceStoreOverrides(),
       tokenStoreProvider.overrideWithValue(store),
       authRepositoryProvider.overrideWithValue(repository),
     ],

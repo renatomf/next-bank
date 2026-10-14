@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/api_messages.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
+import 'package:next_bank/core/session/biometric_pin_store.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/pix_providers.dart';
 
@@ -51,7 +52,7 @@ class ReviewPixController extends Notifier<ReviewPixState> {
 
   // The attempt whose answer has not come: its PIN and key go again together
   // (MOB-07). Held only in memory and dropped on any answer (MOB-02).
-  ({String pin, String key})? _unanswered;
+  ({String pin, String key, bool fromBiometrics})? _unanswered;
 
   @override
   ReviewPixState build() {
@@ -70,7 +71,43 @@ class ReviewPixController extends Notifier<ReviewPixState> {
         state.outcomeUnknown) {
       return Future.value();
     }
-    return _authorize((pin: pin, key: ref.read(idempotencyKeysProvider)()));
+    return _authorize((
+      pin: pin,
+      key: ref.read(idempotencyKeysProvider)(),
+      fromBiometrics: false,
+    ));
+  }
+
+  /// Authorizes with the PIN biometrics release, under a new key, checked on
+  /// the server like a typed one (v1.1.0 plan, task 2; ADR 0004). A cancel
+  /// does nothing; a PIN no longer kept asks for the typed one (MOB-11).
+  Future<PixTransfer?> confirmWithBiometrics() async {
+    if (state.verifying ||
+        state.blocked ||
+        state.finished ||
+        state.outcomeUnknown) {
+      return null;
+    }
+    final store = ref.read(biometricPinStoreProvider);
+    switch (await store.read()) {
+      case BiometricPin(:final pin):
+        if (!ref.mounted) return null;
+        return await _authorize((
+          pin: pin,
+          key: ref.read(idempotencyKeysProvider)(),
+          fromBiometrics: true,
+        ));
+      case BiometricCancelled():
+        return null;
+      case BiometricPinLost():
+        await store.clear();
+        if (ref.mounted) {
+          state = const ReviewPixState(
+            error: 'A biometria foi desativada neste aparelho. Digite seu PIN.',
+          );
+        }
+        return null;
+    }
   }
 
   /// Repeats the attempt whose answer was lost, with its PIN and key, so the
@@ -81,7 +118,9 @@ class ReviewPixController extends Notifier<ReviewPixState> {
     return _authorize(unanswered);
   }
 
-  Future<PixTransfer?> _authorize(({String pin, String key}) attempt) async {
+  Future<PixTransfer?> _authorize(
+    ({String pin, String key, bool fromBiometrics}) attempt,
+  ) async {
     _unanswered = attempt;
     state = const ReviewPixState(verifying: true);
     try {
@@ -103,7 +142,18 @@ class ReviewPixController extends Notifier<ReviewPixState> {
       if (failure case ApiRejected(code: ApiErrorCode.pinNotCreated)) {
         ref.invalidate(profileProvider);
       }
-      state = _stateAfter(failure);
+      final next = _stateAfter(failure);
+      // A kept PIN the server refuses is out of date, and a locked PIN must
+      // be reset with the password: either way, it is no longer kept.
+      final refused =
+          attempt.fromBiometrics &&
+          failure is ApiRejected &&
+          failure.code == ApiErrorCode.pinIncorrect;
+      if (next.blocked || refused) {
+        await ref.read(biometricPinStoreProvider).clear();
+        if (!ref.mounted) return null;
+      }
+      state = next;
       if (!state.outcomeUnknown) _unanswered = null;
       return null;
     }

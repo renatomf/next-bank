@@ -1,13 +1,29 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:next_bank/core/session/biometric_pin_store.dart';
+import 'package:next_bank/core/session/greeting_name_store.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/core/session/session_end_reason.dart';
 
+import '../../support/fake_biometric_pin_store.dart';
+import '../../support/fake_greeting_name_store.dart';
 import '../../support/fake_token_store.dart';
 
-ProviderContainer containerWith(FakeTokenStore store) {
+ProviderContainer containerWith(
+  FakeTokenStore store, {
+  FakeBiometricPinStore? biometrics,
+  FakeGreetingNameStore? greeting,
+}) {
   final container = ProviderContainer(
-    overrides: [tokenStoreProvider.overrideWithValue(store)],
+    overrides: [
+      tokenStoreProvider.overrideWithValue(store),
+      biometricPinStoreProvider.overrideWithValue(
+        biometrics ?? FakeBiometricPinStore(),
+      ),
+      greetingNameStoreProvider.overrideWithValue(
+        greeting ?? FakeGreetingNameStore(),
+      ),
+    ],
   );
   addTearDown(container.dispose);
   return container;
@@ -15,6 +31,27 @@ ProviderContainer containerWith(FakeTokenStore store) {
 
 void main() {
   group('sessionProvider', () {
+    // v1.1.0 plan, task 2: nothing of the account stays for the next person
+    // to sign in on this phone (MOB-11, MOB-12).
+    test(
+      'forgets the PIN kept for biometrics and the greeting on sign out',
+      () async {
+        final biometrics = FakeBiometricPinStore(pin: '2580');
+        final greeting = FakeGreetingNameStore('Ana');
+        final container = containerWith(
+          FakeTokenStore(tokens),
+          biometrics: biometrics,
+          greeting: greeting,
+        );
+        await container.read(sessionProvider.future);
+
+        await container.read(sessionProvider.notifier).signOut();
+
+        expect(biometrics.pin, isNull);
+        expect(greeting.name, isNull);
+      },
+    );
+
     test('restores a signed-in session from the device on start', () async {
       final container = containerWith(FakeTokenStore(tokens));
 

@@ -1,17 +1,17 @@
 import 'dart:ui';
 
-import 'package:design_system/src/components/dither.dart';
+import 'package:design_system/src/components/glass_art.dart';
 import 'package:design_system/src/components/icon_circle_button.dart';
 import 'package:design_system/src/components/money_text.dart';
-import 'package:design_system/src/components/silk.dart';
 import 'package:design_system/src/components/skeleton.dart';
 import 'package:design_system/src/tokens.dart';
 import 'package:flutter/material.dart';
 
 /// The Home's signature card (brief, section 2.3; mockups home-dark and
-/// home-light, whose CSS gives every value here): always dark, a silk of mint
-/// lights, and the available balance on a glass panel, with an eye to hide
-/// it (MOB-05). Null values mean the balance is still loading.
+/// home-light, whose CSS gives the layout): always dark, the mint glass art
+/// under a dark tint (v1.1.0 checkpoint, 2026-10-14), and the available
+/// balance on a glass panel, with an eye to hide it (MOB-05). Null values
+/// mean the balance is still loading.
 class BalanceCard extends StatelessWidget {
   /// Creates the card.
   const new({
@@ -62,8 +62,25 @@ class BalanceCard extends StatelessWidget {
           child: Stack(
             alignment: Alignment.bottomCenter,
             children: [
-              const Positioned.fill(child: Silk()),
-              const Positioned.fill(child: Dither()),
+              const Positioned.fill(child: GlassArt()),
+              // Deep under the title, lighter where the glass panel takes
+              // over the contrast, so the art shows in between.
+              const Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        NbBalanceCardColors.tintDeep,
+                        NbBalanceCardColors.tintDeep,
+                        NbBalanceCardColors.tintLight,
+                      ],
+                      stops: [0, 0.3, 0.6],
+                    ),
+                  ),
+                ),
+              ),
               Positioned(
                 top: NbSpace.screen,
                 left: NbSpace.screen,

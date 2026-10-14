@@ -11,6 +11,7 @@ import 'package:next_bank/features/auth/presentation/create_pin/create_pin_scree
 import 'package:next_bank/features/auth/presentation/login/login_screen.dart';
 import 'package:next_bank/features/auth/presentation/register/register_screen.dart';
 import 'package:next_bank/features/auth/presentation/sign_out/sign_out_button.dart';
+import 'package:next_bank/features/auth/presentation/sign_out/switch_account_button.dart';
 import 'package:next_bank/features/auth/presentation/splash/splash_screen.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
@@ -73,7 +74,8 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
       ),
       GoRoute(
         path: AppRoutes.unlock,
-        builder: (_, _) => const UnlockScreen(actions: [SignOutButton()]),
+        builder: (_, _) =>
+            const UnlockScreen(otherAccount: SwitchAccountButton()),
       ),
       // The five areas of the app share the floating bar (week 7 plan, D7);
       // every flow (Pix, details, changes) opens over it, without the bar.

@@ -12,6 +12,7 @@ import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/core/statement/statement_controller.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
 
+import '../../../support/device_stores.dart';
 import '../../../support/fake_account_repository.dart';
 import '../../../support/fake_profile_repository.dart';
 import '../../../support/fake_statement_repository.dart';
@@ -28,6 +29,7 @@ Future<void> pumpHome(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        ...deviceStoreOverrides(),
         tokenStoreProvider.overrideWithValue(FakeTokenStore(tokens)),
         profileRepositoryProvider.overrideWithValue(FakeProfileRepository()),
         accountRepositoryProvider.overrideWithValue(

@@ -46,6 +46,7 @@ class _SendPixScreenState extends ConsumerState<SendPixScreen> {
     final state = ref.watch(sendPixControllerProvider);
     final controller = ref.read(sendPixControllerProvider.notifier);
     final account = ref.watch(accountProvider).value;
+    final hidden = ref.watch(balanceHiddenProvider);
     final payee = state.payee;
     final error = state.error;
     final text = Theme.of(context).textTheme;
@@ -60,6 +61,14 @@ class _SendPixScreenState extends ConsumerState<SendPixScreen> {
                 icon: Icons.arrow_back,
                 iconLabel: 'Voltar',
                 onPressed: widget.onBack,
+                // The same choice as the Home's eye (MOB-05).
+                action: IconCircleButton(
+                  icon: hidden
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                  label: hidden ? 'Mostrar saldo' : 'Ocultar saldo',
+                  onPressed: ref.read(balanceHiddenProvider.notifier).toggle,
+                ),
               ),
               const SizedBox(height: NbSpace.xl),
               Stack(
@@ -89,7 +98,7 @@ class _SendPixScreenState extends ConsumerState<SendPixScreen> {
                   AmountCard(
                     cents: state.amountCents,
                     balanceCents: account?.availableBalanceCents,
-                    balanceHidden: ref.watch(balanceHiddenProvider),
+                    balanceHidden: hidden,
                     onEdit: _amount.requestFocus,
                   ),
                 ],

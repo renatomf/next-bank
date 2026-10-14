@@ -12,6 +12,7 @@ import 'package:next_bank/features/pix/presentation/review/review_pix_screen.dar
 import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
 
 import '../support/fake_account_repository.dart';
+import '../support/fake_biometric_pin_store.dart';
 import '../support/fake_image_sharer.dart';
 import '../support/fake_pix_repository.dart';
 import '../support/fake_profile_repository.dart';
@@ -46,6 +47,7 @@ Future<void> openHome(
   FakeAccountRepository? account,
   FakeImageSharer? sharer,
   FakeWidgetPainter? painter,
+  FakeBiometricPinStore? biometrics,
 }) async {
   await pumpApp(
     tester,
@@ -54,6 +56,7 @@ Future<void> openHome(
     account: account,
     sharer: sharer,
     painter: painter,
+    biometrics: biometrics,
   );
   await unlockWithPin(tester);
 }
@@ -217,6 +220,24 @@ void main() {
 
   // domain-model.md 10: back from the receipt leads to the Home, never to
   // the PIN.
+  // v1.1.0 plan, task 2: biometrics releases the kept PIN, which the server
+  // checks like a typed one (ADR 0004).
+  testWidgets('confirms the Pix with biometrics', (tester) async {
+    tester.view.physicalSize = const Size(1080, 3600);
+    addTearDown(tester.view.reset);
+    final pix = FakePixRepository();
+    pix.authorizeAnswer = completes(pix);
+    await openHome(tester, pix, biometrics: FakeBiometricPinStore(pin: '2580'));
+    await fillInPix(tester);
+    await reviewPix(tester);
+
+    await tester.tap(find.text('Confirmar com biometria'));
+    await tester.pumpAndSettle();
+
+    expect(pix.callsOf('authorize').single.pin, '2580');
+    expect(find.text('Comprovante'), findsOneWidget);
+  });
+
   testWidgets('goes back from the receipt to the Home', (tester) async {
     final pix = FakePixRepository();
     pix.authorizeAnswer = completes(pix);
@@ -436,6 +457,32 @@ void main() {
 
     expect(find.textContaining('10.000'), findsNothing);
     expect(find.bySemanticsLabel('Saldo oculto'), findsOneWidget);
+  });
+
+  // v1.1.0 checkpoint (2026-10-14): the eye on the Pix shows it, and hides
+  // it again, without going back to the Home.
+  testWidgets('shows and hides the balance with the eye on the Pix', (
+    tester,
+  ) async {
+    await openHome(tester, FakePixRepository());
+    await tester.tap(find.bySemanticsLabel('Área Pix'));
+    await tester.pumpAndSettle();
+
+    // On the top right, beside the title (developer's request).
+    expect(
+      find.descendant(
+        of: find.byType(ScreenHeader),
+        matching: find.bySemanticsLabel('Mostrar saldo'),
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.bySemanticsLabel('Mostrar saldo'));
+    await tester.pumpAndSettle();
+    expect(find.text(r'R$ 10.000,00'), findsOneWidget);
+
+    await tester.tap(find.bySemanticsLabel('Ocultar saldo'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('10.000'), findsNothing);
   });
 
   // Brief, section 8: system font scale up to 1.3x on a small phone.

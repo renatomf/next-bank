@@ -3,18 +3,29 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/api_failure.dart';
+import 'package:next_bank/core/session/biometric_check.dart';
+import 'package:next_bank/core/session/biometric_pin_store.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/pix_providers.dart';
 import 'package:next_bank/features/pix/presentation/review/review_pix_controller.dart';
 
+import '../../../../support/fake_biometric_check.dart';
+import '../../../../support/fake_biometric_pin_store.dart';
 import '../../../../support/fake_pix_repository.dart';
 
 const _transferId = 'pix-1';
 
-(ProviderContainer, FakePixRepository) setUpReview() {
+(ProviderContainer, FakePixRepository) setUpReview({
+  FakeBiometricPinStore? biometrics,
+  FakeBiometricCheck? check,
+}) {
   final repository = FakePixRepository();
   final container = ProviderContainer(
     overrides: [
+      biometricPinStoreProvider.overrideWithValue(
+        biometrics ?? FakeBiometricPinStore(),
+      ),
+      biometricCheckProvider.overrideWithValue(check ?? FakeBiometricCheck()),
       pixRepositoryProvider.overrideWithValue(repository),
       idempotencyKeysProvider.overrideWithValue(sequentialKeys()),
     ],
@@ -217,6 +228,88 @@ void main() {
 
       expect(await controllerOf(container).retry(), isNull);
       expect(repository.callsOf('authorize'), hasLength(1));
+    });
+  });
+
+  // v1.1.0 plan, task 2: biometrics releases the kept PIN, which the server
+  // checks like a typed one (ADR 0004, MOB-11).
+  group('confirming with biometrics', () {
+    test('authorizes with the kept PIN under a new key', () async {
+      final (container, repository) = setUpReview(
+        biometrics: FakeBiometricPinStore(pin: '2580'),
+      );
+
+      final transfer = await controllerOf(container).confirmWithBiometrics();
+
+      expect(transfer?.status, PixStatus.completed);
+      expect(authorizations(repository), [('key-1', '2580')]);
+    });
+
+    // MOB-13, ADR 0013: the face opens the app, never a Pix. Only the PIN
+    // behind the strong-biometrics key authorizes it.
+    test('never takes the face check, only the strong key', () async {
+      final biometrics = FakeBiometricPinStore(pin: '2580');
+      final check = FakeBiometricCheck();
+      final (container, repository) = setUpReview(
+        biometrics: biometrics,
+        check: check,
+      );
+
+      await controllerOf(container).confirmWithBiometrics();
+
+      expect(check.checks, 0);
+      expect(biometrics.reads, 1);
+      expect(authorizations(repository), [('key-1', '2580')]);
+    });
+
+    test('does nothing when the customer cancels', () async {
+      final (container, repository) = setUpReview(
+        biometrics: FakeBiometricPinStore(pin: '2580')
+          ..nextRead = const BiometricCancelled(),
+      );
+
+      expect(await controllerOf(container).confirmWithBiometrics(), isNull);
+      expect(repository.callsOf('authorize'), isEmpty);
+      expect(stateOf(container).error, isNull);
+    });
+
+    test('asks for the PIN when the kept one is gone', () async {
+      final biometrics = FakeBiometricPinStore(pin: '2580')
+        ..nextRead = const BiometricPinLost();
+      final (container, repository) = setUpReview(biometrics: biometrics);
+
+      expect(await controllerOf(container).confirmWithBiometrics(), isNull);
+      expect(repository.callsOf('authorize'), isEmpty);
+      expect(
+        stateOf(container).error,
+        'A biometria foi desativada neste aparelho. Digite seu PIN.',
+      );
+    });
+
+    test('forgets a kept PIN the server refuses', () async {
+      final biometrics = FakeBiometricPinStore(pin: '1111');
+      final (container, repository) = setUpReview(biometrics: biometrics);
+      repository.authorizeAnswer = () async => throw const ApiRejected(
+        ApiErrorCode.pinIncorrect,
+        remainingAttempts: 4,
+      );
+
+      await controllerOf(container).confirmWithBiometrics();
+
+      expect(biometrics.pin, isNull);
+      expect(stateOf(container).error, 'PIN incorreto. Restam 4 tentativas.');
+    });
+
+    test('forgets the kept PIN when the PIN gets locked, even typed', () async {
+      final biometrics = FakeBiometricPinStore(pin: '2580');
+      final (container, repository) = setUpReview(biometrics: biometrics);
+      repository.authorizeAnswer = () async =>
+          throw const ApiRejected(ApiErrorCode.pinLocked);
+
+      await controllerOf(container).confirm('7413');
+
+      expect(stateOf(container).blocked, isTrue);
+      expect(biometrics.pin, isNull);
     });
   });
 }

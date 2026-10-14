@@ -4,6 +4,8 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/glass_art.dart';
+
 Widget host(Widget child, {ThemeData? theme}) => MaterialApp(
   theme: theme ?? NbTheme.dark(),
   home: Scaffold(
@@ -37,9 +39,10 @@ void main() {
       );
 
       expect(find.text('Saldo disponível · Conta •••• 0004'), findsOneWidget);
-      expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
       // Week 8 plan, V12: the word "Saldo" where the logo was.
       expect(find.text('Saldo'), findsOneWidget);
+      expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
+      // Week 8 plan, V12: the Home already shows the logo.
       expect(find.byType(NextLogo), findsNothing);
       // The full number never shows on the card.
       expect(find.textContaining('100000'), findsNothing);
@@ -178,9 +181,31 @@ void main() {
     });
   });
 
-  // The contrast below assumes the glass panel never rises above 76 px from
-  // the card's top, where the mint light has faded. This keeps it true.
-  testWidgets('keeps the glass panel at least 76 px below the top', (
+  // v1.1.0 checkpoint (2026-10-14): the developer's art, tinted mint, fills
+  // the card in the mockup's layout.
+  testWidgets('shows the mint glass art behind the balance', (tester) async {
+    await tester.pumpWidget(
+      host(
+        BalanceCard(
+          accountNumber: '100000-4',
+          balanceCents: 1000000,
+          hidden: false,
+          onToggleHidden: () {},
+        ),
+      ),
+    );
+
+    expect(
+      find.descendant(
+        of: find.byType(BalanceCard),
+        matching: find.byType(GlassArt),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  // The title reads on the deep tint, which covers the top 30% of the card.
+  testWidgets('keeps the title within the deep tint at 1.3x text', (
     tester,
   ) async {
     tester.platformDispatcher.textScaleFactorTestValue = 1.3;
@@ -197,40 +222,38 @@ void main() {
     );
 
     final card = tester.getRect(find.byType(BalanceCard));
-    final panel = tester.getRect(find.byType(BackdropFilter));
-    expect(panel.top - card.top, greaterThanOrEqualTo(76));
+    final title = tester.getRect(find.text('Saldo'));
+    expect(title.bottom - card.top, lessThanOrEqualTo(card.height * 0.3));
   });
 
-  // Brief, section 8: AA on every text, on the brightest grounds the glass
-  // panel can sit on. From the mockup's geometry: the mint light (75% at its
-  // center) has faded to at most ~37% where the panel's top can reach,
-  // checked at 40% with the silk sheen on top; the bottom-left light reaches
-  // the panel's corner at ~50%, checked at its full 65%.
+  // Brief, section 8: AA on every text, over the brightest pixel the mint
+  // colorization can give, whatever the crop: the title on the deep tint,
+  // the balance and its label on the glass over the light tint.
   group('balance card contrast (AA)', () {
-    final mintReachingPanel = Color.alphaBlend(
-      NbBalanceCardColors.sheen,
-      Color.alphaBlend(
-        NbBrand.mint.withValues(alpha: 0.4),
-        NbBalanceCardColors.baseTop,
-      ),
+    final brightest = brightestArt();
+    final titleGround = Color.alphaBlend(
+      NbBalanceCardColors.tintDeep,
+      brightest,
     );
-    final bottomLight = Color.alphaBlend(
-      NbBalanceCardColors.glowBottom,
-      NbBalanceCardColors.baseBottom,
+    final panelGround = Color.alphaBlend(
+      NbBalanceCardColors.glass,
+      Color.alphaBlend(NbBalanceCardColors.tintLight, brightest),
     );
-    for (final (ground, light) in [
-      ('the mint light reaching the panel', mintReachingPanel),
-      ('the bottom-left light', bottomLight),
+
+    test('title on the deep tint', () {
+      expect(
+        contrast(NbBalanceCardColors.text, titleGround),
+        greaterThanOrEqualTo(4.5),
+      );
+    });
+
+    for (final (name, color) in [
+      ('balance', NbBalanceCardColors.text),
+      ('label', NbBalanceCardColors.textMuted),
     ]) {
-      final background = Color.alphaBlend(NbBalanceCardColors.glass, light);
-      for (final (name, color) in [
-        ('balance', NbBalanceCardColors.text),
-        ('label', NbBalanceCardColors.textMuted),
-      ]) {
-        test('$name on the glass over $ground', () {
-          expect(contrast(color, background), greaterThanOrEqualTo(4.5));
-        });
-      }
+      test('$name on the glass', () {
+        expect(contrast(color, panelGround), greaterThanOrEqualTo(4.5));
+      });
     }
   });
 }

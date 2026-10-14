@@ -50,18 +50,20 @@
 
 ### 2.3 Card de saldo (assinatura, igual nos dois modos)
 
-Sempre escuro, 190 de altura (cresce com texto maior). O mockup tem 214; o desenvolvedor reduziu para 190 na conferência no celular (semana 6). Camadas, de cima para baixo, com a geometria exata do CSS do mockup da Home:
+**Desde a v1.1.0 (checkpoint de 2026-10-14):** a seda (itens 1 a 4 abaixo) deu lugar à arte de vidro verde do desenvolvedor, colorizada para o menta da marca (`GlassArt`): a luminância de cada pixel vai de `#00241C` nas sombras a `#00FFC8` nas luzes, mantendo 20% da cor original para o vidro não perder profundidade; o pixel mais claro possível é `#33FFD3`. A mesma arte está no fundo da tela de desbloqueio e no card do valor do Pix. O layout do mockup continua ("Saldo" e o olho no alto; "Saldo disponível · Conta •••• 0004" e o valor no painel de vidro). Sobre a arte, uma tinta `#06110F`: a 78% no terço de cima, sob o título, e a 35% a partir de 60% da altura, onde o painel de vidro garante o contraste. No card do valor do Pix, os textos ficam direto sobre a arte, então a tinta é de 78% no card todo; ele tem o mesmo brilho menta embaixo (a sombra do item 5). O olho que mostra ou esconde o saldo fica no canto superior direito da tela do Pix, ao lado do título, e segue a mesma escolha da Home (MOB-05). Os testes provam AA em todo texto contra `#33FFD3`, qualquer que seja o recorte da imagem. A borda, a sombra, o vidro e as cores de texto abaixo continuam.
+
+Sempre escuro, 190 de altura (cresce com texto maior). O mockup tem 214; o desenvolvedor reduziu para 190 na conferência no celular (semana 6). Camadas do mockup, de cima para baixo, com a geometria exata do CSS da Home:
 
 1. Radial Menta 75%: `radial-gradient(70% 90% at 92% 8%)`, transparente a 60%
 2. Radial `#00BEA0` 65%: `radial-gradient(60% 80% at 8% 105%)`, transparente a 65%
 3. Faixa de seda `rgba(220,255,248,0.16)`: `linear-gradient(118deg)`, transparente a 38%, cheia a 48%, transparente a 58%
 4. Base `linear-gradient(160deg, #0B2A26 0%, #06110F 70%)`
-5. Borda `rgba(0,255,200,0.22)`; sombra `0 18 50 -12 rgba(0,255,200,0.35)`
+5. Borda `rgba(0,255,200,0.22)`; sombra `0 18 50 -12 rgba(0,255,200,0.35)` (desde o checkpoint da v1.1.0, 25%, mais suave, nos cards de saldo e do Pix)
 6. Painel de vidro `rgba(6,12,14,0.62)` + blur 14, borda branca a 10%, a 12 da base e das laterais (garante contraste do texto)
 
 Texto do card: saldo e logo `#F2F6F8`; rótulo, "R$" e centavos `#A9B6BF` (AA sobre o vidro mesmo nos pontos mais claros das luzes, provado em teste). Botão do olho: `rgba(10,15,20,0.45)`, borda branca a 14%, ícone 18.
 
-No Flutter, os gradientes são empilhados e desenhados com a geometria do CSS (elipses, ângulos e paradas sobre a caixa real), para baterem com o mockup em qualquer largura. O Impeller não faz *dithering* em gradientes, e degradês suaves sobre fundo escuro mostram faixas no aparelho (F-19). Por isso, o card e o brilho da tela recebem um granulado de 1 px em modo *overlay* (`Dither`), que esconde as faixas sem mudar a cor média. Evolução opcional: fragment shader com a seda em movimento lento.
+No Flutter, os gradientes são empilhados e desenhados com a geometria do CSS (elipses, ângulos e paradas sobre a caixa real), para baterem com o mockup em qualquer largura. O Impeller não faz *dithering* em gradientes, e degradês suaves sobre fundo escuro mostram faixas no aparelho (F-19). Por isso, o brilho da tela recebe um granulado de 1 px em modo *overlay* (`Dither`), que esconde as faixas sem mudar a cor média; o card, desde que usa a arte, não precisa mais dele.
 
 ## 3. Tipografia
 

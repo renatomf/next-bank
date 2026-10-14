@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/api_messages.dart';
 import 'package:next_bank/core/pin_rules.dart';
+import 'package:next_bank/core/session/biometric_pin_store.dart';
 import 'package:next_bank/features/security/presentation/security_providers.dart';
 
 /// What the PIN change screen shows. Never holds the PIN nor the password
@@ -67,6 +68,8 @@ class ChangePinController extends Notifier<ChangePinState> {
       await ref
           .read(securityRepositoryProvider)
           .changePin(password: password, newPin: newPin);
+      // The PIN kept for biometrics is the old one now (MOB-11).
+      await ref.read(biometricPinStoreProvider).clear();
       if (ref.mounted) state = const ChangePinState(done: true);
     } on ApiFailure catch (failure) {
       if (!ref.mounted) return;

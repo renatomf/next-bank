@@ -4,6 +4,7 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/account/account_providers.dart';
+import 'package:next_bank/core/session/biometric_pin_store.dart';
 import 'package:next_bank/core/statement/statement_controller.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/pix_formats.dart';
@@ -162,7 +163,17 @@ class _ReviewPixScreenState extends ConsumerState<ReviewPixScreen> {
         ),
       ];
     }
+    // With biometrics on, they come first; the PIN stays (ADR 0004).
+    final biometrics = ref.watch(biometricUnlockProvider).value ?? false;
     return [
+      if (biometrics && !state.verifying) ...[
+        PrimaryButton(
+          label: 'Confirmar com biometria',
+          onPressed: () =>
+              unawaited(_finish(_controller.confirmWithBiometrics())),
+        ),
+        const SizedBox(height: NbSpace.lg),
+      ],
       PinField(
         label: 'Digite seu PIN para enviar',
         controller: _pin,
