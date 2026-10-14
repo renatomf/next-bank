@@ -1,8 +1,11 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:next_bank/app/redirect.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
+import 'package:next_bank/features/pix/presentation/pix_formats.dart';
 import 'package:next_bank/features/pix/presentation/receipt/receipt_screen.dart';
 import 'package:next_bank/features/pix/presentation/review/review_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
@@ -10,6 +13,7 @@ import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
 import '../support/fake_account_repository.dart';
 import '../support/fake_pix_repository.dart';
 import '../support/fake_profile_repository.dart';
+import '../support/fake_text_sharer.dart';
 import '../support/fake_token_store.dart';
 import '../support/pump_app.dart';
 
@@ -39,12 +43,14 @@ Future<void> openHome(
   WidgetTester tester,
   FakePixRepository pix, {
   FakeAccountRepository? account,
+  FakeTextSharer? sharer,
 }) async {
   await pumpApp(
     tester,
     store: FakeTokenStore(tokens),
     pix: pix,
     account: account,
+    sharer: sharer,
   );
   await unlockWithPin(tester);
 }
@@ -132,6 +138,53 @@ void main() {
     expect(find.text('CPF ***.456.789-** · next bank'), findsOneWidget);
     expect(find.text(_endToEndId), findsOneWidget);
   });
+
+  // v1.1.0 plan, task 1: the receipt goes out as the same masked text the
+  // screen shows (MOB-09), with the demo notice (DEMO-05).
+  testWidgets('shares the receipt of the Pix as text', (tester) async {
+    tester.view.physicalSize = const Size(1080, 3600);
+    addTearDown(tester.view.reset);
+    final pix = FakePixRepository();
+    pix.authorizeAnswer = completes(pix);
+    final sharer = FakeTextSharer();
+    await openHome(tester, pix, sharer: sharer);
+    await fillInPix(tester);
+    await reviewPix(tester);
+    await typePin(tester);
+    expect(find.text(demoReceiptNotice), findsOneWidget);
+
+    await tester.tap(find.bySemanticsLabel('Compartilhar comprovante'));
+    await tester.pumpAndSettle();
+
+    expect(sharer.texts, [
+      receiptShareText(
+        transfer: await pix.fetchAnswer(),
+        payerName: 'Ana Souza',
+        payerAccount: 'next bank · Ag 0001 · CC •••• 0004',
+      ),
+    ]);
+  });
+
+  // DEMO-05: a Pix still moving or refused never goes out as a receipt.
+  for (final status in [
+    PixStatus.processing,
+    PixStatus.failed,
+    PixStatus.cancelled,
+  ]) {
+    testWidgets('offers no sharing on a ${status.name} Pix', (tester) async {
+      final pix = FakePixRepository();
+      pix.fetchAnswer = () async => pixTransfer(status: status);
+      await openHome(tester, pix);
+
+      GoRouter.of(tester.element(find.byType(Scaffold).last))
+          .go(AppRoutes.pixReceipt('pix-1'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ReceiptScreen), findsOneWidget);
+      expect(find.bySemanticsLabel('Compartilhar comprovante'), findsNothing);
+      expect(find.text(demoReceiptNotice), findsOneWidget);
+    });
+  }
 
   // domain-model.md 10: back from the receipt leads to the Home, never to
   // the PIN.
