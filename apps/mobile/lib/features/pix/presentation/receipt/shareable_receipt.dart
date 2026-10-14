@@ -7,9 +7,8 @@ import 'package:next_bank/features/pix/presentation/pix_formats.dart';
 
 /// The receipt of a completed Pix as the image the customer shares (v1.1.0
 /// plan, task 1): laid out like a bank receipt, in the light theme whatever
-/// the app's theme, with only what the screen masks (MOB-09) and saying it is
-/// a demo twice, in a notice and in a watermark a crop cannot remove
-/// (DEMO-05).
+/// the app's theme, with only what the screen masks (MOB-09) and the demo
+/// notice (DEMO-05).
 class ShareableReceipt extends StatelessWidget {
   /// Creates the image of [transfer], which must be completed: a Pix still
   /// moving or refused would read as a payment that never was.
@@ -78,54 +77,48 @@ class ShareableReceipt extends StatelessWidget {
           clipper: const _TornEdges(),
           child: ColoredBox(
             color: colors.surface,
-            child: Stack(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    NbSpace.xl,
-                    NbSpace.xxl,
-                    NbSpace.xl,
-                    NbSpace.xxl,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                NbSpace.xl,
+                NbSpace.xxl,
+                NbSpace.xl,
+                NbSpace.xxl,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const NextLogo(size: 26, color: Color(0xFF0A0F14)),
+                  const SizedBox(height: NbSpace.xl),
+                  _Timeline(
+                    startedAt: receiptDate(transfer.createdAt),
+                    completedAt: receiptDate(completedAt),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const NextLogo(size: 26, color: Color(0xFF0A0F14)),
-                      const SizedBox(height: NbSpace.xl),
-                      _Timeline(
-                        startedAt: receiptDate(transfer.createdAt),
-                        completedAt: receiptDate(completedAt),
-                      ),
-                      const _Rule(),
-                      _Party(
-                        name: transfer.payee.name,
-                        detail: payeeDetail(transfer.payee),
-                      ),
-                      const _Rule(),
-                      if (endToEndId != null)
-                        field('ID da transação', endToEndId),
-                      field('Valor', formatReais(transfer.amountCents).full),
-                      field(
-                        'Data e hora da transação',
-                        receiptLongDate(completedAt),
-                      ),
-                      if (description != null) field('Descrição', description),
-                      const _Rule(top: 0),
-                      Text('Conta de origem', style: text.titleMedium),
-                      const SizedBox(height: NbSpace.md),
-                      _Party(name: payerName, detail: payerAccount),
-                      const _Rule(),
-                      Text(
-                        demoReceiptNotice,
-                        style: label,
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                  const _Rule(),
+                  _Party(
+                    name: transfer.payee.name,
+                    detail: payeeDetail(transfer.payee),
                   ),
-                ),
-                const Positioned.fill(child: _Watermark()),
-              ],
+                  const _Rule(),
+                  if (endToEndId != null) field('ID da transação', endToEndId),
+                  field('Valor', formatReais(transfer.amountCents).full),
+                  field(
+                    'Data e hora da transação',
+                    receiptLongDate(completedAt),
+                  ),
+                  if (description != null) field('Descrição', description),
+                  const _Rule(top: 0),
+                  Text('Conta de origem', style: text.titleMedium),
+                  const SizedBox(height: NbSpace.md),
+                  _Party(name: payerName, detail: payerAccount),
+                  const _Rule(),
+                  Text(
+                    demoReceiptNotice,
+                    style: label,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -245,34 +238,6 @@ class _Rule extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
     padding: EdgeInsets.only(top: top, bottom: NbSpace.xl),
     child: Container(height: 1, color: NbColors.light.border),
-  );
-}
-
-/// "DEMONSTRAÇÃO" across the receipt, faint enough to read through and
-/// spread enough that no crop leaves a clean receipt (DEMO-05).
-class _Watermark extends StatelessWidget {
-  const new();
-
-  @override
-  Widget build(BuildContext context) => IgnorePointer(
-    child: Center(
-      child: Transform.rotate(
-        angle: -math.pi / 5,
-        child: Text(
-          'DEMONSTRAÇÃO',
-          softWrap: false,
-          overflow: TextOverflow.visible,
-          style: TextStyle(
-            fontFamily: NbType.display,
-            package: 'design_system',
-            fontSize: 34,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 3,
-            color: NbColors.light.text.withValues(alpha: 0.07),
-          ),
-        ),
-      ),
-    ),
   );
 }
 
