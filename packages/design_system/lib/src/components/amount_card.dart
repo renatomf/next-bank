@@ -1,7 +1,6 @@
-import 'package:design_system/src/components/dither.dart';
+import 'package:design_system/src/components/glass_art.dart';
 import 'package:design_system/src/components/icon_circle_button.dart';
 import 'package:design_system/src/components/money_text.dart';
-import 'package:design_system/src/components/silk.dart';
 import 'package:design_system/src/components/skeleton.dart';
 import 'package:design_system/src/tokens.dart';
 import 'package:flutter/material.dart';
@@ -45,8 +44,11 @@ class AmountCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(NbRadius.card),
         child: Stack(
           children: [
-            const Positioned.fill(child: Silk()),
-            const Positioned.fill(child: Dither()),
+            const Positioned.fill(child: GlassArt()),
+            // The texts sit right on the art: the deep tint keeps them AA.
+            const Positioned.fill(
+              child: ColoredBox(color: NbBalanceCardColors.tintDeep),
+            ),
             Padding(
               padding: const EdgeInsets.all(NbSpace.screen),
               child: Column(

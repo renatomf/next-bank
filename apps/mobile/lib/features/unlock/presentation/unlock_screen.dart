@@ -58,11 +58,7 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          const Image(
-            image: NbArt.glass,
-            fit: BoxFit.cover,
-            excludeFromSemantics: true,
-          ),
+          const GlassArt(),
           // The art fades into the background, so the text below reads on
           // a plain color in both themes.
           DecoratedBox(
