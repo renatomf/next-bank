@@ -9,6 +9,24 @@ String receiptDate(DateTime instant) {
       '${clockTime(local)}';
 }
 
+/// "quarta-feira, 30 de setembro de 2026, 14:09", in the customer's local
+/// time: the date as the shared receipt writes it (v1.1.0 plan, task 1).
+String receiptLongDate(DateTime instant) {
+  final local = instant.toLocal();
+  return '${weekdayName(local.weekday)}, ${local.day} de '
+      '${longMonth(local.month)} de ${local.year}, ${clockTime(local)}';
+}
+
+/// The first letters of the first and last names, e.g. "MC" for "Mariana
+/// Costa": how the receipt shows who receives.
+String nameInitials(String name) {
+  final words = name.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty);
+  if (words.isEmpty) return '';
+  final first = words.first[0];
+  final last = words.length > 1 ? words.last[0] : '';
+  return (first + last).toUpperCase();
+}
+
 /// The payer's account with only its last four digits (brief, section 7).
 String payerDetail({required String branch, required String number}) {
   final digits = number.replaceAll(RegExp(r'\D'), '');
