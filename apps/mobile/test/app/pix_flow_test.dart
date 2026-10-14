@@ -7,13 +7,14 @@ import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/pix_formats.dart';
 import 'package:next_bank/features/pix/presentation/receipt/receipt_screen.dart';
+import 'package:next_bank/features/pix/presentation/receipt/shareable_receipt.dart';
 import 'package:next_bank/features/pix/presentation/review/review_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
 
 import '../support/fake_account_repository.dart';
 import '../support/fake_pix_repository.dart';
 import '../support/fake_profile_repository.dart';
-import '../support/fake_text_sharer.dart';
+import '../support/fake_image_sharer.dart';
 import '../support/fake_token_store.dart';
 import '../support/pump_app.dart';
 
@@ -43,7 +44,8 @@ Future<void> openHome(
   WidgetTester tester,
   FakePixRepository pix, {
   FakeAccountRepository? account,
-  FakeTextSharer? sharer,
+  FakeImageSharer? sharer,
+  FakeWidgetPainter? painter,
 }) async {
   await pumpApp(
     tester,
@@ -51,6 +53,7 @@ Future<void> openHome(
     pix: pix,
     account: account,
     sharer: sharer,
+    painter: painter,
   );
   await unlockWithPin(tester);
 }
@@ -139,15 +142,16 @@ void main() {
     expect(find.text(_endToEndId), findsOneWidget);
   });
 
-  // v1.1.0 plan, task 1: the receipt goes out as the same masked text the
-  // screen shows (MOB-09), with the demo notice (DEMO-05).
-  testWidgets('shares the receipt of the Pix as text', (tester) async {
+  // v1.1.0 plan, task 1: the receipt goes out as an image of the masked
+  // receipt (MOB-09), with the receipt text as its caption (DEMO-05).
+  testWidgets('shares the receipt of the Pix as an image', (tester) async {
     tester.view.physicalSize = const Size(1080, 3600);
     addTearDown(tester.view.reset);
     final pix = FakePixRepository();
     pix.authorizeAnswer = completes(pix);
-    final sharer = FakeTextSharer();
-    await openHome(tester, pix, sharer: sharer);
+    final sharer = FakeImageSharer();
+    final painter = FakeWidgetPainter();
+    await openHome(tester, pix, sharer: sharer, painter: painter);
     await fillInPix(tester);
     await reviewPix(tester);
     await typePin(tester);
@@ -156,13 +160,22 @@ void main() {
     await tester.tap(find.bySemanticsLabel('Compartilhar comprovante'));
     await tester.pumpAndSettle();
 
-    expect(sharer.texts, [
+    final done = await pix.fetchAnswer();
+    final receipt = painter.painted.single as ShareableReceipt;
+    expect(receipt.transfer.id, done.id);
+    expect(receipt.payerName, 'Ana Souza');
+    expect(receipt.payerAccount, 'next bank · Ag 0001 · CC •••• 0004');
+    final shared = sharer.shared.single;
+    expect(shared.png, painter.png);
+    expect(shared.fileName, 'comprovante-pix.png');
+    expect(
+      shared.caption,
       receiptShareText(
-        transfer: await pix.fetchAnswer(),
+        transfer: done,
         payerName: 'Ana Souza',
         payerAccount: 'next bank · Ag 0001 · CC •••• 0004',
       ),
-    ]);
+    );
   });
 
   // DEMO-05: a Pix still moving or refused never goes out as a receipt.
