@@ -10,7 +10,8 @@ import '../../../../support/tolerant_golden_comparator.dart';
 
 // v1.1.0 plan, task 1: the receipt shared as an image, in the next bank's
 // light theme whatever the app's theme, with only what the screen masks
-// (MOB-09) and a demo watermark a crop cannot remove (DEMO-05).
+// (MOB-09) and the demo notice, without a watermark (DEMO-05; the
+// developer's choice, 2026-10-14).
 void main() {
   setUpAll(() async {
     useTolerantGoldens('shareable_receipt_test.dart');
@@ -93,11 +94,13 @@ void main() {
     expect(find.textContaining('100000'), findsNothing);
   });
 
-  testWidgets('says it is a demo twice: notice and watermark', (tester) async {
+  testWidgets('says it is a demo in a notice, with no watermark', (
+    tester,
+  ) async {
     await pumpReceipt(tester);
 
     expect(find.text(demoReceiptNotice), findsOneWidget);
-    expect(find.text('DEMONSTRAÇÃO'), findsOneWidget);
+    expect(find.text('DEMONSTRAÇÃO'), findsNothing);
   });
 
   test('refuses a Pix that is not completed', () {
