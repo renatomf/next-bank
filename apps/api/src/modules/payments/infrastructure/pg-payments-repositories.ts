@@ -12,6 +12,7 @@ import type {
   PixTransfersRepository,
   ProtectedKeyValue,
   StoredPixKey,
+  StoredRandomKey,
   StoredResponse,
 } from '../application/ports.ts';
 import { RequestInProgress } from '../domain/errors.ts';
@@ -58,6 +59,47 @@ export class PgPixKeysRepository implements PixKeysRepository {
     );
     const row = rows[0];
     return row ? { accountId: row.account_id, masked: row.value_masked } : null;
+  }
+
+  /**
+   * Only pix_keys_one_random_per_account is the arbiter: a clash on the value
+   * index (the same UUID in another account) still fails, and never reads as
+   * "the account already had one".
+   */
+  async insertRandomIfAbsent(key: PixKeyState, value: ProtectedKeyValue): Promise<boolean> {
+    const { rowCount } = await this.#client.query(
+      `INSERT INTO payments.pix_keys
+         (id, account_id, type, value_ciphertext, value_hmac, value_masked, key_version, created_at)
+       VALUES ($1, $2, 'RANDOM', $3, $4, $5, $6, $7)
+       ON CONFLICT (account_id) WHERE type = 'RANDOM' DO NOTHING`,
+      [
+        key.id,
+        key.accountId,
+        value.ciphertext,
+        value.blindIndex,
+        key.masked,
+        value.keyVersion,
+        key.createdAt,
+      ],
+    );
+    return rowCount === 1;
+  }
+
+  /** Served by the pix_keys_one_random_per_account partial unique index. */
+  async findRandomOf(accountId: string): Promise<StoredRandomKey | null> {
+    const { rows } = await this.#client.query<{
+      value_ciphertext: Uint8Array;
+      key_version: number;
+      value_masked: string;
+    }>(
+      `SELECT value_ciphertext, key_version, value_masked FROM payments.pix_keys
+       WHERE account_id = $1 AND type = 'RANDOM'`,
+      [accountId],
+    );
+    const row = rows[0];
+    return row
+      ? { ciphertext: row.value_ciphertext, keyVersion: row.key_version, masked: row.value_masked }
+      : null;
   }
 }
 

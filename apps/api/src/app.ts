@@ -31,7 +31,12 @@ import {
   sessionRoutes,
 } from './modules/identity/index.ts';
 import { createLedgerModule } from './modules/ledger/index.ts';
-import { createPaymentsModule, keyLookupRoutes, transferRoutes } from './modules/payments/index.ts';
+import {
+  createPaymentsModule,
+  keyLookupRoutes,
+  receivingKeyRoutes,
+  transferRoutes,
+} from './modules/payments/index.ts';
 import { healthRoutes } from './shared/http/health.ts';
 import { registerProblemHandlers } from './shared/http/problem.ts';
 import type { PiiKeys } from './shared/infrastructure/aes-gcm-pii-protector.ts';
@@ -201,6 +206,7 @@ export function buildApp({
     revokeSession: identity.revokeSession,
   });
   void app.register(keyLookupRoutes, { lookupPixKey: payments.lookupPixKey });
+  void app.register(receivingKeyRoutes, { getReceivingKey: payments.getReceivingKey });
   void app.register(transferRoutes, {
     createPixTransfer: payments.createPixTransfer,
     authorizePixTransfer: payments.authorizePixTransfer,

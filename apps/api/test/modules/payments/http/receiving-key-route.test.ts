@@ -139,13 +139,20 @@ describe('POST /v1/me/pix/receiving-key', () => {
     });
   });
 
-  it('refuses a body: nothing in it can choose the account (InvalidRequest, PIX-04)', async () => {
-    const customer = await newCustomer();
+  // Bodyless like the other commands (cancel, revoke): whatever is sent is ignored.
+  it('never lets a body choose the account (PIX-04)', async () => {
+    const ana = await newCustomer('Ana Souza');
+    const bruno = await newCustomer('Bruno Lima');
+    const anaKey = (await receivingKey(ana.accessToken)).json<ReceivingKey>();
 
-    const response = await receivingKey(customer.accessToken, { accountId: 'someone-else' });
+    const response = await receivingKey(bruno.accessToken, {
+      accountId: 'account-of-ana',
+      customerId: 'user-ana',
+      key: anaKey.key,
+    });
 
-    expect(response.statusCode).toBe(422);
-    expect(response.json<{ code: string }>().code).toBe('InvalidRequest');
+    expect(response.statusCode).toBe(200);
+    expect(response.json<ReceivingKey>().key).not.toBe(anaKey.key);
   });
 
   it('requires authentication (Unauthenticated)', async () => {
