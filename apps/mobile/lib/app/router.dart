@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +7,7 @@ import 'package:next_bank/app/nav_shell.dart';
 import 'package:next_bank/app/redirect.dart';
 import 'package:next_bank/core/profile/profile.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
+import 'package:next_bank/core/session/after_unlock.dart';
 import 'package:next_bank/core/session/app_lock.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/features/auth/presentation/create_pin/create_pin_screen.dart';
@@ -37,23 +40,36 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
     ref.read(profileProvider),
   );
   final locked = ValueNotifier<bool>(ref.read(appLockProvider));
+  final afterUnlock = ValueNotifier<String?>(ref.read(afterUnlockProvider));
   ref
     ..listen(sessionProvider, (_, next) => session.value = next)
     ..listen(profileProvider, (_, next) => profile.value = next)
     ..listen(appLockProvider, (_, next) => locked.value = next)
+    ..listen(afterUnlockProvider, (_, next) => afterUnlock.value = next)
     ..onDispose(session.dispose)
     ..onDispose(profile.dispose)
-    ..onDispose(locked.dispose);
+    ..onDispose(locked.dispose)
+    ..onDispose(afterUnlock.dispose);
 
   final router = GoRouter(
     initialLocation: AppRoutes.splash,
     refreshListenable: Listenable.merge([session, profile, locked]),
-    redirect: (_, state) => redirectFor(
-      session.value,
-      profile.value,
-      state.matchedLocation,
-      locked: locked.value,
-    ),
+    redirect: (_, state) {
+      final target = redirectFor(
+        session.value,
+        profile.value,
+        state.matchedLocation,
+        locked: locked.value,
+        afterUnlock: afterUnlock.value,
+      );
+      // A shortcut's screen is opened once; the next unlock goes home.
+      if (target != null && target == afterUnlock.value) {
+        unawaited(
+          Future.microtask(ref.read(afterUnlockProvider.notifier).clear),
+        );
+      }
+      return target;
+    },
     routes: [
       GoRoute(path: AppRoutes.splash, builder: (_, _) => const SplashScreen()),
       GoRoute(

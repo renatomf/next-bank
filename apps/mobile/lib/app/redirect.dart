@@ -63,9 +63,15 @@ String? redirectFor(
   AsyncValue<Profile?> profile,
   String location, {
   required bool locked,
+  String? afterUnlock,
 }) {
   final target = switch (session) {
-    AsyncData(value: SignedIn()) => _signedInTarget(profile, location, locked),
+    AsyncData(value: SignedIn()) => _signedInTarget(
+      profile,
+      location,
+      locked,
+      afterUnlock,
+    ),
     AsyncData(value: SignedOut()) =>
       location == AppRoutes.register ? location : AppRoutes.login,
     // Still restoring, or the device storage failed: splash shows which.
@@ -78,6 +84,7 @@ String _signedInTarget(
   AsyncValue<Profile?> profile,
   String location,
   bool locked,
+  String? afterUnlock,
 ) => switch (profile) {
   AsyncData(value: Profile(hasPin: false)) => AppRoutes.createPin,
   AsyncData(value: Profile(hasPin: true)) when locked => AppRoutes.unlock,
@@ -85,8 +92,10 @@ String _signedInTarget(
     AppRoutes.splash ||
     AppRoutes.login ||
     AppRoutes.register ||
-    AppRoutes.createPin ||
-    AppRoutes.unlock => AppRoutes.home,
+    AppRoutes.createPin => AppRoutes.home,
+    // A shortcut on the Unlock screen opens its screen once unlocked (v1.1.0
+    // plan, task 2).
+    AppRoutes.unlock => afterUnlock ?? AppRoutes.home,
     _ => location,
   },
   // Not known yet, or it could not be loaded: splash shows which.
