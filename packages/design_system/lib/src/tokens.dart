@@ -21,8 +21,9 @@ abstract final class NbBalanceCardColors {
   /// Card border: mint at 22%.
   static const Color border = Color(0x3800FFC8);
 
-  /// Card shadow: mint at 35%.
-  static const Color shadow = Color(0x5900FFC8);
+  /// Card glow underneath: mint at 25%, softened from the mockup's 35% at
+  /// the v1.1.0 checkpoint (developer's request).
+  static const Color shadow = Color(0x4000FFC8);
 
   /// Glass panel under the balance: it keeps the text readable over the
   /// lights.

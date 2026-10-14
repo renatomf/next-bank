@@ -58,7 +58,7 @@ Sempre escuro, 190 de altura (cresce com texto maior). O mockup tem 214; o desen
 2. Radial `#00BEA0` 65%: `radial-gradient(60% 80% at 8% 105%)`, transparente a 65%
 3. Faixa de seda `rgba(220,255,248,0.16)`: `linear-gradient(118deg)`, transparente a 38%, cheia a 48%, transparente a 58%
 4. Base `linear-gradient(160deg, #0B2A26 0%, #06110F 70%)`
-5. Borda `rgba(0,255,200,0.22)`; sombra `0 18 50 -12 rgba(0,255,200,0.35)`
+5. Borda `rgba(0,255,200,0.22)`; sombra `0 18 50 -12 rgba(0,255,200,0.35)` (desde o checkpoint da v1.1.0, 25%, mais suave, nos cards de saldo e do Pix)
 6. Painel de vidro `rgba(6,12,14,0.62)` + blur 14, borda branca a 10%, a 12 da base e das laterais (garante contraste do texto)
 
 Texto do card: saldo e logo `#F2F6F8`; rótulo, "R$" e centavos `#A9B6BF` (AA sobre o vidro mesmo nos pontos mais claros das luzes, provado em teste). Botão do olho: `rgba(10,15,20,0.45)`, borda branca a 14%, ícone 18.
