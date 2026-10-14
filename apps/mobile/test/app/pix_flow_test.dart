@@ -172,8 +172,8 @@ void main() {
     PixStatus.cancelled,
   ]) {
     testWidgets('offers no sharing on a ${status.name} Pix', (tester) async {
-      final pix = FakePixRepository();
-      pix.fetchAnswer = () async => pixTransfer(status: status);
+      final pix = FakePixRepository()
+        ..fetchAnswer = () async => pixTransfer(status: status);
       await openHome(tester, pix);
 
       GoRouter.of(tester.element(find.byType(Scaffold).last))

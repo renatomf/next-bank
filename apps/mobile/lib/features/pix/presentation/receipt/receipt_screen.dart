@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/account/account_providers.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
+import 'package:next_bank/core/share/text_sharer.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/pix_formats.dart';
 import 'package:next_bank/features/pix/presentation/pix_providers.dart';
@@ -93,6 +94,9 @@ class _Receipt extends ConsumerWidget {
     final name = ref.watch(profileProvider).value?.name ?? '';
     final account = ref.watch(accountProvider).value;
     final completed = transfer.status == PixStatus.completed;
+    final payerAccount = account == null
+        ? 'next bank'
+        : payerDetail(branch: account.branch, number: account.number);
     return Column(
       children: [
         Container(
@@ -123,17 +127,34 @@ class _Receipt extends ConsumerWidget {
         ReceiptCard(
           date: receiptDate(transfer.completedAt ?? transfer.createdAt),
           status: _badge(transfer.status),
-          from: (
-            name: name,
-            detail: account == null
-                ? 'next bank'
-                : payerDetail(branch: account.branch, number: account.number),
-          ),
+          from: (name: name, detail: payerAccount),
           to: (name: transfer.payee.name, detail: payeeDetail(transfer.payee)),
           type: pixType(transfer.payee.keyType),
           description: transfer.description,
           transactionId: transfer.endToEndId,
         ),
+        const SizedBox(height: NbSpace.md),
+        Text(
+          demoReceiptNotice,
+          textAlign: TextAlign.center,
+          style: text.bodySmall?.copyWith(color: colors.textMuted),
+        ),
+        // Only a completed Pix goes out as a receipt (DEMO-05).
+        if (completed) ...[
+          const SizedBox(height: NbSpace.xl),
+          PrimaryButton(
+            label: 'Compartilhar comprovante',
+            onPressed: () => ref
+                .read(textSharerProvider)
+                .share(
+                  receiptShareText(
+                    transfer: transfer,
+                    payerName: name,
+                    payerAccount: payerAccount,
+                  ),
+                ),
+          ),
+        ],
       ],
     );
   }
