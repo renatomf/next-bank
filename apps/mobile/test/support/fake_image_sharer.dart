@@ -5,14 +5,13 @@ import 'package:next_bank/core/share/image_sharer.dart';
 /// The system's share sheet without the system: keeps what it was given.
 class FakeImageSharer implements ImageSharer {
   /// Images shared, in order.
-  final List<({Uint8List png, String fileName, String caption})> shared = [];
+  final List<({Uint8List png, String fileName})> shared = [];
 
   @override
   Future<void> shareImage({
     required Uint8List png,
     required String fileName,
-    required String caption,
-  }) async => shared.add((png: png, fileName: fileName, caption: caption));
+  }) async => shared.add((png: png, fileName: fileName));
 }
 
 /// Draws nothing: keeps the widgets it was asked to draw and answers with
