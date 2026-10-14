@@ -14,7 +14,6 @@ void main() {
       () => paintWidgetToPng(
         const SizedBox(height: 50, child: ColoredBox(color: Color(0xFF00FFC8))),
         width: 100,
-        pixelRatio: 3,
       ),
     ))!;
 

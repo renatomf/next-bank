@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/account/account_providers.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
-import 'package:next_bank/core/share/text_sharer.dart';
+import 'package:next_bank/core/share/image_sharer.dart';
+import 'package:next_bank/core/share/widget_png.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/pix_formats.dart';
 import 'package:next_bank/features/pix/presentation/pix_providers.dart';
+import 'package:next_bank/features/pix/presentation/receipt/shareable_receipt.dart';
 
 /// The receipt of a Pix (screen 10; comprovante-dark mockup, without sharing,
 /// decision D9). The payer is the customer: their name and their account's
@@ -144,19 +146,39 @@ class _Receipt extends ConsumerWidget {
           const SizedBox(height: NbSpace.xl),
           PrimaryButton(
             label: 'Compartilhar comprovante',
-            onPressed: () => ref
-                .read(textSharerProvider)
-                .share(
-                  receiptShareText(
-                    transfer: transfer,
-                    payerName: name,
-                    payerAccount: payerAccount,
-                  ),
-                ),
+            onPressed: () => _share(ref, name: name, account: payerAccount),
           ),
         ],
       ],
     );
+  }
+
+  /// Draws the receipt image and hands it to the share sheet, with the
+  /// receipt text as its caption (v1.1.0 plan, task 1).
+  Future<void> _share(
+    WidgetRef ref, {
+    required String name,
+    required String account,
+  }) async {
+    final png = await ref.read(widgetPainterProvider)(
+      ShareableReceipt(
+        transfer: transfer,
+        payerName: name,
+        payerAccount: account,
+      ),
+      width: ShareableReceipt.width,
+    );
+    await ref
+        .read(imageSharerProvider)
+        .shareImage(
+          png: png,
+          fileName: 'comprovante-pix.png',
+          caption: receiptShareText(
+            transfer: transfer,
+            payerName: name,
+            payerAccount: account,
+          ),
+        );
   }
 
   static StatusBadge _badge(PixStatus status) => switch (status) {

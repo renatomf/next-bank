@@ -26,7 +26,7 @@ void main() {
     tester.view
       ..physicalSize = const Size(
         ShareableReceipt.width * 2,
-        ShareableReceipt.width * 2 * 2.4,
+        ShareableReceipt.width * 2 * 3.2,
       )
       ..devicePixelRatio = 2;
     addTearDown(tester.view.reset);

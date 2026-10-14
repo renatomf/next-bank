@@ -14,8 +14,8 @@ import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/app_lock.dart';
 import 'package:next_bank/core/session/secure_token_store.dart';
 import 'package:next_bank/core/session/session_controller.dart';
-import 'package:next_bank/core/share/share_plus_text_sharer.dart';
-import 'package:next_bank/core/share/text_sharer.dart';
+import 'package:next_bank/core/share/image_sharer.dart';
+import 'package:next_bank/core/share/share_plus_image_sharer.dart';
 import 'package:next_bank/core/statement/http_statement_repository.dart';
 import 'package:next_bank/core/statement/statement_controller.dart';
 import 'package:next_bank/core/theme/secure_theme_store.dart';
@@ -45,7 +45,7 @@ Future<void> main() async {
         overrides: [
           tokenStoreProvider.overrideWithValue(SecureTokenStore()),
           themeStoreProvider.overrideWithValue(SecureThemeStore()),
-          textSharerProvider.overrideWithValue(SharePlusTextSharer()),
+          imageSharerProvider.overrideWithValue(SharePlusImageSharer()),
           profileRepositoryProvider.overrideWith(
             (ref) =>
                 HttpProfileRepository(ref.watch(apiProvider).getDefaultApi()),

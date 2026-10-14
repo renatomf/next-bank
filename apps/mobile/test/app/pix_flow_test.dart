@@ -12,9 +12,9 @@ import 'package:next_bank/features/pix/presentation/review/review_pix_screen.dar
 import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
 
 import '../support/fake_account_repository.dart';
+import '../support/fake_image_sharer.dart';
 import '../support/fake_pix_repository.dart';
 import '../support/fake_profile_repository.dart';
-import '../support/fake_image_sharer.dart';
 import '../support/fake_token_store.dart';
 import '../support/pump_app.dart';
 

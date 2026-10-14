@@ -19,12 +19,12 @@ import 'package:next_bank/main.dart';
 
 import 'fake_account_repository.dart';
 import 'fake_auth_repository.dart';
+import 'fake_image_sharer.dart';
 import 'fake_monotonic_clock.dart';
 import 'fake_pix_repository.dart';
 import 'fake_profile_repository.dart';
 import 'fake_security_repository.dart';
 import 'fake_statement_repository.dart';
-import 'fake_image_sharer.dart';
 import 'fake_theme_store.dart';
 import 'fake_token_store.dart';
 import 'fake_unlock_repository.dart';
