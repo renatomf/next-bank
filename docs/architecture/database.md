@@ -254,9 +254,10 @@ erDiagram
 - `type`: `CHECK (type IN ('CPF','EMAIL','PHONE','RANDOM'))`
 - **`UNIQUE (type, value_hmac)`** — uma chave pertence a uma única conta
 - Valor cifrado com o protetor compartilhado (dado associado `payments.pix_keys.value`, índice cego com o prefixo `pix-key:<tipo>`), separado do CPF do usuário (semana 5, D7)
-- Máximo de 5 por conta: garantido na aplicação, com lock na conta durante a criação de chave (entra com "Minhas chaves"; na V1 só existe a chave CPF)
+- **Índice único parcial `pix_keys_one_random_per_account (account_id) WHERE type = 'RANDOM'`** (v1.1.0, tarefa 3) — uma chave aleatória por conta, a do QR Code de receber. É o árbitro do `INSERT … ON CONFLICT DO NOTHING` (chamadas simultâneas: uma grava, as outras leem a dela) e serve a leitura da chave aleatória da conta
+- Máximo de 5 por conta: garantido na aplicação, com lock na conta durante a criação de chave (entra com "Minhas chaves"; hoje cada conta tem no máximo a CPF e a aleatória)
 - `GRANT`: só `SELECT, INSERT` para a API
-- Índice `(account_id)`: entra com "Minhas chaves", a primeira consulta que o usa
+- Índice `(account_id)` para todas as chaves: entra com "Minhas chaves", a primeira consulta que o usa (a chave aleatória já tem o índice parcial acima)
 
 **`pix_transfers`**
 - `CHECK (amount > 0)`; `CHECK (payer_account_id <> payee_account_id)`; `CHECK (char_length(description) <= 140)`; `currency = 'BRL'`; `expires_at > created_at`

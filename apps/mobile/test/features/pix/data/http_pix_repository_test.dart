@@ -14,6 +14,10 @@ import '../../../support/scripted_server.dart';
 const _transferId = '0b9a7c1e-5d2f-4a8b-9c3d-7e6f5a4b3c2d';
 // Generated, never a literal: a fixed UUID next to "key" looks like a secret.
 final String _key = newIdempotencyKey();
+// A random Pix key is a UUID v4 too: generated for the same reason.
+final String _receivingKey = newIdempotencyKey();
+String _masked(String key) =>
+    '${key.substring(0, 4)}****-****-****-****-********${key.substring(32)}';
 const _transferPath = '/v1/pix/transfers/$_transferId';
 
 HttpPixRepository repositoryFor(ScriptedServer server) {
@@ -328,5 +332,55 @@ void main() {
         );
       });
     }
+  });
+
+  // The customer's random key, for the QR Code (v1.1.0 plan, task 3).
+  group('receivingKey', () {
+    test("asks for the caller's key, without a body, and reads it", () async {
+      final server = ScriptedServer({
+        '/v1/me/pix/receiving-key': (_) async => JsonReply(200, {
+          'key': _receivingKey,
+          'keyMasked': _masked(_receivingKey),
+        }),
+      });
+
+      final key = await repositoryFor(server).receivingKey();
+
+      final request = server.received.single;
+      expect(request.method, 'POST');
+      expect(request.body, anyOf(isNull, isEmpty));
+      expect(key.key, _receivingKey);
+      expect(key.keyMasked, _masked(_receivingKey));
+    });
+
+    // Only a random key may go in a QR Code: never a CPF (PIX-12; MASVS, code).
+    for (final (name, key) in [
+      ('a CPF', '12345678909'),
+      ('a UUID that is not v4', '019a0b6e-7c3d-7f00-8a1b-2c3d4e5f6a7b'),
+    ]) {
+      test('is unexpected: $name as the key', () async {
+        final server = ScriptedServer({
+          '/v1/me/pix/receiving-key': (_) async =>
+              JsonReply(200, {'key': key, 'keyMasked': '****'}),
+        });
+
+        await expectLater(
+          repositoryFor(server).receivingKey(),
+          throwsA(isA<ApiUnexpected>()),
+        );
+      });
+    }
+
+    test('reports a session that ended', () async {
+      final server = ScriptedServer({
+        '/v1/me/pix/receiving-key': (_) async =>
+            const ProblemReply(401, 'Unauthenticated'),
+      });
+
+      await expectLater(
+        repositoryFor(server).receivingKey(),
+        throwsA(isA<ApiFailure>()),
+      );
+    });
   });
 }

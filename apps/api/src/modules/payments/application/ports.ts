@@ -10,6 +10,9 @@ export interface ProtectedKeyValue {
   keyVersion: number;
 }
 
+/** What decrypting a stored value needs: the ciphertext and the key that sealed it. */
+export type SealedKeyValue = Pick<ProtectedKeyValue, 'ciphertext' | 'keyVersion'>;
+
 /**
  * Encrypts key values for storage, with a keyed blind index per type to find
  * and keep keys unique without storing them in clear (API-06).
@@ -17,6 +20,8 @@ export interface ProtectedKeyValue {
 export interface PixKeyValueProtector {
   protect(type: PixKeyType, value: string): ProtectedKeyValue;
   blindIndex(type: PixKeyType, value: string): Uint8Array;
+  /** Only for the owner's own random key, which the QR Code has to carry. */
+  reveal(type: PixKeyType, sealed: SealedKeyValue): string;
 }
 
 /** What a lookup learns from a stored key: never its value. */
@@ -25,9 +30,17 @@ export interface StoredPixKey {
   masked: string;
 }
 
+/** An account's random key as stored: sealed, so only the protector reads it. */
+export interface StoredRandomKey extends SealedKeyValue {
+  masked: string;
+}
+
 export interface PixKeysRepository {
   insert(key: PixKeyState, value: ProtectedKeyValue): Promise<void>;
   findByIndex(type: PixKeyType, blindIndex: Uint8Array): Promise<StoredPixKey | null>;
+  /** False when the account already has one: concurrent callers keep a single key. */
+  insertRandomIfAbsent(key: PixKeyState, value: ProtectedKeyValue): Promise<boolean>;
+  findRandomOf(accountId: string): Promise<StoredRandomKey | null>;
 }
 
 /** A Pix is always looked up with its payer's account: anyone else finds nothing (PIX-01). */

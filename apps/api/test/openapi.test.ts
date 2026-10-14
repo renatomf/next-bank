@@ -66,6 +66,7 @@ describe('OpenAPI document', () => {
       'PixKeyLookup',
       'PixKeyLookupRequestInput',
       'PixPayee',
+      'PixReceivingKey',
       'PixTransfer',
       'Problem',
       'RefreshRequestInput',
@@ -95,6 +96,19 @@ describe('OpenAPI document', () => {
         $ref: '#/components/schemas/Problem',
       });
     }
+  });
+
+  // PIX-01, PIX-12: the caller's own random key, with no body to choose the account.
+  it('describes POST /v1/me/pix/receiving-key as a protected command without a body', () => {
+    const operation = document.paths['/v1/me/pix/receiving-key']?.post;
+
+    expect(operation?.operationId).toBe('getReceivingKey');
+    expect(operation?.security).toEqual([{ bearerAuth: [] }]);
+    expect(operation).not.toHaveProperty('requestBody');
+    expect(operation?.parameters ?? []).toEqual([]);
+    expect(operation?.responses['200']?.content?.['application/json']?.schema).toEqual({
+      $ref: '#/components/schemas/PixReceivingKey',
+    });
   });
 
   // ASVS session: the customer sees and ends their own sessions, from the token.

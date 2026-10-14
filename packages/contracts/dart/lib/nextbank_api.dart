@@ -28,6 +28,7 @@ export 'package:nextbank_api/src/model/my_account.dart';
 export 'package:nextbank_api/src/model/pix_key_lookup.dart';
 export 'package:nextbank_api/src/model/pix_key_lookup_request_input.dart';
 export 'package:nextbank_api/src/model/pix_payee.dart';
+export 'package:nextbank_api/src/model/pix_receiving_key.dart';
 export 'package:nextbank_api/src/model/pix_transfer.dart';
 export 'package:nextbank_api/src/model/problem.dart';
 export 'package:nextbank_api/src/model/refresh_request_input.dart';

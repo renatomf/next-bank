@@ -15,10 +15,12 @@ import type {
   PixKeyValueProtector,
   ProtectedKeyValue,
   RequestFingerprint,
+  SealedKeyValue,
   StoredPixKey,
+  StoredRandomKey,
   StoredResponse,
 } from '../../../../src/modules/payments/application/ports.ts';
-import type { PixKeyType } from '../../../../src/modules/payments/domain/pix-key.ts';
+import type { PixKeyState, PixKeyType } from '../../../../src/modules/payments/domain/pix-key.ts';
 import type { PixTransferState } from '../../../../src/modules/payments/domain/pix-transfer.ts';
 import type {
   AuditEvent,
@@ -38,17 +40,31 @@ export class FakeUnitOfWork implements UnitOfWork {
   }
 }
 
-/** Not encryption: shows which value and type each call protected. */
+/** Not encryption: shows which value and type each call protected, and reverses it. */
 export class FakeKeyProtector implements PixKeyValueProtector {
   protect(type: PixKeyType, value: string): ProtectedKeyValue {
     return {
-      ciphertext: new TextEncoder().encode(`sealed(${type})`),
+      ciphertext: new TextEncoder().encode(`sealed(${type}:${value})`),
       blindIndex: this.blindIndex(type, value),
       keyVersion: 1,
     };
   }
   blindIndex(type: PixKeyType, value: string): Uint8Array {
     return new TextEncoder().encode(`index(${type}:${value})`);
+  }
+  reveal(type: PixKeyType, sealed: SealedKeyValue): string {
+    const text = textOf(sealed.ciphertext);
+    const prefix = `sealed(${type}:`;
+    if (!text.startsWith(prefix)) throw new Error(`Not a sealed ${type} key: ${text}`);
+    return text.slice(prefix.length, -1);
+  }
+}
+
+/** Random UUIDs v4 in a known order, so tests can expect them. */
+export class SequentialRandomUuids {
+  #next = 1;
+  next(): string {
+    return `00000000-0000-4000-8000-${String(this.#next++).padStart(12, '0')}`;
   }
 }
 
@@ -69,6 +85,10 @@ export class FakePaymentsRepositories implements PaymentsRepositoriesFactory {
   readonly transfers: PixTransferState[] = [];
   readonly records = new Map<string, StoredRecord>();
   readonly auditEvents: AuditEvent[] = [];
+  /** The random key of each account, as stored: sealed, never in clear. */
+  readonly randomKeys = new Map<string, StoredRandomKey>();
+  /** Every random key offered for insertion, kept or not. */
+  readonly offeredRandomKeys: PixKeyState[] = [];
   lookups = 0;
 
   addKey(type: PixKeyType, value: string, key: StoredPixKey): void {
@@ -110,6 +130,18 @@ export class FakePaymentsRepositories implements PaymentsRepositoriesFactory {
           this.lookups += 1;
           return Promise.resolve(this.keys.get(textOf(blindIndex)) ?? null);
         },
+        // Like ON CONFLICT DO NOTHING on the one-random-key-per-account index.
+        insertRandomIfAbsent: (key, value) => {
+          this.offeredRandomKeys.push(key);
+          if (this.randomKeys.has(key.accountId)) return Promise.resolve(false);
+          this.randomKeys.set(key.accountId, {
+            ciphertext: value.ciphertext,
+            keyVersion: value.keyVersion,
+            masked: key.masked,
+          });
+          return Promise.resolve(true);
+        },
+        findRandomOf: (accountId) => Promise.resolve(this.randomKeys.get(accountId) ?? null),
       },
       pixTransfers: {
         insert: (state) => {

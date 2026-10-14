@@ -11,6 +11,7 @@ import 'package:next_bank/core/session/biometric_pin_store.dart';
 import 'package:next_bank/core/session/greeting_name_store.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/core/share/image_sharer.dart';
+import 'package:next_bank/core/share/text_sharer.dart';
 import 'package:next_bank/core/share/widget_png.dart';
 import 'package:next_bank/core/statement/statement_controller.dart';
 import 'package:next_bank/core/theme/theme_controller.dart';
@@ -51,6 +52,7 @@ Future<ProviderContainer> pumpApp(
   FakeMonotonicClock? clock,
   FakeThemeStore? theme,
   FakeImageSharer? sharer,
+  FakeTextSharer? textSharer,
   FakeWidgetPainter? painter,
   FakeBiometricPinStore? biometrics,
   FakeBiometricCheck? check,
@@ -92,6 +94,7 @@ Future<ProviderContainer> pumpApp(
           greeting ?? FakeGreetingNameStore(),
         ),
         imageSharerProvider.overrideWithValue(sharer ?? FakeImageSharer()),
+        textSharerProvider.overrideWithValue(textSharer ?? FakeTextSharer()),
         widgetPainterProvider.overrideWithValue(
           (painter ?? FakeWidgetPainter()).call,
         ),

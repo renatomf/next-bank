@@ -2,7 +2,11 @@ import {
   AesGcmPiiProtector,
   type PiiKeys,
 } from '../../../shared/infrastructure/aes-gcm-pii-protector.ts';
-import type { PixKeyValueProtector, ProtectedKeyValue } from '../application/ports.ts';
+import type {
+  PixKeyValueProtector,
+  ProtectedKeyValue,
+  SealedKeyValue,
+} from '../application/ports.ts';
 import type { PixKeyType } from '../domain/pix-key.ts';
 
 /**
@@ -30,6 +34,10 @@ export class AesGcmPixKeyProtector implements PixKeyValueProtector {
 
   blindIndex(type: PixKeyType, value: string): Uint8Array {
     return this.#for(type).blindIndex(value);
+  }
+
+  reveal(type: PixKeyType, sealed: SealedKeyValue): string {
+    return this.#for(type).decrypt(sealed);
   }
 
   #for(type: PixKeyType): AesGcmPiiProtector {

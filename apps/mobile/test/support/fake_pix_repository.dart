@@ -1,5 +1,6 @@
 import 'package:next_bank/features/pix/domain/pix_repository.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
+import 'package:next_bank/features/pix/domain/receiving_key.dart';
 
 /// Mariana, the payee of the mockups, as the server shows her.
 const PixPayee mariana = PixPayee(
@@ -8,6 +9,9 @@ const PixPayee mariana = PixPayee(
   keyType: PixKeyType.cpf,
   keyMasked: '***.456.789-**',
 );
+
+/// Bruno's random key: a UUID v4 plain enough not to look like a secret.
+const String brunoReceivingKey = '11111111-2222-4333-8444-555555555555';
 
 /// A Pix of R$ 350,00 to [mariana]; the arguments change what matters.
 PixTransfer pixTransfer({
@@ -56,10 +60,18 @@ class FakePixRepository implements PixRepository {
   Future<PixTransfer> Function() authorizeAnswer = () async =>
       pixTransfer(status: PixStatus.completed);
 
+  /// What the next reads of the receiving key do.
+  Future<ReceivingKey> Function() receivingKeyAnswer = () async =>
+      const ReceivingKey(
+        key: brunoReceivingKey,
+        keyMasked: '1111****-****-****-****-********5555',
+      );
+
   /// Calls received, in order.
   final List<PixCall> calls = [];
 
-  /// The calls of one [command]: lookup, create, fetch or authorize.
+  /// The calls of one [command]: lookup, create, fetch, authorize or
+  /// receivingKey.
   List<PixCall> callsOf(String command) =>
       calls.where((call) => call.command == command).toList();
 
@@ -90,6 +102,12 @@ class FakePixRepository implements PixRepository {
   Future<PixTransfer> fetch(String transferId) {
     _record('fetch', transferId: transferId);
     return fetchAnswer();
+  }
+
+  @override
+  Future<ReceivingKey> receivingKey() {
+    _record('receivingKey');
+    return receivingKeyAnswer();
   }
 
   @override

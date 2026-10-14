@@ -29,6 +29,9 @@ class FakeProtector implements PixKeyValueProtector {
   blindIndex(type: PixKeyType, value: string): Uint8Array {
     return new TextEncoder().encode(`index(${type}:${value.length.toString()})`);
   }
+  reveal(): string {
+    throw new Error('A CPF key is never revealed');
+  }
 }
 
 class FakeRepositories implements PaymentsRepositoriesFactory {
@@ -41,6 +44,8 @@ class FakeRepositories implements PaymentsRepositoriesFactory {
           return Promise.resolve();
         },
         findByIndex: () => Promise.resolve(null),
+        insertRandomIfAbsent: () => Promise.resolve(false),
+        findRandomOf: () => Promise.resolve(null),
       },
       pixTransfers: {
         insert: () => Promise.resolve(),

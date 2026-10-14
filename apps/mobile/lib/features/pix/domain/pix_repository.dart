@@ -1,4 +1,5 @@
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
+import 'package:next_bank/features/pix/domain/receiving_key.dart';
 
 /// Sends Pix through the API. Failures are reported as `ApiFailure` with the
 /// catalog code. Every command takes the idempotency key of its attempt, so a
@@ -17,6 +18,10 @@ abstract interface class PixRepository {
 
   /// The Pix [transferId] as the server has it now.
   Future<PixTransfer> fetch(String transferId);
+
+  /// The customer's random key to receive by QR Code, created by the server
+  /// the first time.
+  Future<ReceivingKey> receivingKey();
 
   /// Authorizes the Pix [transferId] with the [pin], checked on the server.
   Future<PixTransfer> authorize({

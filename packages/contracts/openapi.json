@@ -400,6 +400,24 @@
         ],
         "additionalProperties": false
       },
+      "PixReceivingKey": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+          },
+          "keyMasked": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "keyMasked"
+        ],
+        "additionalProperties": false
+      },
       "PixTransfer": {
         "type": "object",
         "properties": {
@@ -1397,6 +1415,38 @@
             }
           },
           "429": {
+            "description": "Default Response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/pix/receiving-key": {
+      "post": {
+        "operationId": "getReceivingKey",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PixReceivingKey"
+                }
+              }
+            }
+          },
+          "401": {
             "description": "Default Response",
             "content": {
               "application/problem+json": {

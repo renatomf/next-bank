@@ -10,6 +10,9 @@ resolution: workspace
 dependencies:
   flutter:
     sdk: flutter
+  # The QR Code matrix (Reed-Solomon and masks) for the Receber screen; drawn
+  # here with a CustomPainter (v1.1.0 plan, task 3). Pure Dart, BSD-3.
+  qr: 4.0.0
 
 dev_dependencies:
   flutter_test:
