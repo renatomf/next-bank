@@ -153,8 +153,8 @@ class _Receipt extends ConsumerWidget {
     );
   }
 
-  /// Draws the receipt image and hands it to the share sheet, with the
-  /// receipt text as its caption (v1.1.0 plan, task 1).
+  /// Draws the receipt image and hands it, alone, to the share sheet
+  /// (v1.1.0 plan, task 1).
   Future<void> _share(
     WidgetRef ref, {
     required String name,
@@ -170,15 +170,7 @@ class _Receipt extends ConsumerWidget {
     );
     await ref
         .read(imageSharerProvider)
-        .shareImage(
-          png: png,
-          fileName: 'comprovante-pix.png',
-          caption: receiptShareText(
-            transfer: transfer,
-            payerName: name,
-            payerAccount: account,
-          ),
-        );
+        .shareImage(png: png, fileName: 'comprovante-pix.png');
   }
 
   static StatusBadge _badge(PixStatus status) => switch (status) {
