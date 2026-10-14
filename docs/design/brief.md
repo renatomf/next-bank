@@ -50,6 +50,8 @@
 
 ### 2.3 Card de saldo (assinatura, igual nos dois modos)
 
+**Desde a v1.1.0 (checkpoint de 2026-10-14):** o card troca a seda pela arte de vidro verde do desenvolvedor (`NbArt.glass`, a mesma do fundo da tela de desbloqueio), com 220 de altura mínima. Camadas: a arte em *cover*; uma tinta `#06110F` a 40% que mantém o card escuro; um chip de vidro com "Conta •••• 0004" no alto, à esquerda, e o olho à direita; embaixo, o painel de vidro do saldo com uma aba "Saldo disponível" por cima. Todo texto fica sobre vidro, e o teste prova AA tomando o branco como o pixel mais claro da arte. A borda, a sombra, o vidro e as cores de texto abaixo continuam. A seda abaixo segue só no card do valor do Pix (`AmountCard`).
+
 Sempre escuro, 190 de altura (cresce com texto maior). O mockup tem 214; o desenvolvedor reduziu para 190 na conferência no celular (semana 6). Camadas, de cima para baixo, com a geometria exata do CSS do mockup da Home:
 
 1. Radial Menta 75%: `radial-gradient(70% 90% at 92% 8%)`, transparente a 60%
