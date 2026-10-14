@@ -82,9 +82,15 @@ class BiometricsTile extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  Switch(
-                    value: state.enabled,
-                    onChanged: state.saving ? null : (_) => toggle(),
+                  // Smaller than Material's: the whole tile is the touch
+                  // target, so the switch only shows the state.
+                  Transform.scale(
+                    scale: 0.75,
+                    child: Switch(
+                      value: state.enabled,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      onChanged: state.saving ? null : (_) => toggle(),
+                    ),
                   ),
                 ],
               ),
