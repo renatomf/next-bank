@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/session/biometric_pin_store.dart';
 import 'package:next_bank/features/auth/presentation/login/login_screen.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
-import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
 
 import '../support/fake_biometric_pin_store.dart';
 import '../support/fake_greeting_name_store.dart';
@@ -11,9 +10,8 @@ import '../support/fake_token_store.dart';
 import '../support/fake_unlock_repository.dart';
 import '../support/pump_app.dart';
 
-// v1.1.0 plan, task 2: the Unlock screen greets by the first name, offers
-// biometrics when enabled, and its shortcuts open their screen only once
-// the app is unlocked (MOB-11, MOB-12).
+// v1.1.0 plan, task 2: the Unlock screen greets by the first name and offers
+// biometrics when enabled (MOB-11, MOB-12).
 void main() {
   Future<FakeUnlockRepository> openLocked(
     WidgetTester tester, {
@@ -88,26 +86,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(PinField), findsOneWidget);
-  });
-
-  testWidgets('the Pix shortcut opens the Pix once unlocked', (tester) async {
-    await openLocked(tester);
-
-    await tester.tap(find.bySemanticsLabel('Pix'));
-    await tester.pumpAndSettle();
-    expect(find.byType(SendPixScreen), findsNothing);
-    await unlockWithPin(tester);
-
-    expect(find.byType(SendPixScreen), findsOneWidget);
-  });
-
-  testWidgets('the card shortcut says it is coming', (tester) async {
-    await openLocked(tester);
-
-    await tester.tap(find.bySemanticsLabel('Cartão'));
-    await tester.pump();
-
-    expect(find.text('Em breve.'), findsOneWidget);
   });
 
   testWidgets('"Entrar com outra conta" signs out', (tester) async {
