@@ -34,6 +34,13 @@ class HttpSecurityRepository implements SecurityRepository {
   }
 
   @override
+  Future<void> verifyPin(String pin) => _call(
+    () => _api.verifyPin(
+      verifyPinRequestInput: api.VerifyPinRequestInput(pin: pin),
+    ),
+  );
+
+  @override
   Future<void> revoke(String id) =>
       _call(() => _api.revokeMySession(sessionId: id));
 
