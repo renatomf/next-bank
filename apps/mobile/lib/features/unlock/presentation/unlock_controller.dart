@@ -3,6 +3,7 @@ import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/api_messages.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/app_lock.dart';
+import 'package:next_bank/core/session/biometric_pin_store.dart';
 import 'package:next_bank/features/unlock/presentation/unlock_providers.dart';
 
 /// What the Unlock screen shows. Never holds the PIN: the screen keeps the
@@ -34,7 +35,30 @@ class UnlockController extends Notifier<UnlockState> {
 
   /// Sends the PIN once; ignored while a check runs, so a double submit
   /// costs one attempt.
-  Future<void> submit(String pin) async {
+  Future<void> submit(String pin) => _check(pin, fromBiometrics: false);
+
+  /// Asks biometrics for the kept PIN and checks it on the server like a
+  /// typed one (ADR 0004). A cancel leaves the PIN to type; a PIN no longer
+  /// kept, such as after a new fingerprint, says so (MOB-11).
+  Future<void> useBiometrics() async {
+    if (state.verifying || state.blocked) return;
+    final store = ref.read(biometricPinStoreProvider);
+    switch (await store.read()) {
+      case BiometricPin(:final pin):
+        if (!ref.mounted) return;
+        await _check(pin, fromBiometrics: true);
+      case BiometricCancelled():
+        return;
+      case BiometricPinLost():
+        await store.clear();
+        if (!ref.mounted) return;
+        state = const UnlockState(
+          error: 'A biometria foi desativada neste aparelho. Digite seu PIN.',
+        );
+    }
+  }
+
+  Future<void> _check(String pin, {required bool fromBiometrics}) async {
     if (state.verifying || state.blocked) return;
     state = const UnlockState(verifying: true);
     try {
@@ -49,14 +73,22 @@ class UnlockController extends Notifier<UnlockState> {
       if (failure case ApiRejected(code: ApiErrorCode.pinNotCreated)) {
         ref.invalidate(profileProvider);
       }
-      state = UnlockState(
-        blocked: switch (failure) {
-          ApiRejected(code: ApiErrorCode.pinLocked) ||
-          ApiRejected(code: ApiErrorCode.pinResetRequired) => true,
-          _ => false,
-        },
-        error: messageFor(failure),
-      );
+      final blocked = switch (failure) {
+        ApiRejected(code: ApiErrorCode.pinLocked) ||
+        ApiRejected(code: ApiErrorCode.pinResetRequired) => true,
+        _ => false,
+      };
+      // A kept PIN the server refuses is out of date, and a locked PIN must
+      // be reset with the password: either way, it is no longer kept.
+      final refused =
+          fromBiometrics &&
+          failure is ApiRejected &&
+          failure.code == ApiErrorCode.pinIncorrect;
+      if (blocked || refused) {
+        await ref.read(biometricPinStoreProvider).clear();
+        if (!ref.mounted) return;
+      }
+      state = UnlockState(blocked: blocked, error: messageFor(failure));
     }
   }
 }

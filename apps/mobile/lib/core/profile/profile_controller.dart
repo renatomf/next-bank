@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/profile/profile.dart';
 import 'package:next_bank/core/profile/profile_repository.dart';
+import 'package:next_bank/core/session/greeting_name_store.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 
 /// Where the profile comes from. Bound to `HttpProfileRepository` by the
@@ -10,7 +11,8 @@ final Provider<ProfileRepository> profileRepositoryProvider = Provider(
 );
 
 /// The signed-in customer's profile; null without a session. Kept only in
-/// memory: nothing about the customer is written to the device (MOB-01).
+/// memory (MOB-01), except the first name the Unlock screen greets with
+/// (v1.1.0 plan, task 2; MOB-12).
 /// Not retried automatically: offline, the splash says so and offers
 /// "Tentar de novo" (domain-model.md, section 11) instead of loading on.
 final AsyncNotifierProvider<ProfileController, Profile?> profileProvider =
@@ -25,7 +27,12 @@ class ProfileController extends AsyncNotifier<Profile?> {
       sessionProvider.select((session) => session.value is SignedIn),
     );
     if (!signedIn) return null;
-    return await ref.read(profileRepositoryProvider).fetch();
+    final profile = await ref.read(profileRepositoryProvider).fetch();
+    final firstName = profile.name.trim().split(RegExp(r'\s+')).first;
+    if (firstName.isNotEmpty) {
+      await ref.read(greetingNameStoreProvider).write(firstName);
+    }
+    return profile;
   }
 
   /// The PIN now exists: recorded here, so the navigation moves on without

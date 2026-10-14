@@ -6,6 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/account/account_providers.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/app_lock.dart';
+import 'package:next_bank/core/session/biometric_pin_store.dart';
+import 'package:next_bank/core/session/greeting_name_store.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/core/share/image_sharer.dart';
 import 'package:next_bank/core/share/widget_png.dart';
@@ -19,6 +21,8 @@ import 'package:next_bank/main.dart';
 
 import 'fake_account_repository.dart';
 import 'fake_auth_repository.dart';
+import 'fake_biometric_pin_store.dart';
+import 'fake_greeting_name_store.dart';
 import 'fake_image_sharer.dart';
 import 'fake_monotonic_clock.dart';
 import 'fake_pix_repository.dart';
@@ -46,6 +50,8 @@ Future<ProviderContainer> pumpApp(
   FakeThemeStore? theme,
   FakeImageSharer? sharer,
   FakeWidgetPainter? painter,
+  FakeBiometricPinStore? biometrics,
+  FakeGreetingNameStore? greeting,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -75,6 +81,12 @@ Future<ProviderContainer> pumpApp(
         monotonicClockProvider.overrideWithValue(clock ?? FakeMonotonicClock()),
         randomProvider.overrideWithValue(Random(42)),
         themeStoreProvider.overrideWithValue(theme ?? FakeThemeStore()),
+        biometricPinStoreProvider.overrideWithValue(
+          biometrics ?? FakeBiometricPinStore(available: false),
+        ),
+        greetingNameStoreProvider.overrideWithValue(
+          greeting ?? FakeGreetingNameStore(),
+        ),
         imageSharerProvider.overrideWithValue(sharer ?? FakeImageSharer()),
         widgetPainterProvider.overrideWithValue(
           (painter ?? FakeWidgetPainter()).call,

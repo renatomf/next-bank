@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:next_bank/core/session/biometric_pin_store.dart';
+import 'package:next_bank/core/session/greeting_name_store.dart';
 import 'package:next_bank/core/session/session_end_reason.dart';
 import 'package:next_bank/core/session/session_tokens.dart';
 import 'package:next_bank/core/session/token_store.dart';
@@ -56,6 +58,10 @@ class SessionController extends AsyncNotifier<Session> {
   /// [reason] when the server ended the session.
   Future<void> signOut([SessionEndReason? reason]) async {
     await ref.read(tokenStoreProvider).clear();
+    // Nothing of the account stays for whoever signs in next on this phone
+    // (v1.1.0 plan, task 2; MOB-11, MOB-12).
+    await ref.read(biometricPinStoreProvider).clear();
+    await ref.read(greetingNameStoreProvider).clear();
     state = AsyncData(SignedOut(reason));
   }
 }

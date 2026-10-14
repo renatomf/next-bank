@@ -1,10 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
+import 'package:next_bank/core/session/biometric_pin_store.dart';
 import 'package:next_bank/core/session/greeting_name_store.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/core/session/session_tokens.dart';
 
+import '../../support/fake_biometric_pin_store.dart';
 import '../../support/fake_greeting_name_store.dart';
 import '../../support/fake_profile_repository.dart';
 import '../../support/fake_token_store.dart';
@@ -17,6 +19,7 @@ import '../../support/fake_token_store.dart';
   final repository = FakeProfileRepository(hasPin: hasPin);
   final container = ProviderContainer(
     overrides: [
+      biometricPinStoreProvider.overrideWithValue(FakeBiometricPinStore()),
       greetingNameStoreProvider.overrideWithValue(
         greeting ?? FakeGreetingNameStore(),
       ),

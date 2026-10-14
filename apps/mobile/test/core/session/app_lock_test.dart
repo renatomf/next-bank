@@ -1,8 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/session/app_lock.dart';
+import 'package:next_bank/core/session/biometric_pin_store.dart';
+import 'package:next_bank/core/session/greeting_name_store.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 
+import '../../support/fake_biometric_pin_store.dart';
+import '../../support/fake_greeting_name_store.dart';
 import '../../support/fake_monotonic_clock.dart';
 import '../../support/fake_token_store.dart';
 
@@ -14,6 +18,8 @@ import '../../support/fake_token_store.dart';
       monotonicClockProvider.overrideWithValue(clock),
       wallClockProvider.overrideWithValue(wall),
       tokenStoreProvider.overrideWithValue(FakeTokenStore()),
+      biometricPinStoreProvider.overrideWithValue(FakeBiometricPinStore()),
+      greetingNameStoreProvider.overrideWithValue(FakeGreetingNameStore()),
     ],
   );
   addTearDown(container.dispose);

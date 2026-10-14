@@ -8,6 +8,7 @@ import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/features/auth/presentation/auth_providers.dart';
 import 'package:next_bank/features/auth/presentation/create_pin/create_pin_controller.dart';
 
+import '../../../../support/device_stores.dart';
 import '../../../../support/fake_auth_repository.dart';
 import '../../../../support/fake_profile_repository.dart';
 import '../../../../support/fake_token_store.dart';
@@ -17,6 +18,7 @@ import '../../../../support/fake_token_store.dart';
   final repository = FakeAuthRepository(tokens);
   final container = ProviderContainer(
     overrides: [
+      ...deviceStoreOverrides(),
       authRepositoryProvider.overrideWithValue(repository),
       tokenStoreProvider.overrideWithValue(FakeTokenStore(tokens)),
       profileRepositoryProvider.overrideWithValue(
