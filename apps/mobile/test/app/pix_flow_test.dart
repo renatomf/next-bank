@@ -459,6 +459,24 @@ void main() {
     expect(find.bySemanticsLabel('Saldo oculto'), findsOneWidget);
   });
 
+  // v1.1.0 checkpoint (2026-10-14): the eye on the Pix shows it, and hides
+  // it again, without going back to the Home.
+  testWidgets('shows and hides the balance with the eye on the Pix', (
+    tester,
+  ) async {
+    await openHome(tester, FakePixRepository());
+    await tester.tap(find.bySemanticsLabel('Área Pix'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.bySemanticsLabel('Mostrar saldo'));
+    await tester.pumpAndSettle();
+    expect(find.text(r'R$ 10.000,00'), findsOneWidget);
+
+    await tester.tap(find.bySemanticsLabel('Ocultar saldo'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('10.000'), findsNothing);
+  });
+
   // Brief, section 8: system font scale up to 1.3x on a small phone.
   testWidgets('the Pix fits a small phone at 1.3x text', (tester) async {
     tester.view

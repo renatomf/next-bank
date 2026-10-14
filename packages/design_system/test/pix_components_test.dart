@@ -26,6 +26,7 @@ void main() {
           balanceCents: balance,
           balanceHidden: hidden,
           onEdit: () {},
+          onToggleBalance: () {},
         );
 
     testWidgets('asks the amount and shows it in reais', (tester) async {
@@ -65,6 +66,7 @@ void main() {
             balanceCents: 0,
             balanceHidden: false,
             onEdit: () => edits++,
+            onToggleBalance: () {},
           ),
         ),
       );
@@ -72,6 +74,50 @@ void main() {
       await tester.tap(find.bySemanticsLabel('Digitar o valor'));
 
       expect(edits, 1);
+    });
+
+    // v1.1.0 checkpoint (2026-10-14): an eye beside the balance, like the
+    // Home's, so the customer can see it without going back (MOB-05).
+    for (final (hidden, label) in [
+      (true, 'Mostrar saldo'),
+      (false, 'Ocultar saldo'),
+    ]) {
+      testWidgets('the eye asks to ${label.toLowerCase()}', (tester) async {
+        var toggles = 0;
+        await tester.pumpWidget(
+          host(
+            AmountCard(
+              cents: 0,
+              balanceCents: 1268042,
+              balanceHidden: hidden,
+              onEdit: () {},
+              onToggleBalance: () => toggles++,
+            ),
+          ),
+        );
+
+        await tester.tap(find.bySemanticsLabel(label));
+
+        expect(toggles, 1);
+      });
+    }
+
+    // The balance card's mint glow underneath, so both cards look alike.
+    testWidgets('glows mint underneath like the balance card', (tester) async {
+      await tester.pumpWidget(host(card()));
+
+      final glows = tester
+          .widgetList<DecoratedBox>(
+            find.descendant(
+              of: find.byType(AmountCard),
+              matching: find.byType(DecoratedBox),
+            ),
+          )
+          .map((box) => box.decoration)
+          .whereType<BoxDecoration>()
+          .expand((decoration) => decoration.boxShadow ?? const <BoxShadow>[])
+          .map((shadow) => shadow.color);
+      expect(glows, contains(NbBalanceCardColors.shadow));
     });
 
     // v1.1.0 checkpoint (2026-10-14): the same mint glass art as the
