@@ -4,12 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/session/app_lock.dart';
+import 'package:next_bank/core/session/biometric_check.dart';
 import 'package:next_bank/core/session/biometric_pin_store.dart';
 import 'package:next_bank/core/session/greeting_name_store.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/features/unlock/presentation/unlock_controller.dart';
 import 'package:next_bank/features/unlock/presentation/unlock_providers.dart';
 
+import '../../../support/fake_biometric_check.dart';
 import '../../../support/fake_biometric_pin_store.dart';
 import '../../../support/fake_greeting_name_store.dart';
 import '../../../support/fake_token_store.dart';
@@ -17,6 +19,7 @@ import '../../../support/fake_unlock_repository.dart';
 
 (ProviderContainer, FakeUnlockRepository) setUpUnlock({
   FakeBiometricPinStore? biometrics,
+  FakeBiometricCheck? check,
 }) {
   final repository = FakeUnlockRepository();
   final container = ProviderContainer(
@@ -24,6 +27,7 @@ import '../../../support/fake_unlock_repository.dart';
       biometricPinStoreProvider.overrideWithValue(
         biometrics ?? FakeBiometricPinStore(),
       ),
+      biometricCheckProvider.overrideWithValue(check ?? FakeBiometricCheck()),
       greetingNameStoreProvider.overrideWithValue(FakeGreetingNameStore()),
       unlockRepositoryProvider.overrideWithValue(repository),
       tokenStoreProvider.overrideWithValue(FakeTokenStore(tokens)),
@@ -114,65 +118,72 @@ void main() {
     });
   });
 
-  // v1.1.0 plan, task 2: biometrics only releases the PIN kept on the phone;
-  // the server checks it like a typed one (ADR 0004, MOB-11).
+  // v1.1.0 plan, task 2.1 (ADR 0013, MOB-13): the phone's prompt, face or
+  // fingerprint, opens the app on the phone; the server never sees it.
   group('UnlockController with biometrics', () {
     test(
-      'unlocks with the PIN biometrics release, checked on the server',
+      'unlocks on the phone when the prompt recognizes the customer',
       () async {
         final biometrics = FakeBiometricPinStore(pin: '2580');
-        final (container, repository) = setUpUnlock(biometrics: biometrics);
-
-        await container.read(unlockControllerProvider.notifier).useBiometrics();
-
-        expect(repository.pins, ['2580']);
-        expect(container.read(appLockProvider), isFalse);
-      },
-    );
-
-    test('stays on the PIN, quietly, when the customer cancels', () async {
-      final biometrics = FakeBiometricPinStore(pin: '2580')
-        ..nextRead = const BiometricCancelled();
-      final (container, repository) = setUpUnlock(biometrics: biometrics);
-
-      await container.read(unlockControllerProvider.notifier).useBiometrics();
-
-      expect(repository.pins, isEmpty);
-      expect(stateOf(container).error, isNull);
-      expect(container.read(appLockProvider), isTrue);
-      expect(biometrics.pin, '2580');
-    });
-
-    test(
-      'asks for the PIN when a new fingerprint voided the kept one',
-      () async {
-        final biometrics = FakeBiometricPinStore(pin: '2580')
-          ..nextRead = const BiometricPinLost();
-        final (container, repository) = setUpUnlock(biometrics: biometrics);
-
-        await container.read(unlockControllerProvider.notifier).useBiometrics();
-
-        expect(repository.pins, isEmpty);
-        expect(
-          stateOf(container).error,
-          'A biometria foi desativada neste aparelho. Digite seu PIN.',
+        final check = FakeBiometricCheck();
+        final (container, repository) = setUpUnlock(
+          biometrics: biometrics,
+          check: check,
         );
-        expect(biometrics.pin, isNull);
+
+        await container.read(unlockControllerProvider.notifier).useBiometrics();
+
+        expect(check.checks, 1);
+        expect(container.read(appLockProvider), isFalse);
+        // Neither the server nor the kept PIN: the face cannot release it.
+        expect(repository.pins, isEmpty);
+        expect(biometrics.reads, 0);
       },
     );
 
-    test('forgets a kept PIN the server refuses', () async {
-      final biometrics = FakeBiometricPinStore(pin: '1111');
-      final (container, repository) = setUpUnlock(biometrics: biometrics);
-      repository.answer = () async => throw const ApiRejected(
-        ApiErrorCode.pinIncorrect,
-        remainingAttempts: 4,
+    test('stays on the PIN, quietly, when the prompt fails', () async {
+      final (container, repository) = setUpUnlock(
+        biometrics: FakeBiometricPinStore(pin: '2580'),
+        check: FakeBiometricCheck(passes: false),
       );
 
       await container.read(unlockControllerProvider.notifier).useBiometrics();
 
-      expect(stateOf(container).error, 'PIN incorreto. Restam 4 tentativas.');
-      expect(biometrics.pin, isNull);
+      expect(container.read(appLockProvider), isTrue);
+      expect(stateOf(container).error, isNull);
+      expect(repository.pins, isEmpty);
+    });
+
+    test('opens one prompt at a time on a double tap', () async {
+      final gate = Completer<void>();
+      final check = FakeBiometricCheck()..gate = gate.future;
+      final (container, _) = setUpUnlock(
+        biometrics: FakeBiometricPinStore(pin: '2580'),
+        check: check,
+      );
+      final controller = container.read(unlockControllerProvider.notifier);
+
+      final first = controller.useBiometrics();
+      final second = controller.useBiometrics();
+      gate.complete();
+      await (first, second).wait;
+
+      expect(check.checks, 1);
+    });
+
+    // Without a kept PIN biometrics were never turned on with the PIN, or
+    // were turned off since: the face must not open the app (MOB-11).
+    test('does nothing without a kept PIN', () async {
+      final check = FakeBiometricCheck();
+      final (container, _) = setUpUnlock(
+        biometrics: FakeBiometricPinStore(),
+        check: check,
+      );
+
+      await container.read(unlockControllerProvider.notifier).useBiometrics();
+
+      expect(check.checks, 0);
+      expect(container.read(appLockProvider), isTrue);
     });
 
     test('forgets the kept PIN when the PIN gets locked', () async {

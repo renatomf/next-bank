@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/account/account_providers.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/app_lock.dart';
+import 'package:next_bank/core/session/biometric_check.dart';
 import 'package:next_bank/core/session/biometric_pin_store.dart';
 import 'package:next_bank/core/session/greeting_name_store.dart';
 import 'package:next_bank/core/session/session_controller.dart';
@@ -21,6 +22,7 @@ import 'package:next_bank/main.dart';
 
 import 'fake_account_repository.dart';
 import 'fake_auth_repository.dart';
+import 'fake_biometric_check.dart';
 import 'fake_biometric_pin_store.dart';
 import 'fake_greeting_name_store.dart';
 import 'fake_image_sharer.dart';
@@ -51,6 +53,7 @@ Future<ProviderContainer> pumpApp(
   FakeImageSharer? sharer,
   FakeWidgetPainter? painter,
   FakeBiometricPinStore? biometrics,
+  FakeBiometricCheck? check,
   FakeGreetingNameStore? greeting,
 }) async {
   await tester.pumpWidget(
@@ -84,6 +87,7 @@ Future<ProviderContainer> pumpApp(
         biometricPinStoreProvider.overrideWithValue(
           biometrics ?? FakeBiometricPinStore(available: false),
         ),
+        biometricCheckProvider.overrideWithValue(check ?? FakeBiometricCheck()),
         greetingNameStoreProvider.overrideWithValue(
           greeting ?? FakeGreetingNameStore(),
         ),

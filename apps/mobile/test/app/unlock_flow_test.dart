@@ -1,9 +1,9 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:next_bank/core/session/biometric_pin_store.dart';
 import 'package:next_bank/features/auth/presentation/login/login_screen.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
 
+import '../support/fake_biometric_check.dart';
 import '../support/fake_biometric_pin_store.dart';
 import '../support/fake_greeting_name_store.dart';
 import '../support/fake_token_store.dart';
@@ -16,6 +16,7 @@ void main() {
   Future<FakeUnlockRepository> openLocked(
     WidgetTester tester, {
     FakeBiometricPinStore? biometrics,
+    FakeBiometricCheck? check,
   }) async {
     final unlock = FakeUnlockRepository();
     await pumpApp(
@@ -23,6 +24,7 @@ void main() {
       store: FakeTokenStore(tokens),
       unlock: unlock,
       biometrics: biometrics,
+      check: check,
       greeting: FakeGreetingNameStore('Ana'),
     );
     return unlock;
@@ -50,18 +52,26 @@ void main() {
     expect(find.byType(HomeScreen), findsOneWidget);
   });
 
-  testWidgets('"Acessar conta" unlocks with the PIN biometrics release', (
+  // Task 2.1 (ADR 0013, MOB-13): face or fingerprint opens the app on the
+  // phone, without the server and without releasing the kept PIN.
+  testWidgets('"Acessar conta" unlocks with the face or a fingerprint', (
     tester,
   ) async {
     final biometrics = FakeBiometricPinStore(pin: '2580');
-    final unlock = await openLocked(tester, biometrics: biometrics);
+    final check = FakeBiometricCheck();
+    final unlock = await openLocked(
+      tester,
+      biometrics: biometrics,
+      check: check,
+    );
     expect(find.byType(PinField), findsNothing);
 
     await tester.tap(find.text('Acessar conta'));
     await tester.pumpAndSettle();
 
-    expect(biometrics.reads, 1);
-    expect(unlock.pins, ['2580']);
+    expect(check.checks, 1);
+    expect(biometrics.reads, 0);
+    expect(unlock.pins, isEmpty);
     expect(find.byType(HomeScreen), findsOneWidget);
   });
 
@@ -84,8 +94,8 @@ void main() {
   ) async {
     await openLocked(
       tester,
-      biometrics: FakeBiometricPinStore(pin: '2580')
-        ..nextRead = const BiometricCancelled(),
+      biometrics: FakeBiometricPinStore(pin: '2580'),
+      check: FakeBiometricCheck(passes: false),
     );
 
     await tester.tap(find.text('Acessar conta'));

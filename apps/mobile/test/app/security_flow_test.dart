@@ -68,6 +68,20 @@ void main() {
       expect(find.text('Biometria ativada.'), findsOneWidget);
     });
 
+    // Task 2.1 (ADR 0013): the face opens the app; a Pix takes biometrics.
+    testWidgets('says what the face and the fingerprint are for', (
+      tester,
+    ) async {
+      await openSecurity(tester, biometrics: FakeBiometricPinStore());
+
+      expect(
+        find.text(
+          'Abra o app com digital ou rosto e confirme Pix com a biometria',
+        ),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('turns off, forgetting the kept PIN', (tester) async {
       final biometrics = FakeBiometricPinStore(pin: '2580');
       await openSecurity(tester, biometrics: biometrics);

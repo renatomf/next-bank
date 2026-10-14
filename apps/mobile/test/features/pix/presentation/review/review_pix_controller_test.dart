@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/api_failure.dart';
+import 'package:next_bank/core/session/biometric_check.dart';
 import 'package:next_bank/core/session/biometric_pin_store.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/pix_providers.dart';
 import 'package:next_bank/features/pix/presentation/review/review_pix_controller.dart';
 
+import '../../../../support/fake_biometric_check.dart';
 import '../../../../support/fake_biometric_pin_store.dart';
 import '../../../../support/fake_pix_repository.dart';
 
@@ -15,6 +17,7 @@ const _transferId = 'pix-1';
 
 (ProviderContainer, FakePixRepository) setUpReview({
   FakeBiometricPinStore? biometrics,
+  FakeBiometricCheck? check,
 }) {
   final repository = FakePixRepository();
   final container = ProviderContainer(
@@ -22,6 +25,7 @@ const _transferId = 'pix-1';
       biometricPinStoreProvider.overrideWithValue(
         biometrics ?? FakeBiometricPinStore(),
       ),
+      biometricCheckProvider.overrideWithValue(check ?? FakeBiometricCheck()),
       pixRepositoryProvider.overrideWithValue(repository),
       idempotencyKeysProvider.overrideWithValue(sequentialKeys()),
     ],
@@ -238,6 +242,23 @@ void main() {
       final transfer = await controllerOf(container).confirmWithBiometrics();
 
       expect(transfer?.status, PixStatus.completed);
+      expect(authorizations(repository), [('key-1', '2580')]);
+    });
+
+    // MOB-13, ADR 0013: the face opens the app, never a Pix. Only the PIN
+    // behind the strong-biometrics key authorizes it.
+    test('never takes the face check, only the strong key', () async {
+      final biometrics = FakeBiometricPinStore(pin: '2580');
+      final check = FakeBiometricCheck();
+      final (container, repository) = setUpReview(
+        biometrics: biometrics,
+        check: check,
+      );
+
+      await controllerOf(container).confirmWithBiometrics();
+
+      expect(check.checks, 0);
+      expect(biometrics.reads, 1);
       expect(authorizations(repository), [('key-1', '2580')]);
     });
 

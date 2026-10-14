@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/misc.dart';
+import 'package:next_bank/core/session/biometric_check.dart';
 import 'package:next_bank/core/session/biometric_pin_store.dart';
 import 'package:next_bank/core/session/greeting_name_store.dart';
 
+import 'fake_biometric_check.dart';
 import 'fake_biometric_pin_store.dart';
 import 'fake_greeting_name_store.dart';
 
@@ -11,5 +13,6 @@ List<Override> deviceStoreOverrides() => [
   biometricPinStoreProvider.overrideWithValue(
     FakeBiometricPinStore(available: false),
   ),
+  biometricCheckProvider.overrideWithValue(FakeBiometricCheck()),
   greetingNameStoreProvider.overrideWithValue(FakeGreetingNameStore()),
 ];
