@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/idempotency_key.dart';
+import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/features/pix/domain/pix_repository.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 
@@ -28,4 +29,10 @@ final Provider<Future<void> Function()> pixPollDelayProvider = Provider(
 /// see when a key is drawn.
 final Provider<String Function()> idempotencyKeysProvider = Provider(
   (ref) => newIdempotencyKey,
+);
+
+/// The name a QR Code to receive carries: the signed-in customer's, from the
+/// profile the app already holds; null without one.
+final Provider<String?> receiverNameProvider = Provider(
+  (ref) => ref.watch(profileProvider).value?.name,
 );
