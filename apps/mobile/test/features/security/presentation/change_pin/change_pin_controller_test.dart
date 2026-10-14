@@ -3,15 +3,24 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/api_failure.dart';
+import 'package:next_bank/core/session/biometric_pin_store.dart';
 import 'package:next_bank/features/security/presentation/change_pin/change_pin_controller.dart';
 import 'package:next_bank/features/security/presentation/security_providers.dart';
 
+import '../../../../support/fake_biometric_pin_store.dart';
 import '../../../../support/fake_security_repository.dart';
 
-(ProviderContainer, FakeSecurityRepository) setUpChange() {
+(ProviderContainer, FakeSecurityRepository) setUpChange({
+  FakeBiometricPinStore? biometrics,
+}) {
   final repository = FakeSecurityRepository();
   final container = ProviderContainer(
-    overrides: [securityRepositoryProvider.overrideWithValue(repository)],
+    overrides: [
+      securityRepositoryProvider.overrideWithValue(repository),
+      biometricPinStoreProvider.overrideWithValue(
+        biometrics ?? FakeBiometricPinStore(),
+      ),
+    ],
   );
   addTearDown(container.dispose);
   container.listen(changePinControllerProvider, (_, _) {});
@@ -37,6 +46,17 @@ Future<void> submit(
 // how a locked PIN works again (week 7 plan, D5). The PIN and the password
 // are never kept in the state (MOB-02).
 void main() {
+  // v1.1.0 plan, task 2: the PIN kept for biometrics is now the old one, so
+  // it goes; biometrics is enabled again with the new PIN (MOB-11).
+  test('forgets the PIN kept for biometrics after the change', () async {
+    final biometrics = FakeBiometricPinStore(pin: '2580');
+    final (container, _) = setUpChange(biometrics: biometrics);
+
+    await submit(container);
+
+    expect(biometrics.pin, isNull);
+  });
+
   test('changes the PIN with the password', () async {
     final (container, repository) = setUpChange();
 
