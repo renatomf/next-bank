@@ -1,19 +1,25 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
+import 'package:next_bank/core/session/greeting_name_store.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/core/session/session_tokens.dart';
 
+import '../../support/fake_greeting_name_store.dart';
 import '../../support/fake_profile_repository.dart';
 import '../../support/fake_token_store.dart';
 
 (ProviderContainer, FakeProfileRepository) setUpProfile({
   FakeTokenStore? store,
   bool hasPin = true,
+  FakeGreetingNameStore? greeting,
 }) {
   final repository = FakeProfileRepository(hasPin: hasPin);
   final container = ProviderContainer(
     overrides: [
+      greetingNameStoreProvider.overrideWithValue(
+        greeting ?? FakeGreetingNameStore(),
+      ),
       tokenStoreProvider.overrideWithValue(store ?? FakeTokenStore(tokens)),
       profileRepositoryProvider.overrideWithValue(repository),
     ],
@@ -33,6 +39,17 @@ final SessionTokens refreshedTokens = SessionTokens(
 // the registration at the PIN when it stopped before (week 4 plan, task 1).
 void main() {
   group('profileProvider', () {
+    // v1.1.0 plan, task 2: the unlock screen greets by the first name only,
+    // kept on the device before the PIN is typed (MOB-12).
+    test('keeps only the first name for the unlock greeting', () async {
+      final greeting = FakeGreetingNameStore();
+      final (container, _) = setUpProfile(greeting: greeting);
+
+      await container.read(profileProvider.future);
+
+      expect(greeting.name, 'Ana');
+    });
+
     test('loads the profile of a signed-in session', () async {
       final (container, repository) = setUpProfile(hasPin: false);
 
