@@ -36,3 +36,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    # The Unlock screen's background: art made by the developer.
+    - assets/images/bg_splash.jpg

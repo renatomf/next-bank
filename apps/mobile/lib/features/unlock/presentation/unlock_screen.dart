@@ -3,27 +3,19 @@ import 'dart:async';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:next_bank/core/session/after_unlock.dart';
 import 'package:next_bank/core/session/biometric_pin_store.dart';
 import 'package:next_bank/core/session/greeting_name_store.dart';
 import 'package:next_bank/features/unlock/presentation/unlock_controller.dart';
 
-/// A shortcut on the Unlock screen: its screen opens once the app is
-/// unlocked; without a route it says "Em breve.".
-typedef UnlockShortcut = ({Widget icon, String label, String? route});
-
 /// The Unlock screen (screen 5; F-16; v1.1.0 plan, task 2): what the
 /// customer sees when the app opens with a stored session and after 5
-/// minutes away. Laid out like a bank's sign-in: the logo, the brand glow,
-/// and a card with the first-name greeting (MOB-12), shortcuts, and either
+/// minutes away. The green glass art fills the screen and fades into the
+/// background, under the logo, the first-name greeting (MOB-12) and either
 /// "Acessar conta" with biometrics or the PIN.
 class UnlockScreen extends ConsumerStatefulWidget {
-  /// Creates the screen; [shortcuts] and [otherAccount] come from the
-  /// router, so features do not import each other.
-  const new({this.shortcuts = const [], this.otherAccount, super.key});
-
-  /// Shortcuts whose screens open once unlocked.
-  final List<UnlockShortcut> shortcuts;
+  /// Creates the screen; [otherAccount] comes from the router, so features
+  /// do not import each other.
+  const new({this.otherAccount, super.key});
 
   /// "Entrar com outra conta", which ends this session.
   final Widget? otherAccount;
@@ -56,90 +48,85 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
     if (mounted) setState(() => _typing = true);
   }
 
-  void _open(UnlockShortcut shortcut) {
-    final route = shortcut.route;
-    if (route == null) {
-      showNbToast(context, 'Em breve.', icon: Icons.info_outline);
-      return;
-    }
-    ref.read(afterUnlockProvider.notifier).route = route;
-    // With biometrics on, the shortcut asks for them at once.
-    if (!_typing && (ref.read(biometricUnlockProvider).value ?? false)) {
-      unawaited(_useBiometrics());
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final colors = context.nbColors;
-    final text = Theme.of(context).textTheme;
     final name = ref.watch(greetingNameProvider).value;
     final biometrics = ref.watch(biometricUnlockProvider).value ?? false;
     return Scaffold(
-      body: GlowBackground(
-        child: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) => SingleChildScrollView(
-              padding: const EdgeInsets.all(NbSpace.screen),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: constraints.maxHeight - NbSpace.screen * 2,
-                ),
-                child: Column(
-                  children: [
-                    const SizedBox(height: NbSpace.xl),
-                    const Center(child: NextLogo(size: 40)),
-                    const SizedBox(height: NbSpace.xxl * 3),
-                    Container(
-                      padding: const EdgeInsets.all(NbSpace.xl),
-                      decoration: BoxDecoration(
-                        color: colors.surface,
-                        borderRadius: BorderRadius.circular(NbRadius.card),
-                        border: Border.all(color: colors.border),
+      backgroundColor: colors.background,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          const Image(
+            image: AssetImage('assets/images/bg_splash.jpg'),
+            fit: BoxFit.cover,
+            excludeFromSemantics: true,
+          ),
+          // The art fades into the background, so the text below reads on
+          // a plain color in both themes.
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  colors.background.withValues(alpha: 0),
+                  colors.background.withValues(alpha: 0),
+                  colors.background.withValues(alpha: 0.85),
+                  colors.background,
+                ],
+                stops: const [0, 0.3, 0.55, 0.7],
+              ),
+            ),
+          ),
+          SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                padding: const EdgeInsets.all(NbSpace.screen),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight - NbSpace.screen * 2,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: NextLogo(size: 28),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Semantics(
-                            header: true,
-                            child: Text(
-                              name == null ? 'Olá!' : 'Olá, $name',
-                              style: text.headlineSmall,
-                            ),
-                          ),
-                          if (widget.shortcuts.isNotEmpty) ...[
-                            const SizedBox(height: NbSpace.xl),
-                            Row(
-                              children: [
-                                for (final shortcut in widget.shortcuts)
-                                  Expanded(
-                                    child: ActionTile(
-                                      icon: shortcut.icon,
-                                      label: shortcut.label,
-                                      onPressed: () => _open(shortcut),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ],
-                          const SizedBox(height: NbSpace.xl),
-                          if (biometrics && !_typing)
-                            ..._biometricAccess()
-                          else
-                            ..._pinAccess(text),
-                          if (widget.otherAccount case final otherAccount?) ...[
-                            const SizedBox(height: NbSpace.md),
-                            Center(child: otherAccount),
-                          ],
-                        ],
+                      const SizedBox(height: NbSpace.xl),
+                      Semantics(
+                        header: true,
+                        child: Text(
+                          name == null ? 'Olá!' : 'Olá, $name',
+                          style: Theme.of(context).textTheme.displayLarge,
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: NbSpace.sm),
+                      Text(
+                        'Seu dinheiro, um passo à frente.',
+                        style: NbType.bodyText.copyWith(
+                          color: colors.textMuted,
+                        ),
+                      ),
+                      const SizedBox(height: NbSpace.xxl),
+                      if (biometrics && !_typing)
+                        ..._biometricAccess()
+                      else
+                        ..._pinAccess(),
+                      if (widget.otherAccount case final otherAccount?) ...[
+                        const SizedBox(height: NbSpace.sm),
+                        Center(child: otherAccount),
+                      ],
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -152,20 +139,24 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
         loading: state.verifying,
         onPressed: _useBiometrics,
       ),
-      const SizedBox(height: NbSpace.sm),
-      Center(
-        child: TextButton(
-          onPressed: () => setState(() => _typing = true),
-          child: const Text('Usar PIN'),
-        ),
+      const SizedBox(height: NbSpace.md),
+      SecondaryButton(
+        label: 'Usar PIN',
+        onPressed: state.verifying
+            ? null
+            : () => setState(() => _typing = true),
       ),
     ];
   }
 
-  List<Widget> _pinAccess(TextTheme text) {
+  List<Widget> _pinAccess() {
     final state = ref.watch(unlockControllerProvider);
+    final colors = context.nbColors;
     return [
-      Text('Digite seu PIN para acessar a conta.', style: text.bodySmall),
+      Text(
+        'Digite seu PIN para acessar a conta.',
+        style: NbType.caption.copyWith(color: colors.textMuted),
+      ),
       const SizedBox(height: NbSpace.lg),
       if (state.blocked)
         // Nothing left to type: the message says why, leaving says how.
