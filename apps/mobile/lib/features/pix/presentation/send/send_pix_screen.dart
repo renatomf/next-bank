@@ -91,6 +91,9 @@ class _SendPixScreenState extends ConsumerState<SendPixScreen> {
                     balanceCents: account?.availableBalanceCents,
                     balanceHidden: ref.watch(balanceHiddenProvider),
                     onEdit: _amount.requestFocus,
+                    onToggleBalance: ref
+                        .read(balanceHiddenProvider.notifier)
+                        .toggle,
                   ),
                 ],
               ),
