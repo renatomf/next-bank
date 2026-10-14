@@ -114,6 +114,30 @@ Future<PixTransfer> Function() completes(FakePixRepository pix) => () async {
 
 // Screens 7 to 10 through the real router (domain-model.md 10 and 11).
 void main() {
+  // v1.1.0 plan, task 1.1: the customer types digits and sees the CPF
+  // masked; the API still gets the 11 digits.
+  testWidgets('masks the CPF key as it is typed', (tester) async {
+    final pix = FakePixRepository();
+    await openHome(tester, pix);
+    await tester.tap(find.bySemanticsLabel('Área Pix'));
+    await tester.pumpAndSettle();
+
+    await typeInto(tester, labeled('Chave CPF'), _cpf);
+
+    final shown = tester.widget<EditableText>(
+      find.descendant(
+        of: labeled('Chave CPF'),
+        matching: find.byType(EditableText),
+      ),
+    );
+    expect(shown.controller.text, '529.982.247-25');
+    await tester.ensureVisible(find.text('Buscar chave'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Buscar chave'));
+    await tester.pumpAndSettle();
+    expect(pix.callsOf('lookup').single.cpf, _cpf);
+  });
+
   testWidgets('sends a Pix from the Home to the receipt', (tester) async {
     // Tall enough for the whole receipt to be built at once.
     tester.view.physicalSize = const Size(1080, 3600);
