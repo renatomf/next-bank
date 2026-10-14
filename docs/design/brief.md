@@ -50,9 +50,9 @@
 
 ### 2.3 Card de saldo (assinatura, igual nos dois modos)
 
-**Desde a v1.1.0 (checkpoint de 2026-10-14):** o card troca a seda pela arte de vidro verde do desenvolvedor (`NbArt.glass`, a mesma do fundo da tela de desbloqueio), com 220 de altura mínima. Camadas: a arte em *cover*; uma tinta `#06110F` a 40% que mantém o card escuro; um chip de vidro com "Conta •••• 0004" no alto, à esquerda, e o olho à direita; embaixo, o painel de vidro do saldo com uma aba "Saldo disponível" por cima. Todo texto fica sobre vidro, e o teste prova AA tomando o branco como o pixel mais claro da arte. A borda, a sombra, o vidro e as cores de texto abaixo continuam. A seda abaixo segue só no card do valor do Pix (`AmountCard`).
+**Desde a v1.1.0 (checkpoint de 2026-10-14):** a seda (itens 1 a 4 abaixo) deu lugar à arte de vidro verde do desenvolvedor, colorizada para o menta da marca (`GlassArt`): a luminância de cada pixel vai de `#00241C` nas sombras a `#00FFC8` nas luzes, mantendo 20% da cor original para o vidro não perder profundidade; o pixel mais claro possível é `#33FFD3`. A mesma arte está no fundo da tela de desbloqueio e no card do valor do Pix. O layout do mockup continua ("Saldo" e o olho no alto; "Saldo disponível · Conta •••• 0004" e o valor no painel de vidro). Sobre a arte, uma tinta `#06110F`: a 78% no terço de cima, sob o título, e a 35% a partir de 60% da altura, onde o painel de vidro garante o contraste. No card do valor do Pix, os textos ficam direto sobre a arte, então a tinta é de 78% no card todo. Os testes provam AA em todo texto contra `#33FFD3`, qualquer que seja o recorte da imagem. A borda, a sombra, o vidro e as cores de texto abaixo continuam.
 
-Sempre escuro, 190 de altura (cresce com texto maior). O mockup tem 214; o desenvolvedor reduziu para 190 na conferência no celular (semana 6). Camadas, de cima para baixo, com a geometria exata do CSS do mockup da Home:
+Sempre escuro, 190 de altura (cresce com texto maior). O mockup tem 214; o desenvolvedor reduziu para 190 na conferência no celular (semana 6). Camadas do mockup, de cima para baixo, com a geometria exata do CSS da Home:
 
 1. Radial Menta 75%: `radial-gradient(70% 90% at 92% 8%)`, transparente a 60%
 2. Radial `#00BEA0` 65%: `radial-gradient(60% 80% at 8% 105%)`, transparente a 65%
@@ -63,7 +63,7 @@ Sempre escuro, 190 de altura (cresce com texto maior). O mockup tem 214; o desen
 
 Texto do card: saldo e logo `#F2F6F8`; rótulo, "R$" e centavos `#A9B6BF` (AA sobre o vidro mesmo nos pontos mais claros das luzes, provado em teste). Botão do olho: `rgba(10,15,20,0.45)`, borda branca a 14%, ícone 18.
 
-No Flutter, os gradientes são empilhados e desenhados com a geometria do CSS (elipses, ângulos e paradas sobre a caixa real), para baterem com o mockup em qualquer largura. O Impeller não faz *dithering* em gradientes, e degradês suaves sobre fundo escuro mostram faixas no aparelho (F-19). Por isso, o card e o brilho da tela recebem um granulado de 1 px em modo *overlay* (`Dither`), que esconde as faixas sem mudar a cor média. Evolução opcional: fragment shader com a seda em movimento lento.
+No Flutter, os gradientes são empilhados e desenhados com a geometria do CSS (elipses, ângulos e paradas sobre a caixa real), para baterem com o mockup em qualquer largura. O Impeller não faz *dithering* em gradientes, e degradês suaves sobre fundo escuro mostram faixas no aparelho (F-19). Por isso, o brilho da tela recebe um granulado de 1 px em modo *overlay* (`Dither`), que esconde as faixas sem mudar a cor média; o card, desde que usa a arte, não precisa mais dele.
 
 ## 3. Tipografia
 
