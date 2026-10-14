@@ -6,13 +6,16 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não publicado]
 
+### Corrigido
+- O ponto do logo "next." ficava acima do pé do "t" e colado nele; agora fica no mesmo nível (medido nos tamanhos do app) e um pouco afastado. O ícone do app não muda.
+
 ## [1.0.1] — 2026-10-13
 
 ### Alterado
 - **Despertador da API:** um monitor do UptimeRobot chama o `/health` a cada 5 min e avisa por e-mail se a API cair. O workflow agendado do GitHub (`keep-awake.yml`) rodou só 3 vezes no dia da `v1.0.0`, e a API dormia (ADR 0012, revisão).
 - **README:** como passar pelo bloqueio do Play Protect ao instalar o APK.
 
-> **Nota:** esta seção anunciava também um ajuste do ponto do logo, por engano: o PR dele (#121) ainda estava aberto quando a tag foi criada, e depois o desenvolvedor decidiu manter o logo como está. O app da `1.0.1` tem o mesmo logo da `1.0.0` (F-33).
+> **Nota:** esta seção anunciava também um ajuste do ponto do logo, por engano: o PR dele (#121) ainda estava aberto quando a tag foi criada, e o app da `1.0.1` tem o mesmo logo da `1.0.0` (F-33). O ajuste entra na versão seguinte.
 
 ## [1.0.0] — 2026-10-13
 
