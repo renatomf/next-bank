@@ -20,8 +20,8 @@ class _FakeSharePlatform extends SharePlatform {
   }
 }
 
-// v1.1.0 plan, task 1: the receipt image goes to the share sheet with its
-// caption, and the file made for it does not stay behind (MOB-09).
+// v1.1.0 plan, task 1: the receipt image goes to the share sheet alone, with
+// no text, and the file made for it does not stay behind (MOB-09).
 void main() {
   late Directory temp;
   late _FakeSharePlatform platform;
@@ -40,22 +40,18 @@ void main() {
 
   final png = Uint8List.fromList([137, 80, 78, 71, 13, 10, 26, 10]);
 
-  test('shares the PNG with its caption and name', () async {
-    await sharer.shareImage(
-      png: png,
-      fileName: 'comprovante-pix.png',
-      caption: 'Comprovante de Pix · next bank',
-    );
+  test('shares only the PNG, by its name, with no text', () async {
+    await sharer.shareImage(png: png, fileName: 'comprovante-pix.png');
 
     final params = platform.shared.single;
-    expect(params.text, 'Comprovante de Pix · next bank');
+    expect(params.text, isNull);
     expect(params.files!.single.mimeType, 'image/png');
     expect(params.fileNameOverrides, ['comprovante-pix.png']);
     expect(platform.fileExisted, [true]);
   });
 
   test('leaves no file behind once shared', () async {
-    await sharer.shareImage(png: png, fileName: 'a.png', caption: 'c');
+    await sharer.shareImage(png: png, fileName: 'a.png');
 
     expect(temp.listSync(recursive: true).whereType<File>(), isEmpty);
   });
@@ -67,7 +63,7 @@ void main() {
     );
 
     await expectLater(
-      failing.shareImage(png: png, fileName: 'a.png', caption: 'c'),
+      failing.shareImage(png: png, fileName: 'a.png'),
       throwsA(isA<StateError>()),
     );
     expect(temp.listSync(recursive: true).whereType<File>(), isEmpty);

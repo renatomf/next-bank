@@ -20,7 +20,6 @@ class SharePlusImageSharer implements ImageSharer {
   Future<void> shareImage({
     required Uint8List png,
     required String fileName,
-    required String caption,
   }) async {
     // Android shares files, not bytes. share_plus copies the file to its own
     // private folder before opening the sheet and clears that folder on the
@@ -31,7 +30,6 @@ class SharePlusImageSharer implements ImageSharer {
       await file.writeAsBytes(png, flush: true);
       await _sharePlus.share(
         ShareParams(
-          text: caption,
           files: [XFile(file.path, mimeType: 'image/png')],
           fileNameOverrides: [fileName],
         ),
