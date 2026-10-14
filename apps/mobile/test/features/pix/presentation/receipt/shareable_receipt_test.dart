@@ -5,18 +5,15 @@ import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/pix_formats.dart';
 import 'package:next_bank/features/pix/presentation/receipt/shareable_receipt.dart';
 
+import '../../../../support/app_fonts.dart';
 import '../../../../support/fake_pix_repository.dart';
-import '../../../../support/tolerant_golden_comparator.dart';
 
 // v1.1.0 plan, task 1: the receipt shared as an image, in the next bank's
 // light theme whatever the app's theme, with only what the screen masks
 // (MOB-09) and the demo notice, without a watermark (DEMO-05; the
 // developer's choice, 2026-10-14).
 void main() {
-  setUpAll(() async {
-    useTolerantGoldens('shareable_receipt_test.dart');
-    await loadAppFonts();
-  });
+  setUpAll(loadAppFonts);
 
   final completed = pixTransfer(
     status: PixStatus.completed,
@@ -49,25 +46,33 @@ void main() {
     );
   }
 
-  testWidgets('looks like the approved receipt', (tester) async {
-    await pumpReceipt(tester);
+  testWidgets(
+    'looks like the approved receipt',
+    tags: ['golden'],
+    skip: !goldensRunHere,
+    (tester) async {
+      await pumpReceipt(tester);
 
-    await expectLater(
-      find.byType(ShareableReceipt),
-      matchesGoldenFile('goldens/shareable_receipt.png'),
-    );
-  });
+      await expectLater(
+        find.byType(ShareableReceipt),
+        matchesGoldenFile('goldens/shareable_receipt.png'),
+      );
+    },
+  );
 
-  testWidgets('is the same in the light theme: always the light receipt', (
-    tester,
-  ) async {
-    await pumpReceipt(tester, theme: NbTheme.light());
+  testWidgets(
+    'is the same in the light theme: always the light receipt',
+    tags: ['golden'],
+    skip: !goldensRunHere,
+    (tester) async {
+      await pumpReceipt(tester, theme: NbTheme.light());
 
-    await expectLater(
-      find.byType(ShareableReceipt),
-      matchesGoldenFile('goldens/shareable_receipt.png'),
-    );
-  });
+      await expectLater(
+        find.byType(ShareableReceipt),
+        matchesGoldenFile('goldens/shareable_receipt.png'),
+      );
+    },
+  );
 
   testWidgets('shows who, how much, when and the transaction id', (
     tester,

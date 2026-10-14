@@ -1,45 +1,11 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_test/flutter_test.dart';
 
-/// Compares goldens allowing a small share of different pixels: Windows and
-/// the Linux of the CI raster text a little differently, and a golden should
-/// fail on a changed layout, not on antialiasing.
-class TolerantGoldenComparator extends LocalFileComparator {
-  /// Compares against goldens beside [testFile], allowing [tolerance] (0 to
-  /// 1) of the pixels to differ.
-  new(super.testFile, {required this.tolerance});
-
-  /// The share of pixels that may differ.
-  final double tolerance;
-
-  @override
-  Future<bool> compare(Uint8List imageBytes, Uri golden) async {
-    final result = await GoldenFileComparator.compareLists(
-      imageBytes,
-      await getGoldenBytes(golden),
-    );
-    if (result.passed || result.diffPercent <= tolerance) {
-      result.dispose();
-      return true;
-    }
-    final error = await generateFailureOutput(result, golden, basedir);
-    result.dispose();
-    throw FlutterError(error);
-  }
-}
-
-/// Uses [TolerantGoldenComparator] for the goldens of [testFileName], which
-/// lives in the same folder as the test calling this.
-void useTolerantGoldens(String testFileName, {double tolerance = 0.01}) {
-  final current = goldenFileComparator as LocalFileComparator;
-  goldenFileComparator = TolerantGoldenComparator(
-    current.basedir.resolve(testFileName),
-    tolerance: tolerance,
-  );
-}
+/// Goldens are drawn and compared only on the CI's Linux: Windows rasters
+/// text differently enough (~5% of pixels) to fail an honest comparison.
+/// Redraw them with .github/workflows/goldens.yml.
+final bool goldensRunHere = Platform.isLinux;
 
 /// Loads the fonts the app draws with, so goldens show real letters and
 /// icons instead of the test font's boxes.

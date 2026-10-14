@@ -1,0 +1,4 @@
+tags:
+  # Pixel comparisons, drawn and checked only on the CI's Linux
+  # (.github/workflows/goldens.yml).
+  golden:
