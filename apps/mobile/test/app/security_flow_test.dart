@@ -9,6 +9,7 @@ import 'package:next_bank/features/security/presentation/change_password/change_
 import 'package:next_bank/features/security/presentation/change_pin/change_pin_screen.dart';
 import 'package:next_bank/features/security/presentation/sessions/security_screen.dart';
 
+import '../support/fake_biometric_pin_store.dart';
 import '../support/fake_security_repository.dart';
 import '../support/fake_token_store.dart';
 import '../support/pump_app.dart';
@@ -17,6 +18,7 @@ import '../support/pump_app.dart';
 Future<FakeSecurityRepository> openSecurity(
   WidgetTester tester, {
   FakeSecurityRepository? security,
+  FakeBiometricPinStore? biometrics,
 }) async {
   // Tall enough for the whole screen to be built at once.
   tester.view.physicalSize = const Size(1080, 3600);
@@ -26,6 +28,7 @@ Future<FakeSecurityRepository> openSecurity(
     tester,
     store: FakeTokenStore(tokens),
     security: fake,
+    biometrics: biometrics,
   );
   await unlockWithPin(tester);
   container.read(routerProvider).go(AppRoutes.security);
@@ -42,6 +45,40 @@ Finder labeled(String label) => find.descendant(
 // Screen 14 and the changes through the real router (domain-model.md 11;
 // week 7 plan, D3 to D5).
 void main() {
+  // v1.1.0 plan, task 2: "Usar biometria" keeps the PIN only once the
+  // server accepts it (MOB-11).
+  group('biometrics', () {
+    testWidgets('is not offered without strong biometrics', (tester) async {
+      await openSecurity(tester);
+
+      expect(find.text('Usar biometria'), findsNothing);
+    });
+
+    testWidgets('turns on with the PIN the server accepts', (tester) async {
+      final biometrics = FakeBiometricPinStore();
+      final security = await openSecurity(tester, biometrics: biometrics);
+
+      await tester.tap(find.bySemanticsLabel(RegExp('^Usar biometria')));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(PinField), '2580');
+      await tester.pumpAndSettle();
+
+      expect(security.verifiedPins, ['2580']);
+      expect(biometrics.pin, '2580');
+      expect(find.text('Biometria ativada.'), findsOneWidget);
+    });
+
+    testWidgets('turns off, forgetting the kept PIN', (tester) async {
+      final biometrics = FakeBiometricPinStore(pin: '2580');
+      await openSecurity(tester, biometrics: biometrics);
+
+      await tester.tap(find.bySemanticsLabel(RegExp('^Usar biometria')));
+      await tester.pumpAndSettle();
+
+      expect(biometrics.pin, isNull);
+    });
+  });
+
   group('the sessions', () {
     testWidgets('marks this device, without a way to end it (D3)', (
       tester,

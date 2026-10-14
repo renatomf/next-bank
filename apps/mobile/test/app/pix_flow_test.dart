@@ -12,6 +12,7 @@ import 'package:next_bank/features/pix/presentation/review/review_pix_screen.dar
 import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
 
 import '../support/fake_account_repository.dart';
+import '../support/fake_biometric_pin_store.dart';
 import '../support/fake_image_sharer.dart';
 import '../support/fake_pix_repository.dart';
 import '../support/fake_profile_repository.dart';
@@ -46,6 +47,7 @@ Future<void> openHome(
   FakeAccountRepository? account,
   FakeImageSharer? sharer,
   FakeWidgetPainter? painter,
+  FakeBiometricPinStore? biometrics,
 }) async {
   await pumpApp(
     tester,
@@ -54,6 +56,7 @@ Future<void> openHome(
     account: account,
     sharer: sharer,
     painter: painter,
+    biometrics: biometrics,
   );
   await unlockWithPin(tester);
 }
@@ -217,6 +220,24 @@ void main() {
 
   // domain-model.md 10: back from the receipt leads to the Home, never to
   // the PIN.
+  // v1.1.0 plan, task 2: biometrics releases the kept PIN, which the server
+  // checks like a typed one (ADR 0004).
+  testWidgets('confirms the Pix with biometrics', (tester) async {
+    tester.view.physicalSize = const Size(1080, 3600);
+    addTearDown(tester.view.reset);
+    final pix = FakePixRepository();
+    pix.authorizeAnswer = completes(pix);
+    await openHome(tester, pix, biometrics: FakeBiometricPinStore(pin: '2580'));
+    await fillInPix(tester);
+    await reviewPix(tester);
+
+    await tester.tap(find.text('Confirmar com biometria'));
+    await tester.pumpAndSettle();
+
+    expect(pix.callsOf('authorize').single.pin, '2580');
+    expect(find.text('Comprovante'), findsOneWidget);
+  });
+
   testWidgets('goes back from the receipt to the Home', (tester) async {
     final pix = FakePixRepository();
     pix.authorizeAnswer = completes(pix);

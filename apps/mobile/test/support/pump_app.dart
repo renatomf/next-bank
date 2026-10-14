@@ -101,6 +101,11 @@ Future<ProviderContainer> pumpApp(
 
 /// Types the PIN on the Unlock screen, as the customer does on opening.
 Future<void> unlockWithPin(WidgetTester tester, [String pin = '2580']) async {
+  // With biometrics on, the Unlock screen offers them first.
+  if (find.byType(PinField).evaluate().isEmpty) {
+    await tester.tap(find.text('Usar PIN'));
+    await tester.pumpAndSettle();
+  }
   await tester.enterText(find.byType(PinField), pin);
   await tester.pumpAndSettle();
 }
