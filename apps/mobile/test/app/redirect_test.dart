@@ -205,6 +205,34 @@ void main() {
         AppRoutes.home,
       );
     });
+
+    // v1.1.0 plan, task 2: a shortcut on the Unlock screen opens its screen
+    // once the app is unlocked, never before.
+    test('unlocked from a shortcut, on unlock → the shortcut', () {
+      expect(
+        redirectFor(
+          signedIn,
+          withPin,
+          AppRoutes.unlock,
+          locked: false,
+          afterUnlock: AppRoutes.pix,
+        ),
+        AppRoutes.pix,
+      );
+    });
+
+    test('still locked, a shortcut waits on unlock', () {
+      expect(
+        redirectFor(
+          signedIn,
+          withPin,
+          AppRoutes.unlock,
+          locked: true,
+          afterUnlock: AppRoutes.pix,
+        ),
+        null,
+      );
+    });
   });
 
   // The Pix and statement screens are for a signed-in customer with a PIN and
