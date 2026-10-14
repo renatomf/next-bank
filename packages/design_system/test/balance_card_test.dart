@@ -4,6 +4,8 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/glass_art.dart';
+
 Widget host(Widget child, {ThemeData? theme}) => MaterialApp(
   theme: theme ?? NbTheme.dark(),
   home: Scaffold(
@@ -36,8 +38,9 @@ void main() {
         ),
       );
 
-      expect(find.text('Saldo disponível'), findsOneWidget);
-      expect(find.text('Conta •••• 0004'), findsOneWidget);
+      expect(find.text('Saldo disponível · Conta •••• 0004'), findsOneWidget);
+      // Week 8 plan, V12: the word "Saldo" where the logo was.
+      expect(find.text('Saldo'), findsOneWidget);
       expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
       // Week 8 plan, V12: the Home already shows the logo.
       expect(find.byType(NextLogo), findsNothing);
@@ -148,7 +151,7 @@ void main() {
       );
 
       expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
-      expect(find.bySemanticsLabel('Saldo disponível'), findsOneWidget);
+      expect(find.bySemanticsLabel('Saldo'), findsOneWidget);
       expect(
         tester.getSemantics(find.bySemanticsLabel('Ocultar saldo')),
         isSemantics(label: 'Ocultar saldo', isButton: true),
@@ -178,9 +181,9 @@ void main() {
     });
   });
 
-  // v1.1.0 checkpoint (2026-10-14): the developer's green glass art fills
-  // the card, under a dark tint that keeps it the same dark card.
-  testWidgets('shows the glass art behind the balance', (tester) async {
+  // v1.1.0 checkpoint (2026-10-14): the developer's art, tinted mint, fills
+  // the card in the mockup's layout.
+  testWidgets('shows the mint glass art behind the balance', (tester) async {
     await tester.pumpWidget(
       host(
         BalanceCard(
@@ -192,29 +195,64 @@ void main() {
       ),
     );
 
-    final art = tester.widget<Image>(
+    expect(
       find.descendant(
         of: find.byType(BalanceCard),
-        matching: find.byType(Image),
+        matching: find.byType(GlassArt),
       ),
+      findsOneWidget,
     );
-    expect(art.image, NbArt.glass);
   });
 
-  // Brief, section 8: AA on every text. Every text sits on glass (the
-  // account chip and the balance panel), over the tinted art; the check
-  // takes white as the art's brightest pixel, wherever the crop falls.
-  group('balance card contrast (AA)', () {
-    final background = Color.alphaBlend(
-      NbBalanceCardColors.glass,
-      Color.alphaBlend(NbBalanceCardColors.tint, const Color(0xFFFFFFFF)),
+  // The title reads on the deep tint, which covers the top 30% of the card.
+  testWidgets('keeps the title within the deep tint at 1.3x text', (
+    tester,
+  ) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    await tester.pumpWidget(
+      host(
+        BalanceCard(
+          accountNumber: '100000-4',
+          balanceCents: 123456789,
+          hidden: false,
+          onToggleHidden: () {},
+        ),
+      ),
     );
+
+    final card = tester.getRect(find.byType(BalanceCard));
+    final title = tester.getRect(find.text('Saldo'));
+    expect(title.bottom - card.top, lessThanOrEqualTo(card.height * 0.3));
+  });
+
+  // Brief, section 8: AA on every text, over the brightest pixel the mint
+  // colorization can give, whatever the crop: the title on the deep tint,
+  // the balance and its label on the glass over the light tint.
+  group('balance card contrast (AA)', () {
+    final brightest = brightestArt();
+    final titleGround = Color.alphaBlend(
+      NbBalanceCardColors.tintDeep,
+      brightest,
+    );
+    final panelGround = Color.alphaBlend(
+      NbBalanceCardColors.glass,
+      Color.alphaBlend(NbBalanceCardColors.tintLight, brightest),
+    );
+
+    test('title on the deep tint', () {
+      expect(
+        contrast(NbBalanceCardColors.text, titleGround),
+        greaterThanOrEqualTo(4.5),
+      );
+    });
+
     for (final (name, color) in [
       ('balance', NbBalanceCardColors.text),
       ('label', NbBalanceCardColors.textMuted),
     ]) {
-      test('$name on the glass over the brightest art', () {
-        expect(contrast(color, background), greaterThanOrEqualTo(4.5));
+      test('$name on the glass', () {
+        expect(contrast(color, panelGround), greaterThanOrEqualTo(4.5));
       });
     }
   });

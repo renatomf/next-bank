@@ -74,7 +74,7 @@ void main() {
     await showBalance(tester);
 
     expect(find.text('Ana'), findsOneWidget);
-    expect(find.text('Conta •••• 0004'), findsOneWidget);
+    expect(find.text('Saldo disponível · Conta •••• 0004'), findsOneWidget);
     expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
   });
 

@@ -35,6 +35,12 @@ void main() {
     expect(find.textContaining('Souza'), findsNothing);
   });
 
+  testWidgets('lays the mint glass art behind the greeting', (tester) async {
+    await openLocked(tester);
+
+    expect(find.byType(GlassArt), findsOneWidget);
+  });
+
   testWidgets('without biometrics, takes the PIN right away', (tester) async {
     final unlock = await openLocked(tester);
 

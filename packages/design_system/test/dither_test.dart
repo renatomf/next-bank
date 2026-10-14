@@ -3,27 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // Found on the emulator: Impeller does not dither gradients, so the faint
-// screen glow and the dark cards' silk showed rings. A fine grain sits
-// over each gradient and under the content.
+// screen glow showed rings. A fine grain sits over the gradient and under
+// the content.
 void main() {
-  testWidgets('sits over the amount card silk', (tester) async {
+  testWidgets('sits over the screen glow', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: NbTheme.dark(),
-        home: Scaffold(
-          body: AmountCard(
-            cents: 5000,
-            balanceCents: 1000000,
-            balanceHidden: false,
-            onEdit: () {},
-          ),
-        ),
+        home: const GlowBackground(child: SizedBox.expand()),
       ),
     );
 
     expect(
       find.descendant(
-        of: find.byType(AmountCard),
+        of: find.byType(GlowBackground),
         matching: find.byType(Dither),
       ),
       findsOneWidget,
