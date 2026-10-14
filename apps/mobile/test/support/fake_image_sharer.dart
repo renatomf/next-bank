@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:next_bank/core/share/image_sharer.dart';
+import 'package:next_bank/core/share/text_sharer.dart';
 
 /// The system's share sheet without the system: keeps what it was given.
 class FakeImageSharer implements ImageSharer {
@@ -28,4 +29,13 @@ class FakeWidgetPainter {
     painted.add(widget);
     return png;
   }
+}
+
+/// Keeps the texts it was asked to share.
+class FakeTextSharer implements TextSharer {
+  /// Texts shared, in order.
+  final List<String> shared = [];
+
+  @override
+  Future<void> shareText(String text) async => shared.add(text);
 }

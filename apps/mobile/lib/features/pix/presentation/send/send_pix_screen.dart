@@ -13,10 +13,18 @@ import 'package:next_bank/features/pix/presentation/send/send_pix_controller.dar
 /// by CPF key, an optional description, then the review with the PIN.
 class SendPixScreen extends ConsumerStatefulWidget {
   /// Creates the screen; the router says where back and the review go.
-  const new({required this.onBack, required this.onReview, super.key});
+  const new({
+    required this.onBack,
+    required this.onReceive,
+    required this.onReview,
+    super.key,
+  });
 
   /// Leaves the Pix.
   final VoidCallback onBack;
+
+  /// Opens "Receber", with the QR Code (v1.1.0 plan, task 3).
+  final VoidCallback onReceive;
 
   /// Opens the review of the Pix just created.
   final ValueChanged<String> onReview;
@@ -70,7 +78,15 @@ class _SendPixScreenState extends ConsumerState<SendPixScreen> {
                   onPressed: ref.read(balanceHiddenProvider.notifier).toggle,
                 ),
               ),
-              const SizedBox(height: NbSpace.xl),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: widget.onReceive,
+                  icon: const Icon(Icons.qr_code_2, size: 20),
+                  label: const Text('Receber'),
+                ),
+              ),
+              const SizedBox(height: NbSpace.sm),
               Stack(
                 children: [
                   // The amount is typed on the keyboard into this field and

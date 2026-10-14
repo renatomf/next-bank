@@ -17,6 +17,7 @@ import 'package:next_bank/features/home/presentation/home_screen.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/processing/processing_screen.dart';
 import 'package:next_bank/features/pix/presentation/receipt/receipt_screen.dart';
+import 'package:next_bank/features/pix/presentation/receive/receive_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/review/review_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
 import 'package:next_bank/features/profile/presentation/profile_screen.dart';
@@ -121,8 +122,13 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
         path: AppRoutes.pix,
         builder: (context, _) => SendPixScreen(
           onBack: () => _back(context),
+          onReceive: () => context.push(AppRoutes.pixReceive),
           onReview: (id) => context.push(AppRoutes.pixReview(id)),
         ),
+      ),
+      GoRoute(
+        path: AppRoutes.pixReceive,
+        builder: (context, _) => ReceivePixScreen(onBack: () => _back(context)),
       ),
       GoRoute(
         path: AppRoutes.pixReview(':transferId'),
