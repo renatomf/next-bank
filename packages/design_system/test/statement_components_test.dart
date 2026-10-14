@@ -172,4 +172,32 @@ void main() {
       isSemantics(label: 'Extrato', isHeader: true),
     );
   });
+
+  // v1.1.0 checkpoint (2026-10-14): the Pix puts its balance eye on the
+  // right, in the space that keeps the title centered.
+  testWidgets('ScreenHeader takes an action on the right, title centered', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(
+        ScreenHeader(
+          title: 'Pix',
+          icon: Icons.arrow_back,
+          iconLabel: 'Voltar',
+          onPressed: () {},
+          action: IconCircleButton(
+            icon: Icons.visibility_off_outlined,
+            label: 'Mostrar saldo',
+            onPressed: () {},
+          ),
+        ),
+      ),
+    );
+
+    final header = tester.getRect(find.byType(ScreenHeader));
+    final action = tester.getRect(find.bySemanticsLabel('Mostrar saldo'));
+    final title = tester.getRect(find.text('Pix'));
+    expect(action.right, moreOrLessEquals(header.right, epsilon: 1));
+    expect(title.center.dx, moreOrLessEquals(header.center.dx, epsilon: 1));
+  });
 }

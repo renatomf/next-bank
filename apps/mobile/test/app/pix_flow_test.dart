@@ -468,6 +468,14 @@ void main() {
     await tester.tap(find.bySemanticsLabel('Área Pix'));
     await tester.pumpAndSettle();
 
+    // On the top right, beside the title (developer's request).
+    expect(
+      find.descendant(
+        of: find.byType(ScreenHeader),
+        matching: find.bySemanticsLabel('Mostrar saldo'),
+      ),
+      findsOneWidget,
+    );
     await tester.tap(find.bySemanticsLabel('Mostrar saldo'));
     await tester.pumpAndSettle();
     expect(find.text(r'R$ 10.000,00'), findsOneWidget);
