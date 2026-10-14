@@ -45,15 +45,17 @@ void main() {
       expect(
         payload,
         startsWith(
-          '000201'
-          '26580014br.gov.bcb.pix0136$_key'
-          '52040000'
-          '5303986'
-          '5802BR'
-          '5910BRUNO LIMA'
-          '6009SAO PAULO'
-          '62070503***'
-          '6304',
+          [
+            '000201',
+            '26580014br.gov.bcb.pix0136$_key',
+            '52040000',
+            '5303986',
+            '5802BR',
+            '5910BRUNO LIMA',
+            '6009SAO PAULO',
+            '62070503***',
+            '6304',
+          ].join(),
         ),
       );
     });
