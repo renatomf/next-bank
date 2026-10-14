@@ -167,7 +167,7 @@ void main() {
   });
 
   // v1.1.0 plan, task 1: the receipt goes out as an image of the masked
-  // receipt (MOB-09), with the receipt text as its caption (DEMO-05).
+  // receipt (MOB-09), alone: no text goes with it.
   testWidgets('shares the receipt of the Pix as an image', (tester) async {
     tester.view.physicalSize = const Size(1080, 3600);
     addTearDown(tester.view.reset);
@@ -192,14 +192,6 @@ void main() {
     final shared = sharer.shared.single;
     expect(shared.png, painter.png);
     expect(shared.fileName, 'comprovante-pix.png');
-    expect(
-      shared.caption,
-      receiptShareText(
-        transfer: done,
-        payerName: 'Ana Souza',
-        payerAccount: 'next bank · Ag 0001 · CC •••• 0004',
-      ),
-    );
   });
 
   // DEMO-05: a Pix still moving or refused never goes out as a receipt.
