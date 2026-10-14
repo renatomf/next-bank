@@ -1,3 +1,5 @@
+import 'package:next_bank/features/pix/domain/receiving_key.dart';
+
 /// Field 26 holds at most 99 characters: the GUI (18) and a 36-character
 /// random key (40) leave 37 for the message, after its own id and length.
 const int maxBrCodeMessageLength = 37;
@@ -8,9 +10,6 @@ const int _maxNameLength = 25;
 const String _city = 'SAO PAULO';
 const int _maxAmountCents = 999999999999; // "9999999999.99", 13 characters.
 
-final RegExp _randomKey = RegExp(
-  r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$',
-);
 final RegExp _printableAscii = RegExp(r'^[\x20-\x7E]*$');
 final RegExp _blanks = RegExp(r'\s+');
 final RegExp _notNameCharacter = RegExp('[^A-Z0-9 ]');
@@ -50,7 +49,7 @@ String staticBrCode({
   int? amountCents,
   String? message,
 }) {
-  if (!_randomKey.hasMatch(key)) {
+  if (!isRandomPixKey(key)) {
     throw ArgumentError.value('(hidden)', 'key', 'must be a random Pix key');
   }
   final text = message == null ? '' : brCodeMessageText(message);

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/features/pix/domain/pix_repository.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
+import 'package:next_bank/features/pix/domain/receiving_key.dart';
 import 'package:nextbank_api/nextbank_api.dart' as api;
 
 /// [PixRepository] over the generated API client (ADR 0008). The client
@@ -66,6 +67,14 @@ class HttpPixRepository implements PixRepository {
   Future<PixTransfer> fetch(String transferId) async => _transferOf(
     await _call(() => _api.getPixTransfer(transferId: transferId)),
   );
+
+  @override
+  Future<ReceivingKey> receivingKey() async {
+    final found = await _call(_api.getReceivingKey);
+    // Only a random key may reach a QR Code, whatever the answer says (PIX-12).
+    if (!isRandomPixKey(found.key)) throw const ApiUnexpected();
+    return ReceivingKey(key: found.key, keyMasked: found.keyMasked);
+  }
 
   @override
   Future<PixTransfer> authorize({
