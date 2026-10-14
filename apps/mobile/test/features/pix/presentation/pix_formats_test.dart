@@ -55,6 +55,72 @@ void main() {
     expect(payeeDetail(mariana), 'CPF ***.456.789-** · next bank');
   });
 
+  // v1.1.0 plan, task 1: the receipt shared as text carries no more than the
+  // screen (MOB-09) and always says it is a demo (DEMO-05).
+  group('receiptShareText', () {
+    final completed = pixTransfer(
+      status: PixStatus.completed,
+      endToEndId: 'E00000000202610081733abcdefghijk',
+    );
+    String share(PixTransfer transfer) => receiptShareText(
+      transfer: transfer,
+      payerName: 'Ana Demo',
+      payerAccount: payerDetail(branch: '0001', number: '100000-4'),
+    );
+
+    test('writes the receipt line by line, ending with the demo notice', () {
+      const notice =
+          'Demonstração: o next bank é um projeto fictício; nenhum dinheiro '
+          'real foi movimentado.';
+      expect(
+        share(completed),
+        [
+          'Comprovante de Pix · next bank',
+          r'Pix enviado: R$ 350,00',
+          receiptDate(DateTime.utc(2026, 10, 8, 17, 33)),
+          'De: Ana Demo · next bank · Ag 0001 · CC •••• 0004',
+          'Para: Mariana Costa · CPF ***.456.789-** · next bank',
+          'Pix · Chave CPF',
+          'Descrição: Aluguel de outubro',
+          'ID da transação: E00000000202610081733abcdefghijk',
+          notice,
+        ].join('\n'),
+      );
+    });
+
+    test('carries only what the screen masks: no full CPF or account', () {
+      final text = share(completed);
+
+      expect(text, isNot(contains('100000')));
+      expect(text, contains('***.456.789-**'));
+    });
+
+    test('leaves out the description when there is none', () {
+      final noDescription = PixTransfer(
+        id: completed.id,
+        status: completed.status,
+        amountCents: completed.amountCents,
+        description: null,
+        payee: completed.payee,
+        endToEndId: completed.endToEndId,
+        failureReason: null,
+        createdAt: completed.createdAt,
+        completedAt: completed.completedAt,
+      );
+
+      expect(share(noDescription), isNot(contains('Descrição')));
+      expect(share(noDescription), contains('Demonstração:'));
+    });
+
+    for (final status in PixStatus.values.where(
+      (status) => status != PixStatus.completed,
+    )) {
+      test('refuses a Pix that is ${status.name}, never a completed one', () {
+        expect(() => share(pixTransfer(status: status)), throwsArgumentError);
+      });
+    }
+  });
+
   group('pixType', () {
     for (final (type, text) in [
       (PixKeyType.cpf, 'Pix · Chave CPF'),
