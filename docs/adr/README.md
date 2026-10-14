@@ -18,6 +18,7 @@ Cada ADR registra **uma** decisão de arquitetura: o contexto, as alternativas c
 | [0010](0010-orquestracao-entre-contextos.md) | Orquestração entre contextos e transação compartilhada | Aceito |
 | [0011](0011-bff.md) | Backend for Frontend (BFF): fora da V1, revisto no backoffice | Aceito |
 | [0012](0012-hospedagem-da-v1.md) | Hospedagem da V1: Render gratuito e Neon, sem custo | Aceito |
+| [0013](0013-rosto-so-para-abrir-o-app.md) | Rosto (biometria fraca) só para abrir o app | Aceito |
 
 ## Template
 
