@@ -9,13 +9,15 @@ class GlassArt extends StatelessWidget {
   const new({super.key});
 
   /// The colorization, chosen by the developer among previews: each pixel's
-  /// luminance maps from #00241C (shadows) to the mint #00FFC8 (lights),
-  /// keeping 20% of the original color so the glass keeps its depth. Its
-  /// brightest result is #33FFD3, the ground the contrast tests check.
+  /// luminance maps from #00241C (shadows) toward the mint #00FFC8 (lights),
+  /// keeping 20% of the original color so the glass keeps its depth. The
+  /// gain is 35% above the plain mapping, for a brighter art (developer's
+  /// request): the lights saturate at the mint, while the brightest result,
+  /// #33FFE1, barely moves, so the contrast tests still hold.
   static const List<double> mint = [
     0.2, 0, 0, 0, 0, //
-    0.14607, 0.69138, 0.04961, 0, 28.8, //
-    0.11472, 0.38592, 0.23896, 0, 22.4, //
+    0.19719, 0.86336, 0.06697, 0, 28.8, //
+    0.12639, 0.42519, 0.24292, 0, 22.4, //
     0, 0, 0, 1, 0, //
   ];
 
