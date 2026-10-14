@@ -28,9 +28,12 @@ next bank é um banco fictício construído como **projeto de portfólio para va
 | Fase | Entrega | Prazo | Marco |
 |---|---|---|---|
 | **1. V1 Core** | App Flutter + API: Auth, Ledger, PIX interno, extrato, testes, CI, deploy | 8 semanas | `v1.0.0` → **começar as candidaturas** |
-| **2. PIX assíncrono** | Simulador do Bacen (SPI/DICT), PIX externo, conta transitória, conciliação, tracing | ~2 semanas | `v1.1.0` |
-| **3. Backoffice** | Next.js: RBAC, dupla aprovação, fila de exceções da conciliação | ~2 semanas | `v1.2.0` |
-| **4. Produtos do app** | Minhas chaves Pix e QR Code; recarga e boleto com provedor simulado; cartão de crédito e fatura | ~2 semanas por versão | `v1.3.0` → `v2.0.0` |
+| **1.1 Produtos do dia a dia** | Pix por QR Code (pagar e receber), recarga de celular síncrona, comprovante compartilhado, biometria (desbloqueio e confirmação), cartão na Home (só interface), `FLAG_SECURE`, verificação automática do IP. Plano: `docs/plans/v1.1.0-produtos-do-dia-a-dia.md` | ~2,5 semanas | `v1.1.0` |
+| **2. PIX assíncrono** | Simulador do Bacen (SPI/DICT), PIX externo, conta transitória, conciliação, tracing; o executor em segundo plano traz agendamentos, pagamentos recorrentes e débito automático | ~2–3 semanas | `v1.2.0` |
+| **3. Backoffice** | Next.js: RBAC, dupla aprovação, fila de exceções da conciliação | ~2 semanas | `v1.3.0` |
+| **4. Produtos do app** | Minhas chaves Pix e QR Code dinâmico; recarga assíncrona, boleto e contas de consumo com provedor simulado; cartão de crédito e fatura | ~2 semanas por versão | `v1.4.0` → `v2.0.0` |
+
+**Nova ordem (2026-10-14):** depois da `v1.0.0`, a `v1.1.0` antecipa a parte mais simples da Fase 4, que um visitante da demo usa na primeira abertura; as Fases 2 e 3 andam uma versão. Nenhuma versão usa provedor real: o dinheiro só se move entre contas do next bank.
 
 **Total:** ~12–13 semanas. Se tudo atrasar: V1 em 9–10 semanas e a Fase 3 passa para "Próximos passos" no README.
 
@@ -325,7 +328,9 @@ Quem avalia o projeto precisa vê-lo funcionando **em menos de um minuto**, sem 
 - **E2E:** um fluxo crítico de ponta a ponta
 - **Meta:** cobertura alta no domínio e nos use cases; sem meta numérica global
 
-## 9. Fase 2 — PIX assíncrono (~2 semanas, `v1.1.0`)
+## 9. Fase 2 — PIX assíncrono (~2–3 semanas, `v1.2.0`)
+
+**Acréscimo de 2026-10-14:** o executor em segundo plano desta fase também roda os **agendamentos, os pagamentos recorrentes e o débito automático**: cada ocorrência paga uma única vez (idempotência por ocorrência), com autorização dada no agendamento, cancelamento a qualquer momento e falha registrada quando falta saldo.
 
 **Objetivo:** provar consistência num mundo assíncrono e não confiável.
 
@@ -352,7 +357,7 @@ Quem avalia o projeto precisa vê-lo funcionando **em menos de um minuto**, sem 
 
 **Pronto quando:** um PIX externo sob 30% de falhas injetadas termina sempre num estado final correto, sem duplicidade, e a conciliação aponta 100% das divergências injetadas.
 
-## 10. Fase 3 — Backoffice Next.js (~2 semanas, `v1.2.0`)
+## 10. Fase 3 — Backoffice Next.js (~2 semanas, `v1.3.0`)
 
 **Objetivo:** mostrar web moderno e o "banco por dentro".
 
@@ -378,23 +383,22 @@ Quem avalia o projeto precisa vê-lo funcionando **em menos de um minuto**, sem 
 
 **Pronto quando:** um PIX divergente da Fase 2 é resolvido pelo backoffice, com dupla aprovação, e aparece corretamente no extrato do cliente e na trilha de auditoria.
 
-## Fase 4 — Produtos do app (`v1.3.0` → `v2.0.0`)
+## Fase 4 — Produtos do app (`v1.4.0` → `v2.0.0`)
 
-**Objetivo:** trocar os atalhos "Em breve" da Home por produtos de verdade, cada um de ponta a ponta: API, Postgres, ledger, app e testes. O dinheiro continua dentro do next bank. Nada aqui movimenta dinheiro real; integração com uma instituição de verdade é opcional e fica por último.
+**Objetivo:** trocar os atalhos "Em breve" da Home por produtos de verdade, cada um de ponta a ponta: API, Postgres, ledger, app e testes. O dinheiro continua dentro do next bank. Nada aqui movimenta dinheiro real, e não há integração com instituição de verdade (decisão de 2026-10-14). A parte mais simples já chegou na `v1.1.0`.
 
-**Ordem e motivo** (definida em 2026-10-12, depois da semana 8):
+**Ordem e motivo** (definida em 2026-10-12, depois da semana 8; revista em 2026-10-14, quando a `v1.1.0` antecipou o QR Code estático, a recarga síncrona e o cartão visual):
 
 | Versão | Produto | O que entra | Por quê, nessa ordem |
 |---|---|---|---|
-| `v1.3.0` | **Minhas chaves Pix e QR Code Pix** | Chaves e-mail, telefone e aleatória (cadastrar, listar, excluir, sem duplicidade, cifradas como a de CPF); QR Code estático e dinâmico no padrão BR Code (EMV), gerar, ler com a câmera e validar o payload (CRC) antes de pagar | Está mais perto do domínio que já existe (Payments) e ativa o atalho "Pagar" |
-| `v1.4.0` | **Recarga de celular e boleto** | Provedor simulado (`apps/provider-sim`) com sucesso, falha, timeout e duplicidade; máquina de estados com reserva de saldo, confirmação ou estorno; linha digitável do boleto validada (dígitos verificadores, valor e vencimento) | Mostra fluxo assíncrono, falhas e devolução de dinheiro sobre a base da Fase 2 (outbox, inbox, conta transitória); ativa "Recarga" |
-| `v2.0.0` | **Cartão de crédito** | Cartão virtual de demonstração (nunca PAN, CVV ou dados reais), bloqueio, limite, autorização com reserva em `available_balance`, compra negada e estornada, fatura, vencimento, pagamento e parcelamento | É o maior produto: um novo contexto (Cards) com ciclo de cobrança próprio |
-| Opcional | **Provedor real (sandbox)** | Um PSP com sandbox para Pix, boleto ou recarga, atrás de uma porta já existente | Só se fizer sentido mostrar uma integração externa; não é necessário para provar a qualidade |
+| `v1.4.0` | **Minhas chaves Pix e QR Code dinâmico** | Chaves e-mail e telefone (cadastrar, listar, excluir, sem duplicidade, cifradas como a de CPF); QR Code dinâmico no padrão BR Code. A chave aleatória e o QR estático (gerar, ler e validar o CRC) chegaram na `v1.1.0` | Está mais perto do domínio que já existe (Payments) e ativa o atalho "Pagar" |
+| `v1.5.0` | **Recarga assíncrona, boleto e contas de consumo** | Provedor simulado (`apps/provider-sim`) com sucesso, falha, timeout e duplicidade; máquina de estados com reserva de saldo, confirmação ou estorno; a recarga síncrona da `v1.1.0` passa a usá-lo; linha digitável do boleto bancário (47 dígitos) e de arrecadação de contas de consumo (48 dígitos) validada, com empresas fictícias | Mostra fluxo assíncrono, falhas e devolução de dinheiro sobre a base da Fase 2 (outbox, inbox, conta transitória); ativa "Recarga" |
+| `v2.0.0` | **Cartão de crédito** | Cartão virtual de demonstração (nunca PAN, CVV ou dados reais), bloqueio, limite, autorização com reserva em `available_balance`, compra negada e estornada, fatura, vencimento, pagamento e parcelamento | É o maior produto: um novo contexto (Cards) com ciclo de cobrança próprio. O cartão visual da Home (só interface) chegou na `v1.1.0` e passa a mostrar os dados do servidor |
 
 **Regras que continuam valendo:**
 - Cada versão começa com o seu plano: fontes conferidas, threat model (ameaças novas viram linha e teste), contratos, concorrência e ADR quando houver decisão de arquitetura.
 - Dinheiro só como `Money`, comandos idempotentes e transacionais, ledger só por inclusão, teste de concorrência em toda regra financeira.
-- O README separa o que funciona localmente, o que usa sandbox e o que dependeria de integração de produção.
+- O README separa o que funciona de ponta a ponta dentro do next bank do que dependeria de uma instituição real, que não faz parte do projeto.
 - O Pix com outros bancos não está aqui: é a Fase 2 (simulador do Bacen).
 
 ## 11. Próximos passos (só documentados no README)
@@ -404,7 +408,7 @@ Cada item recebe um parágrafo de design no README, sem implementação:
 - **Antifraude + MED:** motor de regras de risco (dispositivo novo, valor atípico, beneficiário novo, horário) → aprovar, pedir step-up ou reter; devolução PIX pelo MED.
 - **Cards:** planejado na Fase 4 (`v2.0.0`).
 - **Notificações:** consumidores do outbox, push via FCM, central de notificações.
-- **Biometria no app:** liberar o PIN guardado no Keychain/Keystore com a digital ou o rosto (ADR 0004: conveniência, nunca controle de segurança), com threat model próprio para o PIN guardado no aparelho (MOB-01). Saiu da semana 6 (plano, D4).
+- **Biometria no app:** saiu daqui e entrou na `v1.1.0` (plano `v1.1.0-produtos-do-dia-a-dia.md`, D11 e MOB-11).
 - **Segurança avançada:** vínculo de dispositivo (chave no Secure Enclave/Keystore assinando transações), Play Integrity/App Attest, `FLAG_SECURE`, certificate pinning (SPKI), Row-Level Security.
 - **SDUI/BDC:** Home montada pelo servidor sobre o Design System, com schema versionado e fallback local.
 - **Conta global multimoeda:** cotação com validade, spread, conversão em lançamentos no ledger.

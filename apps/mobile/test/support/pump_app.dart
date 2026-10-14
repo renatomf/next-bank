@@ -7,6 +7,8 @@ import 'package:next_bank/core/account/account_providers.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/app_lock.dart';
 import 'package:next_bank/core/session/session_controller.dart';
+import 'package:next_bank/core/share/image_sharer.dart';
+import 'package:next_bank/core/share/widget_png.dart';
 import 'package:next_bank/core/statement/statement_controller.dart';
 import 'package:next_bank/core/theme/theme_controller.dart';
 import 'package:next_bank/features/auth/presentation/auth_providers.dart';
@@ -17,6 +19,7 @@ import 'package:next_bank/main.dart';
 
 import 'fake_account_repository.dart';
 import 'fake_auth_repository.dart';
+import 'fake_image_sharer.dart';
 import 'fake_monotonic_clock.dart';
 import 'fake_pix_repository.dart';
 import 'fake_profile_repository.dart';
@@ -41,6 +44,8 @@ Future<ProviderContainer> pumpApp(
   FakeSecurityRepository? security,
   FakeMonotonicClock? clock,
   FakeThemeStore? theme,
+  FakeImageSharer? sharer,
+  FakeWidgetPainter? painter,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -70,6 +75,10 @@ Future<ProviderContainer> pumpApp(
         monotonicClockProvider.overrideWithValue(clock ?? FakeMonotonicClock()),
         randomProvider.overrideWithValue(Random(42)),
         themeStoreProvider.overrideWithValue(theme ?? FakeThemeStore()),
+        imageSharerProvider.overrideWithValue(sharer ?? FakeImageSharer()),
+        widgetPainterProvider.overrideWithValue(
+          (painter ?? FakeWidgetPainter()).call,
+        ),
       ],
       child: const NextBankApp(),
     ),
