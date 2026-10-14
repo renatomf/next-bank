@@ -59,7 +59,7 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
         fit: StackFit.expand,
         children: [
           const Image(
-            image: AssetImage('assets/images/bg_splash.jpg'),
+            image: NbArt.glass,
             fit: BoxFit.cover,
             excludeFromSemantics: true,
           ),

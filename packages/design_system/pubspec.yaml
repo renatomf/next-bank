@@ -26,3 +26,7 @@ flutter:
     - family: Manrope
       fonts:
         - asset: fonts/Manrope-Variable.ttf
+  assets:
+    # The green glass art behind the Unlock screen and the balance card:
+    # made by the developer.
+    - assets/images/bg_splash.jpg

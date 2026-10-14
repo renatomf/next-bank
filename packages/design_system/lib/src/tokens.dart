@@ -60,6 +60,19 @@ abstract final class NbBalanceCardColors {
 
   /// Loading placeholders on the glass.
   static const Color placeholder = Color(0x29FFFFFF);
+
+  /// Dark tint over the glass art: #06110F at 40%, enough for AA on the
+  /// glass even over the art's brightest pixel.
+  static const Color tint = Color(0x6606110F);
+}
+
+/// Bundled art (v1.1.0 checkpoint, 2026-10-14), made by the developer.
+abstract final class NbArt {
+  /// Green glass waves: behind the Unlock screen and the balance card.
+  static const AssetImage glass = AssetImage(
+    'assets/images/bg_splash.jpg',
+    package: 'design_system',
+  );
 }
 
 /// Theme colors for one mode (brief, section 2.2), read with
