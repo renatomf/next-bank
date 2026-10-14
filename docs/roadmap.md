@@ -28,7 +28,7 @@ next bank é um banco fictício construído como **projeto de portfólio para va
 | Fase | Entrega | Prazo | Marco |
 |---|---|---|---|
 | **1. V1 Core** | App Flutter + API: Auth, Ledger, PIX interno, extrato, testes, CI, deploy | 8 semanas | `v1.0.0` → **começar as candidaturas** |
-| **1.1 Produtos do dia a dia** | Pix por QR Code (pagar e receber), recarga de celular síncrona, comprovante compartilhado, cartão na Home (só interface), `FLAG_SECURE`, verificação automática do IP. Plano: `docs/plans/v1.1.0-produtos-do-dia-a-dia.md` | ~2 semanas | `v1.1.0` |
+| **1.1 Produtos do dia a dia** | Pix por QR Code (pagar e receber), recarga de celular síncrona, comprovante compartilhado, biometria (desbloqueio e confirmação), cartão na Home (só interface), `FLAG_SECURE`, verificação automática do IP. Plano: `docs/plans/v1.1.0-produtos-do-dia-a-dia.md` | ~2,5 semanas | `v1.1.0` |
 | **2. PIX assíncrono** | Simulador do Bacen (SPI/DICT), PIX externo, conta transitória, conciliação, tracing; o executor em segundo plano traz agendamentos, pagamentos recorrentes e débito automático | ~2–3 semanas | `v1.2.0` |
 | **3. Backoffice** | Next.js: RBAC, dupla aprovação, fila de exceções da conciliação | ~2 semanas | `v1.3.0` |
 | **4. Produtos do app** | Minhas chaves Pix e QR Code dinâmico; recarga assíncrona, boleto e contas de consumo com provedor simulado; cartão de crédito e fatura | ~2 semanas por versão | `v1.4.0` → `v2.0.0` |
@@ -408,7 +408,7 @@ Cada item recebe um parágrafo de design no README, sem implementação:
 - **Antifraude + MED:** motor de regras de risco (dispositivo novo, valor atípico, beneficiário novo, horário) → aprovar, pedir step-up ou reter; devolução PIX pelo MED.
 - **Cards:** planejado na Fase 4 (`v2.0.0`).
 - **Notificações:** consumidores do outbox, push via FCM, central de notificações.
-- **Biometria no app:** liberar o PIN guardado no Keychain/Keystore com a digital ou o rosto (ADR 0004: conveniência, nunca controle de segurança), com threat model próprio para o PIN guardado no aparelho (MOB-01). Saiu da semana 6 (plano, D4).
+- **Biometria no app:** saiu daqui e entrou na `v1.1.0` (plano `v1.1.0-produtos-do-dia-a-dia.md`, D11 e MOB-11).
 - **Segurança avançada:** vínculo de dispositivo (chave no Secure Enclave/Keystore assinando transações), Play Integrity/App Attest, `FLAG_SECURE`, certificate pinning (SPKI), Row-Level Security.
 - **SDUI/BDC:** Home montada pelo servidor sobre o Design System, com schema versionado e fallback local.
 - **Conta global multimoeda:** cotação com validade, spread, conversão em lançamentos no ledger.
