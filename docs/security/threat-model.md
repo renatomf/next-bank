@@ -100,6 +100,7 @@ Legenda STRIDE: **S** falsificação de identidade · **T** adulteração · **R
 | PIX-08 | Autorizar Pix expirado ou fora de ordem | T | A2 | `expires_at` e status verificados com `FOR UPDATE` | Autorizar após 10 min → 409; autorizar duas vezes → 409 | 5 |
 | PIX-09 | Cliente nega ter feito o Pix (repúdio) | R | A2 | Auditoria imutável com sessão, `requestId`, dispositivo e evento de verificação de PIN; ID E2E no comprovante | Evento `PIX_COMPLETED` contém sessão e `requestId` | 5 |
 | PIX-10 | Horário do aparelho manipulado para fugir do limite noturno | T | A2 | Horário sempre do servidor (`Clock`, fuso São Paulo); horário do cliente ignorado | Teste com `Clock` às 21h → limite noturno aplicado | 5 |
+| PIX-12 | QR Code de cobrança expõe o CPF de quem recebe | I | A1, A5 | "Receber" usa só a chave aleatória do cliente (UUID v4 de gerador criptográfico, uma por conta, criada na primeira vez); o BR Code é montado no app e recusa chave que não seja aleatória; o repositório recusa resposta com chave que não seja UUID v4 | `br_code_test.dart`: o código nunca leva CPF e recusa chave que não seja aleatória; `http_pix_repository_test.dart`: CPF na resposta → inesperado; `receiving-key-route.test.ts`: a resposta não traz o CPF | v1.1.0 |
 
 ### 5.3 Consultas (saldo, extrato, comprovante)
 

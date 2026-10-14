@@ -114,7 +114,7 @@ flowchart LR
   - (`type`, `value`) único no sistema
   - Chave CPF tem que ser o CPF do titular da conta
   - No máximo 5 chaves por conta (regra do Bacen para pessoa física)
-- Na V1, só a chave CPF criada no cadastro é obrigatória. As demais ficam para a tela extra "Minhas chaves".
+- Na V1, só a chave CPF criada no cadastro é obrigatória. Desde a v1.1.0, cada conta tem também uma chave aleatória (UUID v4), criada na primeira vez que o cliente abre "Receber": é a chave do QR Code, para o CPF nunca ir num código compartilhado (PIX-12). E-mail e telefone ficam para a tela extra "Minhas chaves".
 
 **`PixTransfer`**
 - Atributos: `id`, `endToEndId`, `payerAccountId`, `payeeAccountId`, `payeeKey` (tipo + valor), `payeeName`, `payeeDocumentMasked` (ex.: `•••.842.•••-09`), `amount`, `description` (até 140 caracteres), `status`, `failureReason`, `createdAt`, `expiresAt`, `authorizedAt`, `completedAt`
