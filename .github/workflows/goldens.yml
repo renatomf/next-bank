@@ -1,0 +1,43 @@
+name: Goldens
+
+# Redraws the app's golden images on the CI's own Linux, the only place they
+# are compared: Windows rasters text differently enough (~5% of pixels) to
+# fail any honest tolerance (v1.1.0 plan, task 1). Run it on a pull request
+# by adding the label "update-goldens" (or by hand, once it is on main),
+# download the artifact and commit the images on the branch.
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [labeled]
+
+# Least privilege (API-09): reads the code, writes nothing back.
+permissions:
+  contents: read
+
+jobs:
+  goldens:
+    name: Redraw goldens
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'update-goldens'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # The same Flutter as the CI's Mobile job, so the images match it.
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: 3.47.5
+          channel: stable
+          cache: true
+      - run: flutter pub get --enforce-lockfile
+      - run: flutter test --update-goldens --tags golden
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: goldens
+          path: apps/mobile/test/**/goldens/*.png
+          if-no-files-found: error
+          retention-days: 7
