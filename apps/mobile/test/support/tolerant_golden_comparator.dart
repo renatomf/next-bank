@@ -54,12 +54,15 @@ Future<void> loadAppFonts() async {
   const fonts = '../../packages/design_system/fonts';
   await load('packages/design_system/Sora', '$fonts/Sora-Variable.ttf');
   await load('packages/design_system/Manrope', '$fonts/Manrope-Variable.ttf');
+  // The icon font comes with Flutter. Its file name changes case between
+  // machines ("MaterialIcons-Regular.otf" on the Linux CI), so it is found
+  // by name, ignoring case.
   final flutterRoot = Platform.environment['FLUTTER_ROOT'];
-  if (flutterRoot != null) {
-    await load(
-      'MaterialIcons',
-      '$flutterRoot/bin/cache/artifacts/material_fonts/'
-          'materialicons-regular.otf',
-    );
-  }
+  final folder = Directory('$flutterRoot/bin/cache/artifacts/material_fonts');
+  if (flutterRoot == null || !folder.existsSync()) return;
+  final icons = folder.listSync().whereType<File>().where(
+    (file) =>
+        file.uri.pathSegments.last.toLowerCase() == 'materialicons-regular.otf',
+  );
+  if (icons.isNotEmpty) await load('MaterialIcons', icons.single.path);
 }
