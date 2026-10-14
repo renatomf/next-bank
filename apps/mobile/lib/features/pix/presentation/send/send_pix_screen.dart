@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/account/account_providers.dart';
+import 'package:next_bank/core/cpf_input_formatter.dart';
 import 'package:next_bank/features/pix/domain/pix_amount.dart';
 import 'package:next_bank/features/pix/presentation/pix_formats.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_controller.dart';
@@ -110,10 +111,9 @@ class _SendPixScreenState extends ConsumerState<SendPixScreen> {
                 label: 'Chave CPF',
                 keyboardType: TextInputType.number,
                 textInputAction: TextInputAction.search,
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.\-]')),
-                  LengthLimitingTextInputFormatter(14),
-                ],
+                // Digits only; the mask shows as they are typed (v1.1.0
+                // plan, task 1.1).
+                inputFormatters: const [CpfInputFormatter()],
                 errorText: state.keyError,
                 onChanged: controller.typeKey,
                 onSubmitted: (_) => controller.lookup(),
