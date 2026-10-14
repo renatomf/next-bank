@@ -36,10 +36,10 @@ void main() {
         ),
       );
 
-      expect(find.text('Saldo disponível · Conta •••• 0004'), findsOneWidget);
+      expect(find.text('Saldo disponível'), findsOneWidget);
+      expect(find.text('Conta •••• 0004'), findsOneWidget);
       expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
-      // Week 8 plan, V12: the word "Saldo" where the logo was.
-      expect(find.text('Saldo'), findsOneWidget);
+      // Week 8 plan, V12: the Home already shows the logo.
       expect(find.byType(NextLogo), findsNothing);
       // The full number never shows on the card.
       expect(find.textContaining('100000'), findsNothing);
@@ -148,7 +148,7 @@ void main() {
       );
 
       expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
-      expect(find.bySemanticsLabel('Saldo'), findsOneWidget);
+      expect(find.bySemanticsLabel('Saldo disponível'), findsOneWidget);
       expect(
         tester.getSemantics(find.bySemanticsLabel('Ocultar saldo')),
         isSemantics(label: 'Ocultar saldo', isButton: true),
@@ -178,59 +178,44 @@ void main() {
     });
   });
 
-  // The contrast below assumes the glass panel never rises above 76 px from
-  // the card's top, where the mint light has faded. This keeps it true.
-  testWidgets('keeps the glass panel at least 76 px below the top', (
-    tester,
-  ) async {
-    tester.platformDispatcher.textScaleFactorTestValue = 1.3;
-    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+  // v1.1.0 checkpoint (2026-10-14): the developer's green glass art fills
+  // the card, under a dark tint that keeps it the same dark card.
+  testWidgets('shows the glass art behind the balance', (tester) async {
     await tester.pumpWidget(
       host(
         BalanceCard(
           accountNumber: '100000-4',
-          balanceCents: 123456789,
+          balanceCents: 1000000,
           hidden: false,
           onToggleHidden: () {},
         ),
       ),
     );
 
-    final card = tester.getRect(find.byType(BalanceCard));
-    final panel = tester.getRect(find.byType(BackdropFilter));
-    expect(panel.top - card.top, greaterThanOrEqualTo(76));
-  });
-
-  // Brief, section 8: AA on every text, on the brightest grounds the glass
-  // panel can sit on. From the mockup's geometry: the mint light (75% at its
-  // center) has faded to at most ~37% where the panel's top can reach,
-  // checked at 40% with the silk sheen on top; the bottom-left light reaches
-  // the panel's corner at ~50%, checked at its full 65%.
-  group('balance card contrast (AA)', () {
-    final mintReachingPanel = Color.alphaBlend(
-      NbBalanceCardColors.sheen,
-      Color.alphaBlend(
-        NbBrand.mint.withValues(alpha: 0.4),
-        NbBalanceCardColors.baseTop,
+    final art = tester.widget<Image>(
+      find.descendant(
+        of: find.byType(BalanceCard),
+        matching: find.byType(Image),
       ),
     );
-    final bottomLight = Color.alphaBlend(
-      NbBalanceCardColors.glowBottom,
-      NbBalanceCardColors.baseBottom,
+    expect(art.image, NbArt.glass);
+  });
+
+  // Brief, section 8: AA on every text. Every text sits on glass (the
+  // account chip and the balance panel), over the tinted art; the check
+  // takes white as the art's brightest pixel, wherever the crop falls.
+  group('balance card contrast (AA)', () {
+    final background = Color.alphaBlend(
+      NbBalanceCardColors.glass,
+      Color.alphaBlend(NbBalanceCardColors.tint, const Color(0xFFFFFFFF)),
     );
-    for (final (ground, light) in [
-      ('the mint light reaching the panel', mintReachingPanel),
-      ('the bottom-left light', bottomLight),
+    for (final (name, color) in [
+      ('balance', NbBalanceCardColors.text),
+      ('label', NbBalanceCardColors.textMuted),
     ]) {
-      final background = Color.alphaBlend(NbBalanceCardColors.glass, light);
-      for (final (name, color) in [
-        ('balance', NbBalanceCardColors.text),
-        ('label', NbBalanceCardColors.textMuted),
-      ]) {
-        test('$name on the glass over $ground', () {
-          expect(contrast(color, background), greaterThanOrEqualTo(4.5));
-        });
-      }
+      test('$name on the glass over the brightest art', () {
+        expect(contrast(color, background), greaterThanOrEqualTo(4.5));
+      });
     }
   });
 }
