@@ -4,6 +4,7 @@ import 'package:next_bank/core/amount_integrity_interceptor.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/statement/http_statement_repository.dart';
 import 'package:next_bank/core/statement/statement_item.dart';
+import 'package:next_bank/core/statement/statement_query.dart';
 import 'package:nextbank_api/nextbank_api.dart';
 
 import '../../support/scripted_server.dart';
@@ -74,10 +75,46 @@ void main() {
       },
     });
 
-    final result = await repositoryFor(server).page('next-1');
+    final result = await repositoryFor(server).page(cursor: 'next-1');
 
     expect(result.items, isEmpty);
     expect(result.nextCursor, isNull);
+  });
+
+  // v1.1.0 plan, task 4.1: the filter and the search go to the server (X1).
+  for (final (filter, sent) in [
+    (StatementFilter.incoming, 'IN'),
+    (StatementFilter.outgoing, 'OUT'),
+    (StatementFilter.pix, 'PIX'),
+    (StatementFilter.receipt, 'RECEIPT'),
+  ]) {
+    test('asks the server for $filter as $sent, with the search', () async {
+      final server = ScriptedServer({
+        _path: (request) async {
+          expect(request.queryParameters['filter'], sent);
+          expect(request.queryParameters['q'], 'mari');
+          return JsonReply(200, page([]));
+        },
+      });
+
+      await repositoryFor(server).page(query: (filter: filter, search: 'mari'));
+
+      expect(server.received, hasLength(1));
+    });
+  }
+
+  test('sends neither filter nor search for the whole statement', () async {
+    final server = ScriptedServer({
+      _path: (request) async {
+        expect(request.queryParameters.containsKey('filter'), isFalse);
+        expect(request.queryParameters.containsKey('q'), isFalse);
+        return JsonReply(200, page([]));
+      },
+    });
+
+    await repositoryFor(server).page();
+
+    expect(server.received, hasLength(1));
   });
 
   test('reads a Pix received and the demo funding', () async {
@@ -114,7 +151,7 @@ void main() {
     });
 
     await expectLater(
-      repositoryFor(server).page('bad'),
+      repositoryFor(server).page(cursor: 'bad'),
       throwsA(
         isA<ApiRejected>().having(
           (f) => f.code,
