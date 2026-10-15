@@ -38,8 +38,15 @@ Future<void> openScan(
   await tester.pumpAndSettle();
 }
 
-/// The camera "reads" the code the fake holds.
+/// Turns the camera on, as the customer does on "Usar a câmera".
+Future<void> turnCameraOn(WidgetTester tester) async {
+  await tester.tap(find.bySemanticsLabel('Usar a câmera'));
+  await tester.pumpAndSettle();
+}
+
+/// The camera, once on, "reads" the code the fake holds.
 Future<void> readWithCamera(WidgetTester tester) async {
+  await turnCameraOn(tester);
   await tester.tap(find.text('Câmera de teste'));
   await tester.pumpAndSettle();
 }
@@ -120,9 +127,24 @@ void main() {
     final scanner = FakeQrScanner()..denied = true;
     clipboardHolds(tester, brunosCode());
     await openScan(tester, pix, scanner);
-    await tester.pumpAndSettle();
+    await turnCameraOn(tester);
 
     expect(find.textContaining('Sem acesso à câmera'), findsOneWidget);
+    expect(find.text('Câmera de teste'), findsNothing);
+
+    await tester.tap(find.bySemanticsLabel('Colar Copia e Cola'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ScanPixScreen), findsNothing);
+    expect(find.text('Mariana Costa'), findsOneWidget);
+  });
+
+  // MOB-10: the camera, and its permission, only when the customer asks.
+  testWidgets('keeps the camera off until "Usar a câmera"', (tester) async {
+    final pix = FakePixRepository();
+    clipboardHolds(tester, brunosCode());
+    await openScan(tester, pix, FakeQrScanner());
+
     expect(find.text('Câmera de teste'), findsNothing);
 
     await tester.tap(find.bySemanticsLabel('Colar Copia e Cola'));
