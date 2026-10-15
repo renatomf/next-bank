@@ -227,7 +227,7 @@ String _code({
 // anything (MOB-06).
 void parseBrCodeTests() {
   group('parseBrCode', () {
-    test("reads the key, the amount and the message of a next bank code", () {
+    test('reads the key, the amount and the message of a next bank code', () {
       final payment = parseBrCode(
         staticBrCode(
           key: _key,
