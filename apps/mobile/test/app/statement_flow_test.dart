@@ -412,7 +412,7 @@ void main() {
       await openHome(tester, FakeStatementRepository());
       await openStatement(tester);
 
-      expect(find.byType(StatementBalanceCard), findsOneWidget);
+      expect(find.byType(BalanceCard), findsOneWidget);
       for (final action in ['Exportar', 'Pagar', 'Fazer Pix']) {
         expect(find.bySemanticsLabel(action), findsWidgets);
       }
@@ -424,7 +424,7 @@ void main() {
 
       await tester.tap(
         find.descendant(
-          of: find.byType(StatementBalanceCard),
+          of: find.byType(BalanceCard),
           matching: find.bySemanticsLabel('Exportar'),
         ),
       );
@@ -440,7 +440,7 @@ void main() {
 
       await tester.tap(
         find.descendant(
-          of: find.byType(StatementBalanceCard),
+          of: find.byType(BalanceCard),
           matching: find.bySemanticsLabel('Fazer Pix'),
         ),
       );
@@ -534,7 +534,7 @@ void main() {
 
       expect(
         find.descendant(
-          of: find.byType(StatementBalanceCard),
+          of: find.byType(BalanceCard),
           matching: find.bySemanticsLabel('Saldo oculto'),
         ),
         findsOneWidget,
@@ -546,7 +546,7 @@ void main() {
       expect(find.widgetWithText(ScreenHeader, 'Extrato'), findsOneWidget);
       await tester.tap(
         find.descendant(
-          of: find.byType(StatementBalanceCard),
+          of: find.byType(BalanceCard),
           matching: find.bySemanticsLabel('Mostrar saldo'),
         ),
       );
@@ -554,7 +554,7 @@ void main() {
 
       expect(
         find.descendant(
-          of: find.byType(StatementBalanceCard),
+          of: find.byType(BalanceCard),
           matching: find.bySemanticsLabel('Saldo oculto'),
         ),
         findsNothing,

@@ -12,102 +12,26 @@ Widget host(Widget child) => MaterialApp(
 // The redesigned statement (v1.1.0 plan, task 4.1): the balance card in the
 // glass style with its actions, and the filter pills.
 void main() {
-  group('StatementBalanceCard', () {
+  // The statement uses the Home's card, with its proportions, plus a row of
+  // actions below the glass panel (developer's call at the checkpoint).
+  group('BalanceCard with actions', () {
     var pressed = <String>[];
-    var toggles = 0;
-    Widget card({int? cents = 1268042, bool hidden = false}) =>
-        StatementBalanceCard(
-          accountNumber: cents == null ? null : '100000-4',
-          balanceCents: cents,
-          hidden: hidden,
-          onToggleHidden: () => toggles++,
-          actions: [
-            for (final label in ['Exportar', 'Pagar', 'Fazer Pix'])
-              (
-                icon: Icons.ios_share,
-                label: label,
-                onPressed: () => pressed.add(label),
-              ),
-          ],
-        );
+    Widget card() => BalanceCard(
+      accountNumber: '100000-4',
+      balanceCents: 1268042,
+      hidden: false,
+      onToggleHidden: () {},
+      actions: [
+        for (final label in ['Exportar', 'Pagar', 'Fazer Pix'])
+          (
+            icon: Icons.ios_share,
+            label: label,
+            onPressed: () => pressed.add(label),
+          ),
+      ],
+    );
 
-    setUp(() {
-      pressed = <String>[];
-      toggles = 0;
-    });
-
-    // As on the Home's card (developer's call at the checkpoint): "Saldo" and
-    // the eye on the card's top line.
-    testWidgets('has "Saldo" and the eye on its top line', (tester) async {
-      await tester.pumpWidget(host(card()));
-
-      expect(find.text('Saldo'), findsOneWidget);
-      await tester.tap(find.bySemanticsLabel('Ocultar saldo'));
-
-      expect(toggles, 1);
-    });
-
-    testWidgets('offers to show the balance while hidden', (tester) async {
-      await tester.pumpWidget(host(card(hidden: true)));
-
-      expect(find.bySemanticsLabel('Mostrar saldo'), findsOneWidget);
-    });
-
-    // As on the Home's card (developer's call at the checkpoint): the
-    // available balance with the masked account, aligned to the start.
-    testWidgets('shows the available balance and the masked account', (
-      tester,
-    ) async {
-      await tester.pumpWidget(host(card()));
-
-      expect(find.text('Saldo disponível · Conta •••• 0004'), findsOneWidget);
-      expect(find.bySemanticsLabel(r'R$ 12.680,42'), findsOneWidget);
-      expect(find.byType(GlassArt), findsOneWidget);
-    });
-
-    // As on the Home's card (developer's call at the checkpoint): the
-    // balance sits on the frosted glass panel, the actions outside it.
-    testWidgets('puts the label and the balance on the glass panel', (
-      tester,
-    ) async {
-      await tester.pumpWidget(host(card()));
-
-      final glass = find.byType(BackdropFilter);
-      expect(glass, findsOneWidget);
-      expect(
-        find.descendant(
-          of: glass,
-          matching: find.text('Saldo disponível · Conta •••• 0004'),
-        ),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(
-          of: glass,
-          matching: find.bySemanticsLabel(r'R$ 12.680,42'),
-        ),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(of: glass, matching: find.bySemanticsLabel('Pagar')),
-        findsNothing,
-      );
-    });
-
-    testWidgets('hides the balance when the customer hid it (MOB-05)', (
-      tester,
-    ) async {
-      await tester.pumpWidget(host(card(hidden: true)));
-
-      expect(find.textContaining('12.680'), findsNothing);
-      expect(find.bySemanticsLabel('Saldo oculto'), findsOneWidget);
-    });
-
-    testWidgets('shows a placeholder while the balance loads', (tester) async {
-      await tester.pumpWidget(host(card(cents: null)));
-
-      expect(find.bySemanticsLabel('Carregando saldo'), findsOneWidget);
-    });
+    setUp(() => pressed = <String>[]);
 
     testWidgets('runs each action, in order', (tester) async {
       await tester.pumpWidget(host(card()));
@@ -119,6 +43,20 @@ void main() {
       expect(pressed, ['Exportar', 'Pagar', 'Fazer Pix']);
     });
 
+    testWidgets('keeps the actions below the glass panel', (tester) async {
+      await tester.pumpWidget(host(card()));
+
+      final glass = find.byType(BackdropFilter);
+      expect(
+        find.descendant(of: glass, matching: find.bySemanticsLabel('Pagar')),
+        findsNothing,
+      );
+      expect(
+        tester.getTopLeft(find.bySemanticsLabel('Pagar')).dy,
+        greaterThan(tester.getBottomLeft(glass).dy),
+      );
+    });
+
     testWidgets('fits the actions at 1.3x text', (tester) async {
       tester.platformDispatcher.textScaleFactorTestValue = 1.3;
       addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
@@ -126,6 +64,23 @@ void main() {
       await tester.pumpWidget(host(card()));
 
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('shows no actions on the Home, which passes none', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(
+          BalanceCard(
+            accountNumber: '100000-4',
+            balanceCents: 1268042,
+            hidden: false,
+            onToggleHidden: () {},
+          ),
+        ),
+      );
+
+      expect(find.bySemanticsLabel('Pagar'), findsNothing);
     });
   });
 
