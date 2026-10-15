@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/statement/statement_controller.dart';
-import 'package:next_bank/core/statement/statement_query.dart';
 import 'package:next_bank/core/statement/statement_item.dart';
+import 'package:next_bank/core/statement/statement_query.dart';
 
 import '../../support/fake_statement_repository.dart';
 
