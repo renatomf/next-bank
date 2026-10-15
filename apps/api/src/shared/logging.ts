@@ -27,7 +27,7 @@ export const REDACT_PATHS = SENSITIVE_KEYS.flatMap((key) => [key, `*.${key}`, `*
 /**
  * The request as logged, with the fields of Fastify's default serializer
  * but the path without its query string, which can carry a searched name
- * or a statement cursor (READ-05).
+ * or a statement cursor (READ-06).
  */
 export function requestForLog(request: FastifyRequest): {
   method: string;

@@ -74,9 +74,9 @@ describe('logs', () => {
     );
   });
 
-  // READ-05 (v1.1.0 plan, task 4.1): a query string can carry a searched
+  // READ-06 (v1.1.0 plan, task 4.1): a query string can carry a searched
   // name or a cursor; the request log keeps only the path.
-  it('logs the path of a request without its query string (READ-05)', async () => {
+  it('logs the path of a request without its query string (READ-06)', async () => {
     app.get('/test/query', { config: { public: true } }, () => ({ ok: true }));
 
     await app.inject({ method: 'GET', url: '/test/query?q=Fake%20Searched%20Name&cursor=abc' });

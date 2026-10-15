@@ -66,7 +66,7 @@ function isRealInstant(time: string): boolean {
 }
 
 // No account (READ-01) and no page size (READ-04): only the cursor and, since
-// v1.1.0 (task 4.1), one filter and part of a name, never logged (READ-05).
+// v1.1.0 (task 4.1), one filter and part of a name, never logged (READ-06).
 const StatementQuerySchema = z.strictObject({
   cursor: z
     .string()
