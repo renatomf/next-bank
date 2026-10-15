@@ -5,6 +5,13 @@ import 'package:design_system/src/components/icon_circle_button.dart';
 import 'package:design_system/src/tokens.dart';
 import 'package:flutter/material.dart';
 
+/// One action at the foot of a [BalanceCard].
+typedef BalanceCardAction = ({
+  IconData icon,
+  String label,
+  VoidCallback onPressed,
+});
+
 /// The Home's signature card (brief, section 2.3; mockups home-dark and
 /// home-light, whose CSS gives the layout): always dark, the mint glass art
 /// under a dark tint (v1.1.0 checkpoint, 2026-10-14), and the available
@@ -18,12 +25,17 @@ class BalanceCard extends StatelessWidget {
     required this.hidden,
     required this.onToggleHidden,
     this.onStatement,
+    this.actions = const [],
     super.key,
   });
 
   /// Opens the statement from a line below the balance; null leaves the
   /// line out (S21 checkpoint of v1.1.0).
   final VoidCallback? onStatement;
+
+  /// Actions in a row below the balance, as on the statement (v1.1.0 plan,
+  /// task 4.1); the Home passes none.
+  final List<BalanceCardAction> actions;
 
   /// Height of the card in the mockup; larger text grows it.
   static const double height = 190;
@@ -125,17 +137,21 @@ class BalanceCard extends StatelessWidget {
               // padding keeps it clear of the logo row as text grows.
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 76, 12, 12),
-                child: switch (onStatement) {
-                  null => panel,
-                  final onStatement => Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      panel,
-                      _StatementLink(onPressed: onStatement),
-                    ],
-                  ),
-                },
+                child: onStatement == null && actions.isEmpty
+                    ? panel
+                    : Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          panel,
+                          if (onStatement case final onStatement?)
+                            _StatementLink(onPressed: onStatement),
+                          if (actions.isNotEmpty) ...[
+                            const SizedBox(height: NbSpace.sm),
+                            _Actions(actions: actions),
+                          ],
+                        ],
+                      ),
               ),
             ],
           ),
@@ -175,6 +191,72 @@ class _StatementLink extends StatelessWidget {
               style: NbType.bodyText.copyWith(color: NbBalanceCardColors.text),
             ),
             const Icon(Icons.chevron_right, color: NbBalanceCardColors.text),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+/// The actions in a row, split by thin lines, on the glass: the card's lower
+/// half is the lighter tint, where white text alone would miss AA.
+class _Actions extends StatelessWidget {
+  const new({required this.actions});
+
+  final List<BalanceCardAction> actions;
+
+  @override
+  Widget build(BuildContext context) => GlassPanel(
+    padding: const EdgeInsets.symmetric(vertical: NbSpace.xs),
+    child: IntrinsicHeight(
+      child: Row(
+        children: [
+          for (final (index, action) in actions.indexed) ...[
+            if (index > 0)
+              const VerticalDivider(
+                width: 1,
+                thickness: 1,
+                indent: NbSpace.sm,
+                endIndent: NbSpace.sm,
+                color: NbBalanceCardColors.buttonBorder,
+              ),
+            Expanded(child: _Action(action: action)),
+          ],
+        ],
+      ),
+    ),
+  );
+}
+
+class _Action extends StatelessWidget {
+  const new({required this.action});
+
+  final BalanceCardAction action;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    container: true,
+    button: true,
+    label: action.label,
+    excludeSemantics: true,
+    child: InkWell(
+      onTap: action.onPressed,
+      borderRadius: BorderRadius.circular(NbRadius.block),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: NbSpace.sm),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(action.icon, size: 22, color: NbBalanceCardColors.text),
+            const SizedBox(height: NbSpace.xs),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                action.label,
+                maxLines: 1,
+                style: NbType.caption.copyWith(color: NbBalanceCardColors.text),
+              ),
+            ),
           ],
         ),
       ),

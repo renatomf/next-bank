@@ -43,13 +43,29 @@ void main() {
       expect(pressed, ['Exportar', 'Pagar', 'Fazer Pix']);
     });
 
-    testWidgets('keeps the actions below the glass panel', (tester) async {
+    testWidgets('keeps the actions below the balance, on their own glass', (
+      tester,
+    ) async {
       await tester.pumpWidget(host(card()));
 
-      final glass = find.byType(BackdropFilter);
+      // The balance's glass; the actions sit on a glass of their own, which
+      // keeps their text AA over the card's lighter lower half.
+      final glass = find
+          .ancestor(
+            of: find.bySemanticsLabel(r'R$ 12.680,42'),
+            matching: find.byType(BackdropFilter),
+          )
+          .first;
       expect(
         find.descendant(of: glass, matching: find.bySemanticsLabel('Pagar')),
         findsNothing,
+      );
+      expect(
+        find.ancestor(
+          of: find.bySemanticsLabel('Pagar'),
+          matching: find.byType(BackdropFilter),
+        ),
+        findsOneWidget,
       );
       expect(
         tester.getTopLeft(find.bySemanticsLabel('Pagar')).dy,

@@ -70,7 +70,7 @@ class _StatementScreenState extends ConsumerState<StatementScreen> {
     final account = ref.watch(accountProvider).value;
     toastFailedRefresh(context, ref, filteredStatementProvider);
     final header = [
-      StatementBalanceCard(
+      BalanceCard(
         accountNumber: account?.number,
         balanceCents: account?.availableBalanceCents,
         hidden: hidden,

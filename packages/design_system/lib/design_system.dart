@@ -32,7 +32,6 @@ export 'src/components/screen_header.dart';
 export 'src/components/secondary_button.dart';
 export 'src/components/secure_hint.dart';
 export 'src/components/skeleton.dart';
-export 'src/components/statement_balance_card.dart';
 export 'src/components/status_badge.dart';
 export 'src/components/transaction_item.dart';
 export 'src/theme.dart';
