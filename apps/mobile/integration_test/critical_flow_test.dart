@@ -97,7 +97,11 @@ void main() {
     expect(balanceOnHome(tester), before - 100);
 
     // The statement shows the Pix sent, and its detail opens the receipt.
-    await scrollAndTap(tester, HomeScreen, find.text('Ver extrato'));
+    await scrollAndTap(
+      tester,
+      HomeScreen,
+      find.bySemanticsLabel('Ver extrato'),
+    );
     await waitFor(tester, find.text('Pix enviado'));
     await tester.tap(find.text('Pix enviado').first);
     await waitFor(tester, find.text('Ver comprovante'));

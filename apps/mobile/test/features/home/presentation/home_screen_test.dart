@@ -27,6 +27,7 @@ Future<void> pumpHome(
   VoidCallback? onPix,
   VoidCallback? onPay,
   VoidCallback? onReceive,
+  VoidCallback? onStatement,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -48,7 +49,7 @@ Future<void> pumpHome(
           onPix: onPix ?? () {},
           onPay: onPay ?? () {},
           onReceive: onReceive ?? () {},
-          onStatement: () {},
+          onStatement: onStatement ?? () {},
           onMovement: (_) {},
         ),
       ),
@@ -144,6 +145,25 @@ void main() {
 
     expect(paid, 1);
     expect(find.widgetWithText(NbToast, 'Em breve.'), findsNothing);
+  });
+
+  // S21 checkpoint: the statement opens from the balance card, and the
+  // latest movements no longer repeat the link.
+  testWidgets('opens the statement from the balance card', (tester) async {
+    var opened = 0;
+    await pumpHome(tester, onStatement: () => opened++);
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(BalanceCard),
+        matching: find.bySemanticsLabel('Ver extrato'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(opened, 1);
+    expect(find.widgetWithText(TextButton, 'Ver extrato'), findsNothing);
   });
 
   // v1.1.0 plan, task 3, at the S21 checkpoint: "Receber" beside "Pagar".

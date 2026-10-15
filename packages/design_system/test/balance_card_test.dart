@@ -24,6 +24,62 @@ double contrast(Color a, Color b) {
 // glass panel and an eye to hide it (MOB-05).
 void main() {
   group('BalanceCard', () {
+    // S21 checkpoint of v1.1.0: the statement opens from inside the card,
+    // "Extrato" and a caret on one line, both white, below the balance.
+    testWidgets('opens the statement from a line below the balance', (
+      tester,
+    ) async {
+      var opened = 0;
+      await tester.pumpWidget(
+        host(
+          BalanceCard(
+            accountNumber: '100000-4',
+            balanceCents: 1000000,
+            hidden: false,
+            onToggleHidden: () {},
+            onStatement: () => opened++,
+          ),
+        ),
+      );
+
+      final word = tester.widget<Text>(find.text('Extrato'));
+      final caret = tester.widget<Icon>(find.byIcon(Icons.chevron_right));
+      expect(word.style?.color, NbBalanceCardColors.text);
+      expect(caret.color, NbBalanceCardColors.text);
+      // Justified apart: the word at the start, the caret at the end.
+      expect(
+        tester.getTopLeft(find.text('Extrato')).dx,
+        lessThan(tester.getTopLeft(find.byIcon(Icons.chevron_right)).dx - 100),
+      );
+      expect(
+        tester.getTopLeft(find.text('Extrato')).dy,
+        greaterThan(
+          tester.getTopLeft(find.textContaining('Saldo disponível')).dy,
+        ),
+      );
+
+      await tester.tap(find.bySemanticsLabel('Ver extrato'));
+
+      expect(opened, 1);
+    });
+
+    testWidgets('leaves the statement line out without where it goes', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(
+          BalanceCard(
+            accountNumber: '100000-4',
+            balanceCents: 1000000,
+            hidden: false,
+            onToggleHidden: () {},
+          ),
+        ),
+      );
+
+      expect(find.text('Extrato'), findsNothing);
+    });
+
     testWidgets('shows the available balance and the masked account', (
       tester,
     ) async {

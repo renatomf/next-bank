@@ -111,7 +111,7 @@ void main() {
   testWidgets('"Ver extrato" opens the statement destination', (tester) async {
     await openHome(tester);
 
-    await tester.tap(find.text('Ver extrato'));
+    await tester.tap(find.bySemanticsLabel('Ver extrato'));
     await tester.pumpAndSettle();
 
     expect(find.byType(StatementScreen), findsOneWidget);
