@@ -82,11 +82,13 @@ class StatementBalanceCard extends StatelessWidget {
               ),
             ),
             Padding(
+              // Compact (developer's call at the checkpoint): the list below
+              // is what the screen is for.
               padding: const EdgeInsets.fromLTRB(
                 NbSpace.screen,
-                NbSpace.xl,
-                NbSpace.screen,
                 NbSpace.lg,
+                NbSpace.screen,
+                NbSpace.sm,
               ),
               child: Column(
                 children: [
@@ -117,7 +119,7 @@ class StatementBalanceCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: NbSpace.lg),
+                  const SizedBox(height: NbSpace.md),
                   GlassPanel(
                     child: BalanceAmount(
                       accountNumber: accountNumber,
@@ -125,7 +127,7 @@ class StatementBalanceCard extends StatelessWidget {
                       hidden: hidden,
                     ),
                   ),
-                  const SizedBox(height: NbSpace.xl),
+                  const SizedBox(height: NbSpace.sm),
                   IntrinsicHeight(
                     child: Row(
                       children: [
@@ -168,18 +170,20 @@ class _Action extends StatelessWidget {
       onTap: action.onPressed,
       borderRadius: BorderRadius.circular(NbRadius.block),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: NbSpace.sm),
+        padding: const EdgeInsets.symmetric(vertical: NbSpace.xs),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(action.icon, size: 22, color: NbBalanceCardColors.text),
-            const SizedBox(height: NbSpace.xs),
+            Icon(action.icon, size: 18, color: NbBalanceCardColors.text),
+            const SizedBox(height: 2),
             FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
                 action.label,
                 maxLines: 1,
-                style: NbType.caption.copyWith(color: NbBalanceCardColors.text),
+                style: NbType.cardLabel.copyWith(
+                  color: NbBalanceCardColors.text,
+                ),
               ),
             ),
           ],
