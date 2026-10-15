@@ -400,6 +400,17 @@ void main() {
       expect(stateOf(container).payee, isNull);
     });
 
+    // "Usar chave CPF" clears the field, which was already empty.
+    test('gives way to an empty key, back to typing a CPF', () async {
+      final (container, _) = setUpSend();
+      await controllerOf(container).readQrCode(brunosCode(amountCents: 2500));
+
+      controllerOf(container).typeKey('');
+
+      expect(stateOf(container).qrKey, isNull);
+      expect(stateOf(container).amountLocked, isFalse);
+    });
+
     test('refuses a changed code without asking the server', () async {
       final (container, repository) = setUpSend();
       final valid = brunosCode(amountCents: 2500);
