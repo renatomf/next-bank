@@ -14,11 +14,13 @@ Widget host(Widget child) => MaterialApp(
 void main() {
   group('StatementBalanceCard', () {
     var pressed = <String>[];
+    var toggles = 0;
     Widget card({int? cents = 1268042, bool hidden = false}) =>
         StatementBalanceCard(
           accountNumber: cents == null ? null : '100000-4',
           balanceCents: cents,
           hidden: hidden,
+          onToggleHidden: () => toggles++,
           actions: [
             for (final label in ['Exportar', 'Pagar', 'Fazer Pix'])
               (
@@ -29,7 +31,27 @@ void main() {
           ],
         );
 
-    setUp(() => pressed = <String>[]);
+    setUp(() {
+      pressed = <String>[];
+      toggles = 0;
+    });
+
+    // As on the Home's card (developer's call at the checkpoint): "Saldo" and
+    // the eye on the card's top line.
+    testWidgets('has "Saldo" and the eye on its top line', (tester) async {
+      await tester.pumpWidget(host(card()));
+
+      expect(find.text('Saldo'), findsOneWidget);
+      await tester.tap(find.bySemanticsLabel('Ocultar saldo'));
+
+      expect(toggles, 1);
+    });
+
+    testWidgets('offers to show the balance while hidden', (tester) async {
+      await tester.pumpWidget(host(card(hidden: true)));
+
+      expect(find.bySemanticsLabel('Mostrar saldo'), findsOneWidget);
+    });
 
     // As on the Home's card (developer's call at the checkpoint): the
     // available balance with the masked account, aligned to the start.

@@ -540,9 +540,11 @@ void main() {
         findsOneWidget,
       );
 
+      // The eye lives in the card now, as on the Home: the top has only back.
+      expect(find.bySemanticsLabel('Mostrar saldo'), findsOneWidget);
       await tester.tap(
         find.descendant(
-          of: find.byType(StatementScreen),
+          of: find.byType(StatementBalanceCard),
           matching: find.bySemanticsLabel('Mostrar saldo'),
         ),
       );
