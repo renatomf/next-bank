@@ -126,7 +126,7 @@ class SendPixController extends Notifier<SendPixState> {
 
   /// The key field changed: the payee found for the old key no longer holds.
   void typeKey(String key) {
-    if (key == state.key) return;
+    if (key == state.key && state.qrKey == null) return;
     // A typed key gives up the QR Code, and with it the fixed amount.
     state = state._with(
       key: key,
