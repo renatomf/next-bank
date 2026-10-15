@@ -7,9 +7,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/scan/qr_scanner.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_controller.dart';
 
-/// Paying by QR Code (v1.1.0 plan, task 4): the camera, or the "Copia e
-/// Cola" pasted. A valid code fills the Pix screen beneath and goes back to
-/// it; nothing read ever opens a link or another screen (MOB-06).
+/// Paying by QR Code (v1.1.0 plan, task 4): the camera, turned on only when
+/// the customer asks, or the "Copia e Cola" pasted. A valid code fills the
+/// Pix screen beneath and goes back to it; nothing read ever opens a link or
+/// another screen (MOB-06).
 class ScanPixScreen extends ConsumerStatefulWidget {
   /// Creates the screen; the router says where back and a read code go.
   const new({required this.onBack, required this.onRead, super.key});
@@ -26,6 +27,8 @@ class ScanPixScreen extends ConsumerStatefulWidget {
 
 class _ScanPixScreenState extends ConsumerState<ScanPixScreen> {
   String? _error;
+  // The camera, and the permission it asks, only on "Usar a câmera" (MOB-10).
+  bool _cameraOn = false;
   bool _cameraDenied = false;
   bool _done = false;
 
@@ -71,6 +74,11 @@ class _ScanPixScreenState extends ConsumerState<ScanPixScreen> {
                   message:
                       'Sem acesso à câmera. Você pode colar o código '
                       'Copia e Cola.',
+                )
+              else if (!_cameraOn)
+                PrimaryButton(
+                  label: 'Usar a câmera',
+                  onPressed: () => setState(() => _cameraOn = true),
                 )
               else ...[
                 ClipRRect(
