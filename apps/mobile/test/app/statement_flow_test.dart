@@ -540,8 +540,10 @@ void main() {
         findsOneWidget,
       );
 
-      // The eye lives in the card now, as on the Home: the top has only back.
+      // The eye lives in the card now, as on the Home; the top has back and
+      // "Extrato" centered.
       expect(find.bySemanticsLabel('Mostrar saldo'), findsOneWidget);
+      expect(find.widgetWithText(ScreenHeader, 'Extrato'), findsOneWidget);
       await tester.tap(
         find.descendant(
           of: find.byType(StatementBalanceCard),

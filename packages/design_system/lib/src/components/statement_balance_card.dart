@@ -1,6 +1,7 @@
 import 'package:design_system/src/components/balance_amount.dart';
 import 'package:design_system/src/components/glass_art.dart';
 import 'package:design_system/src/components/glass_panel.dart';
+import 'package:design_system/src/components/icon_circle_button.dart';
 import 'package:design_system/src/tokens.dart';
 import 'package:flutter/material.dart';
 
@@ -22,6 +23,7 @@ class StatementBalanceCard extends StatelessWidget {
     required this.accountNumber,
     required this.balanceCents,
     required this.hidden,
+    required this.onToggleHidden,
     required this.actions,
     super.key,
   });
@@ -34,6 +36,9 @@ class StatementBalanceCard extends StatelessWidget {
 
   /// True while the customer chose to hide the balance (MOB-05).
   final bool hidden;
+
+  /// Shows or hides the balance (MOB-05).
+  final VoidCallback onToggleHidden;
 
   /// The actions at the foot, left to right.
   final List<StatementCardAction> actions;
@@ -85,6 +90,34 @@ class StatementBalanceCard extends StatelessWidget {
               ),
               child: Column(
                 children: [
+                  // "Saldo" and the eye, as on the Home's card.
+                  Row(
+                    children: [
+                      Semantics(
+                        container: true,
+                        header: true,
+                        child: Text(
+                          'Saldo',
+                          style: NbType.sectionTitle.copyWith(
+                            color: NbBalanceCardColors.text,
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      IconCircleButton(
+                        icon: hidden
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        label: hidden ? 'Mostrar saldo' : 'Ocultar saldo',
+                        onPressed: onToggleHidden,
+                        background: NbBalanceCardColors.button,
+                        foreground: NbBalanceCardColors.text,
+                        borderColor: NbBalanceCardColors.buttonBorder,
+                        iconSize: 18,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: NbSpace.lg),
                   GlassPanel(
                     child: BalanceAmount(
                       accountNumber: accountNumber,

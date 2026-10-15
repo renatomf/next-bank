@@ -14,7 +14,7 @@ import 'package:next_bank/core/statement/statement_query.dart';
 import 'package:next_bank/core/statement/statement_texts.dart';
 
 /// The statement (screen 11, redesigned in v1.1.0, task 4.1): back and the
-/// balance eye on top, the balance card with its actions, the filters, the
+/// title on top, the balance card with its actions, the filters, the
 /// search by name and the movements, newest first, the next page as the
 /// customer nears the end, pull to refresh. Filters and search run on the
 /// server (X1).
@@ -74,6 +74,8 @@ class _StatementScreenState extends ConsumerState<StatementScreen> {
         accountNumber: account?.number,
         balanceCents: account?.availableBalanceCents,
         hidden: hidden,
+        // The same choice as the Home's and the Pix's (MOB-05).
+        onToggleHidden: ref.read(balanceHiddenProvider.notifier).toggle,
         actions: [
           (
             icon: Icons.ios_share,
@@ -102,33 +104,11 @@ class _StatementScreenState extends ConsumerState<StatementScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.all(NbSpace.screen),
-                child: Row(
-                  children: [
-                    IconCircleButton(
-                      icon: Icons.arrow_back,
-                      label: 'Voltar',
-                      onPressed: widget.onBack,
-                    ),
-                    // No title on screen (developer's call); screen readers
-                    // still hear where they are.
-                    Expanded(
-                      child: Semantics(
-                        header: true,
-                        label: 'Extrato',
-                        child: const SizedBox(height: 1),
-                      ),
-                    ),
-                    // The same choice as the Home's and the Pix's (MOB-05).
-                    IconCircleButton(
-                      icon: hidden
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                      label: hidden ? 'Mostrar saldo' : 'Ocultar saldo',
-                      onPressed: ref
-                          .read(balanceHiddenProvider.notifier)
-                          .toggle,
-                    ),
-                  ],
+                child: ScreenHeader(
+                  title: 'Extrato',
+                  icon: Icons.arrow_back,
+                  iconLabel: 'Voltar',
+                  onPressed: widget.onBack,
                 ),
               ),
               Expanded(
