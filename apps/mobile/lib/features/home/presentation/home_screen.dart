@@ -19,6 +19,7 @@ class HomeScreen extends ConsumerWidget {
   const new({
     required this.onPix,
     required this.onPay,
+    required this.onReceive,
     required this.onStatement,
     required this.onMovement,
     super.key,
@@ -29,6 +30,9 @@ class HomeScreen extends ConsumerWidget {
 
   /// Opens the reading of a Pix QR Code (v1.1.0 plan, task 4).
   final VoidCallback onPay;
+
+  /// Opens "Receber", with the customer's QR Code (v1.1.0 plan, task 3).
+  final VoidCallback onReceive;
 
   /// Opens the statement.
   final VoidCallback onStatement;
@@ -66,7 +70,7 @@ class HomeScreen extends ConsumerWidget {
                 const SizedBox(height: 22),
                 const _HelpRow(),
                 const SizedBox(height: NbSpace.xl),
-                _Shortcuts(onPix: onPix, onPay: onPay),
+                _Shortcuts(onPix: onPix, onPay: onPay, onReceive: onReceive),
                 const SizedBox(height: 28),
                 const _Balance(),
                 const SizedBox(height: 28),
@@ -169,14 +173,23 @@ class _HelpField extends StatelessWidget {
   }
 }
 
-/// The Home's row of four (home-dark mockup): the Pix opens its area and
-/// "Pagar" reads a Pix QR Code (v1.1.0); the others come with their screens
-/// and say so (week 8 plan, V7).
+/// The Home's shortcuts (home-dark mockup), scrolling sideways since the
+/// S21 checkpoint of v1.1.0: the Pix opens its area, "Pagar" reads a Pix QR
+/// Code and "Receber" shows the customer's; the others come with their
+/// screens and say so (week 8 plan, V7).
 class _Shortcuts extends StatelessWidget {
-  const new({required this.onPix, required this.onPay});
+  const new({
+    required this.onPix,
+    required this.onPay,
+    required this.onReceive,
+  });
 
   final VoidCallback onPix;
   final VoidCallback onPay;
+  final VoidCallback onReceive;
+
+  /// Every tile's width: one size for all (week 8 plan, V13).
+  static const double _tileWidth = 84;
 
   @override
   Widget build(BuildContext context) {
@@ -189,6 +202,11 @@ class _Shortcuts extends StatelessWidget {
         onPressed: onPay,
       ),
       ActionTile(
+        icon: const Icon(Icons.qr_code_2),
+        label: 'Receber',
+        onPressed: onReceive,
+      ),
+      ActionTile(
         icon: const Icon(Icons.swap_horiz),
         label: 'Transferir',
         onPressed: soon,
@@ -199,16 +217,16 @@ class _Shortcuts extends StatelessWidget {
         onPressed: soon,
       ),
     ];
-    // One height for the four, the tallest one's (week 8 plan, V13).
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final (index, tile) in tiles.indexed) ...[
-            if (index > 0) const SizedBox(width: NbSpace.sm),
-            Expanded(child: tile),
-          ],
-        ],
+    // A sideways list needs a fixed height: the tile's, grown with the
+    // system's text size so larger labels still fit.
+    return SizedBox(
+      height: MediaQuery.textScalerOf(context).scale(ActionTile.height),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: tiles.length,
+        separatorBuilder: (_, _) => const SizedBox(width: NbSpace.sm),
+        itemBuilder: (_, index) =>
+            SizedBox(width: _tileWidth, child: tiles[index]),
       ),
     );
   }

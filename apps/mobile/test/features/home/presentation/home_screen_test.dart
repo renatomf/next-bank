@@ -163,11 +163,14 @@ void main() {
     await pumpHome(tester);
     await tester.pumpAndSettle();
 
+    // The nearest list above the tiles; the Home's own list scrolls down.
     final list = tester.widget<ListView>(
-      find.ancestor(
-        of: find.widgetWithText(ActionTile, 'Área Pix'),
-        matching: find.byType(ListView),
-      ),
+      find
+          .ancestor(
+            of: find.widgetWithText(ActionTile, 'Área Pix'),
+            matching: find.byType(ListView),
+          )
+          .first,
     );
     expect(list.scrollDirection, Axis.horizontal);
     final labels = tester

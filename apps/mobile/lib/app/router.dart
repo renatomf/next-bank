@@ -97,6 +97,7 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
                 unawaited(context.push(AppRoutes.pix));
                 unawaited(context.push(AppRoutes.pixScan));
               },
+              onReceive: () => context.push(AppRoutes.pixReceive),
               onStatement: () => context.go(AppRoutes.statement),
               onMovement: (id) => context.push(AppRoutes.statementItem(id)),
             ),
