@@ -13,6 +13,18 @@ export interface StatementPosition {
 }
 
 /** One posting of a customer account, with the entry it belongs to. */
+/**
+ * What narrows a statement page (v1.1.0 plan, task 4.1): one kind at a time
+ * and part of the counterparty's name, both optional.
+ */
+export interface StatementFilter {
+  kind: 'IN' | 'OUT' | 'PIX' | 'RECEIPT' | null;
+  search: string | null;
+}
+
+/** No filter: the whole statement. */
+export const NO_STATEMENT_FILTER: StatementFilter = { kind: null, search: null };
+
 export interface StatementRow {
   postingId: string;
   /** createdAt as text, exact: what the next page continues from. */
@@ -47,6 +59,7 @@ export interface LedgerRepository {
     ledgerAccountId: string,
     after: StatementPosition | null,
     limit: number,
+    filter: StatementFilter,
   ): Promise<StatementRow[]>;
 }
 

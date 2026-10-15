@@ -2,7 +2,13 @@ import type { Clock, IdGenerator, Transaction } from '../../../shared/applicatio
 import type { Money } from '../../../shared/domain/money.ts';
 import { customerCodeOf, LedgerAccount } from '../domain/ledger-account.ts';
 import type { PostJournalEntry } from './post-journal-entry.ts';
-import type { LedgerRepositoryFactory, StatementPosition, StatementRow } from './ports.ts';
+import type {
+  LedgerRepositoryFactory,
+  StatementFilter,
+  StatementPosition,
+  StatementRow,
+} from './ports.ts';
+import { NO_STATEMENT_FILTER } from './ports.ts';
 
 /** Who is on one side of a Pix, as the other side's statement shows it. */
 export interface PixParty {
@@ -161,13 +167,19 @@ export class CustomerLedgerAccounts {
     tx: Transaction,
     accountId: string,
     after: StatementPosition | null,
+    filter: StatementFilter = NO_STATEMENT_FILTER,
   ): Promise<StatementPage> {
     const repository = this.#repositories.for(tx);
     const account = await repository.findByCode(customerCodeOf(accountId));
     if (!account) throw new Error(`No ledger account for account ${accountId}`);
 
     // One more than a page tells whether another page follows.
-    const rows = await repository.statementPage(account.id, after, STATEMENT_PAGE_SIZE + 1);
+    const rows = await repository.statementPage(
+      account.id,
+      after,
+      STATEMENT_PAGE_SIZE + 1,
+      filter,
+    );
     const page = rows.slice(0, STATEMENT_PAGE_SIZE);
     const last = page.at(-1);
     return {
