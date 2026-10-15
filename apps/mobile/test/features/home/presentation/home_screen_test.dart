@@ -26,6 +26,7 @@ Future<void> pumpHome(
   DateTime? now,
   VoidCallback? onPix,
   VoidCallback? onPay,
+  VoidCallback? onReceive,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -46,6 +47,7 @@ Future<void> pumpHome(
         home: HomeScreen(
           onPix: onPix ?? () {},
           onPay: onPay ?? () {},
+          onReceive: onReceive ?? () {},
           onStatement: () {},
           onMovement: (_) {},
         ),
@@ -142,6 +144,36 @@ void main() {
 
     expect(paid, 1);
     expect(find.widgetWithText(NbToast, 'Em breve.'), findsNothing);
+  });
+
+  // v1.1.0 plan, task 3, at the S21 checkpoint: "Receber" beside "Pagar".
+  testWidgets('opens "Receber" on its shortcut', (tester) async {
+    var received = 0;
+    await pumpHome(tester, onReceive: () => received++);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Receber'));
+    await tester.pumpAndSettle();
+
+    expect(received, 1);
+  });
+
+  // Developer's call at the S21 checkpoint: the shortcuts scroll sideways.
+  testWidgets('lists the shortcuts sideways, in order', (tester) async {
+    await pumpHome(tester);
+    await tester.pumpAndSettle();
+
+    final list = tester.widget<ListView>(
+      find.ancestor(
+        of: find.widgetWithText(ActionTile, 'Área Pix'),
+        matching: find.byType(ListView),
+      ),
+    );
+    expect(list.scrollDirection, Axis.horizontal);
+    final labels = tester
+        .widgetList<ActionTile>(find.byType(ActionTile))
+        .map((tile) => tile.label);
+    expect(labels, ['Área Pix', 'Pagar', 'Receber', 'Transferir', 'Recarga']);
   });
 
   for (final shortcut in ['Transferir', 'Recarga']) {
