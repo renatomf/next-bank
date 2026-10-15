@@ -41,8 +41,9 @@ import 'package:next_bank/features/unlock/data/http_unlock_repository.dart';
 import 'package:next_bank/features/unlock/presentation/unlock_providers.dart';
 
 /// Composition root: the only place that binds domain interfaces
-/// to their implementations.
-Future<void> main() async {
+/// to their implementations. The E2E tests pass a [scanner] in place of the
+/// camera, which they cannot drive.
+Future<void> main({QrScannerBuilder? scanner}) async {
   // Edge to edge: the app draws under the phone's own buttons, as in the
   // reference (week 8 plan, V10). Android 15 does it by default.
   WidgetsFlutterBinding.ensureInitialized();
@@ -64,7 +65,7 @@ Future<void> main() async {
           themeStoreProvider.overrideWithValue(SecureThemeStore()),
           imageSharerProvider.overrideWithValue(SharePlusImageSharer()),
           textSharerProvider.overrideWithValue(SharePlusTextSharer()),
-          qrScannerProvider.overrideWithValue(mobileScannerQrView),
+          qrScannerProvider.overrideWithValue(scanner ?? mobileScannerQrView),
           profileRepositoryProvider.overrideWith(
             (ref) =>
                 HttpProfileRepository(ref.watch(apiProvider).getDefaultApi()),

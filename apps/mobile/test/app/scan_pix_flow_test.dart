@@ -146,6 +146,16 @@ void main() {
     clipboardHolds(tester, brunosCode());
     await openScan(tester, pix, FakeQrScanner());
 
+    await tester.scrollUntilVisible(
+      find.bySemanticsLabel('Colar Copia e Cola'),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byType(ScanPixScreen),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
     await tester.tap(find.bySemanticsLabel('Colar Copia e Cola'));
     await tester.pumpAndSettle();
 

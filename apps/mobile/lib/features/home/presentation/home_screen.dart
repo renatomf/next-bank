@@ -18,6 +18,7 @@ class HomeScreen extends ConsumerWidget {
   /// import each other.
   const new({
     required this.onPix,
+    required this.onPay,
     required this.onStatement,
     required this.onMovement,
     super.key,
@@ -25,6 +26,9 @@ class HomeScreen extends ConsumerWidget {
 
   /// Opens the Pix.
   final VoidCallback onPix;
+
+  /// Opens the reading of a Pix QR Code (v1.1.0 plan, task 4).
+  final VoidCallback onPay;
 
   /// Opens the statement.
   final VoidCallback onStatement;
@@ -62,7 +66,7 @@ class HomeScreen extends ConsumerWidget {
                 const SizedBox(height: 22),
                 const _HelpRow(),
                 const SizedBox(height: NbSpace.xl),
-                _Shortcuts(onPix: onPix),
+                _Shortcuts(onPix: onPix, onPay: onPay),
                 const SizedBox(height: 28),
                 const _Balance(),
                 const SizedBox(height: 28),
@@ -165,12 +169,14 @@ class _HelpField extends StatelessWidget {
   }
 }
 
-/// The Home's row of four (home-dark mockup): the Pix opens its area; the
-/// others come with their screens after v1.0.0 and say so (week 8 plan, V7).
+/// The Home's row of four (home-dark mockup): the Pix opens its area and
+/// "Pagar" reads a Pix QR Code (v1.1.0); the others come with their screens
+/// and say so (week 8 plan, V7).
 class _Shortcuts extends StatelessWidget {
-  const new({required this.onPix});
+  const new({required this.onPix, required this.onPay});
 
   final VoidCallback onPix;
+  final VoidCallback onPay;
 
   @override
   Widget build(BuildContext context) {
@@ -180,7 +186,7 @@ class _Shortcuts extends StatelessWidget {
       ActionTile(
         icon: const Icon(Icons.qr_code_scanner),
         label: 'Pagar',
-        onPressed: soon,
+        onPressed: onPay,
       ),
       ActionTile(
         icon: const Icon(Icons.swap_horiz),

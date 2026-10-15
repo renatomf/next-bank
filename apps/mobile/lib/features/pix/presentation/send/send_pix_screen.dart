@@ -15,7 +15,6 @@ class SendPixScreen extends ConsumerStatefulWidget {
   /// Creates the screen; the router says where back and the review go.
   const new({
     required this.onBack,
-    required this.onScan,
     required this.onReceive,
     required this.onReview,
     super.key,
@@ -23,9 +22,6 @@ class SendPixScreen extends ConsumerStatefulWidget {
 
   /// Leaves the Pix.
   final VoidCallback onBack;
-
-  /// Opens the QR Code reading, to pay one (v1.1.0 plan, task 4).
-  final VoidCallback onScan;
 
   /// Opens "Receber", with the QR Code (v1.1.0 plan, task 3).
   final VoidCallback onReceive;
@@ -91,20 +87,13 @@ class _SendPixScreenState extends ConsumerState<SendPixScreen> {
                   onPressed: ref.read(balanceHiddenProvider.notifier).toggle,
                 ),
               ),
-              Wrap(
-                alignment: WrapAlignment.end,
-                children: [
-                  TextButton.icon(
-                    onPressed: widget.onScan,
-                    icon: const Icon(Icons.qr_code_scanner, size: 20),
-                    label: const Text('Pagar com QR Code'),
-                  ),
-                  TextButton.icon(
-                    onPressed: widget.onReceive,
-                    icon: const Icon(Icons.qr_code_2, size: 20),
-                    label: const Text('Receber'),
-                  ),
-                ],
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: widget.onReceive,
+                  icon: const Icon(Icons.qr_code_2, size: 20),
+                  label: const Text('Receber'),
+                ),
               ),
               const SizedBox(height: NbSpace.sm),
               Stack(
