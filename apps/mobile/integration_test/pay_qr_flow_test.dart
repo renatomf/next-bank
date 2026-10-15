@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:next_bank/core/scan/qr_scanner.dart';
 import 'package:next_bank/features/pix/domain/br_code.dart';
 import 'package:next_bank/features/pix/presentation/review/review_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/scan/scan_pix_screen.dart';
@@ -33,12 +34,19 @@ void main() {
     );
     await Clipboard.setData(ClipboardData(text: code));
 
-    await app.main();
+    // The camera opens with the reading screen, and its permission dialog
+    // would take the focus the clipboard needs: the E2E pastes, so it runs
+    // with a stand-in camera (a real one reads nothing in CI anyway).
+    await app.main(
+      overrides: [
+        qrScannerProvider.overrideWithValue(
+          ({required onCode, required onCameraDenied}) => const SizedBox(),
+        ),
+      ],
+    );
     await signIn(tester, email: anaEmail, password: anaPassword);
 
-    await tester.tap(find.bySemanticsLabel('Área Pix'));
-    await waitFor(tester, find.text('Pagar com QR Code'));
-    await tester.tap(find.text('Pagar com QR Code'));
+    await tester.tap(find.text('Pagar'));
     await waitFor(tester, find.byType(ScanPixScreen));
     await scrollAndTap(
       tester,

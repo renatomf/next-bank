@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/features/pix/domain/br_code.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/scan/scan_pix_screen.dart';
+import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
 
 import '../support/fake_pix_repository.dart';
 import '../support/fake_qr_scanner.dart';
@@ -19,7 +20,7 @@ String brunosCode({int? amountCents, String? message}) => staticBrCode(
   message: message,
 );
 
-/// Signed in, unlocked, on "Pagar com QR Code" opened from the Pix.
+/// Signed in, unlocked, on "Pagar" opened from the Home.
 Future<void> openScan(
   WidgetTester tester,
   FakePixRepository pix,
@@ -32,21 +33,12 @@ Future<void> openScan(
     scanner: scanner,
   );
   await unlockWithPin(tester);
-  await tester.tap(find.bySemanticsLabel('Área Pix'));
-  await tester.pumpAndSettle();
-  await tester.tap(find.text('Pagar com QR Code'));
+  await tester.tap(find.text('Pagar'));
   await tester.pumpAndSettle();
 }
 
-/// Turns the camera on, as the customer does on "Usar a câmera".
-Future<void> turnCameraOn(WidgetTester tester) async {
-  await tester.tap(find.bySemanticsLabel('Usar a câmera'));
-  await tester.pumpAndSettle();
-}
-
-/// The camera, once on, "reads" the code the fake holds.
+/// The camera, open with the screen, "reads" the code the fake holds.
 Future<void> readWithCamera(WidgetTester tester) async {
-  await turnCameraOn(tester);
   await tester.tap(find.text('Câmera de teste'));
   await tester.pumpAndSettle();
 }
@@ -127,7 +119,7 @@ void main() {
     final scanner = FakeQrScanner()..denied = true;
     clipboardHolds(tester, brunosCode());
     await openScan(tester, pix, scanner);
-    await turnCameraOn(tester);
+    await tester.pumpAndSettle();
 
     expect(find.textContaining('Sem acesso à câmera'), findsOneWidget);
     expect(find.text('Câmera de teste'), findsNothing);
@@ -139,19 +131,48 @@ void main() {
     expect(find.text('Mariana Costa'), findsOneWidget);
   });
 
-  // MOB-10: the camera, and its permission, only when the customer asks.
-  testWidgets('keeps the camera off until "Usar a câmera"', (tester) async {
+  // Developer's call at the S21 checkpoint: the camera opens with the
+  // screen, titled "Pagar"; MOB-10 holds, as nothing else starts it.
+  testWidgets('opens with the camera on, titled "Pagar"', (tester) async {
+    await openScan(tester, FakePixRepository(), FakeQrScanner());
+
+    expect(find.text('Câmera de teste'), findsOneWidget);
+    expect(find.bySemanticsLabel('Usar a câmera'), findsNothing);
+    expect(find.widgetWithText(ScreenHeader, 'Pagar'), findsOneWidget);
+  });
+
+  testWidgets('pays the "Copia e Cola" pasted', (tester) async {
     final pix = FakePixRepository();
     clipboardHolds(tester, brunosCode());
     await openScan(tester, pix, FakeQrScanner());
-
-    expect(find.text('Câmera de teste'), findsNothing);
 
     await tester.tap(find.bySemanticsLabel('Colar Copia e Cola'));
     await tester.pumpAndSettle();
 
     expect(find.byType(ScanPixScreen), findsNothing);
     expect(find.text('Mariana Costa'), findsOneWidget);
+  });
+
+  testWidgets('reads from the Home and fills the Pix', (tester) async {
+    final scanner = FakeQrScanner()..code = brunosCode(amountCents: 2500);
+    await pumpApp(
+      tester,
+      store: FakeTokenStore(tokens),
+      pix: FakePixRepository(),
+      scanner: scanner,
+    );
+    await unlockWithPin(tester);
+
+    await tester.tap(find.text('Pagar'));
+    await tester.pumpAndSettle();
+    await readWithCamera(tester);
+
+    expect(find.byType(SendPixScreen), findsOneWidget);
+    expect(find.text('Mariana Costa'), findsOneWidget);
+    expect(find.bySemanticsLabel(r'R$ 25,00'), findsOneWidget);
+    // Paying by QR Code lives on the Home now; the Pix keeps "Receber".
+    expect(find.text('Pagar com QR Code'), findsNothing);
+    expect(find.text('Receber'), findsOneWidget);
   });
 
   testWidgets('goes back to typing a CPF on "Usar chave CPF"', (tester) async {

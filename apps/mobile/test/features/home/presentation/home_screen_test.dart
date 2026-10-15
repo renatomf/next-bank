@@ -25,6 +25,7 @@ Future<void> pumpHome(
   FakeStatementRepository? statement,
   DateTime? now,
   VoidCallback? onPix,
+  VoidCallback? onPay,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -44,6 +45,7 @@ Future<void> pumpHome(
         theme: NbTheme.dark(),
         home: HomeScreen(
           onPix: onPix ?? () {},
+          onPay: onPay ?? () {},
           onStatement: () {},
           onMovement: (_) {},
         ),
@@ -129,7 +131,20 @@ void main() {
     expect(opened, 1);
   });
 
-  for (final shortcut in ['Pagar', 'Transferir', 'Recarga']) {
+  // v1.1.0 plan, task 4: "Pagar" reads a Pix QR Code.
+  testWidgets('opens the QR Code reading on "Pagar"', (tester) async {
+    var paid = 0;
+    await pumpHome(tester, onPay: () => paid++);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Pagar'));
+    await tester.pumpAndSettle();
+
+    expect(paid, 1);
+    expect(find.widgetWithText(NbToast, 'Em breve.'), findsNothing);
+  });
+
+  for (final shortcut in ['Transferir', 'Recarga']) {
     testWidgets('says "$shortcut" is coming, without leaving', (tester) async {
       var opened = 0;
       await pumpHome(tester, onPix: () => opened++);
