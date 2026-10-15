@@ -2,6 +2,7 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:next_bank/features/home/presentation/home_screen.dart';
 import 'package:next_bank/features/pix/domain/br_code.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/scan/scan_pix_screen.dart';
@@ -183,6 +184,19 @@ void main() {
     // Paying by QR Code lives on the Home now; the Pix keeps "Receber".
     expect(find.text('Pagar com QR Code'), findsNothing);
     expect(find.text('Receber'), findsOneWidget);
+  });
+
+  // Developer's call at the S21 checkpoint: "Pagar" came from the Home, so
+  // back without a code returns there, not to the Pix beneath.
+  testWidgets('goes back to the Home without reading', (tester) async {
+    await openScan(tester, FakePixRepository(), FakeQrScanner());
+
+    await tester.tap(find.bySemanticsLabel('Voltar'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(HomeScreen), findsOneWidget);
+    expect(find.byType(SendPixScreen), findsNothing);
+    expect(find.byType(ScanPixScreen), findsNothing);
   });
 
   testWidgets('goes back to typing a CPF on "Usar chave CPF"', (tester) async {
