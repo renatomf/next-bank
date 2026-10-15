@@ -1,4 +1,5 @@
 import 'package:design_system/src/components/glass_art.dart';
+import 'package:design_system/src/components/glass_panel.dart';
 import 'package:design_system/src/components/money_text.dart';
 import 'package:design_system/src/components/skeleton.dart';
 import 'package:design_system/src/tokens.dart';
@@ -12,8 +13,9 @@ typedef StatementCardAction = ({
 });
 
 /// The balance on top of the statement (v1.1.0 plan, task 4.1): the same
-/// green glass art and deep tint as the Home's card, the balance centered
-/// and a row of actions below, split by thin lines.
+/// green glass art and deep tint as the Home's card, the balance centered on
+/// the same frosted glass panel, and a row of actions below, split by thin
+/// lines.
 class StatementBalanceCard extends StatelessWidget {
   /// Creates the card; a null [balanceCents] means it is still loading.
   const new({
@@ -80,29 +82,35 @@ class StatementBalanceCard extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  Text(
-                    'Saldo',
-                    style: NbType.bodyText.copyWith(
-                      color: NbBalanceCardColors.textMuted,
+                  GlassPanel(
+                    child: Column(
+                      children: [
+                        Text(
+                          'Saldo',
+                          style: NbType.bodyText.copyWith(
+                            color: NbBalanceCardColors.textMuted,
+                          ),
+                        ),
+                        const SizedBox(height: NbSpace.sm),
+                        if (cents == null)
+                          const Skeleton(
+                            width: 180,
+                            height: 32,
+                            color: NbBalanceCardColors.placeholder,
+                          )
+                        else
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: MoneyText(
+                              cents: cents,
+                              hidden: hidden,
+                              color: NbBalanceCardColors.text,
+                              mutedColor: NbBalanceCardColors.textMuted,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: NbSpace.sm),
-                  if (cents == null)
-                    const Skeleton(
-                      width: 180,
-                      height: 32,
-                      color: NbBalanceCardColors.placeholder,
-                    )
-                  else
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: MoneyText(
-                        cents: cents,
-                        hidden: hidden,
-                        color: NbBalanceCardColors.text,
-                        mutedColor: NbBalanceCardColors.textMuted,
-                      ),
-                    ),
                   const SizedBox(height: NbSpace.xl),
                   IntrinsicHeight(
                     child: Row(
