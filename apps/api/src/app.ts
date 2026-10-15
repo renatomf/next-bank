@@ -44,7 +44,7 @@ import { PgUnitOfWork } from './shared/infrastructure/pg-unit-of-work.ts';
 import type { ErrorReporter } from './shared/application/ports.ts';
 import { NoopErrorReporter } from './shared/infrastructure/sentry-error-reporter.ts';
 import { SystemClock, UuidV7Generator } from './shared/infrastructure/system-ports.ts';
-import { REDACT_PATHS } from './shared/logging.ts';
+import { REDACT_PATHS, requestForLog } from './shared/logging.ts';
 
 /** JSON log destination, one line per event. */
 export interface LogDestination {
@@ -94,6 +94,7 @@ export function buildApp({
     logger: {
       level: 'info',
       redact: { paths: REDACT_PATHS, censor: '[REDACTED]' },
+      serializers: { req: requestForLog },
       ...(logStream ? { stream: logStream } : {}),
     },
     genReqId: requestId,
