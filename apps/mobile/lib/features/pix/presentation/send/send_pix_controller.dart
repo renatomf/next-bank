@@ -84,7 +84,7 @@ sendPixControllerProvider =
     );
 
 /// What one creation sent: repeating it must reuse its key (MOB-07).
-typedef _Draft = ({String cpf, int amountCents, String? description});
+typedef _Draft = ({PixKeyRef key, int amountCents, String? description});
 
 /// Fills in the Pix and creates it, waiting for the PIN (screen 7).
 class SendPixController extends Notifier<SendPixState> {
@@ -132,7 +132,10 @@ class SendPixController extends Notifier<SendPixState> {
     }
     state = state._with(searching: true, keyError: () => null);
     try {
-      final payee = await ref.read(pixRepositoryProvider).lookup(_digits(key));
+      final payee = await ref.read(pixRepositoryProvider).lookup((
+        type: PixKeyType.cpf,
+        value: _digits(key),
+      ));
       if (!ref.mounted) return;
       state = state._with(
         searching: false,
@@ -154,7 +157,7 @@ class SendPixController extends Notifier<SendPixState> {
     if (!state.canSubmit) return null;
     final description = state.description.trim();
     final draft = (
-      cpf: _digits(state.key),
+      key: (type: PixKeyType.cpf, value: _digits(state.key)),
       amountCents: state.amountCents,
       description: description.isEmpty ? null : description,
     );
@@ -168,7 +171,7 @@ class SendPixController extends Notifier<SendPixState> {
       final transfer = await ref
           .read(pixRepositoryProvider)
           .create(
-            cpf: draft.cpf,
+            key: draft.key,
             amountCents: draft.amountCents,
             description: draft.description,
             idempotencyKey: key,

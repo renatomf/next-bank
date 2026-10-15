@@ -16,12 +16,17 @@ class HttpPixRepository implements PixRepository {
   final api.DefaultApi _api;
 
   @override
-  Future<PixPayee> lookup(String cpf) async {
+  Future<PixPayee> lookup(PixKeyRef key) async {
     final found = await _call(
       () => _api.lookupPixKey(
         pixKeyLookupRequestInput: api.PixKeyLookupRequestInput(
-          type: api.PixKeyLookupRequestInputTypeEnum.CPF,
-          value: cpf,
+          type: switch (key.type) {
+            PixKeyType.cpf => api.PixKeyLookupRequestInputTypeEnum.CPF,
+            PixKeyType.email => api.PixKeyLookupRequestInputTypeEnum.EMAIL,
+            PixKeyType.phone => api.PixKeyLookupRequestInputTypeEnum.PHONE,
+            PixKeyType.random => api.PixKeyLookupRequestInputTypeEnum.RANDOM,
+          },
+          value: key.value,
         ),
       ),
     );
@@ -40,7 +45,7 @@ class HttpPixRepository implements PixRepository {
 
   @override
   Future<PixTransfer> create({
-    required String cpf,
+    required PixKeyRef key,
     required int amountCents,
     required String? description,
     required String idempotencyKey,
@@ -50,8 +55,17 @@ class HttpPixRepository implements PixRepository {
         idempotencyKey: idempotencyKey,
         createPixTransferRequestInput: api.CreatePixTransferRequestInput(
           key: api.CreatePixTransferRequestInputKey(
-            type: api.CreatePixTransferRequestInputKeyTypeEnum.CPF,
-            value: cpf,
+            type: switch (key.type) {
+              PixKeyType.cpf =>
+                api.CreatePixTransferRequestInputKeyTypeEnum.CPF,
+              PixKeyType.email =>
+                api.CreatePixTransferRequestInputKeyTypeEnum.EMAIL,
+              PixKeyType.phone =>
+                api.CreatePixTransferRequestInputKeyTypeEnum.PHONE,
+              PixKeyType.random =>
+                api.CreatePixTransferRequestInputKeyTypeEnum.RANDOM,
+            },
+            value: key.value,
           ),
           amount: api.MoneyInput(
             amount: amountCents,

@@ -5,12 +5,12 @@ import 'package:next_bank/features/pix/domain/receiving_key.dart';
 /// catalog code. Every command takes the idempotency key of its attempt, so a
 /// repeated attempt never becomes a second Pix (ADR 0007; MOB-07).
 abstract interface class PixRepository {
-  /// Who holds the CPF key [cpf] (11 digits).
-  Future<PixPayee> lookup(String cpf);
+  /// Who holds the [key].
+  Future<PixPayee> lookup(PixKeyRef key);
 
-  /// Creates a Pix of [amountCents] to the CPF key [cpf], waiting for the PIN.
+  /// Creates a Pix of [amountCents] to the [key], waiting for the PIN.
   Future<PixTransfer> create({
-    required String cpf,
+    required PixKeyRef key,
     required int amountCents,
     required String? description,
     required String idempotencyKey,
