@@ -339,6 +339,25 @@ void main() {
     await tester.pumpAndSettle();
     await openStatement(tester);
     expect(tester.takeException(), isNull);
+    // The card, filters and search fill a small screen: the rows come below.
+    final list = find
+        .descendant(
+          of: find.byType(StatementScreen),
+          matching: find.byType(Scrollable),
+        )
+        .first;
+    await tester.scrollUntilVisible(
+      find.descendant(
+        of: find.byType(StatementScreen),
+        matching: find.text('Pix recebido'),
+      ),
+      200,
+      scrollable: list,
+    );
+    // Clear of the floating bar, which covers the bottom of the list.
+    await tester.drag(list, const Offset(0, -150));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
     await tester.tap(statementRows().first);
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);

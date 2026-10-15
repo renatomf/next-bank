@@ -1,8 +1,7 @@
+import 'package:design_system/src/components/balance_amount.dart';
 import 'package:design_system/src/components/glass_art.dart';
 import 'package:design_system/src/components/glass_panel.dart';
 import 'package:design_system/src/components/icon_circle_button.dart';
-import 'package:design_system/src/components/money_text.dart';
-import 'package:design_system/src/components/skeleton.dart';
 import 'package:design_system/src/tokens.dart';
 import 'package:flutter/material.dart';
 
@@ -46,9 +45,7 @@ class BalanceCard extends StatelessWidget {
     final number = accountNumber;
     final cents = balanceCents;
     final panel = GlassPanel(
-      child: number == null || cents == null
-          ? const _LoadingBalance()
-          : _Balance(accountNumber: number, cents: cents, hidden: hidden),
+      child: BalanceAmount(accountNumber: number, cents: cents, hidden: hidden),
     );
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -184,78 +181,3 @@ class _StatementLink extends StatelessWidget {
     ),
   );
 }
-
-class _Balance extends StatelessWidget {
-  const new({
-    required this.accountNumber,
-    required this.cents,
-    required this.hidden,
-  });
-
-  final String accountNumber;
-  final int cents;
-  final bool hidden;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Saldo disponível · Conta ${_masked(accountNumber)}',
-          style: NbType.cardLabel.copyWith(
-            color: NbBalanceCardColors.textMuted,
-          ),
-        ),
-        const SizedBox(height: NbSpace.xs),
-        // A large balance shrinks to fit instead of breaking the line.
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.centerLeft,
-          child: MoneyText(
-            cents: cents,
-            hidden: hidden,
-            color: NbBalanceCardColors.text,
-            mutedColor: NbBalanceCardColors.textMuted,
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// Only the last four digits, as in the mockups: "•••• 0004".
-  static String _masked(String number) {
-    final digits = number.replaceAll(RegExp(r'\D'), '');
-    return '•••• ${digits.substring(digits.length - 4)}';
-  }
-}
-
-class _LoadingBalance extends StatelessWidget {
-  const new();
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: 'Carregando saldo',
-      container: true,
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Skeleton(
-            width: 180,
-            height: 12,
-            color: NbBalanceCardColors.placeholder,
-          ),
-          SizedBox(height: NbSpace.md),
-          Skeleton(
-            width: 200,
-            height: 34,
-            color: NbBalanceCardColors.placeholder,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// The glass panel that keeps the balance readable over the lights.

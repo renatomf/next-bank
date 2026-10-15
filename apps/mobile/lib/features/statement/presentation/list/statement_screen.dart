@@ -71,6 +71,7 @@ class _StatementScreenState extends ConsumerState<StatementScreen> {
     toastFailedRefresh(context, ref, filteredStatementProvider);
     final header = [
       StatementBalanceCard(
+        accountNumber: account?.number,
         balanceCents: account?.availableBalanceCents,
         hidden: hidden,
         actions: [

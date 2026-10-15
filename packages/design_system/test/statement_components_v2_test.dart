@@ -84,7 +84,7 @@ void main() {
     testWidgets('shows a placeholder while the balance loads', (tester) async {
       await tester.pumpWidget(host(card(cents: null)));
 
-      expect(find.byType(Skeleton), findsOneWidget);
+      expect(find.bySemanticsLabel('Carregando saldo'), findsOneWidget);
     });
 
     testWidgets('runs each action, in order', (tester) async {
