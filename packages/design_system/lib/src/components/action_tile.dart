@@ -16,6 +16,10 @@ class ActionTile extends StatelessWidget {
   /// Height in the mockup; larger text grows it.
   static const double height = 84;
 
+  /// One size for every shortcut's icon, the Pix symbol included (S21
+  /// checkpoint of v1.1.0).
+  static const double iconSize = 22;
+
   /// What the shortcut shows: an [Icon], painted in the accent color, or any
   /// widget such as the Pix symbol (week 8 plan, V6).
   final Widget icon;
@@ -53,9 +57,13 @@ class ActionTile extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  IconTheme.merge(
-                    data: IconThemeData(size: 22, color: colors.accent),
-                    child: icon,
+                  // A tight box: any widget given as the icon takes this size.
+                  SizedBox.square(
+                    dimension: iconSize,
+                    child: IconTheme.merge(
+                      data: IconThemeData(size: iconSize, color: colors.accent),
+                      child: icon,
+                    ),
                   ),
                   const SizedBox(height: NbSpace.sm),
                   // One line, shrinking only as much as a narrow tile needs, so
