@@ -1,6 +1,5 @@
-import 'dart:ui';
-
 import 'package:design_system/src/components/glass_art.dart';
+import 'package:design_system/src/components/glass_panel.dart';
 import 'package:design_system/src/components/icon_circle_button.dart';
 import 'package:design_system/src/components/money_text.dart';
 import 'package:design_system/src/components/skeleton.dart';
@@ -46,7 +45,7 @@ class BalanceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final number = accountNumber;
     final cents = balanceCents;
-    final panel = _GlassPanel(
+    final panel = GlassPanel(
       child: number == null || cents == null
           ? const _LoadingBalance()
           : _Balance(accountNumber: number, cents: cents, hidden: hidden),
@@ -260,30 +259,3 @@ class _LoadingBalance extends StatelessWidget {
 }
 
 /// The glass panel that keeps the balance readable over the lights.
-class _GlassPanel extends StatelessWidget {
-  const new({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final shape = BorderRadius.circular(NbRadius.block);
-    return ClipRRect(
-      borderRadius: shape,
-      child: BackdropFilter(
-        // CSS blur(14px) is a standard deviation of 14 px.
-        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            color: NbBalanceCardColors.glass,
-            borderRadius: shape,
-            border: Border.all(color: NbBalanceCardColors.glassBorder),
-          ),
-          child: child,
-        ),
-      ),
-    );
-  }
-}
