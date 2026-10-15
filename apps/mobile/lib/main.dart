@@ -11,6 +11,8 @@ import 'package:next_bank/core/api_client.dart';
 import 'package:next_bank/core/error_reporting.dart';
 import 'package:next_bank/core/profile/http_profile_repository.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
+import 'package:next_bank/core/scan/mobile_scanner_qr_view.dart';
+import 'package:next_bank/core/scan/qr_scanner.dart';
 import 'package:next_bank/core/session/app_lock.dart';
 import 'package:next_bank/core/session/biometric_check.dart';
 import 'package:next_bank/core/session/biometric_pin_store.dart';
@@ -62,6 +64,7 @@ Future<void> main() async {
           themeStoreProvider.overrideWithValue(SecureThemeStore()),
           imageSharerProvider.overrideWithValue(SharePlusImageSharer()),
           textSharerProvider.overrideWithValue(SharePlusTextSharer()),
+          qrScannerProvider.overrideWithValue(mobileScannerQrView),
           profileRepositoryProvider.overrideWith(
             (ref) =>
                 HttpProfileRepository(ref.watch(apiProvider).getDefaultApi()),

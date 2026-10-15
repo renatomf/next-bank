@@ -25,6 +25,10 @@ abstract final class AppRoutes {
   /// Sending a Pix (screen 7).
   static const String pix = '/pix';
 
+  /// Paying a Pix by QR Code, with the camera or pasted (v1.1.0 plan,
+  /// task 4).
+  static const String pixScan = '$pix/scan';
+
   /// Receiving a Pix by QR Code (v1.1.0 plan, task 3).
   static const String pixReceive = '$pix/receive';
 

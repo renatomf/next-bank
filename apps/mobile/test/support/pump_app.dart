@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/account/account_providers.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
+import 'package:next_bank/core/scan/qr_scanner.dart';
 import 'package:next_bank/core/session/app_lock.dart';
 import 'package:next_bank/core/session/biometric_check.dart';
 import 'package:next_bank/core/session/biometric_pin_store.dart';
@@ -30,6 +31,7 @@ import 'fake_image_sharer.dart';
 import 'fake_monotonic_clock.dart';
 import 'fake_pix_repository.dart';
 import 'fake_profile_repository.dart';
+import 'fake_qr_scanner.dart';
 import 'fake_security_repository.dart';
 import 'fake_statement_repository.dart';
 import 'fake_theme_store.dart';
@@ -53,6 +55,7 @@ Future<ProviderContainer> pumpApp(
   FakeThemeStore? theme,
   FakeImageSharer? sharer,
   FakeTextSharer? textSharer,
+  FakeQrScanner? scanner,
   FakeWidgetPainter? painter,
   FakeBiometricPinStore? biometrics,
   FakeBiometricCheck? check,
@@ -95,6 +98,7 @@ Future<ProviderContainer> pumpApp(
         ),
         imageSharerProvider.overrideWithValue(sharer ?? FakeImageSharer()),
         textSharerProvider.overrideWithValue(textSharer ?? FakeTextSharer()),
+        qrScannerProvider.overrideWithValue((scanner ?? FakeQrScanner()).call),
         widgetPainterProvider.overrideWithValue(
           (painter ?? FakeWidgetPainter()).call,
         ),
