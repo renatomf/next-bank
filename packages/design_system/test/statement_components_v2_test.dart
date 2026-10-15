@@ -40,6 +40,32 @@ void main() {
       expect(find.byType(GlassArt), findsOneWidget);
     });
 
+    // As on the Home's card (developer's call at the checkpoint): the
+    // balance sits on the frosted glass panel, the actions outside it.
+    testWidgets('puts "Saldo" and the balance on the glass panel', (
+      tester,
+    ) async {
+      await tester.pumpWidget(host(card()));
+
+      final glass = find.byType(BackdropFilter);
+      expect(glass, findsOneWidget);
+      expect(
+        find.descendant(of: glass, matching: find.text('Saldo')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: glass,
+          matching: find.bySemanticsLabel(r'R$ 12.680,42'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: glass, matching: find.bySemanticsLabel('Pagar')),
+        findsNothing,
+      );
+    });
+
     testWidgets('hides the balance when the customer hid it (MOB-05)', (
       tester,
     ) async {
