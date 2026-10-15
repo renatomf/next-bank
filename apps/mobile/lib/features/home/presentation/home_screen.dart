@@ -72,12 +72,9 @@ class HomeScreen extends ConsumerWidget {
                 const SizedBox(height: NbSpace.xl),
                 _Shortcuts(onPix: onPix, onPay: onPay, onReceive: onReceive),
                 const SizedBox(height: 28),
-                const _Balance(),
+                _Balance(onStatement: onStatement),
                 const SizedBox(height: 28),
-                _LatestMovements(
-                  onStatement: onStatement,
-                  onMovement: onMovement,
-                ),
+                _LatestMovements(onMovement: onMovement),
               ],
             ),
           ),
@@ -233,7 +230,9 @@ class _Shortcuts extends StatelessWidget {
 }
 
 class _Balance extends ConsumerWidget {
-  const new();
+  const new({required this.onStatement});
+
+  final VoidCallback onStatement;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -245,6 +244,7 @@ class _Balance extends ConsumerWidget {
         balanceCents: account.availableBalanceCents,
         hidden: hidden,
         onToggleHidden: toggle,
+        onStatement: onStatement,
       ),
       AsyncError() => Padding(
         padding: const EdgeInsets.symmetric(vertical: NbSpace.xl),
@@ -258,17 +258,18 @@ class _Balance extends ConsumerWidget {
         balanceCents: null,
         hidden: hidden,
         onToggleHidden: toggle,
+        onStatement: onStatement,
       ),
     };
   }
 }
 
 /// The latest movements (home-dark mockup): the newest three of the same
-/// statement the statement screen shows, and "Ver extrato".
+/// statement the statement screen shows; the link to it lives in the
+/// balance card since the S21 checkpoint of v1.1.0.
 class _LatestMovements extends ConsumerWidget {
-  const new({required this.onStatement, required this.onMovement});
+  const new({required this.onMovement});
 
-  final VoidCallback onStatement;
   final ValueChanged<String> onMovement;
 
   /// How many movements the Home shows.
@@ -324,10 +325,6 @@ class _LatestMovements extends ConsumerWidget {
                 'Últimas movimentações',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
-            ),
-            TextButton(
-              onPressed: onStatement,
-              child: const Text('Ver extrato'),
             ),
           ],
         ),
