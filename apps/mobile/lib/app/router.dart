@@ -139,7 +139,9 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
       GoRoute(
         path: AppRoutes.pixScan,
         builder: (context, _) => ScanPixScreen(
-          onBack: () => _back(context),
+          // Opened from the Home's "Pagar": without a code, back is the
+          // Home; a code read goes to the Pix beneath, filled.
+          onBack: () => context.go(AppRoutes.home),
           onRead: () => _back(context),
         ),
       ),
