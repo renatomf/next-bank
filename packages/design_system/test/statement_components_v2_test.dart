@@ -43,13 +43,12 @@ void main() {
       expect(pressed, ['Exportar', 'Pagar', 'Fazer Pix']);
     });
 
-    testWidgets('keeps the actions below the balance, on their own glass', (
+    testWidgets('keeps the actions below the balance, with no box', (
       tester,
     ) async {
       await tester.pumpWidget(host(card()));
 
-      // The balance's glass; the actions sit on a glass of their own, which
-      // keeps their text AA over the card's lighter lower half.
+      // The balance's glass.
       final glass = find
           .ancestor(
             of: find.bySemanticsLabel(r'R$ 12.680,42'),
@@ -60,12 +59,14 @@ void main() {
         find.descendant(of: glass, matching: find.bySemanticsLabel('Pagar')),
         findsNothing,
       );
+      // No box of their own (developer's call): the tint darkens again at
+      // the foot instead, keeping their text AA (accessibility test).
       expect(
         find.ancestor(
           of: find.bySemanticsLabel('Pagar'),
           matching: find.byType(BackdropFilter),
         ),
-        findsOneWidget,
+        findsNothing,
       );
       expect(
         tester.getTopLeft(find.bySemanticsLabel('Pagar')).dy,
