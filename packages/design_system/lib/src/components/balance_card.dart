@@ -83,19 +83,12 @@ class BalanceCard extends StatelessWidget {
               const Positioned.fill(child: GlassArt()),
               // Deep under the title, lighter where the glass panel takes
               // over the contrast, so the art shows in between.
-              const Positioned.fill(
+              // With actions at the foot, the tint deepens again under them,
+              // so their white text keeps AA without a box of its own.
+              Positioned.fill(
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        NbBalanceCardColors.tintDeep,
-                        NbBalanceCardColors.tintDeep,
-                        NbBalanceCardColors.tintLight,
-                      ],
-                      stops: [0, 0.3, 0.6],
-                    ),
+                    gradient: actions.isEmpty ? _homeTint : _footTint,
                   ),
                 ),
               ),
@@ -198,15 +191,40 @@ class _StatementLink extends StatelessWidget {
   );
 }
 
-/// The actions in a row, split by thin lines, on the glass: the card's lower
-/// half is the lighter tint, where white text alone would miss AA.
+/// The Home's tint: deep under the title, lighter where the glass panel takes
+/// over the contrast.
+const LinearGradient _homeTint = LinearGradient(
+  begin: Alignment.topCenter,
+  end: Alignment.bottomCenter,
+  colors: [
+    NbBalanceCardColors.tintDeep,
+    NbBalanceCardColors.tintDeep,
+    NbBalanceCardColors.tintLight,
+  ],
+  stops: [0, 0.3, 0.6],
+);
+
+/// The same tint, deep again at the foot, under the actions.
+const LinearGradient _footTint = LinearGradient(
+  begin: Alignment.topCenter,
+  end: Alignment.bottomCenter,
+  colors: [
+    NbBalanceCardColors.tintDeep,
+    NbBalanceCardColors.tintDeep,
+    NbBalanceCardColors.tintLight,
+    NbBalanceCardColors.tintDeep,
+  ],
+  stops: [0, 0.3, 0.55, 0.8],
+);
+
+/// The actions in a row, split by thin lines.
 class _Actions extends StatelessWidget {
   const new({required this.actions});
 
   final List<BalanceCardAction> actions;
 
   @override
-  Widget build(BuildContext context) => GlassPanel(
+  Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(vertical: NbSpace.xs),
     child: IntrinsicHeight(
       child: Row(
