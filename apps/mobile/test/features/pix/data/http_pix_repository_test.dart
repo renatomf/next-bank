@@ -16,6 +16,7 @@ const _transferId = '0b9a7c1e-5d2f-4a8b-9c3d-7e6f5a4b3c2d';
 final String _key = newIdempotencyKey();
 // A random Pix key is a UUID v4 too: generated for the same reason.
 final String _receivingKey = newIdempotencyKey();
+const PixKeyRef _cpfKey = (type: PixKeyType.cpf, value: '12345678909');
 String _masked(String key) =>
     '${key.substring(0, 4)}****-****-****-****-********${key.substring(32)}';
 const _transferPath = '/v1/pix/transfers/$_transferId';
@@ -68,7 +69,7 @@ void main() {
         }),
       });
 
-      final payee = await repositoryFor(server).lookup('12345678909');
+      final payee = await repositoryFor(server).lookup(_cpfKey);
 
       final request = server.received.single;
       expect(request.method, 'POST');
@@ -79,6 +80,27 @@ void main() {
       expect(payee.keyMasked, '***.456.789-**');
     });
 
+    // A key read from a QR Code (v1.1.0 plan, task 4).
+    test('asks for a random key with its type', () async {
+      final server = ScriptedServer({
+        '/v1/pix/key-lookups': (_) async => JsonReply(200, {
+          'keyType': 'RANDOM',
+          'keyMasked': _masked(_receivingKey),
+          'payeeName': 'Bruno Lima',
+          'payeeDocumentMasked': '***.982.247-**',
+        }),
+      });
+
+      final payee = await repositoryFor(server)
+          .lookup((type: PixKeyType.random, value: _receivingKey));
+
+      expect(jsonOf(server.received.single.body), {
+        'type': 'RANDOM',
+        'value': _receivingKey,
+      });
+      expect(payee.keyType, PixKeyType.random);
+    });
+
     test('reports a key that does not exist', () async {
       final server = ScriptedServer({
         '/v1/pix/key-lookups': (_) async =>
@@ -86,7 +108,7 @@ void main() {
       });
 
       await expectLater(
-        repositoryFor(server).lookup('12345678909'),
+        repositoryFor(server).lookup(_cpfKey),
         rejectedWith(ApiErrorCode.pixKeyNotFound),
       );
     });
@@ -101,7 +123,7 @@ void main() {
       });
 
       await repositoryFor(server).create(
-        cpf: '12345678909',
+        key: _cpfKey,
         amountCents: 35000,
         description: 'Aluguel de outubro',
         idempotencyKey: _key,
@@ -117,13 +139,31 @@ void main() {
       });
     });
 
+    test('sends a random key with its type', () async {
+      final server = ScriptedServer({
+        '/v1/pix/transfers': (_) async => JsonReply(201, pixTransfer()),
+      });
+
+      await repositoryFor(server).create(
+        key: (type: PixKeyType.random, value: _receivingKey),
+        amountCents: 2500,
+        description: null,
+        idempotencyKey: _key,
+      );
+
+      expect(
+        (jsonOf(server.received.single.body)! as Map<String, Object?>)['key'],
+        {'type': 'RANDOM', 'value': _receivingKey},
+      );
+    });
+
     test('leaves out a missing description', () async {
       final server = ScriptedServer({
         '/v1/pix/transfers': (_) async => JsonReply(201, pixTransfer()),
       });
 
       await repositoryFor(server).create(
-        cpf: '12345678909',
+        key: _cpfKey,
         amountCents: 1,
         description: null,
         idempotencyKey: _key,
@@ -141,7 +181,7 @@ void main() {
       });
 
       final transfer = await repositoryFor(server).create(
-        cpf: '12345678909',
+        key: _cpfKey,
         amountCents: 35000,
         description: 'Aluguel de outubro',
         idempotencyKey: _key,
@@ -166,7 +206,7 @@ void main() {
 
       await expectLater(
         repositoryFor(server).create(
-          cpf: '12345678909',
+          key: _cpfKey,
           amountCents: 200000,
           description: null,
           idempotencyKey: _key,

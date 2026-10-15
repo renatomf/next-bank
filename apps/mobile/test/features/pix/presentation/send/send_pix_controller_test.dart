@@ -92,7 +92,10 @@ void main() {
 
       await controller.lookup();
 
-      expect(repository.callsOf('lookup').single.cpf, _cpf);
+      expect(repository.callsOf('lookup').single.key, (
+        type: PixKeyType.cpf,
+        value: _cpf,
+      ));
       expect(stateOf(container).payee, mariana);
       expect(stateOf(container).keyError, isNull);
     });
@@ -170,7 +173,7 @@ void main() {
       final transferId = await controller.submit();
 
       final create = repository.callsOf('create').single;
-      expect(create.cpf, _cpf);
+      expect(create.key, (type: PixKeyType.cpf, value: _cpf));
       expect(create.amountCents, 35000);
       expect(create.description, 'Aluguel de outubro');
       expect(create.idempotencyKey, 'key-1');

@@ -138,7 +138,10 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Buscar chave'));
     await tester.pumpAndSettle();
-    expect(pix.callsOf('lookup').single.cpf, _cpf);
+    expect(pix.callsOf('lookup').single.key, (
+      type: PixKeyType.cpf,
+      value: _cpf,
+    ));
   });
 
   testWidgets('sends a Pix from the Home to the receipt', (tester) async {
@@ -157,7 +160,7 @@ void main() {
     await typePin(tester);
 
     final create = pix.callsOf('create').single;
-    expect(create.cpf, _cpf);
+    expect(create.key, (type: PixKeyType.cpf, value: _cpf));
     expect(create.amountCents, 35000);
     expect(create.description, 'Aluguel de outubro');
     expect(pix.callsOf('authorize').single.pin, '2580');
