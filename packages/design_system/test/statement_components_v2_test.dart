@@ -16,6 +16,7 @@ void main() {
     var pressed = <String>[];
     Widget card({int? cents = 1268042, bool hidden = false}) =>
         StatementBalanceCard(
+          accountNumber: cents == null ? null : '100000-4',
           balanceCents: cents,
           hidden: hidden,
           actions: [
@@ -30,19 +31,21 @@ void main() {
 
     setUp(() => pressed = <String>[]);
 
-    testWidgets('shows the balance under "Saldo", on the glass art', (
+    // As on the Home's card (developer's call at the checkpoint): the
+    // available balance with the masked account, aligned to the start.
+    testWidgets('shows the available balance and the masked account', (
       tester,
     ) async {
       await tester.pumpWidget(host(card()));
 
-      expect(find.text('Saldo'), findsOneWidget);
+      expect(find.text('Saldo disponível · Conta •••• 0004'), findsOneWidget);
       expect(find.bySemanticsLabel(r'R$ 12.680,42'), findsOneWidget);
       expect(find.byType(GlassArt), findsOneWidget);
     });
 
     // As on the Home's card (developer's call at the checkpoint): the
     // balance sits on the frosted glass panel, the actions outside it.
-    testWidgets('puts "Saldo" and the balance on the glass panel', (
+    testWidgets('puts the label and the balance on the glass panel', (
       tester,
     ) async {
       await tester.pumpWidget(host(card()));
@@ -50,7 +53,10 @@ void main() {
       final glass = find.byType(BackdropFilter);
       expect(glass, findsOneWidget);
       expect(
-        find.descendant(of: glass, matching: find.text('Saldo')),
+        find.descendant(
+          of: glass,
+          matching: find.text('Saldo disponível · Conta •••• 0004'),
+        ),
         findsOneWidget,
       );
       expect(
