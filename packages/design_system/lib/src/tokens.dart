@@ -225,6 +225,13 @@ abstract final class NbRadius {
 
   /// Text fields.
   static const double field = 16;
+
+  /// The Home's boxes (v1.1.0 checkpoint, 2026-10-16): a little tighter than
+  /// [card] — the balance card, the Pix box.
+  static const double box = 20;
+
+  /// What sits inside a box, and the Home's shortcuts.
+  static const double boxInner = 14;
 }
 
 /// Sizes (brief, sections 4 and 8).

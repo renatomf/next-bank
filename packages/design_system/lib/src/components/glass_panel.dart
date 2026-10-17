@@ -22,7 +22,7 @@ class GlassPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final shape = BorderRadius.circular(NbRadius.block);
+    final shape = BorderRadius.circular(NbRadius.boxInner);
     return ClipRRect(
       borderRadius: shape,
       child: BackdropFilter(

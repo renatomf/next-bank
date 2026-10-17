@@ -61,7 +61,7 @@ class BalanceCard extends StatelessWidget {
     );
     return DecoratedBox(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(NbRadius.card),
+        borderRadius: BorderRadius.circular(NbRadius.box),
         border: Border.all(color: NbBalanceCardColors.border),
         boxShadow: const [
           // CSS 0 18px 50px -12px: a 50 px CSS blur is a 42 px Flutter one.
@@ -74,7 +74,7 @@ class BalanceCard extends StatelessWidget {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(NbRadius.card),
+        borderRadius: BorderRadius.circular(NbRadius.box),
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: height),
           child: Stack(
@@ -168,7 +168,7 @@ class _StatementLink extends StatelessWidget {
     excludeSemantics: true,
     child: InkWell(
       onTap: onPressed,
-      borderRadius: BorderRadius.circular(NbRadius.block),
+      borderRadius: BorderRadius.circular(NbRadius.boxInner),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
           NbSpace.md,
@@ -259,7 +259,7 @@ class _Action extends StatelessWidget {
     excludeSemantics: true,
     child: InkWell(
       onTap: action.onPressed,
-      borderRadius: BorderRadius.circular(NbRadius.block),
+      borderRadius: BorderRadius.circular(NbRadius.boxInner),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: NbSpace.sm),
         child: Column(

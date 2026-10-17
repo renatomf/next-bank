@@ -3,7 +3,7 @@ import 'package:design_system/src/tokens.dart';
 import 'package:flutter/material.dart';
 
 /// A shortcut of the Home (brief, section 7; home-dark mockup): 84 high,
-/// radius 20, an icon in the accent color over its label.
+/// the inner box radius, an icon in the accent color over its label.
 class ActionTile extends StatelessWidget {
   /// Creates the shortcut.
   const new({
@@ -43,7 +43,7 @@ class ActionTile extends StatelessWidget {
         child: Material(
           color: colors.surface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(NbRadius.block),
+            borderRadius: BorderRadius.circular(NbRadius.boxInner),
             side: BorderSide(color: colors.border),
           ),
           clipBehavior: Clip.antiAlias,
