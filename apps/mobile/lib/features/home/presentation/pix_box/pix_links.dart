@@ -46,7 +46,8 @@ class PixLinks extends StatelessWidget {
   }
 }
 
-/// An icon beside a two-line text, read by screen readers as one [label].
+/// The icon on the start edge and the two-line text centered in the room
+/// beside it, as in the reference; read by screen readers as one [label].
 class _PixLink extends StatelessWidget {
   const new({
     required this.icon,
@@ -74,16 +75,15 @@ class _PixLink extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(NbSpace.sm),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconTheme.merge(
                 data: IconThemeData(color: colors.accent),
                 child: icon,
               ),
-              const SizedBox(width: NbSpace.sm),
-              Flexible(
+              Expanded(
                 child: Text(
                   text,
+                  textAlign: TextAlign.center,
                   style: NbType.caption.copyWith(color: colors.accent),
                 ),
               ),
