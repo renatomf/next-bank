@@ -216,7 +216,7 @@ void main() {
 
     Future<void> scrollToBox(WidgetTester tester) async {
       await tester.scrollUntilVisible(
-        find.text('Minhas chaves'),
+        find.text('Minhas\nchaves'),
         200,
         scrollable: find
             .descendant(

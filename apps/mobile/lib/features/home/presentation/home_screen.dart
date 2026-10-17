@@ -83,6 +83,11 @@ class HomeScreen extends ConsumerWidget {
                 // In place of the latest movements (v1.1.0 plan, task 4.2):
                 // the statement opens from the balance card.
                 HomePixBox(
+                  cpfMasked: ref.watch(
+                    profileProvider.select(
+                      (profile) => profile.value?.cpfMasked,
+                    ),
+                  ),
                   onPix: onPix,
                   onPixWithKey: onPixWithKey,
                   onTransfer: onTransfer,
