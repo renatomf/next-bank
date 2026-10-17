@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
-import 'package:next_bank/features/home/presentation/widgets/home_pix_box.dart';
+import 'package:next_bank/features/home/presentation/pix_box/pix_box.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/automatic/pix_automatic_screen.dart';
 import 'package:next_bank/features/pix/presentation/keys/pix_keys_screen.dart';
@@ -26,7 +26,7 @@ Future<void> openHome(WidgetTester tester, FakePixRepository pix) async {
 Future<void> tapInBox(WidgetTester tester, String label) async {
   await tester.tap(
     find.descendant(
-      of: find.byType(HomePixBox),
+      of: find.byType(PixBox),
       matching: find.bySemanticsLabel(label),
     ),
   );
@@ -43,7 +43,7 @@ void main() {
 
     await tester.enterText(
       find.descendant(
-        of: find.byType(HomePixBox),
+        of: find.byType(PixBox),
         matching: find.byType(TextField),
       ),
       _cpf,

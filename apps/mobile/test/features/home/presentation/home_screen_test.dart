@@ -11,7 +11,7 @@ import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/core/statement/statement_controller.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
-import 'package:next_bank/features/home/presentation/widgets/home_pix_box.dart';
+import 'package:next_bank/features/home/presentation/pix_box/pix_box.dart';
 
 import '../../../support/device_stores.dart';
 import '../../../support/fake_account_repository.dart';
@@ -210,7 +210,7 @@ void main() {
   // v1.1.0 plan, task 4.2: the Pix box, in place of the latest movements.
   group('the Pix box', () {
     Finder keyField() => find.descendant(
-      of: find.byType(HomePixBox),
+      of: find.byType(PixBox),
       matching: find.byType(TextField),
     );
 
@@ -232,7 +232,7 @@ void main() {
       await pumpHome(tester);
       await tester.pumpAndSettle();
 
-      expect(find.byType(HomePixBox), findsOneWidget);
+      expect(find.byType(PixBox), findsOneWidget);
       expect(find.text('Últimas movimentações'), findsNothing);
     });
 
@@ -301,7 +301,7 @@ void main() {
 
         await tester.tap(
           find.descendant(
-            of: find.byType(HomePixBox),
+            of: find.byType(PixBox),
             matching: find.bySemanticsLabel(label),
           ),
         );
@@ -351,12 +351,12 @@ void main() {
       await scrollToBox(tester);
 
       final automatic = find.descendant(
-        of: find.byType(HomePixBox),
+        of: find.byType(PixBox),
         matching: find.bySemanticsLabel('Pix Automático'),
       );
       expect(
         find.descendant(
-          of: find.byType(HomePixBox),
+          of: find.byType(PixBox),
           matching: find.byType(PixMark),
         ),
         findsOneWidget,
@@ -367,7 +367,7 @@ void main() {
           tester
               .getCenter(
                 find.descendant(
-                  of: find.byType(HomePixBox),
+                  of: find.byType(PixBox),
                   matching: find.bySemanticsLabel('Minhas chaves'),
                 ),
               )
