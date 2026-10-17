@@ -11,6 +11,7 @@ import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/core/statement/statement_controller.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
+import 'package:next_bank/features/home/presentation/pix_box/cpf_key_row.dart';
 import 'package:next_bank/features/home/presentation/pix_box/pix_box.dart';
 
 import '../../../support/device_stores.dart';
@@ -321,9 +322,22 @@ void main() {
       await scrollToBox(tester);
 
       expect(find.text('***.444.777-**'), findsOneWidget);
+
+      // On the row's two ends (developer's call): the icon on the start, the
+      // "Cadastrar" text on the end, both one padding from the edge.
+      final row = find.byType(CpfKeyRow);
+      final icon = find.descendant(
+        of: row,
+        matching: find.byIcon(Icons.badge_outlined),
+      );
+      final register = find.text('Cadastrar');
       expect(
-        tester.getTopLeft(find.text('Cadastrar')).dx,
-        greaterThan(tester.getTopRight(find.text('***.444.777-**')).dx),
+        tester.getTopLeft(icon).dx - tester.getTopLeft(row).dx,
+        moreOrLessEquals(NbSpace.md, epsilon: 1),
+      );
+      expect(
+        tester.getTopRight(row).dx - tester.getTopRight(register).dx,
+        moreOrLessEquals(NbSpace.md, epsilon: 1),
       );
     });
 
