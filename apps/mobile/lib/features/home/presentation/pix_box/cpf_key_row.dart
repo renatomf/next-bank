@@ -25,6 +25,8 @@ class CpfKeyRow extends StatelessWidget {
         color: colors.surface2,
         borderRadius: BorderRadius.circular(NbRadius.boxInner),
       ),
+      // The CPF on the start, "Cadastrar" on the end: the CPF takes the room
+      // left, which pushes the button to the edge.
       child: Row(
         children: [
           Icon(
@@ -34,8 +36,8 @@ class CpfKeyRow extends StatelessWidget {
           ),
           const SizedBox(width: NbSpace.md),
           Expanded(child: _CpfLabel(cpfMasked: cpfMasked)),
-          // It may shrink only on a narrow screen with large text.
-          const Flexible(child: _RegisterButton()),
+          const SizedBox(width: NbSpace.sm),
+          const _RegisterButton(),
         ],
       ),
     );
@@ -69,13 +71,11 @@ class _RegisterButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) => TextButton(
     onPressed: () {},
+    // No padding of its own, so its text lines up with the row's end.
     style: TextButton.styleFrom(
-      padding: const EdgeInsets.symmetric(horizontal: NbSpace.sm),
+      padding: EdgeInsets.zero,
+      minimumSize: const Size(0, NbSize.touch),
     ),
-    child: const Text(
-      'Cadastrar',
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-    ),
+    child: const Text('Cadastrar', maxLines: 1),
   );
 }

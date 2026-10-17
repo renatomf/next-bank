@@ -64,9 +64,9 @@ class PixBox extends StatelessWidget {
             header: true,
             child: Text('Pix', style: Theme.of(context).textTheme.titleMedium),
           ),
-          const SizedBox(height: NbSpace.md),
+          const SizedBox(height: NbSpace.lg),
           PixKeyField(onPix: onPix, onPixWithKey: onPixWithKey),
-          const SizedBox(height: NbSpace.md),
+          const SizedBox(height: NbSpace.lg),
           PixActions(
             onTransfer: onTransfer,
             onPay: onPay,
