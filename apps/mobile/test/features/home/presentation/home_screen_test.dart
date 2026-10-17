@@ -327,6 +327,45 @@ void main() {
       );
     });
 
+    // As in the reference: the icon on the link's start edge, the text
+    // centered in the room beside it.
+    for (final (label, text) in [
+      ('Pix Automático', 'Pix\nAutomático'),
+      ('Minhas chaves', 'Minhas\nchaves'),
+    ]) {
+      testWidgets('puts the icon of "$label" on the start, its text centered', (
+        tester,
+      ) async {
+        await pumpHome(tester);
+        await tester.pumpAndSettle();
+        await scrollToBox(tester);
+
+        final link = find.descendant(
+          of: find.byType(PixBox),
+          matching: find.bySemanticsLabel(label),
+        );
+        final icon = find
+            .descendant(
+              of: link,
+              matching: find.byWidgetPredicate(
+                (widget) => widget is PixMark || widget is Icon,
+              ),
+            )
+            .first;
+        final words = find.descendant(of: link, matching: find.text(text));
+
+        expect(
+          tester.getTopLeft(icon).dx - tester.getTopLeft(link).dx,
+          lessThanOrEqualTo(NbSpace.sm),
+        );
+        expect(tester.widget<Text>(words).textAlign, TextAlign.center);
+        // Centered between the icon and the link's end.
+        final room =
+            (tester.getTopRight(icon).dx + tester.getTopRight(link).dx) / 2;
+        expect(tester.getCenter(words).dx, moreOrLessEquals(room, epsilon: 8));
+      });
+    }
+
     // Developer's call: two-line labels, as in the reference.
     testWidgets('breaks the labels in two lines', (tester) async {
       await pumpHome(tester);
