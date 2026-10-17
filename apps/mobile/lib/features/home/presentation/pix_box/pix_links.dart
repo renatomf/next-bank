@@ -34,7 +34,11 @@ class PixLinks extends StatelessWidget {
           ),
           Expanded(
             child: _PixLink(
-              icon: const Icon(Icons.key_outlined, size: pixBoxIconSize),
+              // A little in from the edge, at the developer's request.
+              icon: const Padding(
+                padding: EdgeInsets.only(left: NbSpace.sm),
+                child: Icon(Icons.key_outlined, size: pixBoxIconSize),
+              ),
               label: 'Minhas chaves',
               text: 'Minhas\nchaves',
               onPressed: onKeys,

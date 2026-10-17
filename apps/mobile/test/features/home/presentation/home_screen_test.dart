@@ -356,7 +356,7 @@ void main() {
 
         expect(
           tester.getTopLeft(icon).dx - tester.getTopLeft(link).dx,
-          lessThanOrEqualTo(NbSpace.sm),
+          lessThanOrEqualTo(NbSpace.lg),
         );
         expect(tester.widget<Text>(words).textAlign, TextAlign.center);
         // Centered between the icon and the link's end.
