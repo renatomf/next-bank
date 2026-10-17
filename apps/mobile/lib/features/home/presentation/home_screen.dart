@@ -3,12 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/account/account_providers.dart';
 import 'package:next_bank/core/api_failure.dart';
-import 'package:next_bank/core/clock.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/refresh_failure.dart';
-import 'package:next_bank/core/statement/statement_controller.dart';
-import 'package:next_bank/core/statement/statement_item.dart';
-import 'package:next_bank/core/statement/statement_texts.dart';
+import 'package:next_bank/features/home/presentation/widgets/home_pix_box.dart';
 
 /// Home (screen 6; mockups home-dark and home-light): the greeting and the
 /// available balance, the Pix shortcut and the latest movements. The floating
@@ -21,7 +18,10 @@ class HomeScreen extends ConsumerWidget {
     required this.onPay,
     required this.onReceive,
     required this.onStatement,
-    required this.onMovement,
+    required this.onPixWithKey,
+    required this.onTransfer,
+    required this.onAutomatic,
+    required this.onKeys,
     super.key,
   });
 
@@ -37,26 +37,32 @@ class HomeScreen extends ConsumerWidget {
   /// Opens the statement.
   final VoidCallback onStatement;
 
-  /// Opens the detail of a movement.
-  final ValueChanged<String> onMovement;
+  /// Opens the Pix with a CPF key typed in the Pix box, in digits.
+  final ValueChanged<String> onPixWithKey;
+
+  /// Opens "Transferir Pix".
+  final VoidCallback onTransfer;
+
+  /// Opens "Pix Automático".
+  final VoidCallback onAutomatic;
+
+  /// Opens "Minhas chaves".
+  final VoidCallback onKeys;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final name = ref.watch(profileProvider).value?.name ?? '';
     toastFailedRefresh(context, ref, accountProvider);
-    toastFailedRefresh(context, ref, statementProvider);
     return Scaffold(
       body: GlowBackground(
         child: SafeArea(
-          // Pulled down, the Home reads the balance and the movements again,
-          // as when money arrives with the app open.
+          // Pulled down, the Home reads the balance again, as when money
+          // arrives with the app open.
           child: RefreshIndicator(
             onRefresh: () async {
               try {
-                await Future.wait([
-                  ref.refresh(accountProvider.future),
-                  ref.read(statementProvider.notifier).refresh(),
-                ]);
+                ref.invalidate(accountProvider);
+                await ref.read(accountProvider.future);
               } on ApiFailure {
                 // Told by the toast; the screen keeps what it had.
               }
@@ -74,7 +80,17 @@ class HomeScreen extends ConsumerWidget {
                 const SizedBox(height: 28),
                 _Balance(onStatement: onStatement),
                 const SizedBox(height: 28),
-                _LatestMovements(onMovement: onMovement),
+                // In place of the latest movements (v1.1.0 plan, task 4.2):
+                // the statement opens from the balance card.
+                HomePixBox(
+                  onPix: onPix,
+                  onPixWithKey: onPixWithKey,
+                  onTransfer: onTransfer,
+                  onPay: onPay,
+                  onReceive: onReceive,
+                  onAutomatic: onAutomatic,
+                  onKeys: onKeys,
+                ),
               ],
             ),
           ),
@@ -261,88 +277,6 @@ class _Balance extends ConsumerWidget {
         onStatement: onStatement,
       ),
     };
-  }
-}
-
-/// The latest movements (home-dark mockup): the newest three of the same
-/// statement the statement screen shows; the link to it lives in the
-/// balance card since the S21 checkpoint of v1.1.0.
-class _LatestMovements extends ConsumerWidget {
-  const new({required this.onMovement});
-
-  final ValueChanged<String> onMovement;
-
-  /// How many movements the Home shows.
-  static const int count = 3;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.nbColors;
-    final now = ref.watch(nowProvider)();
-    final content = switch (ref.watch(statementProvider)) {
-      AsyncValue(value: StatementView(items: [])) => const EmptyState(
-        icon: Icons.receipt_long_outlined,
-        title: 'Sem movimentações',
-        message: 'Seus Pix enviados e recebidos aparecem aqui.',
-      ),
-      AsyncValue(:final value?) => Column(
-        children: [
-          for (final (index, item) in value.items.take(count).indexed) ...[
-            if (index > 0) Divider(height: 1, color: colors.border),
-            TransactionItem(
-              title: statementTitle(item.kind),
-              caption: statementCaption(item, now),
-              amountCents: item.amountCents,
-              incoming: item.direction == MoneyDirection.incoming,
-              onTap: () => onMovement(item.id),
-            ),
-          ],
-        ],
-      ),
-      AsyncError() => ErrorState(
-        message: 'Não foi possível carregar suas movimentações.',
-        onRetry: () => ref.invalidate(statementProvider),
-      ),
-      _ => Semantics(
-        label: 'Carregando movimentações',
-        container: true,
-        child: const Column(
-          children: [
-            Skeleton(width: double.infinity, height: 52),
-            SizedBox(height: NbSpace.md),
-            Skeleton(width: double.infinity, height: 52),
-          ],
-        ),
-      ),
-    };
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                'Últimas movimentações',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: NbSpace.md),
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: NbSpace.lg,
-            vertical: NbSpace.xs,
-          ),
-          decoration: BoxDecoration(
-            color: colors.surface,
-            borderRadius: BorderRadius.circular(NbRadius.block),
-            border: Border.all(color: colors.border),
-          ),
-          child: content,
-        ),
-      ],
-    );
   }
 }
 

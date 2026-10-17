@@ -139,9 +139,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // The Home and the statement each read the first page: the statement
-      // keeps its own, filterable list (v1.1.0 plan, task 4.1).
-      expect(statement.cursors, [null, null, 'c1']);
+      // Only the statement reads it: the Home no longer lists movements
+      // (v1.1.0 plan, task 4.2).
+      expect(statement.cursors, [null, 'c1']);
       expect(find.text('Não há movimentações mais antigas.'), findsOneWidget);
     });
 
@@ -249,21 +249,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Não encontrado.'), findsOneWidget);
-    });
-
-    testWidgets('opens from the Home too', (tester) async {
-      await openHome(
-        tester,
-        FakeStatementRepository({
-          null: () async => pageOf([received]),
-        }),
-      );
-
-      await tester.tap(find.byType(TransactionItem).first);
-      await tester.pumpAndSettle();
-
-      expect(find.text('Detalhe'), findsOneWidget);
-      expect(find.text('Pix recebido'), findsOneWidget);
     });
   });
 

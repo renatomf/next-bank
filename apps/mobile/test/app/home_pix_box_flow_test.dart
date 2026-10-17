@@ -51,10 +51,10 @@ void main() {
     await tapInBox(tester, 'Continuar com a chave');
 
     expect(find.byType(SendPixScreen), findsOneWidget);
-    expect(
-      pix.callsOf('lookup').single.key,
-      (type: PixKeyType.cpf, value: _cpf),
-    );
+    expect(pix.callsOf('lookup').single.key, (
+      type: PixKeyType.cpf,
+      value: _cpf,
+    ));
     // The holder the server returns (PIX-11), and the key shown in its field.
     expect(find.text('Mariana Costa'), findsOneWidget);
     expect(find.text('529.982.247-25'), findsOneWidget);
@@ -65,9 +65,7 @@ void main() {
     ('Pix Automático', PixAutomaticScreen),
     ('Minhas chaves', PixKeysScreen),
   ]) {
-    testWidgets('opens "$label", blank for now, and goes back', (
-      tester,
-    ) async {
+    testWidgets('opens "$label", blank for now, and goes back', (tester) async {
       await openHome(tester, FakePixRepository());
 
       await tapInBox(tester, label);

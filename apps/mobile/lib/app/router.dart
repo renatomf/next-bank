@@ -17,12 +17,15 @@ import 'package:next_bank/features/auth/presentation/sign_out/switch_account_but
 import 'package:next_bank/features/auth/presentation/splash/splash_screen.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
+import 'package:next_bank/features/pix/presentation/automatic/pix_automatic_screen.dart';
+import 'package:next_bank/features/pix/presentation/keys/pix_keys_screen.dart';
 import 'package:next_bank/features/pix/presentation/processing/processing_screen.dart';
 import 'package:next_bank/features/pix/presentation/receipt/receipt_screen.dart';
 import 'package:next_bank/features/pix/presentation/receive/receive_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/review/review_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/scan/scan_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
+import 'package:next_bank/features/pix/presentation/transfer/transfer_pix_screen.dart';
 import 'package:next_bank/features/profile/presentation/profile_screen.dart';
 import 'package:next_bank/features/security/presentation/change_password/change_password_screen.dart';
 import 'package:next_bank/features/security/presentation/change_pin/change_pin_screen.dart';
@@ -98,8 +101,11 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
                 unawaited(context.push(AppRoutes.pixScan));
               },
               onReceive: () => context.push(AppRoutes.pixReceive),
+              onPixWithKey: (cpf) => context.push(AppRoutes.pix, extra: cpf),
+              onTransfer: () => context.push(AppRoutes.pixTransfer),
+              onAutomatic: () => context.push(AppRoutes.pixAutomatic),
+              onKeys: () => context.push(AppRoutes.pixKeys),
               onStatement: () => context.go(AppRoutes.statement),
-              onMovement: (id) => context.push(AppRoutes.statementItem(id)),
             ),
           ),
           GoRoute(
@@ -136,7 +142,9 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
       // returns to the PIN (domain-model.md 10).
       GoRoute(
         path: AppRoutes.pix,
-        builder: (context, _) => SendPixScreen(
+        builder: (context, state) => SendPixScreen(
+          // The CPF from the Home's Pix box rides as extra, never in the URL.
+          initialCpf: state.extra is String ? state.extra! as String : null,
           onBack: () => _back(context),
           onReceive: () => context.push(AppRoutes.pixReceive),
           onReview: (id) => context.push(AppRoutes.pixReview(id)),
@@ -150,6 +158,20 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
           onBack: () => context.go(AppRoutes.home),
           onRead: () => _back(context),
         ),
+      ),
+      GoRoute(
+        path: AppRoutes.pixTransfer,
+        builder: (context, _) =>
+            TransferPixScreen(onBack: () => _back(context)),
+      ),
+      GoRoute(
+        path: AppRoutes.pixAutomatic,
+        builder: (context, _) =>
+            PixAutomaticScreen(onBack: () => _back(context)),
+      ),
+      GoRoute(
+        path: AppRoutes.pixKeys,
+        builder: (context, _) => PixKeysScreen(onBack: () => _back(context)),
       ),
       GoRoute(
         path: AppRoutes.pixReceive,

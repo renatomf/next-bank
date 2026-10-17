@@ -240,6 +240,7 @@ void main() {
       final keys = <String>[];
       await pumpHome(tester, onPixWithKey: keys.add);
       await tester.pumpAndSettle();
+      await scrollToBox(tester);
 
       await tester.enterText(keyField(), '52998224725');
       await tester.tap(find.bySemanticsLabel('Continuar com a chave'));
@@ -252,6 +253,7 @@ void main() {
       var opened = 0;
       await pumpHome(tester, onPix: () => opened++);
       await tester.pumpAndSettle();
+      await scrollToBox(tester);
 
       await tester.tap(find.bySemanticsLabel('Continuar com a chave'));
       await tester.pumpAndSettle();
@@ -266,6 +268,7 @@ void main() {
       var opened = 0;
       await pumpHome(tester, onPixWithKey: keys.add, onPix: () => opened++);
       await tester.pumpAndSettle();
+      await scrollToBox(tester);
 
       await tester.enterText(keyField(), '12345678900');
       await tester.tap(find.bySemanticsLabel('Continuar com a chave'));

@@ -29,6 +29,15 @@ abstract final class AppRoutes {
   /// task 4).
   static const String pixScan = '$pix/scan';
 
+  /// Transferring a Pix (v1.1.0 plan, task 4.2): blank for now.
+  static const String pixTransfer = '$pix/transfer';
+
+  /// Pix Automático (v1.1.0 plan, task 4.2): blank for now.
+  static const String pixAutomatic = '$pix/automatic';
+
+  /// The customer's Pix keys (v1.1.0 plan, task 4.2): blank for now.
+  static const String pixKeys = '$pix/keys';
+
   /// Receiving a Pix by QR Code (v1.1.0 plan, task 3).
   static const String pixReceive = '$pix/receive';
 
