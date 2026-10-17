@@ -65,67 +65,24 @@ Finder statementRows() => find.descendant(
 
 // Screens 11 and 12 through the real router (domain-model.md 10 and 11).
 void main() {
-  group('the Home', () {
-    testWidgets('shows the three latest movements', (tester) async {
-      await openHome(
-        tester,
-        FakeStatementRepository({
-          null: () async =>
-              pageOf([received, sent, funding, movement('older')], 'c1'),
-        }),
-      );
-
-      expect(find.text('Últimas movimentações'), findsOneWidget);
-      expect(find.byType(TransactionItem), findsNWidgets(3));
-      expect(find.text(r'+ R$ 350,00'), findsOneWidget);
-      expect(find.text(r'− R$ 120,00'), findsOneWidget);
-      expect(find.text('Depósito inicial'), findsOneWidget);
-    });
-
-    testWidgets('says when there is no movement yet', (tester) async {
-      await openHome(tester, FakeStatementRepository());
-
-      expect(find.text('Sem movimentações'), findsOneWidget);
-    });
-
-    testWidgets('offers a retry when the movements cannot load', (
+  // v1.1.0 plan, task 4.2: the Home's latest movements gave way to the Pix
+  // box; the movements live on the statement, opened from the balance card.
+  testWidgets('the Home no longer lists movements', (tester) async {
+    await openHome(
       tester,
-    ) async {
-      var fails = true;
-      await openHome(
-        tester,
-        FakeStatementRepository({
-          null: () async =>
-              fails ? throw const ApiUnreachable() : pageOf([received]),
-        }),
-      );
-      expect(
-        find.text('Não foi possível carregar suas movimentações.'),
-        findsOneWidget,
-      );
+      FakeStatementRepository({
+        null: () async => pageOf([received]),
+      }),
+    );
 
-      fails = false;
-      await tester.tap(find.text('Tentar de novo'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Pix recebido'), findsOneWidget);
-    });
-
-    // Week 8 plan, V14 (changing week 6's D8): the eye hides only the
-    // balance; the movements keep their amounts.
-    testWidgets('shows the amounts while the balance is hidden', (
-      tester,
-    ) async {
-      await openHome(
-        tester,
-        FakeStatementRepository({
-          null: () async => pageOf([received]),
-        }),
-      );
-
-      expect(find.bySemanticsLabel('Saldo oculto'), findsOneWidget);
-      expect(find.text(r'+ R$ 350,00'), findsOneWidget);
-    });
+    expect(find.text('Últimas movimentações'), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byType(HomeScreen),
+        matching: find.byType(TransactionItem),
+      ),
+      findsNothing,
+    );
   });
 
   group('the statement', () {

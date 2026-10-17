@@ -11,6 +11,7 @@ import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/core/statement/statement_controller.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
+import 'package:next_bank/features/home/presentation/widgets/home_pix_box.dart';
 
 import '../../../support/device_stores.dart';
 import '../../../support/fake_account_repository.dart';
@@ -28,6 +29,10 @@ Future<void> pumpHome(
   VoidCallback? onPay,
   VoidCallback? onReceive,
   VoidCallback? onStatement,
+  ValueChanged<String>? onPixWithKey,
+  VoidCallback? onTransfer,
+  VoidCallback? onAutomatic,
+  VoidCallback? onKeys,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -50,7 +55,10 @@ Future<void> pumpHome(
           onPay: onPay ?? () {},
           onReceive: onReceive ?? () {},
           onStatement: onStatement ?? () {},
-          onMovement: (_) {},
+          onPixWithKey: onPixWithKey ?? (_) {},
+          onTransfer: onTransfer ?? () {},
+          onAutomatic: onAutomatic ?? () {},
+          onKeys: onKeys ?? () {},
         ),
       ),
     ),
@@ -197,6 +205,118 @@ void main() {
         .widgetList<ActionTile>(find.byType(ActionTile))
         .map((tile) => tile.label);
     expect(labels, ['Área Pix', 'Pagar', 'Receber', 'Transferir', 'Recarga']);
+  });
+
+  // v1.1.0 plan, task 4.2: the Pix box, in place of the latest movements.
+  group('the Pix box', () {
+    Finder keyField() => find.descendant(
+      of: find.byType(HomePixBox),
+      matching: find.byType(TextField),
+    );
+
+    Future<void> scrollToBox(WidgetTester tester) async {
+      await tester.scrollUntilVisible(
+        find.text('Minhas chaves'),
+        200,
+        scrollable: find
+            .descendant(
+              of: find.byType(HomeScreen),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('takes the place of the latest movements', (tester) async {
+      await pumpHome(tester);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(HomePixBox), findsOneWidget);
+      expect(find.text('Últimas movimentações'), findsNothing);
+    });
+
+    testWidgets('opens the Pix with a valid CPF, in digits', (tester) async {
+      final keys = <String>[];
+      await pumpHome(tester, onPixWithKey: keys.add);
+      await tester.pumpAndSettle();
+
+      await tester.enterText(keyField(), '52998224725');
+      await tester.tap(find.bySemanticsLabel('Continuar com a chave'));
+      await tester.pumpAndSettle();
+
+      expect(keys, ['52998224725']);
+    });
+
+    testWidgets('opens the Pix area when the field is empty', (tester) async {
+      var opened = 0;
+      await pumpHome(tester, onPix: () => opened++);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.bySemanticsLabel('Continuar com a chave'));
+      await tester.pumpAndSettle();
+
+      expect(opened, 1);
+    });
+
+    testWidgets('says an invalid CPF is invalid, going nowhere (PIX-07)', (
+      tester,
+    ) async {
+      final keys = <String>[];
+      var opened = 0;
+      await pumpHome(tester, onPixWithKey: keys.add, onPix: () => opened++);
+      await tester.pumpAndSettle();
+
+      await tester.enterText(keyField(), '12345678900');
+      await tester.tap(find.bySemanticsLabel('Continuar com a chave'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('CPF inválido.'), findsOneWidget);
+      expect(keys, isEmpty);
+      expect(opened, 0);
+    });
+
+    for (final (label, callback) in [
+      ('Transferir Pix', 'transfer'),
+      ('Pagar QR Code', 'pay'),
+      ('Gerar QR Code', 'receive'),
+      ('Pix Automático', 'automatic'),
+      ('Minhas chaves', 'keys'),
+    ]) {
+      testWidgets('runs "$label"', (tester) async {
+        final ran = <String>[];
+        await pumpHome(
+          tester,
+          onTransfer: () => ran.add('transfer'),
+          onPay: () => ran.add('pay'),
+          onReceive: () => ran.add('receive'),
+          onAutomatic: () => ran.add('automatic'),
+          onKeys: () => ran.add('keys'),
+        );
+        await tester.pumpAndSettle();
+        await scrollToBox(tester);
+
+        await tester.tap(
+          find.descendant(
+            of: find.byType(HomePixBox),
+            matching: find.bySemanticsLabel(label),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(ran, [callback]);
+      });
+    }
+
+    // H1: the CPF line, with no number and no action yet.
+    testWidgets('shows the CPF line with "Cadastrar"', (tester) async {
+      await pumpHome(tester);
+      await tester.pumpAndSettle();
+      await scrollToBox(tester);
+
+      expect(find.text('Sua chave Pix principal'), findsOneWidget);
+      expect(find.text('Cadastrar'), findsOneWidget);
+    });
   });
 
   for (final shortcut in ['Transferir', 'Recarga']) {

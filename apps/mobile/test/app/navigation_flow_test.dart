@@ -56,7 +56,7 @@ void main() {
       );
     }
     await tapBar(tester, 'Início');
-    expect(find.text('Últimas movimentações'), findsOneWidget);
+    expect(find.text('Digite ou cole uma chave CPF'), findsOneWidget);
   });
 
   // Week 8 plan, V1 and V4: docked at the bottom, the bar never covers the
