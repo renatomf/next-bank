@@ -311,14 +311,70 @@ void main() {
       });
     }
 
-    // H1: the CPF line, with no number and no action yet.
-    testWidgets('shows the CPF line with "Cadastrar"', (tester) async {
+    // Developer's call at the checkpoint: the CPF masked by the server on
+    // the start, "Cadastrar" (no action yet) on the end.
+    testWidgets('shows the masked CPF, with "Cadastrar" apart on the end', (
+      tester,
+    ) async {
       await pumpHome(tester);
       await tester.pumpAndSettle();
       await scrollToBox(tester);
 
-      expect(find.text('Sua chave Pix principal'), findsOneWidget);
-      expect(find.text('Cadastrar'), findsOneWidget);
+      expect(find.text('***.444.777-**'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.text('Cadastrar')).dx,
+        greaterThan(tester.getTopRight(find.text('***.444.777-**')).dx),
+      );
+    });
+
+    // Developer's call: two-line labels, as in the reference.
+    testWidgets('breaks the labels in two lines', (tester) async {
+      await pumpHome(tester);
+      await tester.pumpAndSettle();
+      await scrollToBox(tester);
+
+      for (final label in [
+        'Transferir\nPix',
+        'Pagar\nQR Code',
+        'Gerar\nQR Code',
+        'Pix\nAutomático',
+        'Minhas\nchaves',
+      ]) {
+        expect(find.text(label), findsOneWidget, reason: label);
+      }
+    });
+
+    testWidgets('puts the Pix symbol on "Pix Automático", split from "Minhas '
+        'chaves" by a line', (tester) async {
+      await pumpHome(tester);
+      await tester.pumpAndSettle();
+      await scrollToBox(tester);
+
+      final automatic = find.descendant(
+        of: find.byType(HomePixBox),
+        matching: find.bySemanticsLabel('Pix Automático'),
+      );
+      expect(
+        find.descendant(
+          of: find.byType(HomePixBox),
+          matching: find.byType(PixMark),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        tester.getCenter(automatic).dy,
+        moreOrLessEquals(
+          tester
+              .getCenter(
+                find.descendant(
+                  of: find.byType(HomePixBox),
+                  matching: find.bySemanticsLabel('Minhas chaves'),
+                ),
+              )
+              .dy,
+          epsilon: 1,
+        ),
+      );
     });
   });
 
