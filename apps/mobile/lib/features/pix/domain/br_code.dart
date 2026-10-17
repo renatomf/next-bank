@@ -1,3 +1,5 @@
+import 'package:next_bank/core/cpf.dart';
+import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/domain/receiving_key.dart';
 
 /// Field 26 holds at most 99 characters: the GUI (18) and a 36-character
@@ -113,4 +115,145 @@ String crc16Ccitt(String text) {
     }
   }
   return crc.toRadixString(16).toUpperCase().padLeft(4, '0');
+}
+
+/// The code is not a static Pix the app can pay: broken, changed after its
+/// CRC, dynamic, or not a Pix at all (PIX-13, MOB-06). Never carries the
+/// text read (MOB-02).
+final class InvalidQrCode implements Exception {
+  /// Creates the error.
+  const new();
+
+  @override
+  String toString() => 'InvalidQrCode';
+}
+
+/// The code is a valid Pix, to a kind of key the next bank does not register
+/// (e-mail, phone, CNPJ).
+final class UnsupportedPixKey implements Exception {
+  /// Creates the error.
+  const new();
+
+  @override
+  String toString() => 'UnsupportedPixKey';
+}
+
+/// What a static code asks to pay. The name it carries is left out on
+/// purpose: the screen shows the one the server returns for the key (PIX-11).
+final class BrCodePayment {
+  /// Creates the payment read from a code.
+  const new({
+    required this.key,
+    required this.keyType,
+    this.amountCents,
+    this.message,
+  });
+
+  /// The key to pay, normalized.
+  final String key;
+
+  /// The kind of [key]: CPF or random.
+  final PixKeyType keyType;
+
+  /// The fixed amount, in integer cents; null lets the payer type it.
+  final int? amountCents;
+
+  /// The message for the payer, if any.
+  final String? message;
+}
+
+final RegExp _anyUuid = RegExp(
+  r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+);
+final RegExp _cpfDigits = RegExp(r'^\d{11}$');
+final RegExp _cnpjDigits = RegExp(r'^\d{14}$');
+final RegExp _phone = RegExp(r'^\+\d{8,15}$');
+final RegExp _twoDigits = RegExp(r'^\d{2}$');
+final RegExp _amount = RegExp(r'^(\d{1,10})(?:\.(\d{1,2}))?$');
+
+/// Reads a static Pix code (the QR Code or its "Copia e Cola") to pay it.
+/// The whole code is checked, CRC first, before anything of it is used.
+///
+/// Throws [InvalidQrCode] for anything that is not a valid static Pix and
+/// [UnsupportedPixKey] for a key the next bank does not register.
+BrCodePayment parseBrCode(String text) {
+  final code = text.trim();
+  if (code.length < 8) throw const InvalidQrCode();
+  final body = code.substring(0, code.length - 4);
+  if (!body.endsWith('6304') ||
+      crc16Ccitt(body) != code.substring(code.length - 4).toUpperCase()) {
+    throw const InvalidQrCode();
+  }
+  final fields = _fieldsOf(code);
+  if (fields['00'] != '01' || fields['53'] != '986' || fields['58'] == null) {
+    throw const InvalidQrCode();
+  }
+  final account = _pixAccountOf(fields);
+  // A dynamic code carries a URL (25) instead of the key (01).
+  final key = account['01'];
+  if (key == null) throw const InvalidQrCode();
+  final amount = fields['54'];
+  final message = account['02']?.trim() ?? '';
+  final (normalized, type) = _keyOf(key);
+  return BrCodePayment(
+    key: normalized,
+    keyType: type,
+    amountCents: amount == null ? null : _cents(amount),
+    message: message.isEmpty ? null : message,
+  );
+}
+
+/// The EMV fields of [text], id to value; a broken length is an invalid code.
+Map<String, String> _fieldsOf(String text) {
+  final fields = <String, String>{};
+  var at = 0;
+  while (at < text.length) {
+    if (at + 4 > text.length) throw const InvalidQrCode();
+    final id = text.substring(at, at + 2);
+    final size = text.substring(at + 2, at + 4);
+    if (!_twoDigits.hasMatch(id) || !_twoDigits.hasMatch(size)) {
+      throw const InvalidQrCode();
+    }
+    final end = at + 4 + int.parse(size);
+    if (end > text.length) throw const InvalidQrCode();
+    fields[id] = text.substring(at + 4, end);
+    at = end;
+  }
+  return fields;
+}
+
+/// The merchant account field of the Pix arrangement, among ids 26 to 51.
+Map<String, String> _pixAccountOf(Map<String, String> fields) {
+  for (var id = 26; id <= 51; id++) {
+    final value = fields['$id'];
+    if (value == null) continue;
+    final account = _fieldsOf(value);
+    if (account['00']?.toLowerCase() == _pixGui) return account;
+  }
+  throw const InvalidQrCode();
+}
+
+(String, PixKeyType) _keyOf(String raw) {
+  final key = raw.trim();
+  final lower = key.toLowerCase();
+  if (_anyUuid.hasMatch(lower)) return (lower, PixKeyType.random);
+  if (_cpfDigits.hasMatch(key)) {
+    if (!isValidCpf(key)) throw const InvalidQrCode();
+    return (key, PixKeyType.cpf);
+  }
+  if (key.contains('@') || _phone.hasMatch(key) || _cnpjDigits.hasMatch(key)) {
+    throw const UnsupportedPixKey();
+  }
+  throw const InvalidQrCode();
+}
+
+/// "10.50", "10.5" or "10" to integer cents, by text: never a double
+/// (ADR 0006). Zero is no amount to pay.
+int _cents(String text) {
+  final match = _amount.firstMatch(text);
+  if (match == null) throw const InvalidQrCode();
+  final cents =
+      int.parse(match[1]!) * 100 + int.parse((match[2] ?? '').padRight(2, '0'));
+  if (cents < 1) throw const InvalidQrCode();
+  return cents;
 }

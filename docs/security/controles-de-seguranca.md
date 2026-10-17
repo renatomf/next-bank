@@ -160,6 +160,7 @@
 | Segregação de funções | ➖ | Não há equipe operando o sistema na V1. Entra com os perfis do backoffice (Fase 3). | — |
 | Proteção contra replay | ✅ | Idempotência, máquina de estados do Pix e `UNIQUE` de um lançamento por Pix: a mesma autorização repetida devolve a mesma resposta com um lançamento só (PIX-02, T-DB-05, `authorize-route.test.ts`, `db-ledger-schema.test.ts`). | 5 |
 | Chave aleatória para receber por QR Code | ✅ | Uma chave `RANDOM` por conta, UUID v4 de `crypto.randomUUID()` (nunca o gerador de ids, que é v7 e traz o horário), cifrada com índice cego como a CPF; índice único parcial `pix_keys_one_random_per_account` como único árbitro do `ON CONFLICT`: 10 chamadas simultâneas gravam uma chave só; a conta vem do token e um corpo enviado é ignorado (PIX-01, PIX-12, `receiving-key-route.test.ts`, `get-receiving-key.test.ts`). | v1.1.0 |
+| Pagar por QR Code | ✅ | O app confere o BR Code inteiro (CRC primeiro) antes de qualquer tela, descarta o nome do QR e mostra o do servidor, trava o valor fixo e nunca abre o que leu; a câmera só liga na tela de leitura (PIX-11, PIX-13, MOB-06, MOB-10; `br_code_test.dart`, `send_pix_controller_test.dart`, `scan_pix_flow_test.dart`, E2E `pay_qr_flow_test.dart`). | v1.1.0 |
 | Controle de estado das transações | ✅ | Máquina de estados no domínio (`pix-transfer.test.ts`) e `CHECK`s de coerência entre status, datas, motivo de falha e ID E2E no banco (T-DB-10, `db-payments-schema.test.ts`); Pix resolvido recusado antes do PIN, expirado cancelado (PIX-08). | 5 |
 
 ## 9. Frameworks de referência

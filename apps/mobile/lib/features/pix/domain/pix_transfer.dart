@@ -1,4 +1,5 @@
-/// Kinds of Pix key (domain-model.md 3.4). V1 sends only to CPF keys (D8).
+/// Kinds of Pix key (domain-model.md 3.4). The app sends to CPF keys typed
+/// and, since v1.1.0, to random keys read from a QR Code.
 enum PixKeyType {
   /// The holder's CPF.
   cpf,
@@ -12,6 +13,9 @@ enum PixKeyType {
   /// A random key.
   random,
 }
+
+/// A key to send a Pix to: its kind and its normalized value.
+typedef PixKeyRef = ({PixKeyType type, String value});
 
 /// Who receives the Pix, as the server shows it: never the full CPF.
 final class PixPayee {

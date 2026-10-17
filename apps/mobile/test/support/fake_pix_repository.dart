@@ -36,7 +36,7 @@ PixTransfer pixTransfer({
 /// A call the fake received.
 typedef PixCall = ({
   String command,
-  String? cpf,
+  PixKeyRef? key,
   int? amountCents,
   String? description,
   String? transferId,
@@ -76,21 +76,21 @@ class FakePixRepository implements PixRepository {
       calls.where((call) => call.command == command).toList();
 
   @override
-  Future<PixPayee> lookup(String cpf) {
-    _record('lookup', cpf: cpf);
+  Future<PixPayee> lookup(PixKeyRef key) {
+    _record('lookup', key: key);
     return lookupAnswer();
   }
 
   @override
   Future<PixTransfer> create({
-    required String cpf,
+    required PixKeyRef key,
     required int amountCents,
     required String? description,
     required String idempotencyKey,
   }) {
     _record(
       'create',
-      cpf: cpf,
+      key: key,
       amountCents: amountCents,
       description: description,
       idempotencyKey: idempotencyKey,
@@ -127,7 +127,7 @@ class FakePixRepository implements PixRepository {
 
   void _record(
     String command, {
-    String? cpf,
+    PixKeyRef? key,
     int? amountCents,
     String? description,
     String? transferId,
@@ -135,7 +135,7 @@ class FakePixRepository implements PixRepository {
     String? idempotencyKey,
   }) => calls.add((
     command: command,
-    cpf: cpf,
+    key: key,
     amountCents: amountCents,
     description: description,
     transferId: transferId,

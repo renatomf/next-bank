@@ -89,6 +89,22 @@ void main() {
     expect(pix.callsOf('receivingKey'), hasLength(1));
   });
 
+  testWidgets("opens from the Home's shortcut too", (tester) async {
+    await pumpApp(
+      tester,
+      store: FakeTokenStore(tokens),
+      profile: FakeProfileRepository(name: 'Bruno Lima'),
+      pix: FakePixRepository(),
+    );
+    await unlockWithPin(tester);
+
+    await tester.tap(find.text('Receber'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ReceivePixScreen), findsOneWidget);
+    expect(codeOnScreen(tester), brunosCode());
+  });
+
   testWidgets('puts the amount and the message in the code', (tester) async {
     await openReceive(tester, FakePixRepository());
 

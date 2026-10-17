@@ -27,8 +27,10 @@ class AmountCard extends StatelessWidget {
   /// True while the customer chose to hide the balance.
   final bool balanceHidden;
 
-  /// Asks the screen to let the customer type the amount.
-  final VoidCallback onEdit;
+  /// Asks the screen to let the customer type the amount; null when the
+  /// amount is fixed, as one read from a QR Code (PIX-13): a lock replaces
+  /// the pencil.
+  final VoidCallback? onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -80,15 +82,27 @@ class AmountCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: NbSpace.md),
-                      IconCircleButton(
-                        icon: Icons.edit_outlined,
-                        label: 'Digitar o valor',
-                        onPressed: onEdit,
-                        background: NbBalanceCardColors.button,
-                        foreground: NbBalanceCardColors.text,
-                        borderColor: NbBalanceCardColors.buttonBorder,
-                        iconSize: 18,
-                      ),
+                      if (onEdit case final onEdit?)
+                        IconCircleButton(
+                          icon: Icons.edit_outlined,
+                          label: 'Digitar o valor',
+                          onPressed: onEdit,
+                          background: NbBalanceCardColors.button,
+                          foreground: NbBalanceCardColors.text,
+                          borderColor: NbBalanceCardColors.buttonBorder,
+                          iconSize: 18,
+                        )
+                      else
+                        Semantics(
+                          label: 'Valor definido pelo QR Code',
+                          child: const ExcludeSemantics(
+                            child: Icon(
+                              Icons.lock_outline,
+                              size: 20,
+                              color: NbBalanceCardColors.text,
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                   const SizedBox(height: NbSpace.lg),

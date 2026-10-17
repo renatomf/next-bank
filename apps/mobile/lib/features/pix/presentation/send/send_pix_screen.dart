@@ -35,10 +35,12 @@ class SendPixScreen extends ConsumerStatefulWidget {
 
 class _SendPixScreenState extends ConsumerState<SendPixScreen> {
   final _amount = FocusNode();
+  final _description = TextEditingController();
 
   @override
   void dispose() {
     _amount.dispose();
+    _description.dispose();
     super.dispose();
   }
 
@@ -51,6 +53,13 @@ class _SendPixScreenState extends ConsumerState<SendPixScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // A QR Code read fills the description with its message.
+    ref.listen(sendPixControllerProvider.select((s) => s.description), (
+      _,
+      description,
+    ) {
+      if (_description.text != description) _description.text = description;
+    });
     final state = ref.watch(sendPixControllerProvider);
     final controller = ref.read(sendPixControllerProvider.notifier);
     final account = ref.watch(accountProvider).value;
@@ -98,6 +107,8 @@ class _SendPixScreenState extends ConsumerState<SendPixScreen> {
                       alwaysIncludeSemantics: true,
                       child: TextField(
                         focusNode: _amount,
+                        // A fixed amount from a QR Code is not typed over.
+                        enabled: !state.amountLocked,
                         autofocus: true,
                         keyboardType: TextInputType.number,
                         inputFormatters: [
@@ -115,7 +126,7 @@ class _SendPixScreenState extends ConsumerState<SendPixScreen> {
                     cents: state.amountCents,
                     balanceCents: account?.availableBalanceCents,
                     balanceHidden: hidden,
-                    onEdit: _amount.requestFocus,
+                    onEdit: state.amountLocked ? null : _amount.requestFocus,
                   ),
                 ],
               ),
@@ -123,26 +134,39 @@ class _SendPixScreenState extends ConsumerState<SendPixScreen> {
               Row(
                 children: [
                   Expanded(child: Text('Para quem?', style: text.titleMedium)),
-                  TextButton.icon(
-                    onPressed: state.searching ? null : controller.lookup,
-                    iconAlignment: IconAlignment.end,
-                    icon: const Icon(Icons.search, size: 20),
-                    label: const Text('Buscar chave'),
-                  ),
+                  if (state.qrKey == null)
+                    TextButton.icon(
+                      onPressed: state.searching ? null : controller.lookup,
+                      iconAlignment: IconAlignment.end,
+                      icon: const Icon(Icons.search, size: 20),
+                      label: const Text('Buscar chave'),
+                    )
+                  else
+                    TextButton(
+                      onPressed: () => controller.typeKey(''),
+                      child: const Text('Usar chave CPF'),
+                    ),
                 ],
               ),
               const SizedBox(height: NbSpace.sm),
-              NbTextField(
-                label: 'Chave CPF',
-                keyboardType: TextInputType.number,
-                textInputAction: TextInputAction.search,
-                // Digits only; the mask shows as they are typed (v1.1.0
-                // plan, task 1.1).
-                inputFormatters: const [CpfInputFormatter()],
-                errorText: state.keyError,
-                onChanged: controller.typeKey,
-                onSubmitted: (_) => controller.lookup(),
-              ),
+              if (state.qrKey != null) ...[
+                Text('Chave lida do QR Code', style: text.bodyMedium),
+                if (state.keyError case final keyError?) ...[
+                  const SizedBox(height: NbSpace.sm),
+                  FormErrorText(keyError),
+                ],
+              ] else
+                NbTextField(
+                  label: 'Chave CPF',
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.search,
+                  // Digits only; the mask shows as they are typed (v1.1.0
+                  // plan, task 1.1).
+                  inputFormatters: const [CpfInputFormatter()],
+                  errorText: state.keyError,
+                  onChanged: controller.typeKey,
+                  onSubmitted: (_) => controller.lookup(),
+                ),
               if (state.searching) ...[
                 const SizedBox(height: NbSpace.lg),
                 const Center(
@@ -158,6 +182,7 @@ class _SendPixScreenState extends ConsumerState<SendPixScreen> {
               const SizedBox(height: NbSpace.xl),
               NbTextField(
                 label: 'Descrição (opcional)',
+                controller: _description,
                 textInputAction: TextInputAction.done,
                 inputFormatters: [
                   LengthLimitingTextInputFormatter(maxDescriptionLength),

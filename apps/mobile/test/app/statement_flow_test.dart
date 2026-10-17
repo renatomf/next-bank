@@ -51,7 +51,7 @@ Future<void> openHome(
 }
 
 Future<void> openStatement(WidgetTester tester) async {
-  await tester.tap(find.text('Ver extrato'));
+  await tester.tap(find.bySemanticsLabel('Ver extrato'));
   await tester.pumpAndSettle();
 }
 
@@ -134,7 +134,7 @@ void main() {
         FakeStatementRepository({null: () => first.future}),
       );
 
-      await tester.tap(find.text('Ver extrato'));
+      await tester.tap(find.bySemanticsLabel('Ver extrato'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
 
@@ -322,7 +322,7 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.scrollUntilVisible(
-      find.text('Ver extrato'),
+      find.bySemanticsLabel('Ver extrato'),
       200,
       scrollable: find
           .descendant(
@@ -331,7 +331,7 @@ void main() {
           )
           .first,
     );
-    await tester.ensureVisible(find.text('Ver extrato'));
+    await tester.ensureVisible(find.bySemanticsLabel('Ver extrato'));
     await tester.pumpAndSettle();
     await openStatement(tester);
     expect(tester.takeException(), isNull);

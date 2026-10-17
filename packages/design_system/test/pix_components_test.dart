@@ -74,6 +74,28 @@ void main() {
       expect(edits, 1);
     });
 
+    // PIX-13: an amount fixed by a QR Code cannot be typed over.
+    testWidgets('shows a lock instead of the pencil when fixed', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(
+          const AmountCard(
+            cents: 2500,
+            balanceCents: 0,
+            balanceHidden: false,
+            onEdit: null,
+          ),
+        ),
+      );
+
+      expect(find.bySemanticsLabel('Digitar o valor'), findsNothing);
+      expect(
+        find.bySemanticsLabel('Valor definido pelo QR Code'),
+        findsOneWidget,
+      );
+    });
+
     // The balance card's mint glow underneath, so both cards look alike.
     testWidgets('glows mint underneath like the balance card', (tester) async {
       await tester.pumpWidget(host(card()));

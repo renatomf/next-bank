@@ -18,6 +18,8 @@ class HomeScreen extends ConsumerWidget {
   /// import each other.
   const new({
     required this.onPix,
+    required this.onPay,
+    required this.onReceive,
     required this.onStatement,
     required this.onMovement,
     super.key,
@@ -25,6 +27,12 @@ class HomeScreen extends ConsumerWidget {
 
   /// Opens the Pix.
   final VoidCallback onPix;
+
+  /// Opens the reading of a Pix QR Code (v1.1.0 plan, task 4).
+  final VoidCallback onPay;
+
+  /// Opens "Receber", with the customer's QR Code (v1.1.0 plan, task 3).
+  final VoidCallback onReceive;
 
   /// Opens the statement.
   final VoidCallback onStatement;
@@ -62,14 +70,11 @@ class HomeScreen extends ConsumerWidget {
                 const SizedBox(height: 22),
                 const _HelpRow(),
                 const SizedBox(height: NbSpace.xl),
-                _Shortcuts(onPix: onPix),
+                _Shortcuts(onPix: onPix, onPay: onPay, onReceive: onReceive),
                 const SizedBox(height: 28),
-                const _Balance(),
+                _Balance(onStatement: onStatement),
                 const SizedBox(height: 28),
-                _LatestMovements(
-                  onStatement: onStatement,
-                  onMovement: onMovement,
-                ),
+                _LatestMovements(onMovement: onMovement),
               ],
             ),
           ),
@@ -165,12 +170,23 @@ class _HelpField extends StatelessWidget {
   }
 }
 
-/// The Home's row of four (home-dark mockup): the Pix opens its area; the
-/// others come with their screens after v1.0.0 and say so (week 8 plan, V7).
+/// The Home's shortcuts (home-dark mockup), scrolling sideways since the
+/// S21 checkpoint of v1.1.0: the Pix opens its area, "Pagar" reads a Pix QR
+/// Code and "Receber" shows the customer's; the others come with their
+/// screens and say so (week 8 plan, V7).
 class _Shortcuts extends StatelessWidget {
-  const new({required this.onPix});
+  const new({
+    required this.onPix,
+    required this.onPay,
+    required this.onReceive,
+  });
 
   final VoidCallback onPix;
+  final VoidCallback onPay;
+  final VoidCallback onReceive;
+
+  /// Every tile's width: one size for all (week 8 plan, V13).
+  static const double _tileWidth = 84;
 
   @override
   Widget build(BuildContext context) {
@@ -180,7 +196,12 @@ class _Shortcuts extends StatelessWidget {
       ActionTile(
         icon: const Icon(Icons.qr_code_scanner),
         label: 'Pagar',
-        onPressed: soon,
+        onPressed: onPay,
+      ),
+      ActionTile(
+        icon: const Icon(Icons.qr_code_2),
+        label: 'Receber',
+        onPressed: onReceive,
       ),
       ActionTile(
         icon: const Icon(Icons.swap_horiz),
@@ -193,23 +214,25 @@ class _Shortcuts extends StatelessWidget {
         onPressed: soon,
       ),
     ];
-    // One height for the four, the tallest one's (week 8 plan, V13).
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final (index, tile) in tiles.indexed) ...[
-            if (index > 0) const SizedBox(width: NbSpace.sm),
-            Expanded(child: tile),
-          ],
-        ],
+    // A sideways list needs a fixed height: the tile's, grown with the
+    // system's text size so larger labels still fit.
+    return SizedBox(
+      height: MediaQuery.textScalerOf(context).scale(ActionTile.height),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: tiles.length,
+        separatorBuilder: (_, _) => const SizedBox(width: NbSpace.sm),
+        itemBuilder: (_, index) =>
+            SizedBox(width: _tileWidth, child: tiles[index]),
       ),
     );
   }
 }
 
 class _Balance extends ConsumerWidget {
-  const new();
+  const new({required this.onStatement});
+
+  final VoidCallback onStatement;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -221,6 +244,7 @@ class _Balance extends ConsumerWidget {
         balanceCents: account.availableBalanceCents,
         hidden: hidden,
         onToggleHidden: toggle,
+        onStatement: onStatement,
       ),
       AsyncError() => Padding(
         padding: const EdgeInsets.symmetric(vertical: NbSpace.xl),
@@ -234,17 +258,18 @@ class _Balance extends ConsumerWidget {
         balanceCents: null,
         hidden: hidden,
         onToggleHidden: toggle,
+        onStatement: onStatement,
       ),
     };
   }
 }
 
 /// The latest movements (home-dark mockup): the newest three of the same
-/// statement the statement screen shows, and "Ver extrato".
+/// statement the statement screen shows; the link to it lives in the
+/// balance card since the S21 checkpoint of v1.1.0.
 class _LatestMovements extends ConsumerWidget {
-  const new({required this.onStatement, required this.onMovement});
+  const new({required this.onMovement});
 
-  final VoidCallback onStatement;
   final ValueChanged<String> onMovement;
 
   /// How many movements the Home shows.
@@ -300,10 +325,6 @@ class _LatestMovements extends ConsumerWidget {
                 'Últimas movimentações',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
-            ),
-            TextButton(
-              onPressed: onStatement,
-              child: const Text('Ver extrato'),
             ),
           ],
         ),

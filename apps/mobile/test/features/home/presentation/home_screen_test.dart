@@ -25,6 +25,9 @@ Future<void> pumpHome(
   FakeStatementRepository? statement,
   DateTime? now,
   VoidCallback? onPix,
+  VoidCallback? onPay,
+  VoidCallback? onReceive,
+  VoidCallback? onStatement,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -44,7 +47,9 @@ Future<void> pumpHome(
         theme: NbTheme.dark(),
         home: HomeScreen(
           onPix: onPix ?? () {},
-          onStatement: () {},
+          onPay: onPay ?? () {},
+          onReceive: onReceive ?? () {},
+          onStatement: onStatement ?? () {},
           onMovement: (_) {},
         ),
       ),
@@ -129,7 +134,72 @@ void main() {
     expect(opened, 1);
   });
 
-  for (final shortcut in ['Pagar', 'Transferir', 'Recarga']) {
+  // v1.1.0 plan, task 4: "Pagar" reads a Pix QR Code.
+  testWidgets('opens the QR Code reading on "Pagar"', (tester) async {
+    var paid = 0;
+    await pumpHome(tester, onPay: () => paid++);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Pagar'));
+    await tester.pumpAndSettle();
+
+    expect(paid, 1);
+    expect(find.widgetWithText(NbToast, 'Em breve.'), findsNothing);
+  });
+
+  // S21 checkpoint: the statement opens from the balance card, and the
+  // latest movements no longer repeat the link.
+  testWidgets('opens the statement from the balance card', (tester) async {
+    var opened = 0;
+    await pumpHome(tester, onStatement: () => opened++);
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(BalanceCard),
+        matching: find.bySemanticsLabel('Ver extrato'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(opened, 1);
+    expect(find.widgetWithText(TextButton, 'Ver extrato'), findsNothing);
+  });
+
+  // v1.1.0 plan, task 3, at the S21 checkpoint: "Receber" beside "Pagar".
+  testWidgets('opens "Receber" on its shortcut', (tester) async {
+    var received = 0;
+    await pumpHome(tester, onReceive: () => received++);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Receber'));
+    await tester.pumpAndSettle();
+
+    expect(received, 1);
+  });
+
+  // Developer's call at the S21 checkpoint: the shortcuts scroll sideways.
+  testWidgets('lists the shortcuts sideways, in order', (tester) async {
+    await pumpHome(tester);
+    await tester.pumpAndSettle();
+
+    // The nearest list above the tiles; the Home's own list scrolls down.
+    final list = tester.widget<ListView>(
+      find
+          .ancestor(
+            of: find.widgetWithText(ActionTile, 'Área Pix'),
+            matching: find.byType(ListView),
+          )
+          .first,
+    );
+    expect(list.scrollDirection, Axis.horizontal);
+    final labels = tester
+        .widgetList<ActionTile>(find.byType(ActionTile))
+        .map((tile) => tile.label);
+    expect(labels, ['Área Pix', 'Pagar', 'Receber', 'Transferir', 'Recarga']);
+  });
+
+  for (final shortcut in ['Transferir', 'Recarga']) {
     testWidgets('says "$shortcut" is coming, without leaving', (tester) async {
       var opened = 0;
       await pumpHome(tester, onPix: () => opened++);

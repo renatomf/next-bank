@@ -19,8 +19,13 @@ class BalanceCard extends StatelessWidget {
     required this.balanceCents,
     required this.hidden,
     required this.onToggleHidden,
+    this.onStatement,
     super.key,
   });
+
+  /// Opens the statement from a line below the balance; null leaves the
+  /// line out (S21 checkpoint of v1.1.0).
+  final VoidCallback? onStatement;
 
   /// Height of the card in the mockup; larger text grows it.
   static const double height = 190;
@@ -41,6 +46,11 @@ class BalanceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final number = accountNumber;
     final cents = balanceCents;
+    final panel = _GlassPanel(
+      child: number == null || cents == null
+          ? const _LoadingBalance()
+          : _Balance(accountNumber: number, cents: cents, hidden: hidden),
+    );
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(NbRadius.card),
@@ -119,15 +129,17 @@ class BalanceCard extends StatelessWidget {
               // padding keeps it clear of the logo row as text grows.
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 76, 12, 12),
-                child: _GlassPanel(
-                  child: number == null || cents == null
-                      ? const _LoadingBalance()
-                      : _Balance(
-                          accountNumber: number,
-                          cents: cents,
-                          hidden: hidden,
-                        ),
-                ),
+                child: switch (onStatement) {
+                  null => panel,
+                  final onStatement => Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      panel,
+                      _StatementLink(onPressed: onStatement),
+                    ],
+                  ),
+                },
               ),
             ],
           ),
@@ -135,6 +147,43 @@ class BalanceCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// "Extrato" and a caret, justified apart in white, read as "Ver extrato".
+class _StatementLink extends StatelessWidget {
+  const new({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    container: true,
+    button: true,
+    label: 'Ver extrato',
+    excludeSemantics: true,
+    child: InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(NbRadius.block),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          NbSpace.md,
+          NbSpace.md,
+          NbSpace.xs,
+          NbSpace.xs,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Extrato',
+              style: NbType.bodyText.copyWith(color: NbBalanceCardColors.text),
+            ),
+            const Icon(Icons.chevron_right, color: NbBalanceCardColors.text),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 class _Balance extends StatelessWidget {

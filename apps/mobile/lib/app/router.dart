@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,6 +21,7 @@ import 'package:next_bank/features/pix/presentation/processing/processing_screen
 import 'package:next_bank/features/pix/presentation/receipt/receipt_screen.dart';
 import 'package:next_bank/features/pix/presentation/receive/receive_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/review/review_pix_screen.dart';
+import 'package:next_bank/features/pix/presentation/scan/scan_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
 import 'package:next_bank/features/profile/presentation/profile_screen.dart';
 import 'package:next_bank/features/security/presentation/change_password/change_password_screen.dart';
@@ -88,6 +91,13 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
             path: AppRoutes.home,
             builder: (context, _) => HomeScreen(
               onPix: () => context.push(AppRoutes.pix),
+              // The code read fills the Pix screen, so it goes beneath the
+              // reading: back from either lands where it should.
+              onPay: () {
+                unawaited(context.push(AppRoutes.pix));
+                unawaited(context.push(AppRoutes.pixScan));
+              },
+              onReceive: () => context.push(AppRoutes.pixReceive),
               onStatement: () => context.go(AppRoutes.statement),
               onMovement: (id) => context.push(AppRoutes.statementItem(id)),
             ),
@@ -124,6 +134,15 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
           onBack: () => _back(context),
           onReceive: () => context.push(AppRoutes.pixReceive),
           onReview: (id) => context.push(AppRoutes.pixReview(id)),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.pixScan,
+        builder: (context, _) => ScanPixScreen(
+          // Opened from the Home's "Pagar": without a code, back is the
+          // Home; a code read goes to the Pix beneath, filled.
+          onBack: () => context.go(AppRoutes.home),
+          onRead: () => _back(context),
         ),
       ),
       GoRoute(
