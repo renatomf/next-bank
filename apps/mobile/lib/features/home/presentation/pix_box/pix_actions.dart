@@ -1,6 +1,5 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
-import 'package:next_bank/features/home/presentation/pix_box/pix_box.dart';
 
 /// The three main Pix actions side by side, split by thin lines: Transferir
 /// Pix, Pagar QR Code and Gerar QR Code.
@@ -25,37 +24,41 @@ class PixActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.nbColors;
+    final divider = VerticalDivider(
+      width: 1,
+      indent: NbSpace.md,
+      endIndent: NbSpace.md,
+      color: colors.border,
+    );
 
     return DecoratedBox(
       decoration: BoxDecoration(
         color: colors.surface2,
         borderRadius: BorderRadius.circular(NbRadius.boxInner),
       ),
+      // IntrinsicHeight lets the dividers run the height of the buttons.
       child: IntrinsicHeight(
         child: Row(
           children: [
             Expanded(
-              child: _PixActionButton(
+              child: _PixAction(
                 icon: Icons.swap_horiz,
-                label: 'Transferir Pix',
                 text: 'Transferir\nPix',
                 onPressed: onTransfer,
               ),
             ),
-            const _ActionDivider(),
+            divider,
             Expanded(
-              child: _PixActionButton(
+              child: _PixAction(
                 icon: Icons.qr_code_scanner,
-                label: 'Pagar QR Code',
                 text: 'Pagar\nQR Code',
                 onPressed: onPay,
               ),
             ),
-            const _ActionDivider(),
+            divider,
             Expanded(
-              child: _PixActionButton(
+              child: _PixAction(
                 icon: Icons.qr_code_2,
-                label: 'Gerar QR Code',
                 text: 'Gerar\nQR Code',
                 onPressed: onReceive,
               ),
@@ -67,17 +70,12 @@ class PixActions extends StatelessWidget {
   }
 }
 
-/// An icon over a two-line text, read by screen readers as one [label].
-class _PixActionButton extends StatelessWidget {
-  const new({
-    required this.icon,
-    required this.label,
-    required this.text,
-    required this.onPressed,
-  });
+/// An icon over a two-line text. The lines are the developer's call; on a
+/// narrow column the text shrinks instead of breaking a word in the middle.
+class _PixAction extends StatelessWidget {
+  const new({required this.icon, required this.text, required this.onPressed});
 
   final IconData icon;
-  final String label;
   final String text;
   final VoidCallback onPressed;
 
@@ -87,7 +85,8 @@ class _PixActionButton extends StatelessWidget {
 
     return Semantics(
       button: true,
-      label: label,
+      // Read as one phrase: "Transferir Pix", not two lines.
+      label: text.replaceAll('\n', ' '),
       excludeSemantics: true,
       child: InkWell(
         onTap: onPressed,
@@ -99,12 +98,15 @@ class _PixActionButton extends StatelessWidget {
           ),
           child: Column(
             children: [
-              Icon(icon, size: pixBoxIconSize, color: colors.accent),
+              Icon(icon, size: NbSize.icon, color: colors.accent),
               const SizedBox(height: NbSpace.xs),
-              Text(
-                text,
-                textAlign: TextAlign.center,
-                style: NbType.caption.copyWith(color: colors.text),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  text,
+                  textAlign: TextAlign.center,
+                  style: NbType.caption.copyWith(color: colors.text),
+                ),
               ),
             ],
           ),
@@ -112,16 +114,4 @@ class _PixActionButton extends StatelessWidget {
       ),
     );
   }
-}
-
-class _ActionDivider extends StatelessWidget {
-  const new();
-
-  @override
-  Widget build(BuildContext context) => VerticalDivider(
-    width: 1,
-    indent: NbSpace.md,
-    endIndent: NbSpace.md,
-    color: context.nbColors.border,
-  );
 }

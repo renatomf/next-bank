@@ -2,7 +2,6 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:next_bank/core/cpf.dart';
 import 'package:next_bank/core/cpf_input_formatter.dart';
-import 'package:next_bank/features/home/presentation/pix_box/pix_box.dart';
 
 /// "Digite ou cole uma chave CPF" and its › button:
 /// - empty, it opens the Pix area;
@@ -144,7 +143,7 @@ class _ContinueButton extends StatelessWidget {
             dimension: 52,
             child: Icon(
               Icons.chevron_right,
-              size: pixBoxIconSize,
+              size: NbSize.icon,
               color: colors.onPrimary,
             ),
           ),

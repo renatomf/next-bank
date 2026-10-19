@@ -1,6 +1,5 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
-import 'package:next_bank/features/home/presentation/pix_box/pix_box.dart';
 
 /// Pix Automático and Minhas chaves, in one row split by a line.
 class PixLinks extends StatelessWidget {
@@ -15,13 +14,13 @@ class PixLinks extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // IntrinsicHeight lets the divider run the height of the links.
     return IntrinsicHeight(
       child: Row(
         children: [
           Expanded(
             child: _PixLink(
-              icon: const PixMark(size: pixBoxIconSize),
-              label: 'Pix Automático',
+              icon: const PixMark(size: NbSize.icon),
               text: 'Pix\nAutomático',
               onPressed: onAutomatic,
             ),
@@ -37,9 +36,8 @@ class PixLinks extends StatelessWidget {
               // A little in from the edge, at the developer's request.
               icon: const Padding(
                 padding: EdgeInsets.only(left: NbSpace.sm),
-                child: Icon(Icons.key_outlined, size: pixBoxIconSize),
+                child: Icon(Icons.key_outlined, size: NbSize.icon),
               ),
-              label: 'Minhas chaves',
               text: 'Minhas\nchaves',
               onPressed: onKeys,
             ),
@@ -51,17 +49,12 @@ class PixLinks extends StatelessWidget {
 }
 
 /// The icon on the start edge and the two-line text centered in the room
-/// beside it, as in the reference; read by screen readers as one [label].
+/// beside it, as in the reference. On a narrow link the text shrinks
+/// instead of breaking a word in the middle.
 class _PixLink extends StatelessWidget {
-  const new({
-    required this.icon,
-    required this.label,
-    required this.text,
-    required this.onPressed,
-  });
+  const new({required this.icon, required this.text, required this.onPressed});
 
   final Widget icon;
-  final String label;
   final String text;
   final VoidCallback onPressed;
 
@@ -71,7 +64,8 @@ class _PixLink extends StatelessWidget {
 
     return Semantics(
       button: true,
-      label: label,
+      // Read as one phrase: "Minhas chaves", not two lines.
+      label: text.replaceAll('\n', ' '),
       excludeSemantics: true,
       child: InkWell(
         onTap: onPressed,
@@ -85,10 +79,13 @@ class _PixLink extends StatelessWidget {
                 child: icon,
               ),
               Expanded(
-                child: Text(
-                  text,
-                  textAlign: TextAlign.center,
-                  style: NbType.caption.copyWith(color: colors.accent),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    text,
+                    textAlign: TextAlign.center,
+                    style: NbType.caption.copyWith(color: colors.accent),
+                  ),
                 ),
               ),
             ],

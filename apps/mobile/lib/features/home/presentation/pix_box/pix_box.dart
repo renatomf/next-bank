@@ -81,6 +81,3 @@ class PixBox extends StatelessWidget {
     );
   }
 }
-
-/// One size for every icon of the box.
-const double pixBoxIconSize = 22;

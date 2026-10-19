@@ -1,6 +1,5 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
-import 'package:next_bank/features/home/presentation/pix_box/pix_box.dart';
 
 /// The customer's CPF key: "CPF" and the CPF masked by the server on the
 /// start, "Cadastrar" on the end. "Cadastrar" has no action yet
@@ -31,13 +30,21 @@ class CpfKeyRow extends StatelessWidget {
         children: [
           Icon(
             Icons.badge_outlined,
-            size: pixBoxIconSize,
+            size: NbSize.icon,
             color: colors.textMuted,
           ),
           const SizedBox(width: NbSpace.md),
           Expanded(child: _CpfLabel(cpfMasked: cpfMasked)),
           const SizedBox(width: NbSpace.sm),
-          const _RegisterButton(),
+          TextButton(
+            onPressed: () {},
+            // No padding of its own, so its text lines up with the row's end.
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.zero,
+              minimumSize: const Size(0, NbSize.touch),
+            ),
+            child: const Text('Cadastrar', maxLines: 1),
+          ),
         ],
       ),
     );
@@ -63,19 +70,4 @@ class _CpfLabel extends StatelessWidget {
       ],
     );
   }
-}
-
-class _RegisterButton extends StatelessWidget {
-  const new();
-
-  @override
-  Widget build(BuildContext context) => TextButton(
-    onPressed: () {},
-    // No padding of its own, so its text lines up with the row's end.
-    style: TextButton.styleFrom(
-      padding: EdgeInsets.zero,
-      minimumSize: const Size(0, NbSize.touch),
-    ),
-    child: const Text('Cadastrar', maxLines: 1),
-  );
 }
