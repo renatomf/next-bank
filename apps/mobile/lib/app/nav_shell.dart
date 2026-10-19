@@ -39,7 +39,7 @@ class NavShell extends StatelessWidget {
           (icon: Icons.credit_card, label: 'Cartões'),
         ],
         trailing: const [
-          (icon: Icons.show_chart, label: 'Investimentos'),
+          (icon: Icons.analytics_outlined, label: 'Investimentos'),
           (icon: Icons.more_horiz, label: 'Menu'),
         ],
         // The official symbol, by the developer's exception (week 8 plan, V6).
