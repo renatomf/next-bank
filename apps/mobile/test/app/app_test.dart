@@ -30,7 +30,7 @@ class FlakyTokenStore extends FakeTokenStore {
 }
 
 final Finder loginButton = find.widgetWithText(FilledButton, 'Entrar');
-final Finder signOutButton = find.bySemanticsLabel('Sair');
+final Finder signOutButton = find.bySemanticsLabel('Sair da conta');
 final Finder unlockTitle = find.byType(UnlockScreen);
 final Finder otherAccountButton = find.text('Entrar com outra conta');
 

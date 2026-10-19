@@ -99,15 +99,57 @@ void main() {
     );
   });
 
-  // AUTH-06: "Trocar conta" ends this session, as "Sair" does.
+  // Checkpoint: "Trocar conta" asks first, with a way back.
+  testWidgets('asks before switching account, and goes back on Voltar', (
+    tester,
+  ) async {
+    final repository = FakeAuthRepository(tokens);
+    await openProfile(tester, repository: repository);
+
+    await tester.tap(find.text('Trocar conta'));
+    await tester.pumpAndSettle();
+    expect(find.text('Trocar de conta?'), findsOneWidget);
+
+    await tester.tap(find.text('Voltar'));
+    await tester.pumpAndSettle();
+
+    expect(repository.logouts, 0);
+    expect(find.byType(ProfileScreen), findsOneWidget);
+  });
+
+  // AUTH-06: confirmed, "Trocar conta" ends this session, as "Sair" does.
   testWidgets('switches account through the login', (tester) async {
     final repository = FakeAuthRepository(tokens);
     await openProfile(tester, repository: repository);
 
     await tester.tap(find.text('Trocar conta'));
     await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Trocar conta').last);
+    await tester.pumpAndSettle();
 
     expect(repository.logouts, 1);
     expect(find.widgetWithText(FilledButton, 'Entrar'), findsOneWidget);
+  });
+
+  // Checkpoint: the whole "Sair da conta" box is the button, text included.
+  testWidgets('signs out from anywhere on the Sair da conta box', (
+    tester,
+  ) async {
+    final repository = FakeAuthRepository(tokens);
+    await openProfile(tester, repository: repository);
+    await tester.tap(find.widgetWithText(Tab, 'Configurações'));
+    await tester.pumpAndSettle();
+
+    final signOut = find.text('Sair da conta');
+    await tester.ensureVisible(signOut);
+    await tester.pumpAndSettle();
+    expect(
+      find.ancestor(of: signOut, matching: find.byType(OutlinedButton)),
+      findsOneWidget,
+    );
+    await tester.tap(signOut);
+    await tester.pumpAndSettle();
+
+    expect(repository.logouts, 1);
   });
 }

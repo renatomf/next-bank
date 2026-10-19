@@ -123,7 +123,6 @@ void main() {
     await openTab(tester, 'Configurações');
 
     await tester.scrollUntilVisible(find.text('sign-out button'), 200);
-    expect(find.text('Sair da conta'), findsOneWidget);
     expect(find.text('Meus dados cadastrais'), findsNothing);
   });
 
