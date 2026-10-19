@@ -121,30 +121,15 @@ class _AmountGrid extends StatelessWidget {
   final int? pickedCents;
   final ValueChanged<int> onPicked;
 
-  static const int _perRow = 3;
-
   @override
   Widget build(BuildContext context) {
-    const amounts = rechargeAmountsInCents;
-    return Column(
-      spacing: NbSpace.sm,
+    return NbGrid(
       children: [
-        for (var start = 0; start < amounts.length; start += _perRow)
-          Row(
-            spacing: NbSpace.sm,
-            children: [
-              for (var i = start; i < start + _perRow; i++)
-                Expanded(
-                  // A short last row keeps the columns of the others.
-                  child: i < amounts.length
-                      ? FilterPill(
-                          label: 'R\$ ${formatReais(amounts[i]).integer}',
-                          selected: amounts[i] == pickedCents,
-                          onPressed: () => onPicked(amounts[i]),
-                        )
-                      : const SizedBox.shrink(),
-                ),
-            ],
+        for (final cents in rechargeAmountsInCents)
+          FilterPill(
+            label: 'R\$ ${formatReais(cents).integer}',
+            selected: cents == pickedCents,
+            onPressed: () => onPicked(cents),
           ),
       ],
     );
