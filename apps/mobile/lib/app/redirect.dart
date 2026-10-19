@@ -69,6 +69,15 @@ abstract final class AppRoutes {
   /// The notification settings, over the notifications.
   static const String notificationSettings = '$notifications/settings';
 
+  /// Cartões, an area of the bar (v1.1.0 plan, task 4.11).
+  static const String cards = '/cards';
+
+  /// Investimentos, an area of the bar.
+  static const String investments = '/investments';
+
+  /// The full menu, an area of the bar.
+  static const String menu = '/menu';
+
   /// The customer and the way out (screen 13).
   static const String profile = '/profile';
 
