@@ -46,20 +46,22 @@ void main() {
     expect(find.bySemanticsLabel(RegExp('3 não lidas')), findsWidgets);
   });
 
-  testWidgets('scrolls past the examples without end, a day back every two', (
-    tester,
-  ) async {
+  // S21 checkpoint: twelve rows, then "Carregar mais" brings twelve more,
+  // past the six examples, a day back every two rows.
+  testWidgets('loads twelve more rows on Carregar mais', (tester) async {
     await pumpNotifications(tester);
+    final more = find.widgetWithText(TextButton, 'Carregar mais');
 
-    // Rows 28 and 29: well past the six examples. Two rows share each day,
-    // so the list is dragged until that day shows.
-    final day = find.text('5 out');
-    for (var drags = 0; drags < 40 && day.evaluate().isEmpty; drags++) {
-      await tester.drag(find.byType(ListView), const Offset(0, -300));
-      await tester.pumpAndSettle();
-    }
+    await tester.scrollUntilVisible(more, 300);
+    expect(find.text('14 out'), findsWidgets); // rows 10 and 11
+    expect(find.text('13 out'), findsNothing);
 
-    expect(day, findsWidgets);
+    await tester.tap(more);
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(more, 300);
+
+    expect(find.text('8 out'), findsWidgets); // rows 22 and 23
+    expect(find.text('7 out'), findsNothing);
   });
 
   testWidgets('says a row is coming', (tester) async {
