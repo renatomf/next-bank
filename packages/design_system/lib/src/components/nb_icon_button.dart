@@ -28,6 +28,8 @@ class NbIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
+    // Its own node, so a row around it never swallows its label.
+    container: true,
     button: true,
     label: label,
     onTap: onPressed,
