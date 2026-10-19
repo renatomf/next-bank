@@ -27,7 +27,8 @@ class GreetingHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: NbSpace.md),
-        const NextLogo(size: 24),
+        // A little larger than the mockup, at the developer's request.
+        const NextLogo(size: 28),
       ],
     );
   }
