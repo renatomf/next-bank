@@ -11,6 +11,7 @@ class PeekCarousel extends StatefulWidget {
     required this.itemAspectRatio,
     required this.onPageChanged,
     this.initialPage = 0,
+    this.footerHeight = 0,
     super.key,
   });
 
@@ -25,6 +26,10 @@ class PeekCarousel extends StatefulWidget {
 
   /// The item on at first.
   final int initialPage;
+
+  /// Room under each item's [itemAspectRatio] box, such as for a row of
+  /// actions under a card.
+  final double footerHeight;
 
   @override
   State<PeekCarousel> createState() => _PeekCarouselState();
@@ -47,20 +52,24 @@ class _PeekCarouselState extends State<PeekCarousel> {
 
   @override
   Widget build(BuildContext context) {
-    // As tall as one item in its share of the width.
-    return AspectRatio(
-      aspectRatio: widget.itemAspectRatio / _itemShare,
-      child: PageView(
-        controller: _pages,
-        padEnds: false,
-        onPageChanged: widget.onPageChanged,
-        children: [
-          for (final child in widget.children)
-            Padding(
-              padding: const EdgeInsets.only(right: NbSpace.md),
-              child: child,
-            ),
-        ],
+    return LayoutBuilder(
+      // As tall as one item in its share of the width, plus its footer.
+      builder: (context, constraints) => SizedBox(
+        height:
+            constraints.maxWidth * _itemShare / widget.itemAspectRatio +
+            widget.footerHeight,
+        child: PageView(
+          controller: _pages,
+          padEnds: false,
+          onPageChanged: widget.onPageChanged,
+          children: [
+            for (final child in widget.children)
+              Padding(
+                padding: const EdgeInsets.only(right: NbSpace.md),
+                child: child,
+              ),
+          ],
+        ),
       ),
     );
   }
