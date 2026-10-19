@@ -41,7 +41,13 @@ class ShortcutsRow extends StatelessWidget {
         ),
         Expanded(
           child: ActionTile(
-            icon: const Icon(Icons.swap_horiz),
+            // The arrows fill less of their box than the other glyphs; scaled,
+            // they look the same size without changing the tile (S21
+            // checkpoint).
+            icon: Transform.scale(
+              scale: 1.25,
+              child: const Icon(Icons.swap_horiz),
+            ),
             label: 'Transferir',
             onPressed: sayComingSoon,
           ),
