@@ -35,7 +35,11 @@ void main() {
   testWidgets('paints a plain icon button green', (tester) async {
     await pump(
       tester,
-      NbIconButton(icon: Icons.copy_outlined, label: 'Copiar', onPressed: () {}),
+      NbIconButton(
+        icon: Icons.copy_outlined,
+        label: 'Copiar',
+        onPressed: () {},
+      ),
     );
 
     expect(colorOf(tester, Icons.copy_outlined), NbColors.dark.accent);

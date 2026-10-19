@@ -59,7 +59,12 @@ class IconCircleButton extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: onPressed,
-            child: Icon(icon, size: iconSize, color: foreground ?? colors.text),
+            // The accent green by default, as the app's icons (S21 checkpoint).
+            child: Icon(
+              icon,
+              size: iconSize,
+              color: foreground ?? colors.accent,
+            ),
           ),
         ),
       ),

@@ -23,7 +23,7 @@ class NbIconButton extends StatelessWidget {
   /// Called on tap.
   final VoidCallback onPressed;
 
-  /// The icon's color; the text color when null.
+  /// The icon's color; the accent green when null, as the app's icons.
   final Color? color;
 
   @override
@@ -36,7 +36,7 @@ class NbIconButton extends StatelessWidget {
     excludeSemantics: true,
     child: IconButton(
       onPressed: onPressed,
-      icon: Icon(icon, color: color ?? context.nbColors.text),
+      icon: Icon(icon, color: color ?? context.nbColors.accent),
     ),
   );
 }
