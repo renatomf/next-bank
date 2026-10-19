@@ -2,9 +2,9 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/api_failure.dart';
-import 'package:next_bank/features/areas/presentation/area_placeholder_screen.dart';
 import 'package:next_bank/features/cards/presentation/cards_screen.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
+import 'package:next_bank/features/investments/presentation/investments_screen.dart';
 import 'package:next_bank/features/menu/presentation/menu_screen.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
 import 'package:next_bank/features/profile/presentation/profile_screen.dart';
@@ -53,21 +53,18 @@ void main() {
     await openHome(tester);
     expect(bar, findsOneWidget);
 
-    // v1.1.0 plan, task 4.11: the three new areas, title only for now.
-    for (final label in ['Investimentos']) {
-      await tapBar(tester, label);
-      expect(
-        find.widgetWithText(AreaPlaceholderScreen, label),
-        findsOneWidget,
-        reason: label,
-      );
-      expect(
-        tester.getSemantics(
-          find.descendant(of: bar, matching: find.bySemanticsLabel(label)),
+    // v1.1.0 plan, task 4.16: Investimentos is the investments' tabs.
+    await tapBar(tester, 'Investimentos');
+    expect(find.byType(InvestmentsScreen), findsOneWidget);
+    expect(
+      tester.getSemantics(
+        find.descendant(
+          of: bar,
+          matching: find.bySemanticsLabel('Investimentos'),
         ),
-        isSemantics(label: label, isSelected: true, isButton: true),
-      );
-    }
+      ),
+      isSemantics(label: 'Investimentos', isSelected: true, isButton: true),
+    );
     // v1.1.0 plan, task 4.14: Cartões is the cards' carousel.
     await tapBar(tester, 'Cartões');
     expect(find.byType(CardsScreen), findsOneWidget);

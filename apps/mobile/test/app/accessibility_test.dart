@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:next_bank/app/redirect.dart';
 import 'package:next_bank/core/session/session_tokens.dart';
-import 'package:next_bank/features/areas/presentation/area_placeholder_screen.dart';
 import 'package:next_bank/features/assistant/presentation/assistant_screen.dart';
 import 'package:next_bank/features/auth/presentation/create_pin/create_pin_screen.dart';
 import 'package:next_bank/features/auth/presentation/login/login_screen.dart';
@@ -13,6 +12,7 @@ import 'package:next_bank/features/auth/presentation/splash/splash_screen.dart';
 import 'package:next_bank/features/cards/presentation/cards_screen.dart';
 import 'package:next_bank/features/help/presentation/help_screen.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
+import 'package:next_bank/features/investments/presentation/investments_screen.dart';
 import 'package:next_bank/features/menu/presentation/menu_screen.dart';
 import 'package:next_bank/features/notifications/presentation/inbox/notifications_screen.dart';
 import 'package:next_bank/features/notifications/presentation/settings/notification_settings_screen.dart';
@@ -184,7 +184,7 @@ final List<(String, Type, Future<void> Function(WidgetTester))> screens = [
   ('Cartões', CardsScreen, (t) => openSignedIn(t, AppRoutes.cards)),
   (
     'Investimentos',
-    AreaPlaceholderScreen,
+    InvestmentsScreen,
     (tester) => openSignedIn(tester, AppRoutes.investments),
   ),
   ('Menu', MenuScreen, (t) => openSignedIn(t, AppRoutes.menu)),
