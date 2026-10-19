@@ -449,6 +449,30 @@ void main() {
       }
     });
 
+    // S21 checkpoint: the links' words in the actions' color; only their
+    // icons stay green.
+    testWidgets('writes the links in the color of the actions', (tester) async {
+      await pumpHome(tester);
+      await tester.pumpAndSettle();
+      await scrollToBox(tester);
+
+      Color? colorOf(String text) =>
+          tester.widget<Text>(find.text(text)).style?.color;
+
+      final actions = colorOf('Pagar\nQR Code');
+      expect(colorOf('Pix\nAutomático'), actions);
+      expect(colorOf('Minhas\nchaves'), actions);
+      final key = tester.widget<IconTheme>(
+        find
+            .ancestor(
+              of: find.byIcon(Icons.key_outlined),
+              matching: find.byType(IconTheme),
+            )
+            .first,
+      );
+      expect(key.data.color, NbColors.dark.accent);
+    });
+
     testWidgets('puts the Pix symbol on "Pix Automático", split from "Minhas '
         'chaves" by a line', (tester) async {
       await pumpHome(tester);
