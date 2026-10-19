@@ -12,7 +12,10 @@ void main() {
   testWidgets('centers the image by default', (tester) async {
     await pumpArt(tester, const GlassArt());
 
-    expect(tester.widget<Image>(find.byType(Image)).alignment, Alignment.center);
+    expect(
+      tester.widget<Image>(find.byType(Image)).alignment,
+      Alignment.center,
+    );
   });
 
   testWidgets('shows the area asked for', (tester) async {
