@@ -204,6 +204,32 @@ void main() {
     );
   });
 
+  // S21 checkpoint: the title and the button share one row, the title on
+  // one line, on the S21's width and on a small phone at 1.3x text.
+  for (final (name, width, scale) in [
+    ('the S21', 384.0, 1.0),
+    ('a small phone at 1.3x text', 320.0, 1.3),
+  ]) {
+    testWidgets('keeps Fazer Pix ou TED on one line on $name', (tester) async {
+      await pumpTransfer(tester);
+      tester.view
+        ..physicalSize = Size(width * 3, 2400)
+        ..devicePixelRatio = 3;
+      tester.platformDispatcher.textScaleFactorTestValue = scale;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await tester.pumpAndSettle();
+
+      const title = 'Fazer Pix ou TED';
+      final paragraph = tester.renderObject<RenderParagraph>(find.text(title));
+      final boxes = paragraph.getBoxesForSelection(
+        const TextSelection(baseOffset: 0, extentOffset: title.length),
+      );
+      expect(boxes.map((box) => box.top).toSet(), hasLength(1));
+      expect(paragraph.size.width, greaterThanOrEqualTo(boxes.last.right));
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets('goes back where the app says', (tester) async {
     var back = 0;
     await pumpTransfer(tester, onBack: () => back++);
