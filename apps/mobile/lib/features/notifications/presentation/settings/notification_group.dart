@@ -55,12 +55,17 @@ class NotificationGroup extends StatelessWidget {
                     style: NbType.bodyText.copyWith(color: colors.text),
                   ),
                 ),
-                Switch(
-                  value: isOn,
-                  onChanged: (_) => showNbToast(
-                    context,
-                    'Em breve.',
-                    icon: Icons.info_outline,
+                // A little smaller than Material's, at the developer's
+                // request; scaling keeps the touch area.
+                Transform.scale(
+                  scale: 0.8,
+                  child: Switch(
+                    value: isOn,
+                    onChanged: (_) => showNbToast(
+                      context,
+                      'Em breve.',
+                      icon: Icons.info_outline,
+                    ),
                   ),
                 ),
               ],
