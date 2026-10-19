@@ -60,6 +60,24 @@ abstract final class AppRoutes {
   /// The customer and the way out (screen 13).
   static const String profile = '/profile';
 
+  /// The theme picker, over the profile (v1.1.0 plan, task 4.4).
+  static const String profileTheme = '$profile/theme';
+
+  /// Security opened from the profile, over it, with the way back.
+  static const String profileSecurity = '$profile/security';
+
+  /// Blank for now: the customer's registration data.
+  static const String personalData = '$profile/personal-data';
+
+  /// Blank for now: an account shared with someone else.
+  static const String sharedAccount = '$profile/shared-account';
+
+  /// Blank for now: inviting friends.
+  static const String inviteFriends = '$profile/invite-friends';
+
+  /// Blank for now: the customer's accounts.
+  static const String manageAccounts = '$profile/manage-accounts';
+
   /// Sessions and credentials (screen 14).
   static const String security = '/security';
 

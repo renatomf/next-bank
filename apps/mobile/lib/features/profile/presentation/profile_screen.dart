@@ -1,196 +1,130 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:next_bank/core/account/account_providers.dart';
-import 'package:next_bank/core/profile/profile_controller.dart';
-import 'package:next_bank/core/theme/theme_choice.dart';
-import 'package:next_bank/core/theme/theme_controller.dart';
+import 'package:next_bank/features/profile/presentation/account_card.dart';
+import 'package:next_bank/features/profile/presentation/profile_header.dart';
+import 'package:next_bank/features/profile/presentation/profile_tab.dart';
+import 'package:next_bank/features/profile/presentation/settings_tab.dart';
 
-/// Profile (screen 13): who is signed in, their account, Security and the way
-/// out (week 7 plan, D6 and T3-1). Only what the app already has: no e-mail
-/// or CPF, which would need new fields from the API (READ-02).
-class ProfileScreen extends ConsumerWidget {
-  /// Creates the screen; the app provides where Security goes and the
-  /// sign-out button, so features never import each other.
-  const new({required this.onSecurity, required this.signOut, super.key});
+/// Profile (screen 13, redesigned in v1.1.0 plan, task 4.4), from top to
+/// bottom: the header, the account card and the "Perfil" and
+/// "Configurações" tabs. Each part lives in its own file; this one puts them
+/// in order and switches the tabs. The app says where every row goes, so
+/// features never import each other.
+class ProfileScreen extends StatefulWidget {
+  /// Creates the screen.
+  const new({
+    required this.onClose,
+    required this.onPersonalData,
+    required this.onSharedAccount,
+    required this.onInviteFriends,
+    required this.onTheme,
+    required this.onChangePin,
+    required this.onChangePassword,
+    required this.onSecurity,
+    required this.onManageAccounts,
+    required this.signOut,
+    required this.switchAccount,
+    super.key,
+  });
 
-  /// Opens Security.
+  /// Leaves the profile, to the Home.
+  final VoidCallback onClose;
+
+  /// Opens "Meus dados cadastrais".
+  final VoidCallback onPersonalData;
+
+  /// Opens "Conta compartilhada".
+  final VoidCallback onSharedAccount;
+
+  /// Opens "Convidar amigos".
+  final VoidCallback onInviteFriends;
+
+  /// Opens the theme picker.
+  final VoidCallback onTheme;
+
+  /// Opens the PIN change.
+  final VoidCallback onChangePin;
+
+  /// Opens the password change.
+  final VoidCallback onChangePassword;
+
+  /// Opens Security: the connected devices and biometrics.
   final VoidCallback onSecurity;
+
+  /// Opens "Gerenciar contas".
+  final VoidCallback onManageAccounts;
 
   /// The sign-out button, from the auth feature.
   final Widget signOut;
 
+  /// "Trocar conta", from the auth feature.
+  final Widget switchAccount;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabs = TabController(length: 2, vsync: this);
+
+  @override
+  void dispose() {
+    _tabs.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final colors = context.nbColors;
-    final text = Theme.of(context).textTheme;
-    final name = ref.watch(profileProvider).value?.name ?? '';
-    final account = ref.watch(accountProvider).value;
+
     return Scaffold(
       body: GlowBackground(
         child: SafeArea(
           child: ListView(
             padding: const EdgeInsets.all(NbSpace.screen),
             children: [
-              Semantics(
-                header: true,
-                child: Text('Perfil', style: text.headlineSmall),
+              ProfileHeader(
+                onClose: widget.onClose,
+                switchAccount: widget.switchAccount,
               ),
               const SizedBox(height: NbSpace.xl),
-              Row(
-                children: [
-                  ExcludeSemantics(
-                    child: Container(
-                      width: 56,
-                      height: 56,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: colors.surface2,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: colors.border),
+              const AccountCard(),
+              const SizedBox(height: NbSpace.xl),
+              TabBar(
+                controller: _tabs,
+                indicatorColor: colors.accent,
+                labelColor: colors.text,
+                unselectedLabelColor: colors.textMuted,
+                labelStyle: NbType.bodyStrong,
+                unselectedLabelStyle: NbType.bodyText,
+                dividerColor: Colors.transparent,
+                tabs: const [
+                  Tab(text: 'Perfil'),
+                  Tab(text: 'Configurações'),
+                ],
+              ),
+              const SizedBox(height: NbSpace.xl),
+              // The tabs switch the content below them, without swiping:
+              // the whole screen scrolls as one list.
+              ListenableBuilder(
+                listenable: _tabs,
+                builder: (context, _) => _tabs.index == 0
+                    ? ProfileTab(
+                        onPersonalData: widget.onPersonalData,
+                        onSharedAccount: widget.onSharedAccount,
+                        onInviteFriends: widget.onInviteFriends,
+                      )
+                    : SettingsTab(
+                        onTheme: widget.onTheme,
+                        onChangePin: widget.onChangePin,
+                        onChangePassword: widget.onChangePassword,
+                        onSecurity: widget.onSecurity,
+                        onManageAccounts: widget.onManageAccounts,
+                        signOut: widget.signOut,
                       ),
-                      child: Text(
-                        name.isEmpty ? '' : name.characters.first.toUpperCase(),
-                        style: NbType.avatar.copyWith(color: colors.text),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: NbSpace.lg),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          name,
-                          style: NbType.bodyStrong.copyWith(color: colors.text),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          account == null
-                              ? 'next bank'
-                              : 'next bank · Ag ${account.branch} · Conta '
-                                    '${_lastFour(account.number)}',
-                          style: NbType.caption.copyWith(
-                            color: colors.textMuted,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: NbSpace.xl),
-              _Row(
-                icon: Icons.shield_outlined,
-                title: 'Segurança',
-                caption: 'Aparelhos, PIN e senha',
-                onTap: onSecurity,
-              ),
-              const SizedBox(height: NbSpace.xl),
-              Text('Tema', style: NbType.bodyText.copyWith(color: colors.text)),
-              const SizedBox(height: NbSpace.sm),
-              // The choice selected is announced, not only shown (brief,
-              // section 8).
-              SegmentedButton<ThemeChoice>(
-                showSelectedIcon: false,
-                segments: const [
-                  ButtonSegment(
-                    value: ThemeChoice.system,
-                    label: Text('Sistema'),
-                  ),
-                  ButtonSegment(value: ThemeChoice.light, label: Text('Claro')),
-                  ButtonSegment(value: ThemeChoice.dark, label: Text('Escuro')),
-                ],
-                selected: {
-                  ref.watch(themeChoiceProvider).value ?? ThemeChoice.system,
-                },
-                onSelectionChanged: (choice) => ref
-                    .read(themeChoiceProvider.notifier)
-                    .choose(choice.single),
-              ),
-              const SizedBox(height: NbSpace.xl),
-              Row(
-                children: [
-                  signOut,
-                  const SizedBox(width: NbSpace.md),
-                  // Wraps on a small phone with large text (brief, section 8).
-                  Expanded(
-                    child: Text(
-                      'Sair da conta',
-                      style: NbType.bodyText.copyWith(color: colors.text),
-                    ),
-                  ),
-                ],
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Only the last four digits, as everywhere (brief, section 7).
-  static String _lastFour(String number) {
-    final digits = number.replaceAll(RegExp(r'\D'), '');
-    return '•••• ${digits.substring(digits.length - 4)}';
-  }
-}
-
-class _Row extends StatelessWidget {
-  const new({
-    required this.icon,
-    required this.title,
-    required this.caption,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String caption;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.nbColors;
-    return Semantics(
-      container: true,
-      button: true,
-      label: '$title, $caption',
-      excludeSemantics: true,
-      child: Material(
-        color: colors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(NbRadius.block),
-          side: BorderSide(color: colors.border),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(NbSpace.lg),
-            child: Row(
-              children: [
-                Icon(icon, color: colors.accent),
-                const SizedBox(width: NbSpace.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: NbType.bodyText.copyWith(color: colors.text),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        caption,
-                        style: NbType.caption.copyWith(color: colors.textMuted),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(Icons.chevron_right, color: colors.textMuted),
-              ],
-            ),
           ),
         ),
       ),

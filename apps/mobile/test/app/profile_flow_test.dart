@@ -63,7 +63,7 @@ void main() {
   ]) {
     testWidgets('opens "$row" and goes back to the profile', (tester) async {
       await openProfile(tester);
-      await tester.tap(find.text(tab));
+      await tester.tap(find.widgetWithText(Tab, tab));
       await tester.pumpAndSettle();
 
       await tap(tester, row);
@@ -79,7 +79,7 @@ void main() {
   ) async {
     final theme = FakeThemeStore();
     await openProfile(tester, theme: theme);
-    await tester.tap(find.text('Configurações'));
+    await tester.tap(find.widgetWithText(Tab, 'Configurações'));
     await tester.pumpAndSettle();
     await tap(tester, 'Tema do app');
 

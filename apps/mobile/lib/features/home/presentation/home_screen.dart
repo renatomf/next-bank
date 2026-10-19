@@ -26,6 +26,7 @@ class HomeScreen extends ConsumerWidget {
     required this.onTransfer,
     required this.onAutomatic,
     required this.onKeys,
+    required this.onProfile,
     super.key,
   });
 
@@ -53,6 +54,9 @@ class HomeScreen extends ConsumerWidget {
   /// Opens "Minhas chaves".
   final VoidCallback onKeys;
 
+  /// Opens the profile.
+  final VoidCallback onProfile;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileProvider).value;
@@ -69,7 +73,7 @@ class HomeScreen extends ConsumerWidget {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
               children: [
-                GreetingHeader(firstName: firstName),
+                GreetingHeader(firstName: firstName, onProfile: onProfile),
                 const SizedBox(height: 22),
                 const AssistantBar(),
                 const SizedBox(height: NbSpace.xl),

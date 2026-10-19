@@ -26,7 +26,9 @@ import 'package:next_bank/features/pix/presentation/review/review_pix_screen.dar
 import 'package:next_bank/features/pix/presentation/scan/scan_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/transfer/transfer_pix_screen.dart';
+import 'package:next_bank/features/profile/presentation/blank/profile_blank_screen.dart';
 import 'package:next_bank/features/profile/presentation/profile_screen.dart';
+import 'package:next_bank/features/profile/presentation/theme/theme_screen.dart';
 import 'package:next_bank/features/security/presentation/change_password/change_password_screen.dart';
 import 'package:next_bank/features/security/presentation/change_pin/change_pin_screen.dart';
 import 'package:next_bank/features/security/presentation/sessions/security_screen.dart';
@@ -106,6 +108,7 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
               onAutomatic: () => context.push(AppRoutes.pixAutomatic),
               onKeys: () => context.push(AppRoutes.pixKeys),
               onStatement: () => context.go(AppRoutes.statement),
+              onProfile: () => context.go(AppRoutes.profile),
             ),
           ),
           GoRoute(
@@ -130,9 +133,18 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
           GoRoute(
             path: AppRoutes.profile,
             builder: (context, _) => ProfileScreen(
-              onSecurity: () => context.go(AppRoutes.security),
+              onClose: () => context.go(AppRoutes.home),
+              onPersonalData: () => context.push(AppRoutes.personalData),
+              onSharedAccount: () => context.push(AppRoutes.sharedAccount),
+              onInviteFriends: () => context.push(AppRoutes.inviteFriends),
+              onTheme: () => context.push(AppRoutes.profileTheme),
+              onChangePin: () => context.push(AppRoutes.changePin),
+              onChangePassword: () => context.push(AppRoutes.changePassword),
+              onSecurity: () => context.push(AppRoutes.profileSecurity),
+              onManageAccounts: () => context.push(AppRoutes.manageAccounts),
               // T3-1: signing out lives on the Profile.
               signOut: const SignOutButton(),
+              switchAccount: const SwitchAccountButton(label: 'Trocar conta'),
             ),
           ),
         ],
@@ -222,6 +234,30 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
         ),
       ),
       // The changes open over Security, so back and done return to it.
+      // Opened over the Profile, so back returns to it (v1.1.0 plan, 4.4).
+      GoRoute(
+        path: AppRoutes.profileTheme,
+        builder: (context, _) => ThemeScreen(onBack: () => _back(context)),
+      ),
+      GoRoute(
+        path: AppRoutes.profileSecurity,
+        builder: (context, _) => SecurityScreen(
+          onBack: () => _back(context),
+          onChangePin: () => context.push(AppRoutes.changePin),
+          onChangePassword: () => context.push(AppRoutes.changePassword),
+        ),
+      ),
+      for (final (path, title) in [
+        (AppRoutes.personalData, 'Meus dados cadastrais'),
+        (AppRoutes.sharedAccount, 'Conta compartilhada'),
+        (AppRoutes.inviteFriends, 'Convidar amigos'),
+        (AppRoutes.manageAccounts, 'Gerenciar contas'),
+      ])
+        GoRoute(
+          path: path,
+          builder: (context, _) =>
+              ProfileBlankScreen(title: title, onBack: () => _back(context)),
+        ),
       GoRoute(
         path: AppRoutes.changePin,
         builder: (context, _) => ChangePinScreen(

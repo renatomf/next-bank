@@ -44,7 +44,7 @@ Future<void> pumpProfile(WidgetTester tester, List<String> opened) async {
 }
 
 Future<void> openTab(WidgetTester tester, String tab) async {
-  await tester.tap(find.text(tab));
+  await tester.tap(find.widgetWithText(Tab, tab));
   await tester.pumpAndSettle();
 }
 
@@ -110,7 +110,8 @@ void main() {
       await pumpProfile(tester, opened);
       await openTab(tester, tab);
 
-      await tester.scrollUntilVisible(find.text(row), 200);
+      await tester.ensureVisible(find.bySemanticsLabel(row));
+      await tester.pumpAndSettle();
       await tester.tap(find.bySemanticsLabel(row));
 
       expect(opened, [destination]);

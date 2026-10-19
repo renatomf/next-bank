@@ -42,7 +42,9 @@ void main() {
     expect(shown(tester), Brightness.light);
   });
 
-  testWidgets('changes the theme from the Profile and keeps it', (tester) async {
+  testWidgets('changes the theme from the Profile and keeps it', (
+    tester,
+  ) async {
     final theme = FakeThemeStore();
     await openProfile(tester, theme);
     expect(shown(tester), Brightness.light);

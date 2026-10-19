@@ -228,6 +228,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Configurações'));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(signOutButton);
+    await tester.pumpAndSettle();
     await tester.tap(signOutButton);
     await tester.pumpAndSettle();
 
