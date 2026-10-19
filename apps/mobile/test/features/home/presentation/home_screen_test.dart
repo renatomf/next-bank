@@ -39,6 +39,7 @@ Future<void> pumpHome(
   VoidCallback? onHelp,
   VoidCallback? onNotifications,
   VoidCallback? onAssistant,
+  VoidCallback? onRecharge,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -69,6 +70,7 @@ Future<void> pumpHome(
           onHelp: onHelp ?? () {},
           onNotifications: onNotifications ?? () {},
           onAssistant: onAssistant ?? () {},
+          onRecharge: onRecharge ?? () {},
         ),
       ),
     ),
@@ -522,19 +524,18 @@ void main() {
     expect(find.widgetWithText(NbToast, 'Em breve.'), findsNothing);
   });
 
-  for (final shortcut in ['Recarga']) {
-    testWidgets('says "$shortcut" is coming, without leaving', (tester) async {
-      var opened = 0;
-      await pumpHome(tester, onPix: () => opened++);
-      await tester.pumpAndSettle();
+  // v1.1.0 plan, task 4.12: the Recarga shortcut opens the recharges.
+  testWidgets('opens the recharges on the "Recarga" shortcut', (tester) async {
+    var opened = 0;
+    await pumpHome(tester, onRecharge: () => opened++);
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.text(shortcut));
-      await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(ActionTile, 'Recarga'));
+    await tester.pumpAndSettle();
 
-      expect(find.widgetWithText(NbToast, 'Em breve.'), findsOneWidget);
-      expect(opened, 0);
-    });
-  }
+    expect(opened, 1);
+    expect(find.widgetWithText(NbToast, 'Em breve.'), findsNothing);
+  });
 
   // v1.1.0 plan, task 4.6: the bell opens the notifications.
   testWidgets('opens the notifications', (tester) async {
