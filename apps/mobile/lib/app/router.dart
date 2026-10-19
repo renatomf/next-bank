@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:next_bank/app/nav_shell.dart';
 import 'package:next_bank/app/redirect.dart';
+import 'package:next_bank/core/cards/example_cards.dart';
 import 'package:next_bank/core/profile/profile.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/app_lock.dart';
@@ -122,6 +123,8 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
               onHelp: () => context.push(AppRoutes.help),
               onAssistant: () => context.push(AppRoutes.assistant),
               onRecharge: () => context.push(AppRoutes.recharge),
+              onCardDetails: (index) =>
+                  context.go('${AppRoutes.cards}?card=$index'),
               onNotifications: () => context.push(AppRoutes.notifications),
             ),
           ),
@@ -147,7 +150,18 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
             ),
           GoRoute(
             path: AppRoutes.cards,
-            builder: (_, _) => const CardsScreen(),
+            builder: (_, state) {
+              // The card to open on, from the Home's Detalhes; the first
+              // when none or one out of range.
+              final card = int.tryParse(
+                state.uri.queryParameters['card'] ?? '',
+              );
+              final index =
+                  card != null && card >= 0 && card < exampleCards.length
+                  ? card
+                  : 0;
+              return CardsScreen(key: ValueKey(index), initialIndex: index);
+            },
           ),
           GoRoute(path: AppRoutes.menu, builder: (_, _) => const MenuScreen()),
           GoRoute(

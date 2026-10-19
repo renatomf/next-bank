@@ -10,15 +10,18 @@ import 'package:next_bank/features/cards/presentation/debit_card_panel.dart';
 /// for now: the carousel of the debit and the credit card, and below it
 /// the content of the card on, as a tab.
 class CardsScreen extends ConsumerStatefulWidget {
-  /// Creates the screen.
-  const new({super.key});
+  /// Creates the screen on the card at [initialIndex].
+  const new({this.initialIndex = 0, super.key});
+
+  /// The card on at first, such as the one the Home's Detalhes opened.
+  final int initialIndex;
 
   @override
   ConsumerState<CardsScreen> createState() => _CardsScreenState();
 }
 
 class _CardsScreenState extends ConsumerState<CardsScreen> {
-  int _index = 0;
+  late int _index = widget.initialIndex;
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +60,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
               const SizedBox(height: NbSpace.lg),
               PeekCarousel(
                 itemAspectRatio: PaymentCard.aspectRatio,
+                initialPage: widget.initialIndex,
                 onPageChanged: (index) => setState(() => _index = index),
                 children: [
                   for (final card in exampleCards)
