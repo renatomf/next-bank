@@ -10,6 +10,7 @@ import 'package:next_bank/features/auth/presentation/create_pin/create_pin_scree
 import 'package:next_bank/features/auth/presentation/login/login_screen.dart';
 import 'package:next_bank/features/auth/presentation/register/register_screen.dart';
 import 'package:next_bank/features/auth/presentation/splash/splash_screen.dart';
+import 'package:next_bank/features/cards/presentation/cards_screen.dart';
 import 'package:next_bank/features/help/presentation/help_screen.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
 import 'package:next_bank/features/menu/presentation/menu_screen.dart';
@@ -180,7 +181,7 @@ final List<(String, Type, Future<void> Function(WidgetTester))> screens = [
     RechargeScreen,
     (tester) => openSignedIn(tester, AppRoutes.recharge),
   ),
-  ('Cartões', AreaPlaceholderScreen, (t) => openSignedIn(t, AppRoutes.cards)),
+  ('Cartões', CardsScreen, (t) => openSignedIn(t, AppRoutes.cards)),
   (
     'Investimentos',
     AreaPlaceholderScreen,

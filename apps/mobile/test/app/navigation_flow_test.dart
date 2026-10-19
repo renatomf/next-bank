@@ -2,6 +2,7 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/api_failure.dart';
+import 'package:next_bank/features/cards/presentation/cards_screen.dart';
 import 'package:next_bank/features/areas/presentation/area_placeholder_screen.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
 import 'package:next_bank/features/menu/presentation/menu_screen.dart';
@@ -53,7 +54,7 @@ void main() {
     expect(bar, findsOneWidget);
 
     // v1.1.0 plan, task 4.11: the three new areas, title only for now.
-    for (final label in ['Cartões', 'Investimentos']) {
+    for (final label in ['Investimentos']) {
       await tapBar(tester, label);
       expect(
         find.widgetWithText(AreaPlaceholderScreen, label),
@@ -67,6 +68,10 @@ void main() {
         isSemantics(label: label, isSelected: true, isButton: true),
       );
     }
+    // v1.1.0 plan, task 4.14: Cartões is the cards' carousel.
+    await tapBar(tester, 'Cartões');
+    expect(find.byType(CardsScreen), findsOneWidget);
+
     // v1.1.0 plan, task 4.13: the Menu is the full menu.
     await tapBar(tester, 'Menu');
     expect(find.byType(MenuScreen), findsOneWidget);
