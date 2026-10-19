@@ -36,6 +36,7 @@ class NbChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.nbColors;
     final isOn = selected ?? false;
+    final iconColor = isOn ? colors.accent : colors.text;
 
     return Semantics(
       container: true,
@@ -71,13 +72,13 @@ class NbChip extends StatelessWidget {
                   spacing: NbSpace.sm,
                   children: [
                     if (icon case final icon?)
-                      Icon(icon, size: 18, color: colors.accent),
+                      Icon(icon, size: 18, color: iconColor),
                     Text(
                       label,
                       style: NbType.bodyText.copyWith(color: colors.text),
                     ),
                     if (trailingIcon case final trailing?)
-                      Icon(trailing, size: 18, color: colors.accent),
+                      Icon(trailing, size: 18, color: colors.text),
                   ],
                 ),
               ),

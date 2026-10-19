@@ -93,7 +93,7 @@ class _ProfileIcon extends StatelessWidget {
         shape: BoxShape.circle,
         border: Border.all(color: colors.border),
       ),
-      child: Icon(Icons.person_outline, color: colors.accent),
+      child: Icon(Icons.person_outline, color: colors.text),
     );
   }
 }
