@@ -22,6 +22,7 @@ export 'src/components/info_notice.dart';
 export 'src/components/menu_group.dart';
 export 'src/components/money_text.dart';
 export 'src/components/nb_nav_bar.dart';
+export 'src/components/nb_tab_bar.dart';
 export 'src/components/nb_text_field.dart';
 export 'src/components/nb_toast.dart';
 export 'src/components/next_logo.dart';
