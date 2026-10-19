@@ -144,7 +144,10 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
               onManageAccounts: () => context.push(AppRoutes.manageAccounts),
               // T3-1: signing out lives on the Profile.
               signOut: const SignOutButton(),
-              switchAccount: const SwitchAccountButton(label: 'Trocar conta'),
+              switchAccount: const SwitchAccountButton(
+                label: 'Trocar conta',
+                askFirst: true,
+              ),
             ),
           ),
         ],

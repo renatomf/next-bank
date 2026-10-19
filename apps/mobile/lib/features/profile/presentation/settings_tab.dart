@@ -36,8 +36,6 @@ class SettingsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: NbSpace.xl,
@@ -82,19 +80,7 @@ class SettingsTab extends StatelessWidget {
             ),
           ],
         ),
-        Row(
-          children: [
-            signOut,
-            const SizedBox(width: NbSpace.md),
-            // Wraps on a small phone with large text (brief, section 8).
-            Expanded(
-              child: Text(
-                'Sair da conta',
-                style: NbType.bodyText.copyWith(color: colors.text),
-              ),
-            ),
-          ],
-        ),
+        signOut,
       ],
     );
   }
