@@ -527,6 +527,20 @@ void main() {
     expect(sizes, hasLength(1));
   });
 
+  // S21 checkpoint: the arrows fill less of their box than the other
+  // glyphs, so "Transferir" draws them a little larger.
+  testWidgets('draws the Transferir arrows a little larger', (tester) async {
+    await pumpHome(tester);
+    await tester.pumpAndSettle();
+
+    final arrows = find.descendant(
+      of: find.widgetWithText(ActionTile, 'Transferir'),
+      matching: find.byIcon(Icons.swap_horiz),
+    );
+    final drawn = tester.getBottomRight(arrows) - tester.getTopLeft(arrows);
+    expect(drawn.dx, greaterThan(NbSize.icon));
+  });
+
   // Week 8 plan, V9: the help field is a button that says it is coming.
   testWidgets('says the assistant is coming', (tester) async {
     await pumpHome(tester);
