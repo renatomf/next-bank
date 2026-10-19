@@ -41,46 +41,7 @@ class _TransferPixScreenState extends State<TransferPixScreen> {
                 onPressed: widget.onBack,
               ),
               const SizedBox(height: NbSpace.xl),
-              Row(
-                children: [
-                  const PixMark(size: NbSize.icon),
-                  const SizedBox(width: NbSpace.sm),
-                  Expanded(
-                    child: Text(
-                      'Fazer Pix ou TED',
-                      style: NbType.sectionTitle.copyWith(color: colors.text),
-                    ),
-                  ),
-                  const SizedBox(width: NbSpace.md),
-                  // On the right edge, apart from the title; compact, its
-                  // label shrinking rather than wrap on a small phone (S21
-                  // checkpoint).
-                  Flexible(
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: FilledButton.tonal(
-                        onPressed: () => showNbToast(
-                          context,
-                          'Em breve.',
-                          icon: Icons.info_outline,
-                        ),
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: NbSpace.md,
-                          ),
-                          textStyle: NbType.caption.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        child: const FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text('Limites de uso', maxLines: 1),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              const _TitleRow(),
               const SizedBox(height: NbSpace.lg),
               Container(
                 padding: const EdgeInsets.all(NbSpace.lg),
@@ -138,6 +99,60 @@ class _TransferPixScreenState extends State<TransferPixScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// "Fazer Pix ou TED" on the start and "Limites de uso" on the end, apart,
+/// on one row: each side shrinks its text to fit rather than break a line
+/// (S21 checkpoint).
+class _TitleRow extends StatelessWidget {
+  const new();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.nbColors;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      spacing: NbSpace.md,
+      children: [
+        Flexible(
+          flex: 3,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            spacing: NbSpace.sm,
+            children: [
+              const PixMark(size: NbSize.icon),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'Fazer Pix ou TED',
+                    maxLines: 1,
+                    style: NbType.sectionTitle.copyWith(color: colors.text),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Flexible(
+          flex: 2,
+          child: FilledButton.tonal(
+            onPressed: () =>
+                showNbToast(context, 'Em breve.', icon: Icons.info_outline),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: NbSpace.md),
+              textStyle: NbType.caption.copyWith(fontWeight: FontWeight.w700),
+            ),
+            child: const FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text('Limites de uso', maxLines: 1),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
