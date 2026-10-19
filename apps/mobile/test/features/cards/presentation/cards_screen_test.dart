@@ -84,7 +84,24 @@ void main() {
     }
   });
 
-  for (final label in ['Bloquear', 'Ativar', 'Exibir senha']) {
+  // S21 checkpoint: the lock toggles between locked and unlocked, on the
+  // screen only for now.
+  testWidgets('toggles the lock between locked and unlocked', (tester) async {
+    await pumpCards(tester);
+
+    await tester.tap(find.widgetWithText(TextButton, 'Bloquear'));
+    await tester.pumpAndSettle();
+    expect(find.text('Cartão bloqueado'), findsOneWidget);
+    expect(find.byIcon(Icons.lock), findsOneWidget);
+    expect(find.widgetWithText(NbToast, 'Em breve.'), findsNothing);
+
+    await tester.tap(find.widgetWithText(TextButton, 'Desbloquear'));
+    await tester.pumpAndSettle();
+    expect(find.text('Cartão desbloqueado'), findsOneWidget);
+    expect(find.byIcon(Icons.lock_open), findsOneWidget);
+  });
+
+  for (final label in ['Ativar', 'Exibir senha']) {
     testWidgets('says "$label" on the debit card is coming', (tester) async {
       await pumpCards(tester);
 
