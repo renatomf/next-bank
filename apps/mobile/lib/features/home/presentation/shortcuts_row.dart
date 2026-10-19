@@ -1,71 +1,59 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 
-/// The Home's shortcuts, scrolling sideways. Transferir and Recarga come
-/// with their screens and say so for now (week 8 plan, V7).
+/// The Home's four shortcuts, side by side across the width (S21 checkpoint
+/// of v1.1.0): Área Pix, Pagar, Transferir and Recarga. Transferir and
+/// Recarga come with their screens and say so for now (week 8 plan, V7);
+/// "Receber" lives in the Pix box.
 class ShortcutsRow extends StatelessWidget {
   /// Creates the row; the Home says where each shortcut goes.
-  const new({
-    required this.onPix,
-    required this.onPay,
-    required this.onReceive,
-    super.key,
-  });
+  const new({required this.onPix, required this.onPay, super.key});
 
   /// Opens the Pix area.
   final VoidCallback onPix;
 
-  /// Opens the reading of a Pix QR Code.
+  /// Opens the reading of a Pix QR Code; the boleto's barcode comes later.
   final VoidCallback onPay;
-
-  /// Opens "Receber", with the customer's QR Code.
-  final VoidCallback onReceive;
-
-  /// One width for every tile (week 8 plan, V13).
-  static const double tileWidth = 84;
 
   @override
   Widget build(BuildContext context) {
     void sayComingSoon() =>
         showNbToast(context, 'Em breve.', icon: Icons.info_outline);
 
-    final shortcuts = [
-      ActionTile(icon: const PixMark(), label: 'Área Pix', onPressed: onPix),
-      ActionTile(
-        icon: const Icon(Icons.qr_code_scanner),
-        label: 'Pagar',
-        onPressed: onPay,
-      ),
-      ActionTile(
-        icon: const Icon(Icons.qr_code_2),
-        label: 'Receber',
-        onPressed: onReceive,
-      ),
-      ActionTile(
-        icon: const Icon(Icons.swap_horiz),
-        label: 'Transferir',
-        onPressed: sayComingSoon,
-      ),
-      ActionTile(
-        icon: const Icon(Icons.phone_android),
-        label: 'Recarga',
-        onPressed: sayComingSoon,
-      ),
-    ];
-
-    // A sideways list needs a fixed height. It grows with the system's text
-    // size, so larger labels still fit.
-    final height = MediaQuery.textScalerOf(context).scale(ActionTile.height);
-
-    return SizedBox(
-      height: height,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: shortcuts.length,
-        separatorBuilder: (_, _) => const SizedBox(width: NbSpace.sm),
-        itemBuilder: (_, index) =>
-            SizedBox(width: tileWidth, child: shortcuts[index]),
-      ),
+    // Each tile takes an equal share of the width, so the four keep one size
+    // (week 8 plan, V13).
+    return Row(
+      spacing: NbSpace.sm,
+      children: [
+        Expanded(
+          child: ActionTile(
+            icon: const PixMark(),
+            label: 'Área Pix',
+            onPressed: onPix,
+          ),
+        ),
+        Expanded(
+          child: ActionTile(
+            icon: const Icon(Icons.barcode_reader),
+            label: 'Pagar',
+            onPressed: onPay,
+          ),
+        ),
+        Expanded(
+          child: ActionTile(
+            icon: const Icon(Icons.swap_horiz),
+            label: 'Transferir',
+            onPressed: sayComingSoon,
+          ),
+        ),
+        Expanded(
+          child: ActionTile(
+            icon: const Icon(Icons.phone_android),
+            label: 'Recarga',
+            onPressed: sayComingSoon,
+          ),
+        ),
+      ],
     );
   }
 }
