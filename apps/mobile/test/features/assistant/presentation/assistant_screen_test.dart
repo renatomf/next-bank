@@ -100,6 +100,21 @@ void main() {
     expect(comingSoon(), findsOneWidget);
   });
 
+  // S21 checkpoint: the menu looks like the app's boxes, on the sheet's
+  // background.
+  testWidgets('draws the attach menu as the app boxes, on the sheet color', (
+    tester,
+  ) async {
+    await pumpAssistant(tester);
+
+    final style = tester.widget<MenuAnchor>(find.byType(MenuAnchor)).style!;
+    final colors = NbColors.dark;
+    expect(style.backgroundColor!.resolve({}), colors.surface);
+    final shape = style.shape!.resolve({})! as RoundedRectangleBorder;
+    expect(shape.side.color, colors.border);
+    expect(shape.borderRadius, BorderRadius.circular(NbRadius.boxInner));
+  });
+
   testWidgets('opens the agent sheet, which its X closes', (tester) async {
     await pumpAssistant(tester);
 
