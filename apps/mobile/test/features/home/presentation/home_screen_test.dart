@@ -287,6 +287,23 @@ void main() {
       expect(inBox(find.text('Bloqueado')), findsOneWidget);
     });
 
+    // S21 checkpoint: the lock on the start, Detalhes on the end, apart.
+    testWidgets('puts Detalhes on the right edge of the card', (tester) async {
+      await pumpHome(tester);
+      await openBox(tester);
+      // A wide screen: Detalhes needs much less than its share of the row.
+      tester.view.devicePixelRatio = 1.5;
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpAndSettle();
+
+      final card = inBox(find.byType(PaymentCard)).first;
+      final details = inBox(find.widgetWithText(TextButton, 'Detalhes')).first;
+      expect(
+        tester.getTopRight(details).dx,
+        moreOrLessEquals(tester.getTopRight(card).dx, epsilon: 1),
+      );
+    });
+
     testWidgets('opens the details of the card on', (tester) async {
       final opened = <int>[];
       await pumpHome(tester, onCardDetails: opened.add);
