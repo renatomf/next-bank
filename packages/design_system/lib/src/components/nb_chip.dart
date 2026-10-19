@@ -53,28 +53,34 @@ class NbChip extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onPressed,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: NbSpace.lg,
-              vertical: NbSpace.sm,
+          // At least a touch target high (brief, section 8).
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              minHeight: kMinInteractiveDimension,
             ),
-            // On a narrow room the content shrinks to fit, whole; in a list
-            // that scrolls sideways it keeps its natural size.
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                spacing: NbSpace.sm,
-                children: [
-                  if (icon case final icon?)
-                    Icon(icon, size: 18, color: iconColor),
-                  Text(
-                    label,
-                    style: NbType.bodyText.copyWith(color: colors.text),
-                  ),
-                  if (trailingIcon case final trailing?)
-                    Icon(trailing, size: 18, color: colors.text),
-                ],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: NbSpace.lg,
+                vertical: NbSpace.sm,
+              ),
+              // On a narrow room the content shrinks to fit, whole; in a list
+              // that scrolls sideways it keeps its natural size.
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  spacing: NbSpace.sm,
+                  children: [
+                    if (icon case final icon?)
+                      Icon(icon, size: 18, color: iconColor),
+                    Text(
+                      label,
+                      style: NbType.bodyText.copyWith(color: colors.text),
+                    ),
+                    if (trailingIcon case final trailing?)
+                      Icon(trailing, size: 18, color: colors.text),
+                  ],
+                ),
               ),
             ),
           ),
