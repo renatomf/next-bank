@@ -35,21 +35,22 @@ class MenuGroup extends StatelessWidget {
   }
 }
 
-/// One row of a [MenuGroup]: an icon, the title and an arrow. With
+/// One row of a [MenuGroup]: an optional icon, the title and an arrow. With
 /// [selected], it is one choice among others, as a theme: a check marks the
 /// one that is on, and screen readers hear it.
 class MenuRow extends StatelessWidget {
   /// Creates the row.
   const new({
-    required this.icon,
     required this.title,
+    this.icon,
     required this.onTap,
     this.selected,
     super.key,
   });
 
-  /// What the row is about, in the accent color.
-  final IconData icon;
+  /// What the row is about, in the accent color; none for a plain row,
+  /// such as a question.
+  final IconData? icon;
 
   /// What the row opens or chooses.
   final String title;
@@ -78,8 +79,10 @@ class MenuRow extends StatelessWidget {
           padding: const EdgeInsets.all(NbSpace.lg),
           child: Row(
             children: [
-              Icon(icon, size: NbSize.icon, color: colors.accent),
-              const SizedBox(width: NbSpace.md),
+              if (icon case final icon?) ...[
+                Icon(icon, size: NbSize.icon, color: colors.accent),
+                const SizedBox(width: NbSpace.md),
+              ],
               Expanded(
                 child: Text(
                   title,
