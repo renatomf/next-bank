@@ -46,11 +46,11 @@ class _CardLockToggleState extends State<CardLockToggle> {
                 size: NbSize.icon,
                 color: _locked ? colors.danger : colors.success,
               ),
-              Flexible(
-                child: Text(
-                  label,
-                  style: NbType.bodyText.copyWith(color: colors.text),
-                ),
+              // One line: where room is short, the caller shrinks it whole.
+              Text(
+                label,
+                maxLines: 1,
+                style: NbType.bodyText.copyWith(color: colors.text),
               ),
             ],
           ),
