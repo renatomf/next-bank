@@ -26,11 +26,15 @@ class HelpScreen extends StatelessWidget {
                 icon: Icons.arrow_back,
                 iconLabel: 'Voltar',
                 onPressed: onBack,
-                // Wraps on a small phone with large text (brief, section 8).
+                // On the right edge, as Exibir todos below; wraps on a small
+                // phone with large text (brief, section 8).
                 action: Flexible(
-                  child: TextButton(
-                    onPressed: () => sayComingSoon(context),
-                    child: const Text('Acessar chat'),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => sayComingSoon(context),
+                      child: const Text('Acessar chat'),
+                    ),
                   ),
                 ),
               ),
