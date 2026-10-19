@@ -51,10 +51,15 @@ void main() {
   ) async {
     await pumpNotifications(tester);
 
-    // Row 28 and on: well past the six examples.
-    await tester.scrollUntilVisible(find.text('5 out'), 500);
+    // Rows 28 and 29: well past the six examples. Two rows share each day,
+    // so the list is dragged until that day shows.
+    final day = find.text('5 out');
+    for (var drags = 0; drags < 40 && day.evaluate().isEmpty; drags++) {
+      await tester.drag(find.byType(ListView), const Offset(0, -300));
+      await tester.pumpAndSettle();
+    }
 
-    expect(find.text('5 out'), findsWidgets);
+    expect(day, findsWidgets);
   });
 
   testWidgets('says a row is coming', (tester) async {

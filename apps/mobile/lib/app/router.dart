@@ -17,6 +17,8 @@ import 'package:next_bank/features/auth/presentation/sign_out/switch_account_but
 import 'package:next_bank/features/auth/presentation/splash/splash_screen.dart';
 import 'package:next_bank/features/help/presentation/help_screen.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
+import 'package:next_bank/features/notifications/presentation/inbox/notifications_screen.dart';
+import 'package:next_bank/features/notifications/presentation/settings/notification_settings_screen.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/automatic/pix_automatic_screen.dart';
 import 'package:next_bank/features/pix/presentation/keys/pix_keys_screen.dart';
@@ -111,6 +113,7 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
               onStatement: () => context.go(AppRoutes.statement),
               onProfile: () => context.go(AppRoutes.profile),
               onHelp: () => context.push(AppRoutes.help),
+              onNotifications: () => context.push(AppRoutes.notifications),
             ),
           ),
           GoRoute(
@@ -242,6 +245,18 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
       GoRoute(
         path: AppRoutes.help,
         builder: (context, _) => HelpScreen(onBack: () => _back(context)),
+      ),
+      GoRoute(
+        path: AppRoutes.notifications,
+        builder: (context, _) => NotificationsScreen(
+          onBack: () => _back(context),
+          onSettings: () => context.push(AppRoutes.notificationSettings),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.notificationSettings,
+        builder: (context, _) =>
+            NotificationSettingsScreen(onBack: () => _back(context)),
       ),
       // Opened over the Profile, so back returns to it (v1.1.0 plan, 4.4).
       GoRoute(
