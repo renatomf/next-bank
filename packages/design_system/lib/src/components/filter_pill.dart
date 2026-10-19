@@ -49,22 +49,27 @@ class FilterPill extends StatelessWidget {
               horizontal: NbSpace.lg,
               vertical: NbSpace.sm,
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (leading != null) ...[
-                  Icon(
-                    leading,
-                    size: 18,
-                    color: selected ? colors.accent : colors.text,
+            // On a narrow room the content shrinks to fit, whole; in a list
+            // that scrolls sideways it keeps its natural size.
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (leading != null) ...[
+                    Icon(
+                      leading,
+                      size: 18,
+                      color: selected ? colors.accent : colors.text,
+                    ),
+                    const SizedBox(width: NbSpace.sm),
+                  ],
+                  Text(
+                    label,
+                    style: NbType.bodyText.copyWith(color: colors.text),
                   ),
-                  const SizedBox(width: NbSpace.sm),
                 ],
-                Text(
-                  label,
-                  style: NbType.bodyText.copyWith(color: colors.text),
-                ),
-              ],
+              ),
             ),
           ),
         ),
