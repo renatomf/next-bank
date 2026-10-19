@@ -10,6 +10,8 @@ import 'package:next_bank/features/auth/presentation/register/register_screen.da
 import 'package:next_bank/features/auth/presentation/splash/splash_screen.dart';
 import 'package:next_bank/features/help/presentation/help_screen.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
+import 'package:next_bank/features/notifications/presentation/inbox/notifications_screen.dart';
+import 'package:next_bank/features/notifications/presentation/settings/notification_settings_screen.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/processing/processing_screen.dart';
 import 'package:next_bank/features/pix/presentation/receipt/receipt_screen.dart';
@@ -166,6 +168,16 @@ final List<(String, Type, Future<void> Function(WidgetTester))> screens = [
     (tester) => openSignedIn(tester, AppRoutes.changePassword),
   ),
   ('Help', HelpScreen, (tester) => openSignedIn(tester, AppRoutes.help)),
+  (
+    'Notifications',
+    NotificationsScreen,
+    (tester) => openSignedIn(tester, AppRoutes.notifications),
+  ),
+  (
+    'Notification settings',
+    NotificationSettingsScreen,
+    (tester) => openSignedIn(tester, AppRoutes.notificationSettings),
+  ),
   (
     'Theme',
     ThemeScreen,

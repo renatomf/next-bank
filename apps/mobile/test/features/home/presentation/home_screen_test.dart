@@ -37,6 +37,7 @@ Future<void> pumpHome(
   VoidCallback? onKeys,
   VoidCallback? onProfile,
   VoidCallback? onHelp,
+  VoidCallback? onNotifications,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -65,6 +66,7 @@ Future<void> pumpHome(
           onKeys: onKeys ?? () {},
           onProfile: onProfile ?? () {},
           onHelp: onHelp ?? () {},
+          onNotifications: onNotifications ?? () {},
         ),
       ),
     ),
@@ -493,15 +495,15 @@ void main() {
     });
   }
 
-  // Week 8 plan, V11: notifications beside the help field, still coming.
-  testWidgets('says "Notificações" is coming', (tester) async {
-    await pumpHome(tester);
+  // v1.1.0 plan, task 4.6: the bell opens the notifications.
+  testWidgets('opens the notifications', (tester) async {
+    var opened = 0;
+    await pumpHome(tester, onNotifications: () => opened++);
     await tester.pumpAndSettle();
 
     await tester.tap(find.bySemanticsLabel('Notificações'));
-    await tester.pumpAndSettle();
 
-    expect(find.widgetWithText(NbToast, 'Em breve.'), findsOneWidget);
+    expect(opened, 1);
   });
 
   // v1.1.0 plan, task 4.5: the help button opens the help screen.
