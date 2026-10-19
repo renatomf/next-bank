@@ -3,10 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:next_bank/features/pix/presentation/transfer/example_contacts.dart';
 
 /// The Chave Pix tab, inside the transfer's card: the key field with the
-/// camera, and "Agenda do celular". Layout only: they say they are coming.
+/// camera, which opens the QR Code reading, and "Agenda do celular", which
+/// says it is coming.
 class PixKeyEntry extends StatelessWidget {
   /// Creates the entry.
-  const new({super.key});
+  const new({required this.onScan, super.key});
+
+  /// Opens the QR Code reading.
+  final VoidCallback onScan;
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +39,7 @@ class PixKeyEntry extends StatelessWidget {
               icon: Icons.photo_camera_outlined,
               label: 'Ler QR Code',
               color: colors.accent,
-              onPressed: () => _sayComingSoon(context),
+              onPressed: onScan,
             ),
           ],
         ),

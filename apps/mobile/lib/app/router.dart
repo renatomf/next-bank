@@ -181,8 +181,14 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
       ),
       GoRoute(
         path: AppRoutes.pixTransfer,
-        builder: (context, _) =>
-            TransferPixScreen(onBack: () => _back(context)),
+        builder: (context, _) => TransferPixScreen(
+          onBack: () => _back(context),
+          // As the Home's "Pagar": a code read fills the Pix beneath.
+          onScan: () {
+            unawaited(context.push(AppRoutes.pix));
+            unawaited(context.push(AppRoutes.pixScan));
+          },
+        ),
       ),
       GoRoute(
         path: AppRoutes.pixAutomatic,

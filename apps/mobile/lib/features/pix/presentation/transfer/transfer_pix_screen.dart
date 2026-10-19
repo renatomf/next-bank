@@ -5,13 +5,17 @@ import 'package:next_bank/features/pix/presentation/transfer/pix_key_tab.dart';
 
 /// Transferir (v1.1.0 plan, task 4.9), layout only for now: a Pix by key
 /// or contact, or a transfer by agency and account, picked by two pills.
-/// Nothing is sent; the actions say they are coming.
+/// Nothing is sent; the camera opens the QR Code reading, the other
+/// actions say they are coming.
 class TransferPixScreen extends StatefulWidget {
-  /// Creates the screen; the router says where back goes.
-  const new({required this.onBack, super.key});
+  /// Creates the screen; the router says where back and the camera go.
+  const new({required this.onBack, required this.onScan, super.key});
 
   /// Leaves the screen.
   final VoidCallback onBack;
+
+  /// Opens the QR Code reading.
+  final VoidCallback onScan;
 
   @override
   State<TransferPixScreen> createState() => _TransferPixScreenState();
@@ -47,7 +51,8 @@ class _TransferPixScreenState extends State<TransferPixScreen> {
                       style: NbType.sectionTitle.copyWith(color: colors.text),
                     ),
                   ),
-                  // Wraps on a small phone with large text.
+                  // Compact, and its label shrinks rather than wrap on a
+                  // small phone with large text (S21 checkpoint).
                   Flexible(
                     child: FilledButton.tonal(
                       onPressed: () => showNbToast(
@@ -55,7 +60,18 @@ class _TransferPixScreenState extends State<TransferPixScreen> {
                         'Em breve.',
                         icon: Icons.info_outline,
                       ),
-                      child: const Text('Limites de uso'),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: NbSpace.md,
+                        ),
+                        textStyle: NbType.caption.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      child: const FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text('Limites de uso', maxLines: 1),
+                      ),
                     ),
                   ),
                 ],
@@ -71,23 +87,33 @@ class _TransferPixScreenState extends State<TransferPixScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Wrap(
-                      spacing: NbSpace.sm,
-                      runSpacing: NbSpace.sm,
-                      children: [
-                        FilterPill(
-                          label: 'Chave Pix',
-                          icon: Icons.key_outlined,
-                          selected: !_byAccount,
-                          onPressed: () => setState(() => _byAccount = false),
-                        ),
-                        FilterPill(
-                          label: 'Agência e conta',
-                          icon: Icons.account_balance_outlined,
-                          selected: _byAccount,
-                          onPressed: () => setState(() => _byAccount = true),
-                        ),
-                      ],
+                    // One row, each pill half the width and both as tall,
+                    // however much a long label shrinks (S21 checkpoint).
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        spacing: NbSpace.sm,
+                        children: [
+                          Expanded(
+                            child: FilterPill(
+                              label: 'Chave Pix',
+                              icon: Icons.key_outlined,
+                              selected: !_byAccount,
+                              onPressed: () =>
+                                  setState(() => _byAccount = false),
+                            ),
+                          ),
+                          Expanded(
+                            child: FilterPill(
+                              label: 'Agência e conta',
+                              icon: Icons.account_balance_outlined,
+                              selected: _byAccount,
+                              onPressed: () =>
+                                  setState(() => _byAccount = true),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: NbSpace.md),
                     Divider(height: 1, color: colors.border),
@@ -95,7 +121,7 @@ class _TransferPixScreenState extends State<TransferPixScreen> {
                     if (_byAccount)
                       const BankAccountTab()
                     else
-                      const PixKeyEntry(),
+                      PixKeyEntry(onScan: widget.onScan),
                   ],
                 ),
               ),
