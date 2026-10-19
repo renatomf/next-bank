@@ -90,6 +90,16 @@ void main() {
     );
   });
 
+  // S21 checkpoint: Investimentos shows a dashboard's chart.
+  testWidgets('shows a dashboard chart on Investimentos', (tester) async {
+    await openHome(tester);
+
+    expect(
+      find.descendant(of: bar, matching: find.byIcon(Icons.analytics_outlined)),
+      findsOneWidget,
+    );
+  });
+
   // D7: the flows open over the areas, without the bar.
   testWidgets('the Pix opens over the bar, and back returns to it', (
     tester,
