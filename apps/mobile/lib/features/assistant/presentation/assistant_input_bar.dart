@@ -54,7 +54,8 @@ class AssistantInputBar extends StatelessWidget {
   }
 }
 
-/// The plus, opening Galeria, Arquivos and Buscar contato.
+/// The plus, opening Galeria, Arquivos and Buscar contato in a box like
+/// the app's others, on the agent sheet's background (S21 checkpoint).
 class _AttachMenu extends StatelessWidget {
   const new();
 
@@ -66,11 +67,32 @@ class _AttachMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.nbColors;
+
     return MenuAnchor(
+      style: MenuStyle(
+        backgroundColor: WidgetStatePropertyAll(colors.surface),
+        surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(NbRadius.boxInner),
+            side: BorderSide(color: colors.border),
+          ),
+        ),
+        padding: const WidgetStatePropertyAll(
+          EdgeInsets.symmetric(vertical: NbSpace.xs),
+        ),
+      ),
       menuChildren: [
         for (final (icon, label) in _items)
           MenuItemButton(
-            leadingIcon: Icon(icon),
+            leadingIcon: Icon(icon, size: NbSize.icon, color: colors.accent),
+            style: MenuItemButton.styleFrom(
+              foregroundColor: colors.text,
+              textStyle: NbType.bodyText,
+              padding: const EdgeInsets.symmetric(horizontal: NbSpace.lg),
+              minimumSize: const Size(0, NbSize.button),
+            ),
             onPressed: () =>
                 showNbToast(context, 'Em breve.', icon: Icons.info_outline),
             child: Text(label),

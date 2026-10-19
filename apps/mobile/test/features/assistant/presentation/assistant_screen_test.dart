@@ -108,7 +108,7 @@ void main() {
     await pumpAssistant(tester);
 
     final style = tester.widget<MenuAnchor>(find.byType(MenuAnchor)).style!;
-    final colors = NbColors.dark;
+    const colors = NbColors.dark;
     expect(style.backgroundColor!.resolve({}), colors.surface);
     final shape = style.shape!.resolve({})! as RoundedRectangleBorder;
     expect(shape.side.color, colors.border);
