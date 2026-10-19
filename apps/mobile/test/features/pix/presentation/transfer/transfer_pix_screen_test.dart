@@ -1,17 +1,22 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/features/pix/presentation/transfer/bank_account_form.dart';
 import 'package:next_bank/features/pix/presentation/transfer/bank_list.dart';
 import 'package:next_bank/features/pix/presentation/transfer/transfer_pix_screen.dart';
 
-Future<void> pumpTransfer(WidgetTester tester, {VoidCallback? onBack}) async {
+Future<void> pumpTransfer(
+  WidgetTester tester, {
+  VoidCallback? onBack,
+  VoidCallback? onScan,
+}) async {
   tester.view.physicalSize = const Size(1080, 3600);
   addTearDown(tester.view.reset);
   await tester.pumpWidget(
     MaterialApp(
       theme: NbTheme.dark(),
-      home: TransferPixScreen(onBack: onBack ?? () {}),
+      home: TransferPixScreen(onBack: onBack ?? () {}, onScan: onScan ?? () {}),
     ),
   );
   await tester.pumpAndSettle();
@@ -56,7 +61,6 @@ void main() {
 
     for (final label in [
       'Limites de uso',
-      'Ler QR Code',
       'Agenda do celular',
       'Faça vários Pix de uma vez',
       'Favoritar Mariana Costa',
@@ -145,6 +149,42 @@ void main() {
 
       expect(find.widgetWithText(NbToast, 'Em breve.'), findsOneWidget);
     });
+  });
+
+  // S21 checkpoint: the camera opens the QR Code reading.
+  testWidgets('opens the QR Code reading on the camera', (tester) async {
+    var scans = 0;
+    await pumpTransfer(tester, onScan: () => scans++);
+
+    await tester.tap(find.bySemanticsLabel('Ler QR Code'));
+    await tester.pumpAndSettle();
+
+    expect(scans, 1);
+    expect(find.widgetWithText(NbToast, 'Em breve.'), findsNothing);
+  });
+
+  // S21 checkpoint: on a small phone at 1.3x text, the two pills share one
+  // row and "Limites de uso" stays on one line.
+  testWidgets('keeps the pills on one row and Limites de uso on one line', (
+    tester,
+  ) async {
+    await pumpTransfer(tester);
+    tester.view
+      ..physicalSize = const Size(320 * 3, 568 * 3)
+      ..devicePixelRatio = 3;
+    tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    await tester.pumpAndSettle();
+
+    final pills = find.byType(FilterPill);
+    expect(tester.getTopLeft(pills.first).dy, tester.getTopLeft(pills.last).dy);
+    const label = 'Limites de uso';
+    final paragraph = tester.renderObject<RenderParagraph>(find.text(label));
+    final boxes = paragraph.getBoxesForSelection(
+      const TextSelection(baseOffset: 0, extentOffset: label.length),
+    );
+    expect(boxes.map((box) => box.top).toSet(), hasLength(1));
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('goes back where the app says', (tester) async {

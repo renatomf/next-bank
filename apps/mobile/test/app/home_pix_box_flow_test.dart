@@ -6,6 +6,7 @@ import 'package:next_bank/features/home/presentation/pix_box/pix_box.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/automatic/pix_automatic_screen.dart';
 import 'package:next_bank/features/pix/presentation/keys/pix_keys_screen.dart';
+import 'package:next_bank/features/pix/presentation/scan/scan_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/transfer/transfer_pix_screen.dart';
 
@@ -49,6 +50,20 @@ void main() {
     await tester.tap(find.bySemanticsLabel('Voltar'));
     await tester.pumpAndSettle();
     expect(find.byType(HomeScreen), findsOneWidget);
+  });
+
+  // S21 checkpoint: the transfer's camera opens the reading, as "Pagar".
+  testWidgets("opens the QR Code reading from Transferir's camera", (
+    tester,
+  ) async {
+    await openHome(tester, FakePixRepository());
+    await tester.tap(find.widgetWithText(ActionTile, 'Transferir'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.bySemanticsLabel('Ler QR Code'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ScanPixScreen), findsOneWidget);
   });
 
   testWidgets('opens the Pix with the CPF typed, looked up at once', (
