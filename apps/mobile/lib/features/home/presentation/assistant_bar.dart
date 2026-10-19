@@ -2,12 +2,19 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 
 /// "Posso te ajudar?" with the help and notification buttons beside it. The
-/// help button opens the help (v1.1.0 plan, task 4.5) and the bell the
-/// notifications (task 4.6); the assistant comes later and says so (week 8
-/// plan, V9).
+/// field opens the assistant (v1.1.0 plan, task 4.10), the help button the
+/// help (task 4.5) and the bell the notifications (task 4.6).
 class AssistantBar extends StatelessWidget {
   /// Creates the bar.
-  const new({required this.onHelp, required this.onNotifications, super.key});
+  const new({
+    required this.onAssistant,
+    required this.onHelp,
+    required this.onNotifications,
+    super.key,
+  });
+
+  /// Opens the assistant.
+  final VoidCallback onAssistant;
 
   /// Opens the help.
   final VoidCallback onHelp;
@@ -19,7 +26,7 @@ class AssistantBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Expanded(child: _AssistantField()),
+        Expanded(child: _AssistantField(onTap: onAssistant)),
         const SizedBox(width: NbSpace.sm),
         IconCircleButton(
           icon: Icons.help_outline,
@@ -37,10 +44,11 @@ class AssistantBar extends StatelessWidget {
   }
 }
 
-/// A button shaped like a field, for the assistant to come: honest about
-/// it, it says so when tapped.
+/// A button shaped like a field, opening the assistant.
 class _AssistantField extends StatelessWidget {
-  const new();
+  const new({required this.onTap});
+
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -48,18 +56,14 @@ class _AssistantField extends StatelessWidget {
 
     return Semantics(
       button: true,
-      label: 'Posso te ajudar? Assistente, em breve',
+      label: 'Posso te ajudar? Abrir o assistente',
       excludeSemantics: true,
       child: Material(
         color: colors.surface,
         shape: StadiumBorder(side: BorderSide(color: colors.border)),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: () => showNbToast(
-            context,
-            'Em breve: assistente com IA.',
-            icon: Icons.info_outline,
-          ),
+          onTap: onTap,
           child: ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 48),
             child: Padding(

@@ -60,6 +60,9 @@ abstract final class AppRoutes {
   /// Help, over the Home (v1.1.0 plan, task 4.5).
   static const String help = '/help';
 
+  /// The assistant, over the Home (v1.1.0 plan, task 4.10).
+  static const String assistant = '/assistant';
+
   /// Notifications, over the Home (v1.1.0 plan, task 4.6).
   static const String notifications = '/notifications';
 

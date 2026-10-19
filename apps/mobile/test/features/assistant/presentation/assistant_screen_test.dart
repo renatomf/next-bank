@@ -119,7 +119,11 @@ void main() {
       findsOneWidget,
     );
 
-    await tap(tester, find.bySemanticsLabel('Fechar'));
+    // The sheet's own X: the screen has one too.
+    await tap(
+      tester,
+      find.descendant(of: sheet, matching: find.bySemanticsLabel('Fechar')),
+    );
 
     expect(find.byType(AgentSheet), findsNothing);
   });

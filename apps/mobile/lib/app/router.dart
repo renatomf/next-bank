@@ -9,6 +9,7 @@ import 'package:next_bank/core/profile/profile.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/app_lock.dart';
 import 'package:next_bank/core/session/session_controller.dart';
+import 'package:next_bank/features/assistant/presentation/assistant_screen.dart';
 import 'package:next_bank/features/auth/presentation/create_pin/create_pin_screen.dart';
 import 'package:next_bank/features/auth/presentation/login/login_screen.dart';
 import 'package:next_bank/features/auth/presentation/register/register_screen.dart';
@@ -113,6 +114,7 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
               onStatement: () => context.go(AppRoutes.statement),
               onProfile: () => context.go(AppRoutes.profile),
               onHelp: () => context.push(AppRoutes.help),
+              onAssistant: () => context.push(AppRoutes.assistant),
               onNotifications: () => context.push(AppRoutes.notifications),
             ),
           ),
@@ -248,6 +250,10 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
         ),
       ),
       // The changes open over Security, so back and done return to it.
+      GoRoute(
+        path: AppRoutes.assistant,
+        builder: (context, _) => AssistantScreen(onClose: () => _back(context)),
+      ),
       GoRoute(
         path: AppRoutes.help,
         builder: (context, _) => HelpScreen(onBack: () => _back(context)),

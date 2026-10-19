@@ -29,6 +29,7 @@ class HomeScreen extends ConsumerWidget {
     required this.onProfile,
     required this.onHelp,
     required this.onNotifications,
+    required this.onAssistant,
     super.key,
   });
 
@@ -65,6 +66,9 @@ class HomeScreen extends ConsumerWidget {
   /// Opens the notifications.
   final VoidCallback onNotifications;
 
+  /// Opens the assistant.
+  final VoidCallback onAssistant;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileProvider).value;
@@ -83,7 +87,11 @@ class HomeScreen extends ConsumerWidget {
               children: [
                 GreetingHeader(firstName: firstName, onProfile: onProfile),
                 const SizedBox(height: 22),
-                AssistantBar(onHelp: onHelp, onNotifications: onNotifications),
+                AssistantBar(
+                  onAssistant: onAssistant,
+                  onHelp: onHelp,
+                  onNotifications: onNotifications,
+                ),
                 const SizedBox(height: NbSpace.xl),
                 ShortcutsRow(
                   onPix: onPix,
