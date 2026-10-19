@@ -21,7 +21,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^24.19.1",
+    "@types/node": "^24.19.2",
     "@types/pg": "^8.23.1",
     "@vitest/coverage-v8": "^5.0.3",
     "dbmate": "^2.36.0",
