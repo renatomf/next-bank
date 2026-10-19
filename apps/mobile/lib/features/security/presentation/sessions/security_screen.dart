@@ -164,9 +164,7 @@ class _SessionTile extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          ExcludeSemantics(
-            child: Icon(Icons.smartphone, color: colors.textMuted),
-          ),
+          ExcludeSemantics(child: Icon(Icons.smartphone, color: colors.accent)),
           const SizedBox(width: NbSpace.md),
           Expanded(
             child: Column(
