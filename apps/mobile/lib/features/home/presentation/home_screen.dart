@@ -85,7 +85,11 @@ class HomeScreen extends ConsumerWidget {
                 const SizedBox(height: 22),
                 AssistantBar(onHelp: onHelp, onNotifications: onNotifications),
                 const SizedBox(height: NbSpace.xl),
-                ShortcutsRow(onPix: onPix, onPay: onPay),
+                ShortcutsRow(
+                  onPix: onPix,
+                  onPay: onPay,
+                  onTransfer: onTransfer,
+                ),
                 const SizedBox(height: 28),
                 BalanceSection(onStatement: onStatement),
                 const SizedBox(height: 28),

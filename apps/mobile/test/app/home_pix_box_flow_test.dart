@@ -76,18 +76,19 @@ void main() {
     expect(find.text('529.982.247-25'), findsOneWidget);
   });
 
-  for (final (label, screen) in [
-    ('Transferir Pix', TransferPixScreen),
-    ('Pix Automático', PixAutomaticScreen),
-    ('Minhas chaves', PixKeysScreen),
+  // Each with its own title: "Transferir Pix" opens Transferir.
+  for (final (label, screen, title) in [
+    ('Transferir Pix', TransferPixScreen, 'Transferir'),
+    ('Pix Automático', PixAutomaticScreen, 'Pix Automático'),
+    ('Minhas chaves', PixKeysScreen, 'Minhas chaves'),
   ]) {
-    testWidgets('opens "$label", blank for now, and goes back', (tester) async {
+    testWidgets('opens "$label" and goes back', (tester) async {
       await openHome(tester, FakePixRepository());
 
       await tapInBox(tester, label);
 
       expect(find.byType(screen), findsOneWidget);
-      expect(find.text(label), findsWidgets);
+      expect(find.widgetWithText(ScreenHeader, title), findsOneWidget);
 
       await tester.tap(find.bySemanticsLabel('Voltar'));
       await tester.pumpAndSettle();

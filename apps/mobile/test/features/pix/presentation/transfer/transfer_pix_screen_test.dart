@@ -90,7 +90,10 @@ void main() {
         );
       }
 
-      await tester.tap(find.widgetWithText(TextButton, 'Carregar mais'));
+      final more = find.widgetWithText(TextButton, 'Carregar mais');
+      await tester.ensureVisible(more);
+      await tester.pumpAndSettle();
+      await tester.tap(more);
       await tester.pumpAndSettle();
 
       expect(find.byType(BankTile), findsNWidgets(20));
