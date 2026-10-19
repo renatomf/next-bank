@@ -51,26 +51,31 @@ class _TransferPixScreenState extends State<TransferPixScreen> {
                       style: NbType.sectionTitle.copyWith(color: colors.text),
                     ),
                   ),
-                  // Compact, and its label shrinks rather than wrap on a
-                  // small phone with large text (S21 checkpoint).
+                  const SizedBox(width: NbSpace.md),
+                  // On the right edge, apart from the title; compact, its
+                  // label shrinking rather than wrap on a small phone (S21
+                  // checkpoint).
                   Flexible(
-                    child: FilledButton.tonal(
-                      onPressed: () => showNbToast(
-                        context,
-                        'Em breve.',
-                        icon: Icons.info_outline,
-                      ),
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: NbSpace.md,
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: FilledButton.tonal(
+                        onPressed: () => showNbToast(
+                          context,
+                          'Em breve.',
+                          icon: Icons.info_outline,
                         ),
-                        textStyle: NbType.caption.copyWith(
-                          fontWeight: FontWeight.w700,
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: NbSpace.md,
+                          ),
+                          textStyle: NbType.caption.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
-                      ),
-                      child: const FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text('Limites de uso', maxLines: 1),
+                        child: const FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text('Limites de uso', maxLines: 1),
+                        ),
                       ),
                     ),
                   ),
