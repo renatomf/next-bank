@@ -75,6 +75,25 @@ void main() {
     });
   });
 
+  // The Home's cards box: a row of lock and details under each card.
+  testWidgets('makes room for a footer under each item', (tester) async {
+    Future<double> heightWith(double footer) async {
+      await pump(
+        tester,
+        PeekCarousel(
+          itemAspectRatio: 2,
+          footerHeight: footer,
+          onPageChanged: (_) {},
+          children: const [Text('primeiro')],
+        ),
+      );
+      return tester.getSize(find.byType(PeekCarousel)).height;
+    }
+
+    final plain = await heightWith(0);
+    expect(await heightWith(56), plain + 56);
+  });
+
   group('CardLockToggle', () {
     testWidgets('switches between unlocked and locked, on the screen', (
       tester,
