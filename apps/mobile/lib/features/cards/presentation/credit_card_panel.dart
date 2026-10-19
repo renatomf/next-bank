@@ -1,6 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
-import 'package:next_bank/features/cards/presentation/example_cards.dart';
+import 'package:next_bank/features/cards/presentation/example_card_figures.dart';
 
 /// What the credit card shows below the carousel: the current invoice, the
 /// shortcuts and the latest purchases, all made up. Layout only: each

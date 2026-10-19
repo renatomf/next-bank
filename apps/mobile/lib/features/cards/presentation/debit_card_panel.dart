@@ -1,7 +1,7 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:next_bank/features/cards/presentation/card_status_row.dart';
-import 'package:next_bank/features/cards/presentation/example_cards.dart';
+import 'package:next_bank/features/cards/presentation/example_card_figures.dart';
 
 /// What the debit card shows below the carousel: its status, the
 /// pre-approved credit, the shortcuts and the quick settings. Layout only:

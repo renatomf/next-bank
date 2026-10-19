@@ -1,11 +1,10 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:next_bank/core/cards/example_cards.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
-import 'package:next_bank/features/cards/presentation/card_carousel.dart';
 import 'package:next_bank/features/cards/presentation/credit_card_panel.dart';
 import 'package:next_bank/features/cards/presentation/debit_card_panel.dart';
-import 'package:next_bank/features/cards/presentation/example_cards.dart';
 
 /// Cartões (v1.1.0 plan, task 4.14), a destination of the bar, layout only
 /// for now: the carousel of the debit and the credit card, and below it
@@ -56,9 +55,17 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                 ],
               ),
               const SizedBox(height: NbSpace.lg),
-              CardCarousel(
-                cards: exampleCards,
+              PeekCarousel(
+                itemAspectRatio: PaymentCard.aspectRatio,
                 onPageChanged: (index) => setState(() => _index = index),
+                children: [
+                  for (final card in exampleCards)
+                    PaymentCard(
+                      label: card.label,
+                      lastFour: card.lastFour,
+                      artArea: card.artArea,
+                    ),
+                ],
               ),
               const SizedBox(height: NbSpace.md),
               Text(

@@ -4,9 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/session_controller.dart';
-import 'package:next_bank/features/cards/presentation/card_brand_mark.dart';
 import 'package:next_bank/features/cards/presentation/cards_screen.dart';
-import 'package:next_bank/features/cards/presentation/payment_card.dart';
 
 import '../../../support/device_stores.dart';
 import '../../../support/fake_profile_repository.dart';
