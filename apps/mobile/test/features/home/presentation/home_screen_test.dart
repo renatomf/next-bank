@@ -11,6 +11,7 @@ import 'package:next_bank/core/clock.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/core/statement/statement_controller.dart';
+import 'package:next_bank/features/home/presentation/greeting_header.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
 import 'package:next_bank/features/home/presentation/pix_box/cpf_key_row.dart';
 import 'package:next_bank/features/home/presentation/pix_box/pix_box.dart';
@@ -130,6 +131,20 @@ void main() {
       expect(find.text(greeting), findsNothing);
     }
     expect(find.byType(DisplayTitle), findsNothing);
+  });
+
+  // S21 checkpoint: the header's logo a little larger.
+  testWidgets('draws the header logo a little larger', (tester) async {
+    await pumpHome(tester);
+    await tester.pumpAndSettle();
+
+    final logo = find
+        .descendant(
+          of: find.byType(GreetingHeader),
+          matching: find.byType(NextLogo),
+        )
+        .first;
+    expect(tester.widget<NextLogo>(logo).size, 28);
   });
 
   // v1.1.0 plan, task 4.4: the icon and the name are the way to the profile.
