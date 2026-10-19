@@ -17,10 +17,7 @@ void main() {
       mainBanks.map((bank) => bank.initials),
       everyElement(matches(RegExp(r'^[A-Z0-9]{2,3}$'))),
     );
-    expect(
-      mainBanks.singleWhere((bank) => bank.code == '001').initials,
-      'BB',
-    );
+    expect(mainBanks.singleWhere((bank) => bank.code == '001').initials, 'BB');
   });
 
   test('keeps the public codes of the best-known banks', () {

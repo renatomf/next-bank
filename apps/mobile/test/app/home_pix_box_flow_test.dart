@@ -1,3 +1,4 @@
+import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
@@ -35,6 +36,21 @@ Future<void> tapInBox(WidgetTester tester, String label) async {
 
 // The Home's Pix box (v1.1.0 plan, task 4.2) through the real router.
 void main() {
+  // v1.1.0 plan, task 4.9: the Home's shortcut opens the transfer too.
+  testWidgets('opens Transferir from the Home shortcut, and back', (
+    tester,
+  ) async {
+    await openHome(tester, FakePixRepository());
+
+    await tester.tap(find.widgetWithText(ActionTile, 'Transferir'));
+    await tester.pumpAndSettle();
+    expect(find.byType(TransferPixScreen), findsOneWidget);
+
+    await tester.tap(find.bySemanticsLabel('Voltar'));
+    await tester.pumpAndSettle();
+    expect(find.byType(HomeScreen), findsOneWidget);
+  });
+
   testWidgets('opens the Pix with the CPF typed, looked up at once', (
     tester,
   ) async {
