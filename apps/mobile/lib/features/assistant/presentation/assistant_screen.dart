@@ -56,14 +56,14 @@ class AssistantScreen extends ConsumerWidget {
                         padding: const EdgeInsets.only(bottom: NbSpace.sm),
                         child: Align(
                           alignment: Alignment.centerLeft,
-                          child: OutlinedButton.icon(
+                          child: NbChip(
+                            label: agent.name,
+                            icon: agent.icon,
                             onPressed: () => showNbToast(
                               context,
                               'Em breve.',
                               icon: Icons.info_outline,
                             ),
-                            icon: Icon(agent.icon, size: 18),
-                            label: Text(agent.name),
                           ),
                         ),
                       ),
@@ -117,15 +117,18 @@ class _Header extends StatelessWidget {
           label: 'Fechar',
           onPressed: onClose,
         ),
-        Flexible(
-          child: OutlinedButton.icon(
-            onPressed: () => showAgentSheet(context),
-            icon: const Icon(Icons.expand_more, size: 18),
-            iconAlignment: IconAlignment.end,
-            label: const Text('Escolher agente'),
+        // A chip with a dropdown's arrow, opening the agent sheet; it takes
+        // the room between the X and the new chat, shrinking if short.
+        Expanded(
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: NbChip(
+              label: 'Escolher agente',
+              trailingIcon: Icons.expand_more,
+              onPressed: () => showAgentSheet(context),
+            ),
           ),
         ),
-        const Spacer(),
         NbIconButton(
           icon: Icons.edit_square,
           label: 'Nova conversa',

@@ -21,11 +21,11 @@ class SuggestionChips extends StatelessWidget {
         spacing: NbSpace.sm,
         children: [
           for (final (icon, label) in _suggestions)
-            OutlinedButton.icon(
+            NbChip(
+              label: label,
+              icon: icon,
               onPressed: () =>
                   showNbToast(context, 'Em breve.', icon: Icons.info_outline),
-              icon: Icon(icon, size: 18),
-              label: Text(label),
             ),
         ],
       ),
