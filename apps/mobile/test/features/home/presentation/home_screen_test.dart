@@ -11,6 +11,7 @@ import 'package:next_bank/core/clock.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/core/statement/statement_controller.dart';
+import 'package:next_bank/features/home/presentation/cards_box.dart';
 import 'package:next_bank/features/home/presentation/greeting_header.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
 import 'package:next_bank/features/home/presentation/pix_box/cpf_key_row.dart';
@@ -41,6 +42,7 @@ Future<void> pumpHome(
   VoidCallback? onNotifications,
   VoidCallback? onAssistant,
   VoidCallback? onRecharge,
+  ValueChanged<int>? onCardDetails,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -72,6 +74,7 @@ Future<void> pumpHome(
           onNotifications: onNotifications ?? () {},
           onAssistant: onAssistant ?? () {},
           onRecharge: onRecharge ?? () {},
+          onCardDetails: onCardDetails ?? (_) {},
         ),
       ),
     ),
@@ -247,6 +250,57 @@ void main() {
         .map((tile) => tester.getTopLeft(find.byWidget(tile)).dy)
         .toSet();
     expect(tops, hasLength(1));
+  });
+
+  // v1.1.0 plan, task 4.15: "Meus cartões" below the Pix box, a lock and
+  // Detalhes under each card.
+  group('the cards box', () {
+    Future<void> openBox(WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1080, 4800);
+      addTearDown(tester.view.reset);
+      await tester.pumpAndSettle();
+    }
+
+    Finder inBox(Finder finder) =>
+        find.descendant(of: find.byType(CardsBox), matching: finder);
+
+    testWidgets('sits below the Pix box with both cards', (tester) async {
+      await pumpHome(tester);
+      await openBox(tester);
+
+      expect(find.text('Meus cartões'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.byType(CardsBox)).dy,
+        greaterThan(tester.getBottomLeft(find.byType(PixBox)).dy),
+      );
+      expect(inBox(find.byType(PaymentCard)), findsNWidgets(2));
+      expect(inBox(find.byType(CardLockToggle)), findsNWidgets(2));
+    });
+
+    testWidgets('toggles a card lock on the screen', (tester) async {
+      await pumpHome(tester);
+      await openBox(tester);
+
+      await tester.tap(inBox(find.byType(CardLockToggle)).first);
+      await tester.pump();
+
+      expect(inBox(find.text('Bloqueado')), findsOneWidget);
+    });
+
+    testWidgets('opens the details of the card on', (tester) async {
+      final opened = <int>[];
+      await pumpHome(tester, onCardDetails: opened.add);
+      await openBox(tester);
+
+      await tester.tap(
+        inBox(find.widgetWithText(TextButton, 'Detalhes')).first,
+      );
+      await tester.drag(inBox(find.byType(PageView)), const Offset(-500, 0));
+      await tester.pumpAndSettle();
+      await tester.tap(inBox(find.widgetWithText(TextButton, 'Detalhes')).last);
+
+      expect(opened, [0, 1]);
+    });
   });
 
   // v1.1.0 plan, task 4.2: the Pix box, in place of the latest movements.

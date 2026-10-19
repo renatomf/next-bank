@@ -10,7 +10,7 @@ import '../../../support/device_stores.dart';
 import '../../../support/fake_profile_repository.dart';
 import '../../../support/fake_token_store.dart';
 
-Future<void> pumpCards(WidgetTester tester) async {
+Future<void> pumpCards(WidgetTester tester, {int initialIndex = 0}) async {
   tester.view.physicalSize = const Size(1080, 4000);
   addTearDown(tester.view.reset);
   await tester.pumpWidget(
@@ -20,7 +20,10 @@ Future<void> pumpCards(WidgetTester tester) async {
         tokenStoreProvider.overrideWithValue(FakeTokenStore(tokens)),
         profileRepositoryProvider.overrideWithValue(FakeProfileRepository()),
       ],
-      child: MaterialApp(theme: NbTheme.dark(), home: const CardsScreen()),
+      child: MaterialApp(
+        theme: NbTheme.dark(),
+        home: CardsScreen(initialIndex: initialIndex),
+      ),
     ),
   );
   await tester.pumpAndSettle();
@@ -70,6 +73,14 @@ void main() {
     expect(find.text(r'R$ 1.250,40'), findsOneWidget);
     expect(find.text('Últimas compras'), findsOneWidget);
     expect(find.text('Cartão desbloqueado'), findsNothing);
+  });
+
+  // v1.1.0 plan, task 4.15: the Home's Detalhes opens the card tapped.
+  testWidgets('opens on the card asked for', (tester) async {
+    await pumpCards(tester, initialIndex: 1);
+
+    expect(find.text('Ana Souza · •••• 0002 · Crédito'), findsOneWidget);
+    expect(find.text('Fatura atual'), findsOneWidget);
   });
 
   // Repository rules: a generic brand, never a real one's name.
