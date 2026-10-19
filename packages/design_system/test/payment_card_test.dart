@@ -68,13 +68,10 @@ void main() {
       expect(pages, [1]);
     });
 
-    // The last item rests on the end edge, the one before cut at the start.
     testWidgets('opens on the page asked for', (tester) async {
       await pump(tester, carousel(initialPage: 1));
 
-      final width = tester.getSize(find.byType(PeekCarousel)).width;
-      expect(tester.getTopLeft(find.text('primeiro')).dx, lessThan(20));
-      expect(tester.getTopLeft(find.text('segundo')).dx, lessThan(width / 2));
+      expect(tester.getTopLeft(find.text('segundo')).dx, 20);
     });
   });
 
