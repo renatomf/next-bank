@@ -1,17 +1,18 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 
-/// "Posso te ajudar?" with the help and notification buttons beside it. All
-/// three come after v1.0.0 and say so (week 8 plan, V9 and V11).
+/// "Posso te ajudar?" with the help and notification buttons beside it. The
+/// help button opens the help (v1.1.0 plan, task 4.5); the assistant and
+/// the notifications come later and say so (week 8 plan, V9 and V11).
 class AssistantBar extends StatelessWidget {
   /// Creates the bar.
-  const new({super.key});
+  const new({required this.onHelp, super.key});
+
+  /// Opens the help.
+  final VoidCallback onHelp;
 
   @override
   Widget build(BuildContext context) {
-    void sayComingSoon() =>
-        showNbToast(context, 'Em breve.', icon: Icons.info_outline);
-
     return Row(
       children: [
         const Expanded(child: _AssistantField()),
@@ -19,13 +20,14 @@ class AssistantBar extends StatelessWidget {
         IconCircleButton(
           icon: Icons.help_outline,
           label: 'Ajuda',
-          onPressed: sayComingSoon,
+          onPressed: onHelp,
         ),
         const SizedBox(width: NbSpace.sm),
         IconCircleButton(
           icon: Icons.notifications_none,
           label: 'Notificações',
-          onPressed: sayComingSoon,
+          onPressed: () =>
+              showNbToast(context, 'Em breve.', icon: Icons.info_outline),
         ),
       ],
     );

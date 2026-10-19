@@ -15,6 +15,7 @@ import 'package:next_bank/features/auth/presentation/register/register_screen.da
 import 'package:next_bank/features/auth/presentation/sign_out/sign_out_button.dart';
 import 'package:next_bank/features/auth/presentation/sign_out/switch_account_button.dart';
 import 'package:next_bank/features/auth/presentation/splash/splash_screen.dart';
+import 'package:next_bank/features/help/presentation/help_screen.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/automatic/pix_automatic_screen.dart';
@@ -109,6 +110,7 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
               onKeys: () => context.push(AppRoutes.pixKeys),
               onStatement: () => context.go(AppRoutes.statement),
               onProfile: () => context.go(AppRoutes.profile),
+              onHelp: () => context.push(AppRoutes.help),
             ),
           ),
           GoRoute(
@@ -237,6 +239,10 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
         ),
       ),
       // The changes open over Security, so back and done return to it.
+      GoRoute(
+        path: AppRoutes.help,
+        builder: (context, _) => HelpScreen(onBack: () => _back(context)),
+      ),
       // Opened over the Profile, so back returns to it (v1.1.0 plan, 4.4).
       GoRoute(
         path: AppRoutes.profileTheme,

@@ -57,6 +57,9 @@ abstract final class AppRoutes {
   /// The detail of the movement [itemId] (screen 12).
   static String statementItem(String itemId) => '$statement/$itemId';
 
+  /// Help, over the Home (v1.1.0 plan, task 4.5).
+  static const String help = '/help';
+
   /// The customer and the way out (screen 13).
   static const String profile = '/profile';
 
