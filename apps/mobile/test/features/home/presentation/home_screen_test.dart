@@ -160,11 +160,20 @@ void main() {
     expect(opened, 1);
   });
 
-  // v1.1.0 plan, task 4: "Pagar" reads a Pix QR Code.
+  // v1.1.0 plan, task 4: "Pagar" reads a Pix QR Code; at the S21
+  // checkpoint it takes a barcode icon, for the boleto to come.
   testWidgets('opens the QR Code reading on "Pagar"', (tester) async {
     var paid = 0;
     await pumpHome(tester, onPay: () => paid++);
     await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(
+        of: find.widgetWithText(ActionTile, 'Pagar'),
+        matching: find.byIcon(Icons.barcode_reader),
+      ),
+      findsOneWidget,
+    );
 
     await tester.tap(find.text('Pagar'));
     await tester.pumpAndSettle();
@@ -192,37 +201,31 @@ void main() {
     expect(find.widgetWithText(TextButton, 'Ver extrato'), findsNothing);
   });
 
-  // v1.1.0 plan, task 3, at the S21 checkpoint: "Receber" beside "Pagar".
-  testWidgets('opens "Receber" on its shortcut', (tester) async {
-    var received = 0;
-    await pumpHome(tester, onReceive: () => received++);
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Receber'));
-    await tester.pumpAndSettle();
-
-    expect(received, 1);
-  });
-
-  // Developer's call at the S21 checkpoint: the shortcuts scroll sideways.
-  testWidgets('lists the shortcuts sideways, in order', (tester) async {
+  // Developer's call at the S21 checkpoint: four fixed shortcuts sharing
+  // the width, no sideways list; "Receber" lives in the Pix box.
+  testWidgets('lays four shortcuts side by side, across the width', (
+    tester,
+  ) async {
     await pumpHome(tester);
     await tester.pumpAndSettle();
 
-    // The nearest list above the tiles; the Home's own list scrolls down.
-    final list = tester.widget<ListView>(
-      find
-          .ancestor(
-            of: find.widgetWithText(ActionTile, 'Área Pix'),
-            matching: find.byType(ListView),
-          )
-          .first,
-    );
-    expect(list.scrollDirection, Axis.horizontal);
+    final tiles = find.byType(ActionTile);
     final labels = tester
-        .widgetList<ActionTile>(find.byType(ActionTile))
+        .widgetList<ActionTile>(tiles)
         .map((tile) => tile.label);
-    expect(labels, ['Área Pix', 'Pagar', 'Receber', 'Transferir', 'Recarga']);
+    expect(labels, ['Área Pix', 'Pagar', 'Transferir', 'Recarga']);
+    expect(
+      find.ancestor(of: tiles.first, matching: find.byType(ListView)),
+      findsOneWidget, // only the Home's own list, scrolling down
+    );
+    final screen = tester.getSize(find.byType(HomeScreen)).width;
+    expect(tester.getTopLeft(tiles.first).dx, NbSpace.screen);
+    expect(tester.getTopRight(tiles.last).dx, screen - NbSpace.screen);
+    final tops = tester
+        .widgetList(tiles)
+        .map((tile) => tester.getTopLeft(find.byWidget(tile)).dy)
+        .toSet();
+    expect(tops, hasLength(1));
   });
 
   // v1.1.0 plan, task 4.2: the Pix box, in place of the latest movements.

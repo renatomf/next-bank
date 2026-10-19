@@ -89,7 +89,10 @@ void main() {
     expect(pix.callsOf('receivingKey'), hasLength(1));
   });
 
-  testWidgets("opens from the Home's shortcut too", (tester) async {
+  // Since the S21 checkpoint, from the Pix box's "Gerar QR Code".
+  testWidgets("opens from the Home's Pix box too", (tester) async {
+    tester.view.physicalSize = const Size(1080, 3600);
+    addTearDown(tester.view.reset);
     await pumpApp(
       tester,
       store: FakeTokenStore(tokens),
@@ -98,7 +101,7 @@ void main() {
     );
     await unlockWithPin(tester);
 
-    await tester.tap(find.text('Receber'));
+    await tester.tap(find.bySemanticsLabel('Gerar QR Code'));
     await tester.pumpAndSettle();
 
     expect(find.byType(ReceivePixScreen), findsOneWidget);
