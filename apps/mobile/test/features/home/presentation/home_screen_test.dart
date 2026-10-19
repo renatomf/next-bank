@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/account/account_providers.dart';
@@ -397,6 +398,34 @@ void main() {
       }
     });
 
+    // Found at the checkpoint: on a narrow column with large text, a word
+    // wider than the column broke in the middle ("Transferi/r"). The labels
+    // keep their two lines, shrinking to fit instead.
+    testWidgets('never breaks a word on a small phone at 1.3x text', (
+      tester,
+    ) async {
+      tester.view
+        ..physicalSize = const Size(320 * 3, 568 * 3)
+        ..devicePixelRatio = 3;
+      tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+      await pumpHome(tester);
+      await tester.pumpAndSettle();
+      await scrollToBox(tester);
+
+      for (final label in [
+        'Transferir\nPix',
+        'Pagar\nQR Code',
+        'Gerar\nQR Code',
+        'Pix\nAutomático',
+        'Minhas\nchaves',
+      ]) {
+        expect(lineCount(tester, find.text(label)), 2, reason: label);
+      }
+    });
+
     testWidgets('puts the Pix symbol on "Pix Automático", split from "Minhas '
         'chaves" by a line', (tester) async {
       await pumpHome(tester);
@@ -538,4 +567,14 @@ void main() {
 
     expect(tester.takeException(), isNull);
   });
+}
+
+/// How many lines the text found by [finder] was laid out in.
+int lineCount(WidgetTester tester, Finder finder) {
+  final paragraph = tester.renderObject<RenderParagraph>(finder);
+  final text = paragraph.text.toPlainText();
+  final boxes = paragraph.getBoxesForSelection(
+    TextSelection(baseOffset: 0, extentOffset: text.length),
+  );
+  return boxes.map((box) => box.top).toSet().length;
 }
