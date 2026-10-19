@@ -16,7 +16,7 @@ dependencies:
     sdk: flutter
   flutter_riverpod: ^3.4.3
   flutter_secure_storage: 11.2.0
-  go_router: 17.5.0
+  go_router: 18.1.0
   local_auth: 3.0.2
   # Pinned below 2.3.0 (2026-10-13) until it is two weeks old.
   local_auth_android: 2.2.0
