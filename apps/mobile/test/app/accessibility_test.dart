@@ -14,6 +14,7 @@ import 'package:next_bank/features/notifications/presentation/inbox/notification
 import 'package:next_bank/features/notifications/presentation/settings/notification_settings_screen.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/automatic/pix_automatic_screen.dart';
+import 'package:next_bank/features/pix/presentation/keys/pix_keys_screen.dart';
 import 'package:next_bank/features/pix/presentation/processing/processing_screen.dart';
 import 'package:next_bank/features/pix/presentation/receipt/receipt_screen.dart';
 import 'package:next_bank/features/pix/presentation/review/review_pix_screen.dart';
@@ -173,6 +174,11 @@ final List<(String, Type, Future<void> Function(WidgetTester))> screens = [
     'Pix Automático',
     PixAutomaticScreen,
     (tester) => openSignedIn(tester, AppRoutes.pixAutomatic),
+  ),
+  (
+    'Minhas chaves',
+    PixKeysScreen,
+    (tester) => openSignedIn(tester, AppRoutes.pixKeys),
   ),
   (
     'Notifications',
