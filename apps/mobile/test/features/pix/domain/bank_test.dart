@@ -11,6 +11,18 @@ void main() {
     expect(codes, everyElement(matches(RegExp(r'^\d{3}$'))));
   });
 
+  // Shown in a circle in place of the bank's logo, a third-party mark.
+  test('gives each bank initials of up to three characters', () {
+    expect(
+      mainBanks.map((bank) => bank.initials),
+      everyElement(matches(RegExp(r'^[A-Z0-9]{2,3}$'))),
+    );
+    expect(
+      mainBanks.singleWhere((bank) => bank.code == '001').initials,
+      'BB',
+    );
+  });
+
   test('keeps the public codes of the best-known banks', () {
     String codeOf(String name) =>
         mainBanks.singleWhere((bank) => bank.name == name).code;
