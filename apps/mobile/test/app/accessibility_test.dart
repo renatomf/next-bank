@@ -12,9 +12,9 @@ import 'package:next_bank/features/auth/presentation/register/register_screen.da
 import 'package:next_bank/features/auth/presentation/splash/splash_screen.dart';
 import 'package:next_bank/features/help/presentation/help_screen.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
+import 'package:next_bank/features/menu/presentation/menu_screen.dart';
 import 'package:next_bank/features/notifications/presentation/inbox/notifications_screen.dart';
 import 'package:next_bank/features/notifications/presentation/settings/notification_settings_screen.dart';
-import 'package:next_bank/features/menu/presentation/menu_screen.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/automatic/pix_automatic_screen.dart';
 import 'package:next_bank/features/pix/presentation/keys/pix_keys_screen.dart';

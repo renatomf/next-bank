@@ -19,6 +19,7 @@ import 'package:next_bank/features/auth/presentation/sign_out/switch_account_but
 import 'package:next_bank/features/auth/presentation/splash/splash_screen.dart';
 import 'package:next_bank/features/help/presentation/help_screen.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
+import 'package:next_bank/features/menu/presentation/menu_screen.dart';
 import 'package:next_bank/features/notifications/presentation/inbox/notifications_screen.dart';
 import 'package:next_bank/features/notifications/presentation/settings/notification_settings_screen.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
@@ -139,12 +140,12 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
           for (final (path, title) in [
             (AppRoutes.cards, 'Cartões'),
             (AppRoutes.investments, 'Investimentos'),
-            (AppRoutes.menu, 'Menu'),
           ])
             GoRoute(
               path: path,
               builder: (_, _) => AreaPlaceholderScreen(title: title),
             ),
+          GoRoute(path: AppRoutes.menu, builder: (_, _) => const MenuScreen()),
           GoRoute(
             path: AppRoutes.security,
             builder: (context, _) => SecurityScreen(
