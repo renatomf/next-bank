@@ -63,6 +63,20 @@ void main() {
     expect(rows.where((dy) => dy == rows.first), hasLength(3));
   });
 
+  // S21 checkpoint: "Acessar chat" ends where "Exibir todos" ends.
+  testWidgets('aligns Acessar chat with Exibir todos on the right', (
+    tester,
+  ) async {
+    await pumpHelp(tester);
+
+    final chat = find.widgetWithText(TextButton, 'Acessar chat');
+    final all = find.widgetWithText(TextButton, 'Exibir todos');
+    expect(
+      tester.getTopRight(chat).dx,
+      moreOrLessEquals(tester.getTopRight(all).dx, epsilon: 1),
+    );
+  });
+
   testWidgets('goes back where the app says', (tester) async {
     var back = 0;
     await pumpHelp(tester, onBack: () => back++);
