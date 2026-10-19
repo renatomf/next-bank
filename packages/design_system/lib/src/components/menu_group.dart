@@ -42,8 +42,8 @@ class MenuRow extends StatelessWidget {
   /// Creates the row.
   const new({
     required this.title,
-    this.icon,
     required this.onTap,
+    this.icon,
     this.selected,
     super.key,
   });
