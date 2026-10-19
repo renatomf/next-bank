@@ -71,4 +71,14 @@ void main() {
       tester.getSize(find.byType(FilterPill)).height,
     );
   });
+
+  // Brief, section 8: a touch target of at least 48 (the accessibility test
+  // caught the assistant's and the transfer's chips at 37).
+  testWidgets('meets the touch target size', (tester) async {
+    final handle = tester.ensureSemantics();
+    await pumpChip(tester, NbChip(label: 'Pedir ajuda', onPressed: () {}));
+
+    await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+    handle.dispose();
+  });
 }
