@@ -36,6 +36,7 @@ Future<void> pumpHome(
   VoidCallback? onAutomatic,
   VoidCallback? onKeys,
   VoidCallback? onProfile,
+  VoidCallback? onHelp,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -63,6 +64,7 @@ Future<void> pumpHome(
           onAutomatic: onAutomatic ?? () {},
           onKeys: onKeys ?? () {},
           onProfile: onProfile ?? () {},
+          onHelp: onHelp ?? () {},
         ),
       ),
     ),
@@ -488,18 +490,27 @@ void main() {
     });
   }
 
-  // Week 8 plan, V11: help and notifications beside the help field.
-  for (final button in ['Ajuda', 'Notificações']) {
-    testWidgets('says "$button" is coming', (tester) async {
-      await pumpHome(tester);
-      await tester.pumpAndSettle();
+  // Week 8 plan, V11: notifications beside the help field, still coming.
+  testWidgets('says "Notificações" is coming', (tester) async {
+    await pumpHome(tester);
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.bySemanticsLabel(button));
-      await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('Notificações'));
+    await tester.pumpAndSettle();
 
-      expect(find.widgetWithText(NbToast, 'Em breve.'), findsOneWidget);
-    });
-  }
+    expect(find.widgetWithText(NbToast, 'Em breve.'), findsOneWidget);
+  });
+
+  // v1.1.0 plan, task 4.5: the help button opens the help screen.
+  testWidgets('opens the help', (tester) async {
+    var opened = 0;
+    await pumpHome(tester, onHelp: () => opened++);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.bySemanticsLabel('Ajuda'));
+
+    expect(opened, 1);
+  });
 
   // Week 8 plan, V13: the four shortcuts share one size, labels on one line.
   testWidgets('lays the shortcuts out in one size', (tester) async {
