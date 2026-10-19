@@ -1,7 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:next_bank/features/pix/domain/bank.dart';
-import 'package:next_bank/features/pix/presentation/transfer/bank_initials.dart';
 
 /// "Buscar banco" and the main banks: ten at a time with "Carregar mais",
 /// or every bank the search finds, by name or code.
@@ -93,7 +92,7 @@ class BankTile extends StatelessWidget {
           padding: const EdgeInsets.all(NbSpace.lg),
           child: Row(
             children: [
-              BankInitials(initials: bank.initials),
+              InitialsAvatar(initials: bank.initials),
               const SizedBox(width: NbSpace.md),
               Expanded(
                 child: Text(

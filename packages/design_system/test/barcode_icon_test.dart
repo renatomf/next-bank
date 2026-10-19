@@ -30,10 +30,7 @@ void main() {
         matching: find.byType(CustomPaint),
       ),
     );
-    expect(
-      (paint.painter! as BarcodePainter).color,
-      const Color(0xFF123456),
-    );
+    expect((paint.painter! as BarcodePainter).color, const Color(0xFF123456));
   });
 
   testWidgets('takes the size asked over the theme', (tester) async {

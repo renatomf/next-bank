@@ -19,6 +19,7 @@ export 'src/components/glass_art.dart';
 export 'src/components/glow_background.dart';
 export 'src/components/icon_circle_button.dart';
 export 'src/components/info_notice.dart';
+export 'src/components/initials_avatar.dart';
 export 'src/components/menu_group.dart';
 export 'src/components/money_text.dart';
 export 'src/components/nb_chip.dart';

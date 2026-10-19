@@ -9,7 +9,9 @@ void main() {
       tester.pumpWidget(
         MaterialApp(
           theme: NbTheme.dark(),
-          home: Scaffold(body: Center(child: InitialsAvatar(initials: initials))),
+          home: Scaffold(
+            body: Center(child: InitialsAvatar(initials: initials)),
+          ),
         ),
       );
 
@@ -27,9 +29,6 @@ void main() {
     await pumpAvatar(tester, 'BTG');
 
     expect(tester.takeException(), isNull);
-    expect(
-      tester.getSize(find.text('BTG')).width,
-      lessThanOrEqualTo(40),
-    );
+    expect(tester.getSize(find.text('BTG')).width, lessThanOrEqualTo(40));
   });
 }
