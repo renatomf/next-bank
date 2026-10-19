@@ -86,6 +86,9 @@ void main() {
     testWidgets('says Ver todos is coming', (tester) async {
       await pumpRecharges(tester);
 
+      // The last card, past the screen's edge: scrolled into view first.
+      await tester.ensureVisible(find.bySemanticsLabel('Ver todos'));
+      await tester.pumpAndSettle();
       await tester.tap(find.bySemanticsLabel('Ver todos'));
       await tester.pumpAndSettle();
 
@@ -129,7 +132,7 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Valor da recarga'), findsOneWidget);
-      for (final amount in [r'R$20', r'R$30', r'R$100']) {
+      for (final amount in [r'R$ 20', r'R$ 30', r'R$ 100']) {
         expect(find.widgetWithText(FilterPill, amount), findsOneWidget);
       }
       expect(find.byType(FilterPill), findsNWidgets(7));
@@ -141,14 +144,14 @@ void main() {
           .widget<FilterPill>(find.widgetWithText(FilterPill, amount))
           .selected;
 
-      await tester.tap(find.widgetWithText(FilterPill, r'R$30'));
+      await tester.tap(find.widgetWithText(FilterPill, r'R$ 30'));
       await tester.pumpAndSettle();
-      expect(isOn(r'R$30'), isTrue);
+      expect(isOn(r'R$ 30'), isTrue);
 
-      await tester.tap(find.widgetWithText(FilterPill, r'R$50'));
+      await tester.tap(find.widgetWithText(FilterPill, r'R$ 50'));
       await tester.pumpAndSettle();
-      expect(isOn(r'R$50'), isTrue);
-      expect(isOn(r'R$30'), isFalse);
+      expect(isOn(r'R$ 50'), isTrue);
+      expect(isOn(r'R$ 30'), isFalse);
     });
 
     testWidgets('says Continuar is coming', (tester) async {

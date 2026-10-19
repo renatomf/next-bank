@@ -60,6 +60,12 @@ abstract final class AppRoutes {
   /// Help, over the Home (v1.1.0 plan, task 4.5).
   static const String help = '/help';
 
+  /// Recargas, over the Home (v1.1.0 plan, task 4.12).
+  static const String recharge = '/recharge';
+
+  /// The amount of a recharge, over the carriers.
+  static const String rechargeAmount = '$recharge/amount';
+
   /// The assistant, over the Home (v1.1.0 plan, task 4.10).
   static const String assistant = '/assistant';
 

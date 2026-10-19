@@ -30,6 +30,7 @@ class HomeScreen extends ConsumerWidget {
     required this.onHelp,
     required this.onNotifications,
     required this.onAssistant,
+    required this.onRecharge,
     super.key,
   });
 
@@ -69,6 +70,9 @@ class HomeScreen extends ConsumerWidget {
   /// Opens the assistant.
   final VoidCallback onAssistant;
 
+  /// Opens the recharges.
+  final VoidCallback onRecharge;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileProvider).value;
@@ -97,6 +101,7 @@ class HomeScreen extends ConsumerWidget {
                   onPix: onPix,
                   onPay: onPay,
                   onTransfer: onTransfer,
+                  onRecharge: onRecharge,
                 ),
                 const SizedBox(height: 28),
                 BalanceSection(onStatement: onStatement),

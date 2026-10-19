@@ -34,6 +34,9 @@ import 'package:next_bank/features/pix/presentation/transfer/transfer_pix_screen
 import 'package:next_bank/features/profile/presentation/blank/profile_blank_screen.dart';
 import 'package:next_bank/features/profile/presentation/profile_screen.dart';
 import 'package:next_bank/features/profile/presentation/theme/theme_screen.dart';
+import 'package:next_bank/features/recharge/domain/carrier.dart';
+import 'package:next_bank/features/recharge/presentation/amount/recharge_amount_screen.dart';
+import 'package:next_bank/features/recharge/presentation/recharge_screen.dart';
 import 'package:next_bank/features/security/presentation/change_password/change_password_screen.dart';
 import 'package:next_bank/features/security/presentation/change_pin/change_pin_screen.dart';
 import 'package:next_bank/features/security/presentation/sessions/security_screen.dart';
@@ -116,6 +119,7 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
               onProfile: () => context.go(AppRoutes.profile),
               onHelp: () => context.push(AppRoutes.help),
               onAssistant: () => context.push(AppRoutes.assistant),
+              onRecharge: () => context.push(AppRoutes.recharge),
               onNotifications: () => context.push(AppRoutes.notifications),
             ),
           ),
@@ -264,6 +268,30 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
       GoRoute(
         path: AppRoutes.assistant,
         builder: (context, _) => AssistantScreen(onClose: () => _back(context)),
+      ),
+      GoRoute(
+        path: AppRoutes.recharge,
+        builder: (context, _) => RechargeScreen(
+          onBack: () => _back(context),
+          onCarrier: (carrier, phone) => context.push(
+            AppRoutes.rechargeAmount,
+            extra: (carrier: carrier, phone: phone),
+          ),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.rechargeAmount,
+        builder: (context, state) {
+          // Opened only from the carriers, which always send both; deep
+          // links are off (MOB-06).
+          final (:carrier, :phone) =
+              state.extra! as ({Carrier carrier, String phone});
+          return RechargeAmountScreen(
+            carrier: carrier,
+            phone: phone,
+            onBack: () => _back(context),
+          );
+        },
       ),
       GoRoute(
         path: AppRoutes.help,
