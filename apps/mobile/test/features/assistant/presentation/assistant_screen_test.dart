@@ -1,5 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
@@ -144,6 +145,44 @@ void main() {
 
     expect(find.byType(AgentSheet), findsNothing);
     expect(comingSoon(), findsOneWidget);
+  });
+
+  // S21 checkpoint: the agents, the suggestions and "Escolher agente" in
+  // the look of the statement's filters, the latter with a dropdown's arrow.
+  testWidgets('uses the filter chips, Escolher agente with an arrow', (
+    tester,
+  ) async {
+    await pumpAssistant(tester);
+
+    for (final label in [..._agents, 'Criar lembrete', 'Escolher agente']) {
+      expect(find.widgetWithText(NbChip, label), findsOneWidget, reason: label);
+    }
+    expect(
+      find.descendant(
+        of: find.widgetWithText(NbChip, 'Escolher agente'),
+        matching: find.byIcon(Icons.expand_more),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('keeps Escolher agente on one line on a small phone', (
+    tester,
+  ) async {
+    await pumpAssistant(tester);
+    tester.view
+      ..physicalSize = const Size(320 * 3, 568 * 3)
+      ..devicePixelRatio = 3;
+    tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    await tester.pumpAndSettle();
+
+    const label = 'Escolher agente';
+    final paragraph = tester.renderObject<RenderParagraph>(find.text(label));
+    final boxes = paragraph.getBoxesForSelection(
+      const TextSelection(baseOffset: 0, extentOffset: label.length),
+    );
+    expect(boxes.map((box) => box.top).toSet(), hasLength(1));
   });
 
   testWidgets('closes where the app says', (tester) async {
