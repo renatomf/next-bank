@@ -2,6 +2,7 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/api_failure.dart';
+import 'package:next_bank/features/areas/presentation/area_placeholder_screen.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
 import 'package:next_bank/features/profile/presentation/profile_screen.dart';
@@ -34,6 +35,15 @@ Future<void> tapBar(WidgetTester tester, String label) async {
   await tester.pumpAndSettle();
 }
 
+/// The profile's Configurações tab, from the Home's header (v1.1.0 plan,
+/// tasks 4.4 and 4.11).
+Future<void> openProfileSettings(WidgetTester tester) async {
+  await tester.tap(find.bySemanticsLabel('Abrir perfil'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Configurações'));
+  await tester.pumpAndSettle();
+}
+
 // The floating bar through the real router (week 7 plan, D7;
 // domain-model.md 10).
 void main() {
@@ -41,13 +51,14 @@ void main() {
     await openHome(tester);
     expect(bar, findsOneWidget);
 
-    for (final (label, screen) in [
-      ('Extrato', StatementScreen),
-      ('Segurança', SecurityScreen),
-      ('Perfil', ProfileScreen),
-    ]) {
+    // v1.1.0 plan, task 4.11: the three new areas, title only for now.
+    for (final label in ['Cartões', 'Investimentos', 'Menu']) {
       await tapBar(tester, label);
-      expect(find.byType(screen), findsOneWidget, reason: label);
+      expect(
+        find.widgetWithText(AreaPlaceholderScreen, label),
+        findsOneWidget,
+        reason: label,
+      );
       expect(
         tester.getSemantics(
           find.descendant(of: bar, matching: find.bySemanticsLabel(label)),
@@ -66,7 +77,7 @@ void main() {
   ) async {
     await openHome(tester);
 
-    for (final label in ['Início', 'Extrato', 'Pix', 'Segurança', 'Perfil']) {
+    for (final label in ['Início', 'Cartões', 'Pix', 'Investimentos', 'Menu']) {
       expect(
         find.descendant(of: bar, matching: find.text(label)),
         findsOneWidget,
@@ -94,13 +105,14 @@ void main() {
     expect(bar, findsOneWidget);
   });
 
-  testWidgets('the PIN change opens over Security, without the bar', (
+  // v1.1.0 plan, task 4.11: Security left the bar; the profile reaches it.
+  testWidgets('the PIN change opens from the profile, without the bar', (
     tester,
   ) async {
     await openHome(tester);
-    await tapBar(tester, 'Segurança');
+    await openProfileSettings(tester);
 
-    await tester.tap(find.bySemanticsLabel(RegExp('Trocar PIN')).first);
+    await tester.tap(find.bySemanticsLabel('Trocar PIN'));
     await tester.pumpAndSettle();
 
     expect(find.byType(ChangePinScreen), findsOneWidget);
@@ -137,7 +149,8 @@ void main() {
   ) async {
     await openHome(tester);
 
-    await tapBar(tester, 'Perfil');
+    await tester.tap(find.bySemanticsLabel('Abrir perfil'));
+    await tester.pumpAndSettle();
 
     expect(find.text('Ana Souza'), findsOneWidget);
     expect(find.text('Conta corrente: •••• 0004'), findsOneWidget);
@@ -154,7 +167,7 @@ void main() {
   ) async {
     final clock = FakeMonotonicClock();
     await openHome(tester, clock: clock);
-    await tapBar(tester, 'Perfil');
+    await tapBar(tester, 'Investimentos');
 
     [
       AppLifecycleState.inactive,
@@ -198,9 +211,7 @@ void main() {
     await tester.enterText(find.byType(TextField).at(1), 'a long passphrase');
     await tester.tap(find.widgetWithText(FilledButton, 'Entrar'));
     await tester.pumpAndSettle();
-    await tapBar(tester, 'Perfil');
-    await tester.tap(find.text('Configurações'));
-    await tester.pumpAndSettle();
+    await openProfileSettings(tester);
     await tester.tap(find.bySemanticsLabel('Trocar PIN'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).at(0), 'a long passphrase');
@@ -230,8 +241,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
 
-    await tapBar(tester, 'Perfil');
-
+    await tester.tap(find.bySemanticsLabel('Abrir perfil'));
+    await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+
+    // v1.1.0 plan, task 4.11: the new areas fit too.
+    for (final label in ['Cartões', 'Investimentos', 'Menu']) {
+      await tapBar(tester, label);
+      expect(tester.takeException(), isNull, reason: label);
+    }
   });
 }

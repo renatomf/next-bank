@@ -224,7 +224,7 @@ void main() {
     await unlockWithPin(tester);
     expect(signOutButton, findsNothing);
 
-    await tester.tap(find.bySemanticsLabel('Perfil'));
+    await tester.tap(find.bySemanticsLabel('Abrir perfil'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Configurações'));
     await tester.pumpAndSettle();

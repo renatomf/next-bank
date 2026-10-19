@@ -18,7 +18,7 @@ Future<void> openProfile(WidgetTester tester, FakeThemeStore theme) async {
   addTearDown(tester.view.reset);
   await pumpApp(tester, store: FakeTokenStore(tokens), theme: theme);
   await unlockWithPin(tester);
-  await tester.tap(find.bySemanticsLabel('Perfil'));
+  await tester.tap(find.bySemanticsLabel('Abrir perfil'));
   await tester.pumpAndSettle();
 }
 
