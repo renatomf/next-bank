@@ -72,12 +72,16 @@ class CardsBox extends StatelessWidget {
                             ),
                           ),
                         ),
+                        // On the end edge, apart from the lock.
                         Flexible(
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: TextButton(
-                              onPressed: () => onDetails(index),
-                              child: const Text('Detalhes'),
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: TextButton(
+                                onPressed: () => onDetails(index),
+                                child: const Text('Detalhes'),
+                              ),
                             ),
                           ),
                         ),
