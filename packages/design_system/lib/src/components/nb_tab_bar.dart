@@ -3,7 +3,9 @@ import 'package:design_system/src/tokens.dart';
 import 'package:flutter/material.dart';
 
 /// The app's tabs: the labels, the one that is on in bold with the accent
-/// line under it (v1.1.0 plan, tasks 4.4 and 4.6).
+/// line under it (v1.1.0 plan, tasks 4.4 and 4.6). The tabs share the width
+/// with little padding, and a label too long for its share shrinks to fit,
+/// whole, on one line.
 class NbTabBar extends StatelessWidget {
   /// Creates the tabs, one per label, switched by [controller].
   const new({required this.controller, required this.labels, super.key});
@@ -26,7 +28,16 @@ class NbTabBar extends StatelessWidget {
       labelStyle: NbType.bodyStrong,
       unselectedLabelStyle: NbType.bodyText,
       dividerColor: Colors.transparent,
-      tabs: [for (final label in labels) Tab(text: label)],
+      labelPadding: const EdgeInsets.symmetric(horizontal: NbSpace.xs),
+      tabs: [
+        for (final label in labels)
+          Tab(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(label, maxLines: 1),
+            ),
+          ),
+      ],
     );
   }
 }
