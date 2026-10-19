@@ -68,6 +68,16 @@ void main() {
     expect(find.widgetWithText(NbToast, 'Em breve.'), findsOneWidget);
   });
 
+  // S21 checkpoint: the switches a little smaller than Material's, their
+  // touch area kept.
+  testWidgets('draws the switches a little smaller', (tester) async {
+    await pumpSettings(tester);
+
+    final toggle = find.byType(Switch).first;
+    final drawn = tester.getBottomRight(toggle) - tester.getTopLeft(toggle);
+    expect(drawn.dx, lessThan(tester.getSize(toggle).width));
+  });
+
   testWidgets('goes back where the app says', (tester) async {
     var back = 0;
     await pumpSettings(tester, onBack: () => back++);
