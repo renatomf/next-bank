@@ -76,8 +76,6 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
-
     return Scaffold(
       body: GlowBackground(
         child: SafeArea(
@@ -91,18 +89,9 @@ class _ProfileScreenState extends State<ProfileScreen>
               const SizedBox(height: NbSpace.xl),
               const AccountCard(),
               const SizedBox(height: NbSpace.xl),
-              TabBar(
+              NbTabBar(
                 controller: _tabs,
-                indicatorColor: colors.accent,
-                labelColor: colors.text,
-                unselectedLabelColor: colors.textMuted,
-                labelStyle: NbType.bodyStrong,
-                unselectedLabelStyle: NbType.bodyText,
-                dividerColor: Colors.transparent,
-                tabs: const [
-                  Tab(text: 'Perfil'),
-                  Tab(text: 'Configurações'),
-                ],
+                labels: const ['Perfil', 'Configurações'],
               ),
               const SizedBox(height: NbSpace.xl),
               // The tabs switch the content below them, without swiping:
