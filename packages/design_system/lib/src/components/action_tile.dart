@@ -18,7 +18,7 @@ class ActionTile extends StatelessWidget {
 
   /// One size for every shortcut's icon, the Pix symbol included (S21
   /// checkpoint of v1.1.0).
-  static const double iconSize = 22;
+  static const double iconSize = NbSize.icon;
 
   /// What the shortcut shows: an [Icon], painted in the accent color, or any
   /// widget such as the Pix symbol (week 8 plan, V6).

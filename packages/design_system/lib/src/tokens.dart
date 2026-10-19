@@ -241,6 +241,10 @@ abstract final class NbSize {
 
   /// Minimum touch target.
   static const double touch = 44;
+
+  /// One size for the icons of tiles, actions and links (S21 checkpoint of
+  /// v1.1.0).
+  static const double icon = 22;
 }
 
 /// Type families and styles (brief, section 3). The fonts are variable, so
