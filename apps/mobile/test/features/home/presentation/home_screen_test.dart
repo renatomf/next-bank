@@ -161,7 +161,7 @@ void main() {
   });
 
   // v1.1.0 plan, task 4: "Pagar" reads a Pix QR Code; at the S21
-  // checkpoint it takes a barcode icon, for the boleto to come.
+  // checkpoint it takes a barcode, for the boleto to come.
   testWidgets('opens the QR Code reading on "Pagar"', (tester) async {
     var paid = 0;
     await pumpHome(tester, onPay: () => paid++);
@@ -170,7 +170,7 @@ void main() {
     expect(
       find.descendant(
         of: find.widgetWithText(ActionTile, 'Pagar'),
-        matching: find.byIcon(Icons.barcode_reader),
+        matching: find.byType(BarcodeIcon),
       ),
       findsOneWidget,
     );
