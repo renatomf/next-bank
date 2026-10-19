@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:next_bank/app/redirect.dart';
 import 'package:next_bank/core/session/session_tokens.dart';
+import 'package:next_bank/features/assistant/presentation/assistant_screen.dart';
 import 'package:next_bank/features/auth/presentation/create_pin/create_pin_screen.dart';
 import 'package:next_bank/features/auth/presentation/login/login_screen.dart';
 import 'package:next_bank/features/auth/presentation/register/register_screen.dart';
@@ -171,6 +172,11 @@ final List<(String, Type, Future<void> Function(WidgetTester))> screens = [
     (tester) => openSignedIn(tester, AppRoutes.changePassword),
   ),
   ('Help', HelpScreen, (tester) => openSignedIn(tester, AppRoutes.help)),
+  (
+    'Assistant',
+    AssistantScreen,
+    (tester) => openSignedIn(tester, AppRoutes.assistant),
+  ),
   (
     'Pix Automático',
     PixAutomaticScreen,
