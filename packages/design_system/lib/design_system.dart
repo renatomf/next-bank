@@ -23,6 +23,7 @@ export 'src/components/initials_avatar.dart';
 export 'src/components/menu_group.dart';
 export 'src/components/money_text.dart';
 export 'src/components/nb_chip.dart';
+export 'src/components/nb_grid.dart';
 export 'src/components/nb_icon_button.dart';
 export 'src/components/nb_nav_bar.dart';
 export 'src/components/nb_tab_bar.dart';

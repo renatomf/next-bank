@@ -12,7 +12,6 @@ void main() {
         body: SizedBox(
           width: 320,
           child: NbGrid(
-            columns: 3,
             children: [
               for (var i = 0; i < count; i++)
                 SizedBox(height: i == 1 ? 80 : 40, child: Text('$i')),
