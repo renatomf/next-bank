@@ -55,16 +55,17 @@ void main() {
     expect(find.widgetWithText(TextButton, 'Cadastrar'), findsNWidgets(4));
   });
 
-  for (final (name, finder) in [
-    ('Selecionar', find.widgetWithText(TextButton, 'Selecionar')),
-    ('Copiar', find.bySemanticsLabel(RegExp('^Copiar'))),
-    ('Compartilhar', find.bySemanticsLabel(RegExp('^Compartilhar'))),
-    ('Cadastrar', find.widgetWithText(TextButton, 'Cadastrar')),
+  // Built inside each test: semantics finders need the tester running.
+  for (final (name, finder) in <(String, Finder Function())>[
+    ('Selecionar', () => find.widgetWithText(TextButton, 'Selecionar')),
+    ('Copiar', () => find.bySemanticsLabel(RegExp('^Copiar'))),
+    ('Compartilhar', () => find.bySemanticsLabel(RegExp('^Compartilhar'))),
+    ('Cadastrar', () => find.widgetWithText(TextButton, 'Cadastrar')),
   ]) {
     testWidgets('says "$name" is coming', (tester) async {
       await pumpKeys(tester);
 
-      await tester.tap(finder.first);
+      await tester.tap(finder().first);
       await tester.pumpAndSettle();
 
       expect(find.widgetWithText(NbToast, 'Em breve.'), findsOneWidget);

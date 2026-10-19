@@ -40,10 +40,7 @@ void main() {
   testWidgets('lists the registered accounts', (tester) async {
     await pumpAutomatic(tester);
 
-    expect(
-      find.text('Gerencie suas contas no Pix Automático'),
-      findsOneWidget,
-    );
+    expect(find.text('Gerencie suas contas no Pix Automático'), findsOneWidget);
     expect(find.text('Cadastradas'), findsOneWidget);
     expect(find.byType(AutomaticPaymentTile), findsNWidgets(3));
     expect(find.textContaining('Streaming Exemplo Ltda.'), findsOneWidget);
