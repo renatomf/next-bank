@@ -66,7 +66,8 @@ void main() {
     );
 
     expect(
-      tester.getSize(find.byType(NbChip)).height,
+      // The pill holds a chip too: the first is the action chip alone.
+      tester.getSize(find.byType(NbChip).first).height,
       tester.getSize(find.byType(FilterPill)).height,
     );
   });

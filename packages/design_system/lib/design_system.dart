@@ -21,6 +21,7 @@ export 'src/components/icon_circle_button.dart';
 export 'src/components/info_notice.dart';
 export 'src/components/menu_group.dart';
 export 'src/components/money_text.dart';
+export 'src/components/nb_chip.dart';
 export 'src/components/nb_icon_button.dart';
 export 'src/components/nb_nav_bar.dart';
 export 'src/components/nb_tab_bar.dart';
