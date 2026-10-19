@@ -74,4 +74,15 @@ void main() {
       ),
     );
   });
+
+  // The help's questions (task 4.5): text and arrow, no icon.
+  testWidgets('shows a row without an icon', (tester) async {
+    await pumpGroup(tester, [
+      MenuRow(title: 'Como fazer um Pix?', onTap: () {}),
+    ]);
+
+    expect(find.text('Como fazer um Pix?'), findsOneWidget);
+    expect(find.byType(Icon), findsOneWidget);
+    expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+  });
 }
