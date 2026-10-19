@@ -35,6 +35,7 @@ Future<void> pumpHome(
   VoidCallback? onTransfer,
   VoidCallback? onAutomatic,
   VoidCallback? onKeys,
+  VoidCallback? onProfile,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -61,6 +62,7 @@ Future<void> pumpHome(
           onTransfer: onTransfer ?? () {},
           onAutomatic: onAutomatic ?? () {},
           onKeys: onKeys ?? () {},
+          onProfile: onProfile ?? () {},
         ),
       ),
     ),
@@ -120,6 +122,18 @@ void main() {
       expect(find.text(greeting), findsNothing);
     }
     expect(find.byType(DisplayTitle), findsNothing);
+  });
+
+  // v1.1.0 plan, task 4.4: the icon and the name are the way to the profile.
+  testWidgets('opens the profile from the icon and the name', (tester) async {
+    var opened = 0;
+    await pumpHome(tester, onProfile: () => opened++);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.bySemanticsLabel('Abrir perfil'));
+    await tester.tap(find.text('Ana'));
+
+    expect(opened, 2);
   });
 
   // Week 8 plan, V6 and V7: four shortcuts; only the Pix opens a screen, the

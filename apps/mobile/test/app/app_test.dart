@@ -226,6 +226,8 @@ void main() {
 
     await tester.tap(find.bySemanticsLabel('Perfil'));
     await tester.pumpAndSettle();
+    await tester.tap(find.text('Configurações'));
+    await tester.pumpAndSettle();
     await tester.tap(signOutButton);
     await tester.pumpAndSettle();
 

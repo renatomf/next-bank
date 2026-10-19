@@ -14,7 +14,9 @@ import 'package:next_bank/features/pix/presentation/processing/processing_screen
 import 'package:next_bank/features/pix/presentation/receipt/receipt_screen.dart';
 import 'package:next_bank/features/pix/presentation/review/review_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
+import 'package:next_bank/features/profile/presentation/blank/profile_blank_screen.dart';
 import 'package:next_bank/features/profile/presentation/profile_screen.dart';
+import 'package:next_bank/features/profile/presentation/theme/theme_screen.dart';
 import 'package:next_bank/features/security/presentation/change_password/change_password_screen.dart';
 import 'package:next_bank/features/security/presentation/change_pin/change_pin_screen.dart';
 import 'package:next_bank/features/security/presentation/sessions/security_screen.dart';
@@ -161,6 +163,16 @@ final List<(String, Type, Future<void> Function(WidgetTester))> screens = [
     'Password change',
     ChangePasswordScreen,
     (tester) => openSignedIn(tester, AppRoutes.changePassword),
+  ),
+  (
+    'Theme',
+    ThemeScreen,
+    (tester) => openSignedIn(tester, AppRoutes.profileTheme),
+  ),
+  (
+    'Blank profile screen',
+    ProfileBlankScreen,
+    (tester) => openSignedIn(tester, AppRoutes.personalData),
   ),
 ];
 
