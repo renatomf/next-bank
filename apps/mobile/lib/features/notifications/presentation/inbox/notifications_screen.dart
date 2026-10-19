@@ -7,9 +7,10 @@ import 'package:next_bank/features/notifications/presentation/example_notificati
 import 'package:next_bank/features/notifications/presentation/inbox/notification_tile.dart';
 
 /// Notifications (v1.1.0 plan, task 4.6), layout only for now: the example
-/// notifications repeated without end, a day back every two rows, as a
-/// list that pages forever would show. Each row says it is coming.
-class NotificationsScreen extends ConsumerWidget {
+/// notifications, twelve at a time, a day back every two rows, and
+/// "Carregar mais" for twelve more (S21 checkpoint). Each row says it is
+/// coming.
+class NotificationsScreen extends ConsumerStatefulWidget {
   /// Creates the screen; the router says where back and the gear go.
   const new({required this.onBack, required this.onSettings, super.key});
 
@@ -20,7 +21,17 @@ class NotificationsScreen extends ConsumerWidget {
   final VoidCallback onSettings;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NotificationsScreen> createState() =>
+      _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
+  static const int _pageSize = 12;
+
+  int _shown = _pageSize;
+
+  @override
+  Widget build(BuildContext context) {
     final colors = context.nbColors;
     final today = ref.watch(nowProvider)();
 
@@ -35,22 +46,33 @@ class NotificationsScreen extends ConsumerWidget {
                   title: 'Notificações',
                   icon: Icons.arrow_back,
                   iconLabel: 'Voltar',
-                  onPressed: onBack,
+                  onPressed: widget.onBack,
                   action: IconCircleButton(
                     icon: Icons.settings_outlined,
                     label: 'Configurar notificações',
-                    onPressed: onSettings,
+                    onPressed: widget.onSettings,
                   ),
                 ),
               ),
               Expanded(
-                // No item count: the list builds rows as it scrolls, without
-                // end.
                 child: ListView.builder(
                   padding: const EdgeInsets.symmetric(
                     horizontal: NbSpace.screen,
                   ),
+                  // The rows shown, then the button for more.
+                  itemCount: _shown + 1,
                   itemBuilder: (context, index) {
+                    if (index == _shown) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: NbSpace.lg,
+                        ),
+                        child: TextButton(
+                          onPressed: () => setState(() => _shown += _pageSize),
+                          child: const Text('Carregar mais'),
+                        ),
+                      );
+                    }
                     final example =
                         exampleNotifications[index %
                             exampleNotifications.length];
