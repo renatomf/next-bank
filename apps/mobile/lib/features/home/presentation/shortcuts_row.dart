@@ -34,7 +34,7 @@ class ShortcutsRow extends StatelessWidget {
         ),
         Expanded(
           child: ActionTile(
-            icon: const Icon(Icons.barcode_reader),
+            icon: const BarcodeIcon(),
             label: 'Pagar',
             onPressed: onPay,
           ),
