@@ -65,12 +65,12 @@ class _KeyRow extends StatelessWidget {
               ],
             ),
           ),
-          _KeyAction(
+          NbIconButton(
             icon: Icons.copy_outlined,
             label: 'Copiar ${pixKey.type}',
             onPressed: sayComingSoon,
           ),
-          _KeyAction(
+          NbIconButton(
             icon: Icons.ios_share,
             label: 'Compartilhar ${pixKey.type}',
             onPressed: sayComingSoon,
@@ -79,25 +79,4 @@ class _KeyRow extends StatelessWidget {
       ),
     );
   }
-}
-
-/// A plain icon button, read by screen readers as [label].
-class _KeyAction extends StatelessWidget {
-  const new({required this.icon, required this.label, required this.onPressed});
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-    button: true,
-    label: label,
-    onTap: onPressed,
-    excludeSemantics: true,
-    child: IconButton(
-      onPressed: onPressed,
-      icon: Icon(icon, color: context.nbColors.text),
-    ),
-  );
 }
