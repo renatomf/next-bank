@@ -187,6 +187,23 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  // S21 checkpoint: "Fazer Pix ou TED" on the start, "Limites de uso" on
+  // the end, apart, as the card below them.
+  testWidgets('puts Limites de uso on the right edge', (tester) async {
+    await pumpTransfer(tester);
+    // A wide screen: the button needs less than half the row.
+    tester.view.devicePixelRatio = 1.5;
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpAndSettle();
+
+    final screen = tester.getSize(find.byType(TransferPixScreen)).width;
+    final limits = find.widgetWithText(FilledButton, 'Limites de uso');
+    expect(
+      tester.getTopRight(limits).dx,
+      moreOrLessEquals(screen - NbSpace.screen, epsilon: 1),
+    );
+  });
+
   testWidgets('goes back where the app says', (tester) async {
     var back = 0;
     await pumpTransfer(tester, onBack: () => back++);
