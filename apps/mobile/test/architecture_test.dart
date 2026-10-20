@@ -47,6 +47,22 @@ void main() {
     expect(violations, isEmpty, reason: violations.join('\n'));
   });
 
+  // ADR 0014 (G1): screens read the brief's text styles from the theme, so a
+  // style or a mode color changes in one place.
+  test('screens read text styles from the theme', () {
+    final violations = [
+      for (final file in [
+        ...dartFiles('lib/features'),
+        ...dartFiles('lib/core/ui'),
+      ])
+        for (final (index, line) in file.readAsLinesSync().indexed)
+          if (line.contains('NbType.'))
+            '${file.path}:${index + 1}: use context.nbText instead of NbType',
+    ];
+
+    expect(violations, isEmpty, reason: violations.join('\n'));
+  });
+
   // MOB-01: nothing sensitive in plain preferences; tokens live only in the
   // Keychain / Keystore. V1 has nothing else to store there either.
   test('the app never uses shared preferences', () {
@@ -85,9 +101,12 @@ List<String> importsOf(File file) => RegExp(
   multiLine: true,
 ).allMatches(file.readAsStringSync()).map((match) => match[1]!).toList();
 
-List<File> dartFiles(String directory) =>
-    Directory(directory)
-        .listSync(recursive: true)
-        .whereType<File>()
-        .where((file) => file.path.endsWith('.dart'))
-        .toList();
+/// The Dart files under [directory]; none while it does not exist yet (such
+/// as `lib/core/ui` before anything is shared there).
+List<File> dartFiles(String directory) => !Directory(directory).existsSync()
+    ? []
+    : Directory(directory)
+          .listSync(recursive: true)
+          .whereType<File>()
+          .where((file) => file.path.endsWith('.dart'))
+          .toList();
