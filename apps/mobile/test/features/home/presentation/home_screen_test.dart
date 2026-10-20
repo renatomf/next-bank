@@ -35,6 +35,9 @@ Future<void> pumpHome(
   VoidCallback? onTransfer,
   VoidCallback? onAutomatic,
   VoidCallback? onKeys,
+  VoidCallback? onProfile,
+  VoidCallback? onHelp,
+  VoidCallback? onNotifications,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -61,6 +64,9 @@ Future<void> pumpHome(
           onTransfer: onTransfer ?? () {},
           onAutomatic: onAutomatic ?? () {},
           onKeys: onKeys ?? () {},
+          onProfile: onProfile ?? () {},
+          onHelp: onHelp ?? () {},
+          onNotifications: onNotifications ?? () {},
         ),
       ),
     ),
@@ -122,6 +128,18 @@ void main() {
     expect(find.byType(DisplayTitle), findsNothing);
   });
 
+  // v1.1.0 plan, task 4.4: the icon and the name are the way to the profile.
+  testWidgets('opens the profile from the icon and the name', (tester) async {
+    var opened = 0;
+    await pumpHome(tester, onProfile: () => opened++);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.bySemanticsLabel('Abrir perfil'));
+    await tester.tap(find.text('Ana'));
+
+    expect(opened, 2);
+  });
+
   // Week 8 plan, V6 and V7: four shortcuts; only the Pix opens a screen, the
   // others say they are coming.
   testWidgets('opens the Pix from its shortcut, with its symbol', (
@@ -144,11 +162,20 @@ void main() {
     expect(opened, 1);
   });
 
-  // v1.1.0 plan, task 4: "Pagar" reads a Pix QR Code.
+  // v1.1.0 plan, task 4: "Pagar" reads a Pix QR Code; at the S21
+  // checkpoint it takes a barcode, for the boleto to come.
   testWidgets('opens the QR Code reading on "Pagar"', (tester) async {
     var paid = 0;
     await pumpHome(tester, onPay: () => paid++);
     await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(
+        of: find.widgetWithText(ActionTile, 'Pagar'),
+        matching: find.byType(BarcodeIcon),
+      ),
+      findsOneWidget,
+    );
 
     await tester.tap(find.text('Pagar'));
     await tester.pumpAndSettle();
@@ -176,37 +203,31 @@ void main() {
     expect(find.widgetWithText(TextButton, 'Ver extrato'), findsNothing);
   });
 
-  // v1.1.0 plan, task 3, at the S21 checkpoint: "Receber" beside "Pagar".
-  testWidgets('opens "Receber" on its shortcut', (tester) async {
-    var received = 0;
-    await pumpHome(tester, onReceive: () => received++);
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Receber'));
-    await tester.pumpAndSettle();
-
-    expect(received, 1);
-  });
-
-  // Developer's call at the S21 checkpoint: the shortcuts scroll sideways.
-  testWidgets('lists the shortcuts sideways, in order', (tester) async {
+  // Developer's call at the S21 checkpoint: four fixed shortcuts sharing
+  // the width, no sideways list; "Receber" lives in the Pix box.
+  testWidgets('lays four shortcuts side by side, across the width', (
+    tester,
+  ) async {
     await pumpHome(tester);
     await tester.pumpAndSettle();
 
-    // The nearest list above the tiles; the Home's own list scrolls down.
-    final list = tester.widget<ListView>(
-      find
-          .ancestor(
-            of: find.widgetWithText(ActionTile, 'Área Pix'),
-            matching: find.byType(ListView),
-          )
-          .first,
-    );
-    expect(list.scrollDirection, Axis.horizontal);
+    final tiles = find.byType(ActionTile);
     final labels = tester
-        .widgetList<ActionTile>(find.byType(ActionTile))
+        .widgetList<ActionTile>(tiles)
         .map((tile) => tile.label);
-    expect(labels, ['Área Pix', 'Pagar', 'Receber', 'Transferir', 'Recarga']);
+    expect(labels, ['Área Pix', 'Pagar', 'Transferir', 'Recarga']);
+    expect(
+      find.ancestor(of: tiles.first, matching: find.byType(ListView)),
+      findsOneWidget, // only the Home's own list, scrolling down
+    );
+    final screen = tester.getSize(find.byType(HomeScreen)).width;
+    expect(tester.getTopLeft(tiles.first).dx, NbSpace.screen);
+    expect(tester.getTopRight(tiles.last).dx, screen - NbSpace.screen);
+    final tops = tester
+        .widgetList(tiles)
+        .map((tile) => tester.getTopLeft(find.byWidget(tile)).dy)
+        .toSet();
+    expect(tops, hasLength(1));
   });
 
   // v1.1.0 plan, task 4.2: the Pix box, in place of the latest movements.
@@ -474,18 +495,27 @@ void main() {
     });
   }
 
-  // Week 8 plan, V11: help and notifications beside the help field.
-  for (final button in ['Ajuda', 'Notificações']) {
-    testWidgets('says "$button" is coming', (tester) async {
-      await pumpHome(tester);
-      await tester.pumpAndSettle();
+  // v1.1.0 plan, task 4.6: the bell opens the notifications.
+  testWidgets('opens the notifications', (tester) async {
+    var opened = 0;
+    await pumpHome(tester, onNotifications: () => opened++);
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.bySemanticsLabel(button));
-      await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('Notificações'));
 
-      expect(find.widgetWithText(NbToast, 'Em breve.'), findsOneWidget);
-    });
-  }
+    expect(opened, 1);
+  });
+
+  // v1.1.0 plan, task 4.5: the help button opens the help screen.
+  testWidgets('opens the help', (tester) async {
+    var opened = 0;
+    await pumpHome(tester, onHelp: () => opened++);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.bySemanticsLabel('Ajuda'));
+
+    expect(opened, 1);
+  });
 
   // Week 8 plan, V13: the four shortcuts share one size, labels on one line.
   testWidgets('lays the shortcuts out in one size', (tester) async {
@@ -497,6 +527,20 @@ void main() {
         .map((tile) => tester.getSize(find.byWidget(tile)))
         .toSet();
     expect(sizes, hasLength(1));
+  });
+
+  // S21 checkpoint: the arrows fill less of their box than the other
+  // glyphs, so "Transferir" draws them a little larger.
+  testWidgets('draws the Transferir arrows a little larger', (tester) async {
+    await pumpHome(tester);
+    await tester.pumpAndSettle();
+
+    final arrows = find.descendant(
+      of: find.widgetWithText(ActionTile, 'Transferir'),
+      matching: find.byIcon(Icons.swap_horiz),
+    );
+    final drawn = tester.getBottomRight(arrows) - tester.getTopLeft(arrows);
+    expect(drawn.dx, greaterThan(NbSize.icon));
   });
 
   // Week 8 plan, V9: the help field is a button that says it is coming.

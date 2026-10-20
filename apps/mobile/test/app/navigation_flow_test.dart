@@ -140,8 +140,10 @@ void main() {
     await tapBar(tester, 'Perfil');
 
     expect(find.text('Ana Souza'), findsOneWidget);
-    expect(find.text('next bank · Ag 0001 · Conta •••• 0004'), findsOneWidget);
-    await tester.tap(find.bySemanticsLabel(RegExp('^Segurança,')));
+    expect(find.text('Conta corrente: •••• 0004'), findsOneWidget);
+    await tester.tap(find.text('Configurações'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('Aparelhos conectados e biometria'));
     await tester.pumpAndSettle();
     expect(find.byType(SecurityScreen), findsOneWidget);
   });
@@ -172,7 +174,7 @@ void main() {
   });
 
   // D5, end to end: a locked PIN offers only "Sair"; the password signs back
-  // in and resets the PIN on Profile > Segurança > Trocar PIN.
+  // in and resets the PIN on Profile > Configurações > Trocar PIN.
   testWidgets('recovers a locked PIN with the password', (tester) async {
     tester.view.physicalSize = const Size(1080, 3600);
     addTearDown(tester.view.reset);
@@ -197,9 +199,9 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Entrar'));
     await tester.pumpAndSettle();
     await tapBar(tester, 'Perfil');
-    await tester.tap(find.bySemanticsLabel(RegExp('^Segurança,')));
+    await tester.tap(find.text('Configurações'));
     await tester.pumpAndSettle();
-    await tester.tap(find.bySemanticsLabel(RegExp('Trocar PIN')).first);
+    await tester.tap(find.bySemanticsLabel('Trocar PIN'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).at(0), 'a long passphrase');
     await tester.enterText(find.byType(TextField).at(1), '1597');
@@ -211,7 +213,7 @@ void main() {
       (password: 'a long passphrase', newPin: '1597'),
     ]);
     expect(find.text('PIN alterado.'), findsOneWidget);
-    expect(find.byType(SecurityScreen), findsOneWidget);
+    expect(find.byType(ProfileScreen), findsOneWidget);
   });
 
   // Brief, section 8: system font scale up to 1.3x on a small phone. Found

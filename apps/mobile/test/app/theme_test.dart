@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/theme/theme_choice.dart';
-import 'package:next_bank/features/profile/presentation/profile_screen.dart';
+import 'package:next_bank/features/profile/presentation/theme/theme_screen.dart';
 
 import '../support/fake_theme_store.dart';
 import '../support/fake_token_store.dart';
@@ -42,20 +42,33 @@ void main() {
     expect(shown(tester), Brightness.light);
   });
 
-  testWidgets('changes the theme on the Profile and keeps it', (tester) async {
+  testWidgets('changes the theme from the Profile and keeps it', (
+    tester,
+  ) async {
     final theme = FakeThemeStore();
     await openProfile(tester, theme);
     expect(shown(tester), Brightness.light);
 
+    await tester.tap(find.text('Configurações'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Tema do app'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Escuro'));
     await tester.pumpAndSettle();
 
-    expect(find.byType(ProfileScreen), findsOneWidget);
+    expect(find.byType(ThemeScreen), findsOneWidget);
     expect(shown(tester), Brightness.dark);
     expect(theme.stored, ThemeChoice.dark);
     expect(
       tester.getSemantics(find.text('Escuro')),
-      isSemantics(label: 'Escuro', isSelected: true),
+      isSemantics(
+        label: 'Escuro',
+        isButton: true,
+        isSelected: true,
+        hasSelectedState: true,
+        isInMutuallyExclusiveGroup: true,
+        hasTapAction: true,
+      ),
     );
   });
 
