@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/account/account_providers.dart';
@@ -11,6 +12,8 @@ import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/core/statement/statement_controller.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
+import 'package:next_bank/features/home/presentation/pix_box/cpf_key_row.dart';
+import 'package:next_bank/features/home/presentation/pix_box/pix_box.dart';
 
 import '../../../support/device_stores.dart';
 import '../../../support/fake_account_repository.dart';
@@ -28,6 +31,10 @@ Future<void> pumpHome(
   VoidCallback? onPay,
   VoidCallback? onReceive,
   VoidCallback? onStatement,
+  ValueChanged<String>? onPixWithKey,
+  VoidCallback? onTransfer,
+  VoidCallback? onAutomatic,
+  VoidCallback? onKeys,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -50,7 +57,10 @@ Future<void> pumpHome(
           onPay: onPay ?? () {},
           onReceive: onReceive ?? () {},
           onStatement: onStatement ?? () {},
-          onMovement: (_) {},
+          onPixWithKey: onPixWithKey ?? (_) {},
+          onTransfer: onTransfer ?? () {},
+          onAutomatic: onAutomatic ?? () {},
+          onKeys: onKeys ?? () {},
         ),
       ),
     ),
@@ -199,6 +209,257 @@ void main() {
     expect(labels, ['Área Pix', 'Pagar', 'Receber', 'Transferir', 'Recarga']);
   });
 
+  // v1.1.0 plan, task 4.2: the Pix box, in place of the latest movements.
+  group('the Pix box', () {
+    Finder keyField() => find.descendant(
+      of: find.byType(PixBox),
+      matching: find.byType(TextField),
+    );
+
+    Future<void> scrollToBox(WidgetTester tester) async {
+      await tester.scrollUntilVisible(
+        find.text('Minhas\nchaves'),
+        200,
+        scrollable: find
+            .descendant(
+              of: find.byType(HomeScreen),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('takes the place of the latest movements', (tester) async {
+      await pumpHome(tester);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PixBox), findsOneWidget);
+      expect(find.text('Últimas movimentações'), findsNothing);
+    });
+
+    testWidgets('opens the Pix with a valid CPF, in digits', (tester) async {
+      final keys = <String>[];
+      await pumpHome(tester, onPixWithKey: keys.add);
+      await tester.pumpAndSettle();
+      await scrollToBox(tester);
+
+      await tester.enterText(keyField(), '52998224725');
+      await tester.tap(find.bySemanticsLabel('Continuar com a chave'));
+      await tester.pumpAndSettle();
+
+      expect(keys, ['52998224725']);
+    });
+
+    testWidgets('opens the Pix area when the field is empty', (tester) async {
+      var opened = 0;
+      await pumpHome(tester, onPix: () => opened++);
+      await tester.pumpAndSettle();
+      await scrollToBox(tester);
+
+      await tester.tap(find.bySemanticsLabel('Continuar com a chave'));
+      await tester.pumpAndSettle();
+
+      expect(opened, 1);
+    });
+
+    testWidgets('says an invalid CPF is invalid, going nowhere (PIX-07)', (
+      tester,
+    ) async {
+      final keys = <String>[];
+      var opened = 0;
+      await pumpHome(tester, onPixWithKey: keys.add, onPix: () => opened++);
+      await tester.pumpAndSettle();
+      await scrollToBox(tester);
+
+      await tester.enterText(keyField(), '12345678900');
+      await tester.tap(find.bySemanticsLabel('Continuar com a chave'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('CPF inválido.'), findsOneWidget);
+      expect(keys, isEmpty);
+      expect(opened, 0);
+    });
+
+    for (final (label, callback) in [
+      ('Transferir Pix', 'transfer'),
+      ('Pagar QR Code', 'pay'),
+      ('Gerar QR Code', 'receive'),
+      ('Pix Automático', 'automatic'),
+      ('Minhas chaves', 'keys'),
+    ]) {
+      testWidgets('runs "$label"', (tester) async {
+        final ran = <String>[];
+        await pumpHome(
+          tester,
+          onTransfer: () => ran.add('transfer'),
+          onPay: () => ran.add('pay'),
+          onReceive: () => ran.add('receive'),
+          onAutomatic: () => ran.add('automatic'),
+          onKeys: () => ran.add('keys'),
+        );
+        await tester.pumpAndSettle();
+        await scrollToBox(tester);
+
+        await tester.tap(
+          find.descendant(
+            of: find.byType(PixBox),
+            matching: find.bySemanticsLabel(label),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(ran, [callback]);
+      });
+    }
+
+    // Developer's call at the checkpoint: the CPF masked by the server on
+    // the start, "Cadastrar" (no action yet) on the end.
+    testWidgets('shows the masked CPF, with "Cadastrar" apart on the end', (
+      tester,
+    ) async {
+      await pumpHome(tester);
+      await tester.pumpAndSettle();
+      await scrollToBox(tester);
+
+      expect(find.text('***.444.777-**'), findsOneWidget);
+
+      // On the row's two ends (developer's call): the icon on the start, the
+      // "Cadastrar" text on the end, both one padding from the edge.
+      final row = find.byType(CpfKeyRow);
+      final icon = find.descendant(
+        of: row,
+        matching: find.byIcon(Icons.badge_outlined),
+      );
+      final register = find.text('Cadastrar');
+      expect(
+        tester.getTopLeft(icon).dx - tester.getTopLeft(row).dx,
+        moreOrLessEquals(NbSpace.md, epsilon: 1),
+      );
+      expect(
+        tester.getTopRight(row).dx - tester.getTopRight(register).dx,
+        moreOrLessEquals(NbSpace.md, epsilon: 1),
+      );
+    });
+
+    // As in the reference: the icon on the link's start edge, the text
+    // centered in the room beside it.
+    for (final (label, text) in [
+      ('Pix Automático', 'Pix\nAutomático'),
+      ('Minhas chaves', 'Minhas\nchaves'),
+    ]) {
+      testWidgets('puts the icon of "$label" on the start, its text centered', (
+        tester,
+      ) async {
+        await pumpHome(tester);
+        await tester.pumpAndSettle();
+        await scrollToBox(tester);
+
+        final link = find.descendant(
+          of: find.byType(PixBox),
+          matching: find.bySemanticsLabel(label),
+        );
+        final icon = find
+            .descendant(
+              of: link,
+              matching: find.byWidgetPredicate(
+                (widget) => widget is PixMark || widget is Icon,
+              ),
+            )
+            .first;
+        final words = find.descendant(of: link, matching: find.text(text));
+
+        expect(
+          tester.getTopLeft(icon).dx - tester.getTopLeft(link).dx,
+          lessThanOrEqualTo(NbSpace.lg),
+        );
+        expect(tester.widget<Text>(words).textAlign, TextAlign.center);
+        // Centered between the icon and the link's end.
+        final room =
+            (tester.getTopRight(icon).dx + tester.getTopRight(link).dx) / 2;
+        expect(tester.getCenter(words).dx, moreOrLessEquals(room, epsilon: 8));
+      });
+    }
+
+    // Developer's call: two-line labels, as in the reference.
+    testWidgets('breaks the labels in two lines', (tester) async {
+      await pumpHome(tester);
+      await tester.pumpAndSettle();
+      await scrollToBox(tester);
+
+      for (final label in [
+        'Transferir\nPix',
+        'Pagar\nQR Code',
+        'Gerar\nQR Code',
+        'Pix\nAutomático',
+        'Minhas\nchaves',
+      ]) {
+        expect(find.text(label), findsOneWidget, reason: label);
+      }
+    });
+
+    // Found at the checkpoint: on a narrow column with large text, a word
+    // wider than the column broke in the middle ("Transferi/r"). The labels
+    // keep their two lines, shrinking to fit instead.
+    testWidgets('never breaks a word on a small phone at 1.3x text', (
+      tester,
+    ) async {
+      tester.view
+        ..physicalSize = const Size(320 * 3, 568 * 3)
+        ..devicePixelRatio = 3;
+      tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+      await pumpHome(tester);
+      await tester.pumpAndSettle();
+      await scrollToBox(tester);
+
+      for (final label in [
+        'Transferir\nPix',
+        'Pagar\nQR Code',
+        'Gerar\nQR Code',
+        'Pix\nAutomático',
+        'Minhas\nchaves',
+      ]) {
+        expect(lineCount(tester, find.text(label)), 2, reason: label);
+      }
+    });
+
+    testWidgets('puts the Pix symbol on "Pix Automático", split from "Minhas '
+        'chaves" by a line', (tester) async {
+      await pumpHome(tester);
+      await tester.pumpAndSettle();
+      await scrollToBox(tester);
+
+      final automatic = find.descendant(
+        of: find.byType(PixBox),
+        matching: find.bySemanticsLabel('Pix Automático'),
+      );
+      expect(
+        find.descendant(
+          of: find.byType(PixBox),
+          matching: find.byType(PixMark),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        tester.getCenter(automatic).dy,
+        moreOrLessEquals(
+          tester
+              .getCenter(
+                find.descendant(
+                  of: find.byType(PixBox),
+                  matching: find.bySemanticsLabel('Minhas chaves'),
+                ),
+              )
+              .dy,
+          epsilon: 1,
+        ),
+      );
+    });
+  });
+
   for (final shortcut in ['Transferir', 'Recarga']) {
     testWidgets('says "$shortcut" is coming, without leaving', (tester) async {
       var opened = 0;
@@ -306,4 +567,14 @@ void main() {
 
     expect(tester.takeException(), isNull);
   });
+}
+
+/// How many lines the text found by [finder] was laid out in.
+int lineCount(WidgetTester tester, Finder finder) {
+  final paragraph = tester.renderObject<RenderParagraph>(finder);
+  final text = paragraph.text.toPlainText();
+  final boxes = paragraph.getBoxesForSelection(
+    TextSelection(baseOffset: 0, extentOffset: text.length),
+  );
+  return boxes.map((box) => box.top).toSet().length;
 }

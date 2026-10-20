@@ -85,6 +85,8 @@ export interface Credentials {
 /** What the customer sees about themselves; never the CPF, e-mail or hashes. */
 export interface Profile {
   name: string;
+  /** Masked by the server, as on receipts: never the full CPF (READ-02). */
+  cpfMasked: string;
   hasPin: boolean;
 }
 

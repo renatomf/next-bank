@@ -4,9 +4,16 @@ import 'package:next_bank/core/profile/profile_repository.dart';
 /// Fake [ProfileRepository]: answers with the account as the server sees it
 /// and counts the calls; [answer] can hold a call open or make it fail.
 class FakeProfileRepository implements ProfileRepository {
-  new({this.name = 'Ana Souza', this.hasPin = true});
+  new({
+    this.name = 'Ana Souza',
+    this.cpfMasked = '***.444.777-**',
+    this.hasPin = true,
+  });
 
   String name;
+
+  /// The CPF as the server masks it.
+  String cpfMasked;
 
   /// Whether the server holds a PIN for the account.
   bool hasPin;
@@ -20,6 +27,6 @@ class FakeProfileRepository implements ProfileRepository {
   Future<Profile> fetch() async {
     fetches++;
     await answer();
-    return Profile(name: name, hasPin: hasPin);
+    return Profile(name: name, cpfMasked: cpfMasked, hasPin: hasPin);
   }
 }

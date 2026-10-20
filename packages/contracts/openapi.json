@@ -236,6 +236,9 @@
           "name": {
             "type": "string"
           },
+          "cpfMasked": {
+            "type": "string"
+          },
           "hasPin": {
             "type": "boolean",
             "description": "False while registration still needs the transaction PIN"
@@ -243,6 +246,7 @@
         },
         "required": [
           "name",
+          "cpfMasked",
           "hasPin"
         ],
         "additionalProperties": false
