@@ -105,7 +105,13 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
           GoRoute(
             path: AppRoutes.statement,
             builder: (context, _) => StatementScreen(
+              onBack: () => context.go(AppRoutes.home),
               onItem: (id) => context.push(AppRoutes.statementItem(id)),
+              onPay: () {
+                unawaited(context.push(AppRoutes.pix));
+                unawaited(context.push(AppRoutes.pixScan));
+              },
+              onPix: () => context.push(AppRoutes.pix),
             ),
           ),
           GoRoute(

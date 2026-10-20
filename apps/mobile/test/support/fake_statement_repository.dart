@@ -1,4 +1,5 @@
 import 'package:next_bank/core/statement/statement_item.dart';
+import 'package:next_bank/core/statement/statement_query.dart';
 import 'package:next_bank/core/statement/statement_repository.dart';
 
 /// A movement for tests: a Pix received from Mariana by default.
@@ -42,9 +43,16 @@ class FakeStatementRepository implements StatementRepository {
   /// Cursors asked, in order.
   final List<String?> cursors = [];
 
+  /// The filter and search of each page asked, in order.
+  final List<StatementQuery> queries = [];
+
   @override
-  Future<StatementPage> page([String? cursor]) {
+  Future<StatementPage> page({
+    String? cursor,
+    StatementQuery query = allMovements,
+  }) {
     cursors.add(cursor);
+    queries.add(query);
     final answer = pages[cursor];
     if (answer == null) throw StateError('No page for cursor $cursor');
     return answer();

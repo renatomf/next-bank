@@ -115,8 +115,21 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(StatementScreen), findsOneWidget);
-    expect(find.bySemanticsLabel('Voltar'), findsNothing);
     expect(bar, findsOneWidget);
+  });
+
+  // v1.1.0 plan, task 4.1 (developer's call): the statement always has a
+  // back arrow, which returns to the Home.
+  testWidgets('goes back to the Home from the statement', (tester) async {
+    await openHome(tester);
+    await tester.tap(find.bySemanticsLabel('Ver extrato'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.bySemanticsLabel('Voltar'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(StatementScreen), findsNothing);
+    expect(find.byType(HomeScreen), findsOneWidget);
   });
 
   testWidgets('the profile shows the customer and the masked account', (

@@ -3,9 +3,11 @@ import { NotFound } from '../../../shared/domain/not-found.ts';
 import type {
   AccountsRepositoriesFactory,
   LedgerPort,
+  StatementFilter,
   StatementPage,
   StatementPosition,
 } from './ports.ts';
+import { NO_STATEMENT_FILTER } from './ports.ts';
 
 /**
  * The caller's own statement (domain-model.md 8.1; week 6 plan, D2). The
@@ -27,11 +29,15 @@ export class GetMyStatement {
     this.#ledger = deps.ledger;
   }
 
-  execute(userId: string, after: StatementPosition | null): Promise<StatementPage> {
+  execute(
+    userId: string,
+    after: StatementPosition | null,
+    filter: StatementFilter = NO_STATEMENT_FILTER,
+  ): Promise<StatementPage> {
     return this.#unitOfWork.run(async (tx) => {
       const account = await this.#repositories.for(tx).accounts.findByHolder(userId);
       if (!account) throw new NotFound('Account');
-      return this.#ledger.statement(tx, account.id, after);
+      return this.#ledger.statement(tx, account.id, after, filter);
     });
   }
 }

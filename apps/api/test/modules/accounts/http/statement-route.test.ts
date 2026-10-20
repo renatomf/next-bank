@@ -64,7 +64,12 @@ async function newCustomer(): Promise<Customer> {
 }
 
 /** A Pix posted in the ledger, as an authorization would. */
-async function pix(from: Customer, to: Customer, cents: bigint): Promise<string> {
+async function pix(
+  from: Customer,
+  to: Customer,
+  cents: bigint,
+  names: { payer: string; payee: string } = { payer: 'Ana Souza', payee: 'Marina Costa' },
+): Promise<string> {
   const transferId = randomUUID();
   await unitOfWork.run((tx) =>
     ledger.customerAccounts.transferPix(tx, {
@@ -72,15 +77,21 @@ async function pix(from: Customer, to: Customer, cents: bigint): Promise<string>
       payerAccountId: from.accountId,
       payeeAccountId: to.accountId,
       amount: Money.of(cents),
-      payer: { name: 'Ana Souza', documentMasked: '***.444.777-**' },
-      payee: { name: 'Marina Costa', documentMasked: '***.456.789-**' },
+      payer: { name: names.payer, documentMasked: '***.444.777-**' },
+      payee: { name: names.payee, documentMasked: '***.456.789-**' },
     }),
   );
   return transferId;
 }
 
 interface Page {
-  items: { id: string; kind: string; transferId: string | null }[];
+  items: {
+    id: string;
+    kind: string;
+    direction: string;
+    transferId: string | null;
+    counterparty: { name: string } | null;
+  }[];
   nextCursor: string | null;
 }
 
@@ -233,5 +244,116 @@ describe('GET /v1/me/statement', () => {
     const response = await app.inject({ method: 'GET', url: '/v1/me/statement' });
 
     expect(response.statusCode).toBe(401);
+  });
+});
+
+// Filters and search (v1.1.0 plan, task 4.1; X1, X2): on the server, one
+// filter at a time plus a name, in the same query as the account (READ-01).
+describe('GET /v1/me/statement, filtered', () => {
+  async function filtered(customer: Customer, query: string): Promise<Page> {
+    const response = await statement(customer, query);
+    expect(response.statusCode).toBe(200);
+    return response.json<Page>();
+  }
+
+  /** Ana sends to Marina and to Bruno, and receives from Carla. */
+  async function busyCustomer(): Promise<Customer> {
+    const ana = await newCustomer();
+    const other = await newCustomer();
+    await pix(ana, other, 1_000n, { payer: 'Ana Souza', payee: 'Marina Costa' });
+    await pix(ana, other, 2_000n, { payer: 'Ana Souza', payee: 'Bruno Lima' });
+    await pix(other, ana, 3_000n, { payer: 'Carla Dias', payee: 'Ana Souza' });
+    return ana;
+  }
+
+  it('keeps only the money in (IN): the funding and the Pix received', async () => {
+    const ana = await busyCustomer();
+
+    const { items } = await filtered(ana, '?filter=IN');
+
+    expect(items.map((item) => item.kind)).toEqual(['PIX_RECEIVED', 'DEMO_FUNDING']);
+  });
+
+  it('keeps only the money out (OUT)', async () => {
+    const ana = await busyCustomer();
+
+    const { items } = await filtered(ana, '?filter=OUT');
+
+    expect(items.map((item) => item.direction)).toEqual(['OUT', 'OUT']);
+  });
+
+  it('keeps only the Pix, sent and received (PIX)', async () => {
+    const ana = await busyCustomer();
+
+    const { items } = await filtered(ana, '?filter=PIX');
+
+    expect(items.map((item) => item.kind)).toEqual(['PIX_RECEIVED', 'PIX_SENT', 'PIX_SENT']);
+  });
+
+  it('keeps only what has a receipt: the Pix sent (RECEIPT)', async () => {
+    const ana = await busyCustomer();
+
+    const { items } = await filtered(ana, '?filter=RECEIPT');
+
+    expect(items).toHaveLength(2);
+    expect(items.every((item) => item.kind === 'PIX_SENT' && item.transferId !== null)).toBe(true);
+  });
+
+  it('finds by part of the name, in any case', async () => {
+    const ana = await busyCustomer();
+
+    const { items } = await filtered(ana, '?q=MARI');
+
+    expect(items.map((item) => item.counterparty?.name)).toEqual(['Marina Costa']);
+  });
+
+  it('combines the filter with the search', async () => {
+    const ana = await busyCustomer();
+
+    expect((await filtered(ana, '?filter=IN&q=carla')).items).toHaveLength(1);
+    expect((await filtered(ana, '?filter=OUT&q=carla')).items).toHaveLength(0);
+  });
+
+  // READ-04: the client's text is never a LIKE wildcard.
+  it.each([['%25%25'], ['__'], ['%25a']])('takes %s literally, finding nothing', async (q) => {
+    const ana = await busyCustomer();
+
+    expect((await filtered(ana, `?q=${q}`)).items).toEqual([]);
+  });
+
+  it('pages a filter with the cursor, every page filtered (READ-03)', async () => {
+    const payer = await newCustomer();
+    const payee = await newCustomer();
+    for (let i = 0; i < 22; i++) await pix(payer, payee, 100n);
+    await pix(payee, payer, 100n);
+
+    const first = await filtered(payer, '?filter=OUT');
+    const second = await filtered(payer, `?filter=OUT&cursor=${first.nextCursor ?? ''}`);
+
+    expect(first.items).toHaveLength(20);
+    expect(second.items).toHaveLength(2);
+    expect(second.nextCursor).toBeNull();
+    expect([...first.items, ...second.items].every((item) => item.direction === 'OUT')).toBe(true);
+  });
+
+  it("never finds another customer's movements (READ-01)", async () => {
+    await busyCustomer();
+    const stranger = await newCustomer();
+
+    expect((await filtered(stranger, '?q=marina')).items).toEqual([]);
+  });
+
+  it.each([
+    ['an unknown filter', '?filter=CARD'],
+    ['a search of one letter', '?q=a'],
+    ['a search longer than 60', `?q=${'a'.repeat(61)}`],
+    ['a search with a control character', '?q=ab%0Acd'],
+  ])('refuses %s (InvalidRequest)', async (_case, query) => {
+    const customer = await newCustomer();
+
+    const response = await statement(customer, query);
+
+    expect(response.statusCode).toBe(422);
+    expect(response.json<{ code: string }>().code).toBe('InvalidRequest');
   });
 });

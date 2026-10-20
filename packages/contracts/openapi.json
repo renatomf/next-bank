@@ -1859,6 +1859,31 @@
             "in": "query",
             "name": "cursor",
             "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "IN",
+                "OUT",
+                "PIX",
+                "RECEIPT"
+              ]
+            },
+            "in": "query",
+            "name": "filter",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 60,
+              "pattern": "^[^\\p{Cc}]*$"
+            },
+            "in": "query",
+            "name": "q",
+            "required": false
           }
         ],
         "security": [

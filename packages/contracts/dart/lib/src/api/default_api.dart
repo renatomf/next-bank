@@ -759,6 +759,8 @@ _responseData = rawData == null ? null : deserialize<MyAccount, MyAccount>(rawDa
   ///
   /// Parameters:
   /// * [cursor] 
+  /// * [filter] 
+  /// * [q] 
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -770,6 +772,8 @@ _responseData = rawData == null ? null : deserialize<MyAccount, MyAccount>(rawDa
   /// Throws [DioException] if API call or serialization fails
   Future<Response<Statement>> getMyStatement({ 
     String? cursor,
+    String? filter,
+    String? q,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -798,6 +802,8 @@ _responseData = rawData == null ? null : deserialize<MyAccount, MyAccount>(rawDa
 
     final _queryParameters = <String, dynamic>{
       if (cursor != null) r'cursor': cursor,
+      if (filter != null) r'filter': filter,
+      if (q != null) r'q': q,
     };
 
     final _response = await _dio.request<Object>(
