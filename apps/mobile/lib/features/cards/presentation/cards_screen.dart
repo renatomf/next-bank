@@ -11,7 +11,10 @@ import 'package:next_bank/features/cards/presentation/debit_card_panel.dart';
 /// the content of the card on, as a tab.
 class CardsScreen extends ConsumerStatefulWidget {
   /// Creates the screen on the card at [initialIndex].
-  const new({this.initialIndex = 0, super.key});
+  const new({required this.onBack, this.initialIndex = 0, super.key});
+
+  /// Leaves the area, to the Home.
+  final VoidCallback onBack;
 
   /// The card on at first, such as the one the Home's Detalhes opened.
   final int initialIndex;
@@ -35,27 +38,21 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
           child: ListView(
             padding: const EdgeInsets.all(NbSpace.screen),
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Semantics(
-                      header: true,
-                      child: Text(
-                        'Cartões',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                    ),
+              // As the Pix screen: back, the title centered, an action.
+              ScreenHeader(
+                title: 'Cartões',
+                icon: Icons.arrow_back,
+                iconLabel: 'Voltar',
+                onPressed: widget.onBack,
+                action: NbIconButton(
+                  icon: Icons.more_vert,
+                  label: 'Mais opções do cartão',
+                  onPressed: () => showNbToast(
+                    context,
+                    'Em breve.',
+                    icon: Icons.info_outline,
                   ),
-                  NbIconButton(
-                    icon: Icons.more_vert,
-                    label: 'Mais opções do cartão',
-                    onPressed: () => showNbToast(
-                      context,
-                      'Em breve.',
-                      icon: Icons.info_outline,
-                    ),
-                  ),
-                ],
+                ),
               ),
               const SizedBox(height: NbSpace.lg),
               PeekCarousel(

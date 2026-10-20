@@ -8,7 +8,10 @@ import 'package:next_bank/features/investments/presentation/returns_tab.dart';
 /// only for now: the Rentabilidade, Investir and Mais tabs.
 class InvestmentsScreen extends StatefulWidget {
   /// Creates the screen.
-  const new({super.key});
+  const new({required this.onBack, super.key});
+
+  /// Leaves the area, to the Home.
+  final VoidCallback onBack;
 
   @override
   State<InvestmentsScreen> createState() => _InvestmentsScreenState();
@@ -32,27 +35,21 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
           child: ListView(
             padding: const EdgeInsets.all(NbSpace.screen),
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Semantics(
-                      header: true,
-                      child: Text(
-                        'Investimentos',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                    ),
+              // As the Pix screen: back, the title centered, an action.
+              ScreenHeader(
+                title: 'Investimentos',
+                icon: Icons.arrow_back,
+                iconLabel: 'Voltar',
+                onPressed: widget.onBack,
+                action: NbIconButton(
+                  icon: Icons.visibility_off_outlined,
+                  label: 'Ocultar valores',
+                  onPressed: () => showNbToast(
+                    context,
+                    'Em breve.',
+                    icon: Icons.info_outline,
                   ),
-                  NbIconButton(
-                    icon: Icons.visibility_off_outlined,
-                    label: 'Ocultar valores',
-                    onPressed: () => showNbToast(
-                      context,
-                      'Em breve.',
-                      icon: Icons.info_outline,
-                    ),
-                  ),
-                ],
+                ),
               ),
               const SizedBox(height: NbSpace.lg),
               NbTabBar(

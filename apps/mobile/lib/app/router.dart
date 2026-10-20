@@ -143,11 +143,12 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
           // v1.1.0 plan, task 4.11: title only, until their layouts.
           GoRoute(
             path: AppRoutes.investments,
-            builder: (_, _) => const InvestmentsScreen(),
+            builder: (context, _) =>
+                InvestmentsScreen(onBack: () => _back(context)),
           ),
           GoRoute(
             path: AppRoutes.cards,
-            builder: (_, state) {
+            builder: (context, state) {
               // The card to open on, from the Home's Detalhes; the first
               // when none or one out of range.
               final card = int.tryParse(
@@ -157,10 +158,17 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
                   card != null && card >= 0 && card < exampleCards.length
                   ? card
                   : 0;
-              return CardsScreen(key: ValueKey(index), initialIndex: index);
+              return CardsScreen(
+                key: ValueKey(index),
+                initialIndex: index,
+                onBack: () => _back(context),
+              );
             },
           ),
-          GoRoute(path: AppRoutes.menu, builder: (_, _) => const MenuScreen()),
+          GoRoute(
+            path: AppRoutes.menu,
+            builder: (context, _) => MenuScreen(onBack: () => _back(context)),
+          ),
           GoRoute(
             path: AppRoutes.security,
             builder: (context, _) => SecurityScreen(

@@ -8,7 +8,10 @@ import 'package:next_bank/features/menu/presentation/menu_sections.dart';
 /// search and the cards do nothing yet.
 class MenuScreen extends StatelessWidget {
   /// Creates the menu.
-  const new({super.key});
+  const new({required this.onBack, super.key});
+
+  /// Leaves the area, to the Home.
+  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
@@ -20,12 +23,12 @@ class MenuScreen extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.all(NbSpace.screen),
             children: [
-              Semantics(
-                header: true,
-                child: Text(
-                  'Menu',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
+              // As the Pix screen: back and the title centered.
+              ScreenHeader(
+                title: 'Menu',
+                icon: Icons.arrow_back,
+                iconLabel: 'Voltar',
+                onPressed: onBack,
               ),
               const SizedBox(height: NbSpace.lg),
               const TextField(
