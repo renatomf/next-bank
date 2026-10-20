@@ -65,11 +65,20 @@ function isRealInstant(time: string): boolean {
   );
 }
 
-// Only the cursor: no account (READ-01) and no page size (READ-04).
+// No account (READ-01) and no page size (READ-04): only the cursor and, since
+// v1.1.0 (task 4.1), one filter and part of a name, never logged (READ-06).
 const StatementQuerySchema = z.strictObject({
   cursor: z
     .string()
     .regex(/^[A-Za-z0-9_-]{1,200}$/)
+    .optional(),
+  filter: z.enum(['IN', 'OUT', 'PIX', 'RECEIPT']).optional(),
+  q: z
+    .string()
+    .trim()
+    .min(2)
+    .max(60)
+    .regex(/^[^\p{Cc}]*$/u)
     .optional(),
 });
 
@@ -113,10 +122,11 @@ export const statementRoutes: FastifyPluginAsyncZod<{ getMyStatement: GetMyState
     },
     async (request) => {
       const { userId } = callerOf(request);
-      const { cursor } = request.query;
+      const { cursor, filter, q } = request.query;
       const page = await getMyStatement.execute(
         userId,
         cursor === undefined ? null : decodeCursor(cursor),
+        { kind: filter ?? null, search: q ?? null },
       );
       return {
         items: page.items.map((item) => ({

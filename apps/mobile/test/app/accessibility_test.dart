@@ -4,17 +4,30 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:next_bank/app/redirect.dart';
 import 'package:next_bank/core/session/session_tokens.dart';
+import 'package:next_bank/features/assistant/presentation/assistant_screen.dart';
 import 'package:next_bank/features/auth/presentation/create_pin/create_pin_screen.dart';
 import 'package:next_bank/features/auth/presentation/login/login_screen.dart';
 import 'package:next_bank/features/auth/presentation/register/register_screen.dart';
 import 'package:next_bank/features/auth/presentation/splash/splash_screen.dart';
+import 'package:next_bank/features/cards/presentation/cards_screen.dart';
+import 'package:next_bank/features/help/presentation/help_screen.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
+import 'package:next_bank/features/investments/presentation/investments_screen.dart';
+import 'package:next_bank/features/menu/presentation/menu_screen.dart';
+import 'package:next_bank/features/notifications/presentation/inbox/notifications_screen.dart';
+import 'package:next_bank/features/notifications/presentation/settings/notification_settings_screen.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
+import 'package:next_bank/features/pix/presentation/automatic/pix_automatic_screen.dart';
+import 'package:next_bank/features/pix/presentation/keys/pix_keys_screen.dart';
 import 'package:next_bank/features/pix/presentation/processing/processing_screen.dart';
 import 'package:next_bank/features/pix/presentation/receipt/receipt_screen.dart';
 import 'package:next_bank/features/pix/presentation/review/review_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
+import 'package:next_bank/features/pix/presentation/transfer/transfer_pix_screen.dart';
+import 'package:next_bank/features/profile/presentation/blank/profile_blank_screen.dart';
 import 'package:next_bank/features/profile/presentation/profile_screen.dart';
+import 'package:next_bank/features/profile/presentation/theme/theme_screen.dart';
+import 'package:next_bank/features/recharge/presentation/recharge_screen.dart';
 import 'package:next_bank/features/security/presentation/change_password/change_password_screen.dart';
 import 'package:next_bank/features/security/presentation/change_pin/change_pin_screen.dart';
 import 'package:next_bank/features/security/presentation/sessions/security_screen.dart';
@@ -161,6 +174,59 @@ final List<(String, Type, Future<void> Function(WidgetTester))> screens = [
     'Password change',
     ChangePasswordScreen,
     (tester) => openSignedIn(tester, AppRoutes.changePassword),
+  ),
+  ('Help', HelpScreen, (tester) => openSignedIn(tester, AppRoutes.help)),
+  (
+    'Recargas',
+    RechargeScreen,
+    (tester) => openSignedIn(tester, AppRoutes.recharge),
+  ),
+  ('Cartões', CardsScreen, (t) => openSignedIn(t, AppRoutes.cards)),
+  (
+    'Investimentos',
+    InvestmentsScreen,
+    (tester) => openSignedIn(tester, AppRoutes.investments),
+  ),
+  ('Menu', MenuScreen, (t) => openSignedIn(t, AppRoutes.menu)),
+  (
+    'Assistant',
+    AssistantScreen,
+    (tester) => openSignedIn(tester, AppRoutes.assistant),
+  ),
+  (
+    'Pix Automático',
+    PixAutomaticScreen,
+    (tester) => openSignedIn(tester, AppRoutes.pixAutomatic),
+  ),
+  (
+    'Minhas chaves',
+    PixKeysScreen,
+    (tester) => openSignedIn(tester, AppRoutes.pixKeys),
+  ),
+  (
+    'Transferir',
+    TransferPixScreen,
+    (tester) => openSignedIn(tester, AppRoutes.pixTransfer),
+  ),
+  (
+    'Notifications',
+    NotificationsScreen,
+    (tester) => openSignedIn(tester, AppRoutes.notifications),
+  ),
+  (
+    'Notification settings',
+    NotificationSettingsScreen,
+    (tester) => openSignedIn(tester, AppRoutes.notificationSettings),
+  ),
+  (
+    'Theme',
+    ThemeScreen,
+    (tester) => openSignedIn(tester, AppRoutes.profileTheme),
+  ),
+  (
+    'Blank profile screen',
+    ProfileBlankScreen,
+    (tester) => openSignedIn(tester, AppRoutes.personalData),
   ),
 ];
 

@@ -5,6 +5,7 @@ import { pgClientOf } from '../../../shared/infrastructure/pg-unit-of-work.ts';
 import type {
   LedgerRepository,
   LedgerRepositoryFactory,
+  StatementFilter,
   StatementPosition,
   StatementRow,
 } from '../application/ports.ts';
@@ -132,7 +133,9 @@ export class PgLedgerRepository implements LedgerRepository {
   /**
    * database.md, section 8, served by postings_statement_idx. The position is
    * the time as UTC text with microseconds, so the next page continues exactly
-   * where this one ended, even among postings of the same millisecond.
+   * where this one ended, even among postings of the same millisecond. The
+   * filter (v1.1.0, task 4.1) narrows the same scan: one kind and part of the
+   * counterparty's name, the client's text escaped so it is never a wildcard.
    */
   static readonly STATEMENT_SQL = `SELECT p.id, p.direction, p.amount, p.currency,
       p.counterparty_name, p.counterparty_document_masked, p.created_at,
@@ -142,6 +145,12 @@ export class PgLedgerRepository implements LedgerRepository {
     JOIN ledger.journal_entries je ON je.id = p.journal_entry_id
     WHERE p.ledger_account_id = $1
       AND ($2::timestamptz IS NULL OR (p.created_at, p.id) < ($2::timestamptz, $3::uuid))
+      AND ($5::text IS NULL
+        OR ($5 = 'IN' AND p.direction = 'C')
+        OR ($5 = 'OUT' AND p.direction = 'D')
+        OR ($5 = 'PIX' AND je.kind <> 'FUNDING')
+        OR ($5 = 'RECEIPT' AND je.kind <> 'FUNDING' AND p.direction = 'D'))
+      AND ($6::text IS NULL OR p.counterparty_name ILIKE $6 ESCAPE '\\')
     ORDER BY p.created_at DESC, p.id DESC
     LIMIT $4`;
 
@@ -149,10 +158,18 @@ export class PgLedgerRepository implements LedgerRepository {
     ledgerAccountId: string,
     after: StatementPosition | null,
     limit: number,
+    filter: StatementFilter,
   ): Promise<StatementRow[]> {
     const { rows } = await this.#client.query<StatementRowRecord>(
       PgLedgerRepository.STATEMENT_SQL,
-      [ledgerAccountId, after?.createdAt ?? null, after?.postingId ?? null, limit],
+      [
+        ledgerAccountId,
+        after?.createdAt ?? null,
+        after?.postingId ?? null,
+        limit,
+        filter.kind,
+        filter.search === null ? null : `%${literalLike(filter.search)}%`,
+      ],
     );
     return rows.map((row) => ({
       postingId: row.id,
@@ -199,4 +216,9 @@ function toState(row: LedgerAccountRow): LedgerAccountState {
     version: Number(row.version),
     createdAt: row.created_at,
   };
+}
+
+/** The client's text as plain characters in LIKE: \, % and _ escaped (READ-04). */
+function literalLike(text: string): string {
+  return text.replace(/[\\%_]/g, (char) => `\\${char}`);
 }

@@ -79,14 +79,17 @@ describe('OpenAPI document', () => {
     ]);
   });
 
-  // READ-01, READ-04: the account comes from the token and the page size is fixed.
-  it('describes GET /v1/me/statement as a protected read with only a cursor', () => {
+  // READ-01, READ-04: the account comes from the token and the page size is
+  // fixed; since v1.1.0 (task 4.1) a filter and a search are optional too.
+  it('describes GET /v1/me/statement as a protected read with a cursor, filter and search', () => {
     const operation = document.paths['/v1/me/statement']?.get;
 
     expect(operation?.operationId).toBe('getMyStatement');
     expect(operation?.security).toEqual([{ bearerAuth: [] }]);
     expect(operation?.parameters).toEqual([
       expect.objectContaining({ in: 'query', name: 'cursor', required: false }),
+      expect.objectContaining({ in: 'query', name: 'filter', required: false }),
+      expect.objectContaining({ in: 'query', name: 'q', required: false }),
     ]);
     expect(operation?.responses['200']?.content?.['application/json']?.schema).toEqual({
       $ref: '#/components/schemas/Statement',

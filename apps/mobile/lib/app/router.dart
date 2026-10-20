@@ -5,25 +5,41 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:next_bank/app/nav_shell.dart';
 import 'package:next_bank/app/redirect.dart';
+import 'package:next_bank/core/cards/example_cards.dart';
 import 'package:next_bank/core/profile/profile.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/app_lock.dart';
 import 'package:next_bank/core/session/session_controller.dart';
+import 'package:next_bank/features/assistant/presentation/assistant_screen.dart';
 import 'package:next_bank/features/auth/presentation/create_pin/create_pin_screen.dart';
 import 'package:next_bank/features/auth/presentation/login/login_screen.dart';
 import 'package:next_bank/features/auth/presentation/register/register_screen.dart';
 import 'package:next_bank/features/auth/presentation/sign_out/sign_out_button.dart';
 import 'package:next_bank/features/auth/presentation/sign_out/switch_account_button.dart';
 import 'package:next_bank/features/auth/presentation/splash/splash_screen.dart';
+import 'package:next_bank/features/cards/presentation/cards_screen.dart';
+import 'package:next_bank/features/help/presentation/help_screen.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
+import 'package:next_bank/features/investments/presentation/investments_screen.dart';
+import 'package:next_bank/features/menu/presentation/menu_screen.dart';
+import 'package:next_bank/features/notifications/presentation/inbox/notifications_screen.dart';
+import 'package:next_bank/features/notifications/presentation/settings/notification_settings_screen.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
+import 'package:next_bank/features/pix/presentation/automatic/pix_automatic_screen.dart';
+import 'package:next_bank/features/pix/presentation/keys/pix_keys_screen.dart';
 import 'package:next_bank/features/pix/presentation/processing/processing_screen.dart';
 import 'package:next_bank/features/pix/presentation/receipt/receipt_screen.dart';
 import 'package:next_bank/features/pix/presentation/receive/receive_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/review/review_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/scan/scan_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
+import 'package:next_bank/features/pix/presentation/transfer/transfer_pix_screen.dart';
+import 'package:next_bank/features/profile/presentation/blank/profile_blank_screen.dart';
 import 'package:next_bank/features/profile/presentation/profile_screen.dart';
+import 'package:next_bank/features/profile/presentation/theme/theme_screen.dart';
+import 'package:next_bank/features/recharge/domain/carrier.dart';
+import 'package:next_bank/features/recharge/presentation/amount/recharge_amount_screen.dart';
+import 'package:next_bank/features/recharge/presentation/recharge_screen.dart';
 import 'package:next_bank/features/security/presentation/change_password/change_password_screen.dart';
 import 'package:next_bank/features/security/presentation/change_pin/change_pin_screen.dart';
 import 'package:next_bank/features/security/presentation/sessions/security_screen.dart';
@@ -98,15 +114,60 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
                 unawaited(context.push(AppRoutes.pixScan));
               },
               onReceive: () => context.push(AppRoutes.pixReceive),
+              onPixWithKey: (cpf) => context.push(AppRoutes.pix, extra: cpf),
+              onTransfer: () => context.push(AppRoutes.pixTransfer),
+              onAutomatic: () => context.push(AppRoutes.pixAutomatic),
+              onKeys: () => context.push(AppRoutes.pixKeys),
               onStatement: () => context.go(AppRoutes.statement),
-              onMovement: (id) => context.push(AppRoutes.statementItem(id)),
+              onProfile: () => context.go(AppRoutes.profile),
+              onHelp: () => context.push(AppRoutes.help),
+              onAssistant: () => context.push(AppRoutes.assistant),
+              onRecharge: () => context.push(AppRoutes.recharge),
+              onCardDetails: (index) =>
+                  context.go('${AppRoutes.cards}?card=$index'),
+              onNotifications: () => context.push(AppRoutes.notifications),
             ),
           ),
           GoRoute(
             path: AppRoutes.statement,
             builder: (context, _) => StatementScreen(
+              onBack: () => context.go(AppRoutes.home),
               onItem: (id) => context.push(AppRoutes.statementItem(id)),
+              onPay: () {
+                unawaited(context.push(AppRoutes.pix));
+                unawaited(context.push(AppRoutes.pixScan));
+              },
+              onPix: () => context.push(AppRoutes.pix),
             ),
+          ),
+          // v1.1.0 plan, task 4.11: title only, until their layouts.
+          GoRoute(
+            path: AppRoutes.investments,
+            builder: (context, _) =>
+                InvestmentsScreen(onBack: () => _back(context)),
+          ),
+          GoRoute(
+            path: AppRoutes.cards,
+            builder: (context, state) {
+              // The card to open on, from the Home's Detalhes; the first
+              // when none or one out of range.
+              final card = int.tryParse(
+                state.uri.queryParameters['card'] ?? '',
+              );
+              final index =
+                  card != null && card >= 0 && card < exampleCards.length
+                  ? card
+                  : 0;
+              return CardsScreen(
+                key: ValueKey(index),
+                initialIndex: index,
+                onBack: () => _back(context),
+              );
+            },
+          ),
+          GoRoute(
+            path: AppRoutes.menu,
+            builder: (context, _) => MenuScreen(onBack: () => _back(context)),
           ),
           GoRoute(
             path: AppRoutes.security,
@@ -118,9 +179,21 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
           GoRoute(
             path: AppRoutes.profile,
             builder: (context, _) => ProfileScreen(
-              onSecurity: () => context.go(AppRoutes.security),
+              onClose: () => context.go(AppRoutes.home),
+              onPersonalData: () => context.push(AppRoutes.personalData),
+              onSharedAccount: () => context.push(AppRoutes.sharedAccount),
+              onInviteFriends: () => context.push(AppRoutes.inviteFriends),
+              onTheme: () => context.push(AppRoutes.profileTheme),
+              onChangePin: () => context.push(AppRoutes.changePin),
+              onChangePassword: () => context.push(AppRoutes.changePassword),
+              onSecurity: () => context.push(AppRoutes.profileSecurity),
+              onManageAccounts: () => context.push(AppRoutes.manageAccounts),
               // T3-1: signing out lives on the Profile.
               signOut: const SignOutButton(),
+              switchAccount: const SwitchAccountButton(
+                label: 'Trocar conta',
+                askFirst: true,
+              ),
             ),
           ),
         ],
@@ -130,7 +203,9 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
       // returns to the PIN (domain-model.md 10).
       GoRoute(
         path: AppRoutes.pix,
-        builder: (context, _) => SendPixScreen(
+        builder: (context, state) => SendPixScreen(
+          // The CPF from the Home's Pix box rides as extra, never in the URL.
+          initialCpf: state.extra is String ? state.extra! as String : null,
           onBack: () => _back(context),
           onReceive: () => context.push(AppRoutes.pixReceive),
           onReview: (id) => context.push(AppRoutes.pixReview(id)),
@@ -144,6 +219,26 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
           onBack: () => context.go(AppRoutes.home),
           onRead: () => _back(context),
         ),
+      ),
+      GoRoute(
+        path: AppRoutes.pixTransfer,
+        builder: (context, _) => TransferPixScreen(
+          onBack: () => _back(context),
+          // As the Home's "Pagar": a code read fills the Pix beneath.
+          onScan: () {
+            unawaited(context.push(AppRoutes.pix));
+            unawaited(context.push(AppRoutes.pixScan));
+          },
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.pixAutomatic,
+        builder: (context, _) =>
+            PixAutomaticScreen(onBack: () => _back(context)),
+      ),
+      GoRoute(
+        path: AppRoutes.pixKeys,
+        builder: (context, _) => PixKeysScreen(onBack: () => _back(context)),
       ),
       GoRoute(
         path: AppRoutes.pixReceive,
@@ -194,6 +289,74 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
         ),
       ),
       // The changes open over Security, so back and done return to it.
+      GoRoute(
+        path: AppRoutes.assistant,
+        builder: (context, _) => AssistantScreen(onClose: () => _back(context)),
+      ),
+      GoRoute(
+        path: AppRoutes.recharge,
+        builder: (context, _) => RechargeScreen(
+          onBack: () => _back(context),
+          onCarrier: (carrier, phone) => context.push(
+            AppRoutes.rechargeAmount,
+            extra: (carrier: carrier, phone: phone),
+          ),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.rechargeAmount,
+        builder: (context, state) {
+          // Opened only from the carriers, which always send both; deep
+          // links are off (MOB-06).
+          final (:carrier, :phone) =
+              state.extra! as ({Carrier carrier, String phone});
+          return RechargeAmountScreen(
+            carrier: carrier,
+            phone: phone,
+            onBack: () => _back(context),
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.help,
+        builder: (context, _) => HelpScreen(onBack: () => _back(context)),
+      ),
+      GoRoute(
+        path: AppRoutes.notifications,
+        builder: (context, _) => NotificationsScreen(
+          onBack: () => _back(context),
+          onSettings: () => context.push(AppRoutes.notificationSettings),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.notificationSettings,
+        builder: (context, _) =>
+            NotificationSettingsScreen(onBack: () => _back(context)),
+      ),
+      // Opened over the Profile, so back returns to it (v1.1.0 plan, 4.4).
+      GoRoute(
+        path: AppRoutes.profileTheme,
+        builder: (context, _) => ThemeScreen(onBack: () => _back(context)),
+      ),
+      GoRoute(
+        path: AppRoutes.profileSecurity,
+        builder: (context, _) => SecurityScreen(
+          onBack: () => _back(context),
+          onChangePin: () => context.push(AppRoutes.changePin),
+          onChangePassword: () => context.push(AppRoutes.changePassword),
+        ),
+      ),
+      for (final (path, title) in [
+        (AppRoutes.personalData, 'Meus dados cadastrais'),
+        (AppRoutes.sharedAccount, 'Conta compartilhada'),
+        (AppRoutes.inviteFriends, 'Convidar amigos'),
+        (AppRoutes.manageAccounts, 'Gerenciar contas'),
+      ])
+        GoRoute(
+          path: path,
+          builder: (context, _) =>
+              ProfileBlankScreen(title: title, onBack: () => _back(context)),
+        ),
       GoRoute(
         path: AppRoutes.changePin,
         builder: (context, _) => ChangePinScreen(

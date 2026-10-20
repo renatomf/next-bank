@@ -7,8 +7,10 @@ import 'package:go_router/go_router.dart';
 import 'package:next_bank/app/redirect.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/statement/statement_item.dart';
+import 'package:next_bank/core/statement/statement_query.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
+import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
 import 'package:next_bank/features/statement/presentation/list/statement_screen.dart';
 
 import '../support/fake_pix_repository.dart';
@@ -63,67 +65,24 @@ Finder statementRows() => find.descendant(
 
 // Screens 11 and 12 through the real router (domain-model.md 10 and 11).
 void main() {
-  group('the Home', () {
-    testWidgets('shows the three latest movements', (tester) async {
-      await openHome(
-        tester,
-        FakeStatementRepository({
-          null: () async =>
-              pageOf([received, sent, funding, movement('older')], 'c1'),
-        }),
-      );
-
-      expect(find.text('Últimas movimentações'), findsOneWidget);
-      expect(find.byType(TransactionItem), findsNWidgets(3));
-      expect(find.text(r'+ R$ 350,00'), findsOneWidget);
-      expect(find.text(r'− R$ 120,00'), findsOneWidget);
-      expect(find.text('Depósito inicial'), findsOneWidget);
-    });
-
-    testWidgets('says when there is no movement yet', (tester) async {
-      await openHome(tester, FakeStatementRepository());
-
-      expect(find.text('Sem movimentações'), findsOneWidget);
-    });
-
-    testWidgets('offers a retry when the movements cannot load', (
+  // v1.1.0 plan, task 4.2: the Home's latest movements gave way to the Pix
+  // box; the movements live on the statement, opened from the balance card.
+  testWidgets('the Home no longer lists movements', (tester) async {
+    await openHome(
       tester,
-    ) async {
-      var fails = true;
-      await openHome(
-        tester,
-        FakeStatementRepository({
-          null: () async =>
-              fails ? throw const ApiUnreachable() : pageOf([received]),
-        }),
-      );
-      expect(
-        find.text('Não foi possível carregar suas movimentações.'),
-        findsOneWidget,
-      );
+      FakeStatementRepository({
+        null: () async => pageOf([received]),
+      }),
+    );
 
-      fails = false;
-      await tester.tap(find.text('Tentar de novo'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Pix recebido'), findsOneWidget);
-    });
-
-    // Week 8 plan, V14 (changing week 6's D8): the eye hides only the
-    // balance; the movements keep their amounts.
-    testWidgets('shows the amounts while the balance is hidden', (
-      tester,
-    ) async {
-      await openHome(
-        tester,
-        FakeStatementRepository({
-          null: () async => pageOf([received]),
-        }),
-      );
-
-      expect(find.bySemanticsLabel('Saldo oculto'), findsOneWidget);
-      expect(find.text(r'+ R$ 350,00'), findsOneWidget);
-    });
+    expect(find.text('Últimas movimentações'), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byType(HomeScreen),
+        matching: find.byType(TransactionItem),
+      ),
+      findsNothing,
+    );
   });
 
   group('the statement', () {
@@ -180,6 +139,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      // Only the statement reads it: the Home no longer lists movements
+      // (v1.1.0 plan, task 4.2).
       expect(statement.cursors, [null, 'c1']);
       expect(find.text('Não há movimentações mais antigas.'), findsOneWidget);
     });
@@ -289,21 +250,6 @@ void main() {
 
       expect(find.text('Não encontrado.'), findsOneWidget);
     });
-
-    testWidgets('opens from the Home too', (tester) async {
-      await openHome(
-        tester,
-        FakeStatementRepository({
-          null: () async => pageOf([received]),
-        }),
-      );
-
-      await tester.tap(find.byType(TransactionItem).first);
-      await tester.pumpAndSettle();
-
-      expect(find.text('Detalhe'), findsOneWidget);
-      expect(find.text('Pix recebido'), findsOneWidget);
-    });
   });
 
   // Brief, section 8: system font scale up to 1.3x on a small phone.
@@ -334,6 +280,25 @@ void main() {
     await tester.ensureVisible(find.bySemanticsLabel('Ver extrato'));
     await tester.pumpAndSettle();
     await openStatement(tester);
+    expect(tester.takeException(), isNull);
+    // The card, filters and search fill a small screen: the rows come below.
+    final list = find
+        .descendant(
+          of: find.byType(StatementScreen),
+          matching: find.byType(Scrollable),
+        )
+        .first;
+    await tester.scrollUntilVisible(
+      find.descendant(
+        of: find.byType(StatementScreen),
+        matching: find.text('Pix recebido'),
+      ),
+      200,
+      scrollable: list,
+    );
+    // Clear of the floating bar, which covers the bottom of the list.
+    await tester.drag(list, const Offset(0, -150));
+    await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     await tester.tap(statementRows().first);
     await tester.pumpAndSettle();
@@ -378,5 +343,164 @@ void main() {
       ),
       findsOneWidget,
     );
+  });
+
+  // The redesigned statement (v1.1.0 plan, task 4.1): the balance card with
+  // its actions, one filter at a time and the search, both on the server.
+  group('redesigned', () {
+    testWidgets('shows the balance card with its three actions', (
+      tester,
+    ) async {
+      await openHome(tester, FakeStatementRepository());
+      await openStatement(tester);
+
+      expect(find.byType(BalanceCard), findsOneWidget);
+      for (final action in ['Exportar', 'Pagar', 'Fazer Pix']) {
+        expect(find.bySemanticsLabel(action), findsWidgets);
+      }
+    });
+
+    testWidgets('says exporting is coming', (tester) async {
+      await openHome(tester, FakeStatementRepository());
+      await openStatement(tester);
+
+      await tester.tap(
+        find.descendant(
+          of: find.byType(BalanceCard),
+          matching: find.bySemanticsLabel('Exportar'),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.widgetWithText(NbToast, 'Em breve.'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('opens the Pix from "Fazer Pix"', (tester) async {
+      await openHome(tester, FakeStatementRepository());
+      await openStatement(tester);
+
+      await tester.tap(
+        find.descendant(
+          of: find.byType(BalanceCard),
+          matching: find.bySemanticsLabel('Fazer Pix'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SendPixScreen), findsOneWidget);
+    });
+
+    testWidgets('asks the server with one filter, cleared by a second tap', (
+      tester,
+    ) async {
+      final statement = FakeStatementRepository();
+      await openHome(tester, statement);
+      await openStatement(tester);
+
+      await tester.tap(find.bySemanticsLabel('Entrada'));
+      await tester.pumpAndSettle();
+
+      expect(statement.queries.last.filter, StatementFilter.incoming);
+
+      await tester.tap(find.bySemanticsLabel('Entrada'));
+      await tester.pumpAndSettle();
+
+      expect(statement.queries.last, allMovements);
+    });
+
+    testWidgets('searches by name after a pause in the typing', (tester) async {
+      final statement = FakeStatementRepository();
+      await openHome(tester, statement);
+      await openStatement(tester);
+
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(StatementScreen),
+          matching: find.byType(TextField),
+        ),
+        'mari',
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(statement.queries.last.search, isNull);
+
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
+
+      expect(statement.queries.last.search, 'mari');
+    });
+
+    testWidgets('says nothing was found for a filter without movements', (
+      tester,
+    ) async {
+      late final FakeStatementRepository statement;
+      statement = FakeStatementRepository({
+        null: () async => statement.queries.last == allMovements
+            ? pageOf([received, sent])
+            : pageOf([]),
+      });
+      await openHome(tester, statement);
+      await openStatement(tester);
+
+      // The pills scroll sideways: the last one may start off screen.
+      await tester.scrollUntilVisible(
+        find.bySemanticsLabel('Comprovante'),
+        100,
+        scrollable: find
+            .descendant(
+              of: find
+                  .ancestor(
+                    of: find.byType(FilterPill).first,
+                    matching: find.byType(ListView),
+                  )
+                  .first,
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.ensureVisible(find.bySemanticsLabel('Comprovante'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.bySemanticsLabel('Comprovante'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Nada encontrado'), findsOneWidget);
+      expect(statementRows(), findsNothing);
+    });
+
+    testWidgets('hides and shows the balance with the eye (MOB-05)', (
+      tester,
+    ) async {
+      await openHome(tester, FakeStatementRepository());
+      await openStatement(tester);
+
+      expect(
+        find.descendant(
+          of: find.byType(BalanceCard),
+          matching: find.bySemanticsLabel('Saldo oculto'),
+        ),
+        findsOneWidget,
+      );
+
+      // The eye lives in the card now, as on the Home; the top has back and
+      // "Extrato" centered.
+      expect(find.bySemanticsLabel('Mostrar saldo'), findsOneWidget);
+      expect(find.widgetWithText(ScreenHeader, 'Extrato'), findsOneWidget);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(BalanceCard),
+          matching: find.bySemanticsLabel('Mostrar saldo'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.descendant(
+          of: find.byType(BalanceCard),
+          matching: find.bySemanticsLabel('Saldo oculto'),
+        ),
+        findsNothing,
+      );
+    });
   });
 }

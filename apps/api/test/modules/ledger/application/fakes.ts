@@ -76,6 +76,7 @@ export class InMemoryLedger implements LedgerRepositoryFactory {
         return Promise.resolve();
       },
       // Newest first, by (created_at, id), as the SQL of database.md section 8.
+      // The filter is the database's work: the integration tests cover it.
       statementPage: (ledgerAccountId, after, limit) => {
         const rows: StatementRow[] = this.entries.flatMap((entry) =>
           entry.postings
