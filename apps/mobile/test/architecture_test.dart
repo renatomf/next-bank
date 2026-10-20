@@ -48,13 +48,11 @@ void main() {
   });
 
   // ADR 0014 (G1): screens read the brief's text styles from the theme, so a
-  // style or a mode color changes in one place.
+  // style or a mode color changes in one place. Only components draw with
+  // tokens: core/ui (the bank's) and the design system (F-36).
   test('screens read text styles from the theme', () {
     final violations = [
-      for (final file in [
-        ...dartFiles('lib/features'),
-        ...dartFiles('lib/core/ui'),
-      ])
+      for (final file in dartFiles('lib/features'))
         for (final (index, line) in file.readAsLinesSync().indexed)
           if (line.contains('NbType.'))
             '${file.path}:${index + 1}: use context.nbText instead of NbType',
@@ -83,10 +81,7 @@ void main() {
       ' Switch(': 'NbSwitch',
     };
     final violations = [
-      for (final file in [
-        ...dartFiles('lib/features'),
-        ...dartFiles('lib/core/ui'),
-      ])
+      for (final file in dartFiles('lib/features'))
         if (!exceptions.contains(file.path.replaceAll(r'\', '/')))
           for (final (index, line) in file.readAsLinesSync().indexed)
             for (final MapEntry(key: code, value: use) in banned.entries)
@@ -135,12 +130,9 @@ List<String> importsOf(File file) => RegExp(
   multiLine: true,
 ).allMatches(file.readAsStringSync()).map((match) => match[1]!).toList();
 
-/// The Dart files under [directory]; none while it does not exist yet (such
-/// as `lib/core/ui` before anything is shared there).
-List<File> dartFiles(String directory) => !Directory(directory).existsSync()
-    ? []
-    : Directory(directory)
-          .listSync(recursive: true)
-          .whereType<File>()
-          .where((file) => file.path.endsWith('.dart'))
-          .toList();
+List<File> dartFiles(String directory) =>
+    Directory(directory)
+        .listSync(recursive: true)
+        .whereType<File>()
+        .where((file) => file.path.endsWith('.dart'))
+        .toList();
