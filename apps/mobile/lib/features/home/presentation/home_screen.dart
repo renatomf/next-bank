@@ -7,6 +7,7 @@ import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/refresh_failure.dart';
 import 'package:next_bank/features/home/presentation/assistant_bar.dart';
 import 'package:next_bank/features/home/presentation/balance_section.dart';
+import 'package:next_bank/features/home/presentation/cards_box.dart';
 import 'package:next_bank/features/home/presentation/greeting_header.dart';
 import 'package:next_bank/features/home/presentation/pix_box/pix_box.dart';
 import 'package:next_bank/features/home/presentation/shortcuts_row.dart';
@@ -31,6 +32,7 @@ class HomeScreen extends ConsumerWidget {
     required this.onNotifications,
     required this.onAssistant,
     required this.onRecharge,
+    required this.onCardDetails,
     super.key,
   });
 
@@ -72,6 +74,9 @@ class HomeScreen extends ConsumerWidget {
 
   /// Opens the recharges.
   final VoidCallback onRecharge;
+
+  /// Opens a card, by its index, on the cards screen.
+  final ValueChanged<int> onCardDetails;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -116,6 +121,8 @@ class HomeScreen extends ConsumerWidget {
                   onAutomatic: onAutomatic,
                   onKeys: onKeys,
                 ),
+                const SizedBox(height: 28),
+                CardsBox(onDetails: onCardDetails),
               ],
             ),
           ),

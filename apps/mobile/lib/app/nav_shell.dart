@@ -17,7 +17,7 @@ class NavShell extends StatelessWidget {
   final Widget child;
 
   /// The areas of the bar, in order: Início and Cartões before the Pix,
-  /// Investimentos and Menu after it (v1.1.0 plan, task 4.11). The
+  /// Invest and Menu after it (v1.1.0 plan, task 4.11). The
   /// statement, Security and the profile open from the Home and the
   /// profile, still over the bar.
   static const List<String> areas = [
@@ -39,7 +39,8 @@ class NavShell extends StatelessWidget {
           (icon: Icons.credit_card, label: 'Cartões'),
         ],
         trailing: const [
-          (icon: Icons.analytics_outlined, label: 'Investimentos'),
+          // Short enough for the bar (S21 checkpoint).
+          (icon: Icons.analytics_outlined, label: 'Invest'),
           (icon: Icons.more_horiz, label: 'Menu'),
         ],
         // The official symbol, by the developer's exception (week 8 plan, V6).

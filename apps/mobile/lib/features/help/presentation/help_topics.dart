@@ -46,37 +46,16 @@ class HelpTopics extends StatelessWidget {
           style: NbType.caption.copyWith(color: colors.textMuted),
         ),
         const SizedBox(height: NbSpace.lg),
-        Column(
-          spacing: NbSpace.sm,
+        NbGrid(
           children: [
-            _TopicRow(topics: _topics.sublist(0, 3)),
-            _TopicRow(topics: _topics.sublist(3)),
+            for (final (icon, label) in _topics)
+              ActionTile(
+                icon: icon,
+                label: label,
+                onPressed: () => sayComingSoon(context),
+              ),
           ],
         ),
-      ],
-    );
-  }
-}
-
-/// Three topics side by side, sharing the width.
-class _TopicRow extends StatelessWidget {
-  const new({required this.topics});
-
-  final List<(Widget, String)> topics;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      spacing: NbSpace.sm,
-      children: [
-        for (final (icon, label) in topics)
-          Expanded(
-            child: ActionTile(
-              icon: icon,
-              label: label,
-              onPressed: () => sayComingSoon(context),
-            ),
-          ),
       ],
     );
   }

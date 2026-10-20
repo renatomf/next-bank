@@ -5,11 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:next_bank/app/nav_shell.dart';
 import 'package:next_bank/app/redirect.dart';
+import 'package:next_bank/core/cards/example_cards.dart';
 import 'package:next_bank/core/profile/profile.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/app_lock.dart';
 import 'package:next_bank/core/session/session_controller.dart';
-import 'package:next_bank/features/areas/presentation/area_placeholder_screen.dart';
 import 'package:next_bank/features/assistant/presentation/assistant_screen.dart';
 import 'package:next_bank/features/auth/presentation/create_pin/create_pin_screen.dart';
 import 'package:next_bank/features/auth/presentation/login/login_screen.dart';
@@ -17,8 +17,11 @@ import 'package:next_bank/features/auth/presentation/register/register_screen.da
 import 'package:next_bank/features/auth/presentation/sign_out/sign_out_button.dart';
 import 'package:next_bank/features/auth/presentation/sign_out/switch_account_button.dart';
 import 'package:next_bank/features/auth/presentation/splash/splash_screen.dart';
+import 'package:next_bank/features/cards/presentation/cards_screen.dart';
 import 'package:next_bank/features/help/presentation/help_screen.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
+import 'package:next_bank/features/investments/presentation/investments_screen.dart';
+import 'package:next_bank/features/menu/presentation/menu_screen.dart';
 import 'package:next_bank/features/notifications/presentation/inbox/notifications_screen.dart';
 import 'package:next_bank/features/notifications/presentation/settings/notification_settings_screen.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
@@ -120,6 +123,8 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
               onHelp: () => context.push(AppRoutes.help),
               onAssistant: () => context.push(AppRoutes.assistant),
               onRecharge: () => context.push(AppRoutes.recharge),
+              onCardDetails: (index) =>
+                  context.go('${AppRoutes.cards}?card=$index'),
               onNotifications: () => context.push(AppRoutes.notifications),
             ),
           ),
@@ -136,15 +141,34 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
             ),
           ),
           // v1.1.0 plan, task 4.11: title only, until their layouts.
-          for (final (path, title) in [
-            (AppRoutes.cards, 'Cartões'),
-            (AppRoutes.investments, 'Investimentos'),
-            (AppRoutes.menu, 'Menu'),
-          ])
-            GoRoute(
-              path: path,
-              builder: (_, _) => AreaPlaceholderScreen(title: title),
-            ),
+          GoRoute(
+            path: AppRoutes.investments,
+            builder: (context, _) =>
+                InvestmentsScreen(onBack: () => _back(context)),
+          ),
+          GoRoute(
+            path: AppRoutes.cards,
+            builder: (context, state) {
+              // The card to open on, from the Home's Detalhes; the first
+              // when none or one out of range.
+              final card = int.tryParse(
+                state.uri.queryParameters['card'] ?? '',
+              );
+              final index =
+                  card != null && card >= 0 && card < exampleCards.length
+                  ? card
+                  : 0;
+              return CardsScreen(
+                key: ValueKey(index),
+                initialIndex: index,
+                onBack: () => _back(context),
+              );
+            },
+          ),
+          GoRoute(
+            path: AppRoutes.menu,
+            builder: (context, _) => MenuScreen(onBack: () => _back(context)),
+          ),
           GoRoute(
             path: AppRoutes.security,
             builder: (context, _) => SecurityScreen(

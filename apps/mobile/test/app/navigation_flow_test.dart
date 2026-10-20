@@ -2,8 +2,10 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/api_failure.dart';
-import 'package:next_bank/features/areas/presentation/area_placeholder_screen.dart';
+import 'package:next_bank/features/cards/presentation/cards_screen.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
+import 'package:next_bank/features/investments/presentation/investments_screen.dart';
+import 'package:next_bank/features/menu/presentation/menu_screen.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
 import 'package:next_bank/features/profile/presentation/profile_screen.dart';
 import 'package:next_bank/features/security/presentation/change_pin/change_pin_screen.dart';
@@ -51,21 +53,28 @@ void main() {
     await openHome(tester);
     expect(bar, findsOneWidget);
 
-    // v1.1.0 plan, task 4.11: the three new areas, title only for now.
-    for (final label in ['Cartões', 'Investimentos', 'Menu']) {
-      await tapBar(tester, label);
-      expect(
-        find.widgetWithText(AreaPlaceholderScreen, label),
-        findsOneWidget,
-        reason: label,
-      );
-      expect(
-        tester.getSemantics(
-          find.descendant(of: bar, matching: find.bySemanticsLabel(label)),
-        ),
-        isSemantics(label: label, isSelected: true, isButton: true),
-      );
-    }
+    // v1.1.0 plan, task 4.16: Invest opens the investments' tabs.
+    await tapBar(tester, 'Invest');
+    expect(find.byType(InvestmentsScreen), findsOneWidget);
+    expect(
+      tester.getSemantics(
+        find.descendant(of: bar, matching: find.bySemanticsLabel('Invest')),
+      ),
+      isSemantics(label: 'Invest', isSelected: true, isButton: true),
+    );
+    // v1.1.0 plan, task 4.14: Cartões is the cards' carousel.
+    await tapBar(tester, 'Cartões');
+    expect(find.byType(CardsScreen), findsOneWidget);
+
+    // v1.1.0 plan, task 4.13: the Menu is the full menu.
+    await tapBar(tester, 'Menu');
+    expect(find.byType(MenuScreen), findsOneWidget);
+    expect(
+      tester.getSemantics(
+        find.descendant(of: bar, matching: find.bySemanticsLabel('Menu')),
+      ),
+      isSemantics(label: 'Menu', isSelected: true, isButton: true),
+    );
     await tapBar(tester, 'Início');
     expect(find.text('Digite ou cole uma chave CPF'), findsOneWidget);
   });
@@ -77,7 +86,7 @@ void main() {
   ) async {
     await openHome(tester);
 
-    for (final label in ['Início', 'Cartões', 'Pix', 'Investimentos', 'Menu']) {
+    for (final label in ['Início', 'Cartões', 'Pix', 'Invest', 'Menu']) {
       expect(
         find.descendant(of: bar, matching: find.text(label)),
         findsOneWidget,
@@ -90,8 +99,9 @@ void main() {
     );
   });
 
-  // S21 checkpoint: Investimentos shows a dashboard's chart.
-  testWidgets('shows a dashboard chart on Investimentos', (tester) async {
+  // S21 checkpoint: Invest, short enough for the bar, shows a framed chart,
+  // as the reference.
+  testWidgets('shows a framed chart on Invest', (tester) async {
     await openHome(tester);
 
     expect(
@@ -99,6 +109,19 @@ void main() {
       findsOneWidget,
     );
   });
+
+  // S21 checkpoint: each area of the bar goes back to the Home, as the Pix.
+  for (final label in ['Cartões', 'Invest', 'Menu']) {
+    testWidgets('goes back to the Home from $label', (tester) async {
+      await openHome(tester);
+      await tapBar(tester, label);
+
+      await tester.tap(find.bySemanticsLabel('Voltar'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(HomeScreen), findsOneWidget);
+    });
+  }
 
   // D7: the flows open over the areas, without the bar.
   testWidgets('the Pix opens over the bar, and back returns to it', (
@@ -177,7 +200,7 @@ void main() {
   ) async {
     final clock = FakeMonotonicClock();
     await openHome(tester, clock: clock);
-    await tapBar(tester, 'Investimentos');
+    await tapBar(tester, 'Invest');
 
     [
       AppLifecycleState.inactive,
@@ -256,7 +279,7 @@ void main() {
     expect(tester.takeException(), isNull);
 
     // v1.1.0 plan, task 4.11: the new areas fit too.
-    for (final label in ['Cartões', 'Investimentos', 'Menu']) {
+    for (final label in ['Cartões', 'Invest', 'Menu']) {
       await tapBar(tester, label);
       expect(tester.takeException(), isNull, reason: label);
     }
