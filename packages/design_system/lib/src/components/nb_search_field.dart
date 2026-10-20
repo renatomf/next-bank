@@ -10,7 +10,7 @@ class NbSearchField extends StatelessWidget {
   /// A field that reports each change of the query to [onChanged].
   const new({
     required this.hint,
-    required this.onChanged,
+    this.onChanged,
     this.controller,
     this.maxLength,
     super.key,
@@ -19,8 +19,9 @@ class NbSearchField extends StatelessWidget {
   /// What is searched, such as "Buscar banco".
   final String hint;
 
-  /// Called with the query on every change.
-  final ValueChanged<String> onChanged;
+  /// Called with the query on every change; none while the screen is only
+  /// a layout.
+  final ValueChanged<String>? onChanged;
 
   /// Holds the query, when the screen needs to read or clear it.
   final TextEditingController? controller;
