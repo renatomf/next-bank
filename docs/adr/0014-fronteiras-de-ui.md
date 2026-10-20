@@ -1,6 +1,6 @@
 # 0014 — Fronteiras de UI: design system, `core/ui` e features
 
-- **Status:** Proposto
+- **Status:** Aceito
 - **Data:** 2026-10-20
 
 ## Contexto
@@ -16,13 +16,13 @@ A ADR 0003 isolou os componentes visuais no pacote `design_system`, e a regra de
 
 ## Decisão
 
-**Opção 4.** O `core/` já guarda o que as features compartilham (sessão, extrato, perfil) e já tem o teste que o impede de importar uma feature; a UI compartilhada ganha uma pasta dentro dele. Cada peça sobe só até onde precisa: uma tela, a feature, o `core/ui` ou o design system, este último só para o que faria sentido num app que não é um banco. O design system se organiza em quatro camadas (`tokens` → `theme` → `components` → `patterns`), cada uma importando só as anteriores, e não guarda texto de interface: os textos chegam por parâmetro. As telas leem os estilos do tema em vez de combinar tokens. Testes que leem o código fonte (como o `architecture_test.dart`) barram a volta de cada problema.
+**Opção 4.** O `core/` já guarda o que as features compartilham (sessão, extrato, perfil) e já tem o teste que o impede de importar uma feature; a UI compartilhada ganha uma pasta dentro dele. Cada peça sobe só até onde precisa: uma tela, a feature, o `core/ui` ou o design system, este último só para o que faria sentido num app que não é um banco. O design system se organiza em quatro camadas (`tokens` → `theme` → `components` → `patterns`), cada uma importando só as anteriores, e não guarda texto de interface: os textos chegam por parâmetro. As telas leem os estilos de texto do tema, por um `ThemeExtension` com os nomes do brief (`context.nbText.caption`), em vez de combinar tokens; os nomes do Material ficam para os widgets do Material. Testes que leem o código fonte (como o `architecture_test.dart`) barram a volta de cada problema.
 
 ## Consequências
 
 - ➕ Um visual muda num lugar só (componente ou tema), e as inconsistências deixam de ter onde nascer
 - ➕ O design system poderia servir a outro app sem levar o banco junto
 - ➕ Componente novo tem endereço definido pela tabela da tarefa 4.17, verificado no CI
-- ➖ Cinco PRs de refatoração antes da recarga (tarefa 5), sem funcionalidade nova
+- ➖ Quatro PRs de refatoração antes da recarga (tarefa 5), sem funcionalidade nova
 - ➖ Os testes de guarda leem texto, não a árvore de sintaxe: uma exceção legítima precisa entrar numa lista com o motivo
 - ➖ Componentes do design system ficam um pouco mais verbosos de usar, com os textos obrigatórios por parâmetro
