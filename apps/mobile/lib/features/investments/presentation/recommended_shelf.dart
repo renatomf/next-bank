@@ -10,8 +10,6 @@ class RecommendedShelf extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -19,12 +17,12 @@ class RecommendedShelf extends StatelessWidget {
           header: true,
           child: Text(
             'Investimentos recomendados',
-            style: NbType.sectionTitle.copyWith(color: colors.text),
+            style: context.nbText.sectionTitle,
           ),
         ),
         Text(
           'Produtos escolhidos para o seu perfil',
-          style: NbType.caption.copyWith(color: colors.textMuted),
+          style: context.nbText.caption,
         ),
         const SizedBox(height: NbSpace.md),
         SingleChildScrollView(
@@ -86,7 +84,7 @@ class _OfferCard extends StatelessWidget {
                       child: Text(
                         offer.rate,
                         textAlign: TextAlign.end,
-                        style: NbType.bodyStrong.copyWith(
+                        style: context.nbText.bodyStrong.copyWith(
                           color: colors.success,
                         ),
                       ),
@@ -94,14 +92,8 @@ class _OfferCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: NbSpace.xl),
-                Text(
-                  offer.kind,
-                  style: NbType.caption.copyWith(color: colors.textMuted),
-                ),
-                Text(
-                  offer.name,
-                  style: NbType.bodyText.copyWith(color: colors.text),
-                ),
+                Text(offer.kind, style: context.nbText.caption),
+                Text(offer.name, style: context.nbText.bodyText),
               ],
             ),
           ),

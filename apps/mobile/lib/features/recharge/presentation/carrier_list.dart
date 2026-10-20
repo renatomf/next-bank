@@ -13,17 +13,12 @@ class CarrierList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Semantics(
           header: true,
-          child: Text(
-            'Recargas',
-            style: NbType.sectionTitle.copyWith(color: colors.text),
-          ),
+          child: Text('Recargas', style: context.nbText.sectionTitle),
         ),
         const SizedBox(height: NbSpace.sm),
         for (final carrier in phoneCarriers)
@@ -41,8 +36,6 @@ class _CarrierRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
-
     return Semantics(
       container: true,
       button: true,
@@ -59,10 +52,7 @@ class _CarrierRow extends StatelessWidget {
             children: [
               InitialsAvatar(initials: carrier.initials),
               Expanded(
-                child: Text(
-                  carrier.name,
-                  style: NbType.bodyText.copyWith(color: colors.text),
-                ),
+                child: Text(carrier.name, style: context.nbText.bodyText),
               ),
             ],
           ),

@@ -42,8 +42,6 @@ class _ProfileLink extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
-
     return Semantics(
       container: true,
       button: true,
@@ -66,7 +64,7 @@ class _ProfileLink extends StatelessWidget {
               Flexible(
                 child: Text(
                   firstName,
-                  style: NbType.bodyStrong.copyWith(color: colors.text),
+                  style: context.nbText.bodyStrong,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),

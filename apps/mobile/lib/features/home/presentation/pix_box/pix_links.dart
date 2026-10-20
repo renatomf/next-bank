@@ -25,12 +25,7 @@ class PixLinks extends StatelessWidget {
               onPressed: onAutomatic,
             ),
           ),
-          VerticalDivider(
-            width: 1,
-            indent: NbSpace.sm,
-            endIndent: NbSpace.sm,
-            color: context.nbColors.border,
-          ),
+          const VerticalDivider(indent: NbSpace.sm, endIndent: NbSpace.sm),
           Expanded(
             child: _PixLink(
               // A little in from the edge, at the developer's request.
@@ -85,7 +80,7 @@ class _PixLink extends StatelessWidget {
                     text,
                     textAlign: TextAlign.center,
                     // The actions' color; only the icon is green.
-                    style: NbType.caption.copyWith(color: colors.text),
+                    style: context.nbText.caption.copyWith(color: colors.text),
                   ),
                 ),
               ),

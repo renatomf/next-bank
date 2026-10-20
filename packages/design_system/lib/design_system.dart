@@ -44,5 +44,6 @@ export 'src/components/secure_hint.dart';
 export 'src/components/skeleton.dart';
 export 'src/components/status_badge.dart';
 export 'src/components/transaction_item.dart';
+export 'src/text_styles.dart';
 export 'src/theme.dart';
 export 'src/tokens.dart';

@@ -17,8 +17,6 @@ class BankAccountForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: NbSpace.lg,
@@ -27,12 +25,7 @@ class BankAccountForm extends StatelessWidget {
           children: [
             InitialsAvatar(initials: bank.initials),
             const SizedBox(width: NbSpace.md),
-            Expanded(
-              child: Text(
-                bank.name,
-                style: NbType.bodyStrong.copyWith(color: colors.text),
-              ),
-            ),
+            Expanded(child: Text(bank.name, style: context.nbText.bodyStrong)),
             TextButton(onPressed: onChangeBank, child: const Text('Alterar')),
           ],
         ),

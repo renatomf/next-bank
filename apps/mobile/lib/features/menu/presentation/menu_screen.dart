@@ -15,8 +15,6 @@ class MenuScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
-
     return Scaffold(
       body: GlowBackground(
         child: SafeArea(
@@ -43,7 +41,7 @@ class MenuScreen extends StatelessWidget {
                   header: true,
                   child: Text(
                     section.title,
-                    style: NbType.sectionTitle.copyWith(color: colors.text),
+                    style: context.nbText.sectionTitle,
                   ),
                 ),
                 const SizedBox(height: NbSpace.md),

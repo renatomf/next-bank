@@ -12,8 +12,6 @@ class InvestTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -21,14 +19,11 @@ class InvestTab extends StatelessWidget {
         const SizedBox(height: NbSpace.xl),
         Semantics(
           header: true,
-          child: Text(
-            'Produtos',
-            style: NbType.sectionTitle.copyWith(color: colors.text),
-          ),
+          child: Text('Produtos', style: context.nbText.sectionTitle),
         ),
         Text(
           'Prateleira completa de investimentos',
-          style: NbType.caption.copyWith(color: colors.textMuted),
+          style: context.nbText.caption,
         ),
         const SizedBox(height: NbSpace.md),
         NbGrid(
@@ -81,14 +76,8 @@ class _ProductCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               spacing: NbSpace.xs,
               children: [
-                Text(
-                  product.title,
-                  style: NbType.bodyStrong.copyWith(color: colors.text),
-                ),
-                Text(
-                  product.description,
-                  style: NbType.caption.copyWith(color: colors.textMuted),
-                ),
+                Text(product.title, style: context.nbText.bodyStrong),
+                Text(product.description, style: context.nbText.caption),
               ],
             ),
           ),

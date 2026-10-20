@@ -28,7 +28,6 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
     final card = exampleCards[_index];
     final name = ref.watch(profileProvider).value?.name ?? '';
 
@@ -72,7 +71,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
               Text(
                 '$name · •••• ${card.lastFour} · ${card.label}',
                 textAlign: TextAlign.center,
-                style: NbType.bodyText.copyWith(color: colors.text),
+                style: context.nbText.bodyText,
               ),
               const SizedBox(height: NbSpace.sm),
               _PageDots(count: exampleCards.length, current: _index),

@@ -1,15 +1,22 @@
+import 'package:design_system/src/text_styles.dart';
 import 'package:design_system/src/tokens.dart';
 import 'package:flutter/material.dart';
 
 /// Material themes built from the brief's tokens (dark is the default look).
 abstract final class NbTheme {
   /// Dark theme.
-  static ThemeData dark() => _build(NbColors.dark, Brightness.dark);
+  static ThemeData dark() =>
+      _build(NbColors.dark, NbTextStyles.dark, Brightness.dark);
 
   /// Light theme.
-  static ThemeData light() => _build(NbColors.light, Brightness.light);
+  static ThemeData light() =>
+      _build(NbColors.light, NbTextStyles.light, Brightness.light);
 
-  static ThemeData _build(NbColors colors, Brightness brightness) {
+  static ThemeData _build(
+    NbColors colors,
+    NbTextStyles text,
+    Brightness brightness,
+  ) {
     final scheme =
         ColorScheme.fromSeed(
           seedColor: NbBrand.mint,
@@ -29,9 +36,9 @@ abstract final class NbTheme {
       colorScheme: scheme,
       scaffoldBackgroundColor: colors.background,
       fontFamily: NbType.body,
-      extensions: [colors],
-      // Every text style the app uses, so screens read them from the theme
-      // instead of combining tokens themselves.
+      // Screens read the brief's styles by name (context.nbText); the
+      // textTheme below serves Material's own widgets.
+      extensions: [colors, text],
       textTheme: TextTheme(
         displayLarge: NbType.displayLarge.copyWith(color: colors.text),
         headlineSmall: NbType.screenTitle.copyWith(color: colors.text),
@@ -62,6 +69,18 @@ abstract final class NbTheme {
         hintStyle: NbType.bodyText.copyWith(color: colors.textMuted),
         errorStyle: NbType.caption.copyWith(color: colors.danger),
       ),
+      // Every sheet alike, whoever opens it.
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: colors.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(NbRadius.box),
+          ),
+        ),
+      ),
+      // No thickness: the default draws one physical pixel, the line the
+      // screens had; 1 dp would be three pixels on the S21.
+      dividerTheme: DividerThemeData(color: colors.border, space: 1),
     );
   }
 }

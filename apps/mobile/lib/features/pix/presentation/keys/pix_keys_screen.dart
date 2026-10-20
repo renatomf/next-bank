@@ -16,8 +16,6 @@ class PixKeysScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
-
     return Scaffold(
       body: GlowBackground(
         child: SafeArea(
@@ -48,7 +46,7 @@ class PixKeysScreen extends StatelessWidget {
               Text(
                 'Cadastre suas chaves Pix e concentre todas as transações em '
                 'um só lugar',
-                style: NbType.screenTitle.copyWith(color: colors.text),
+                style: context.nbText.screenTitle,
               ),
               const SizedBox(height: NbSpace.xl),
               const RegisteredKeys(keys: exampleRegisteredKeys),

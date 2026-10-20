@@ -13,8 +13,6 @@ class RegisteredKeys extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -22,7 +20,7 @@ class RegisteredKeys extends StatelessWidget {
           header: true,
           child: Text(
             'Minhas chaves cadastradas · ${keys.length} de $pixKeyLimit',
-            style: NbType.sectionTitle.copyWith(color: colors.text),
+            style: context.nbText.sectionTitle,
           ),
         ),
         const SizedBox(height: NbSpace.md),
@@ -54,14 +52,8 @@ class _KeyRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               spacing: NbSpace.xs,
               children: [
-                Text(
-                  pixKey.type,
-                  style: NbType.bodyStrong.copyWith(color: colors.text),
-                ),
-                Text(
-                  pixKey.value,
-                  style: NbType.caption.copyWith(color: colors.textMuted),
-                ),
+                Text(pixKey.type, style: context.nbText.bodyStrong),
+                Text(pixKey.value, style: context.nbText.caption),
               ],
             ),
           ),

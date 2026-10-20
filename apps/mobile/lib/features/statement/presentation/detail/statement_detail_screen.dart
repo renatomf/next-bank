@@ -85,7 +85,6 @@ class _Detail extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.nbColors;
     final text = Theme.of(context).textTheme;
     final incoming = item.direction == MoneyDirection.incoming;
     final counterparty = item.counterparty;
@@ -100,7 +99,7 @@ class _Detail extends ConsumerWidget {
           // In or out is said in words, never by color alone.
           child: Text(
             incoming ? 'Entrada' : 'Saída',
-            style: NbType.caption.copyWith(color: colors.textMuted),
+            style: context.nbText.caption,
           ),
         ),
         const SizedBox(height: NbSpace.xs),

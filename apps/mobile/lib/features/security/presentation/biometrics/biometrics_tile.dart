@@ -69,17 +69,9 @@ class BiometricsTile extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Usar biometria',
-                          style: NbType.bodyText.copyWith(color: colors.text),
-                        ),
+                        Text('Usar biometria', style: context.nbText.bodyText),
                         const SizedBox(height: 2),
-                        Text(
-                          _caption,
-                          style: NbType.caption.copyWith(
-                            color: colors.textMuted,
-                          ),
-                        ),
+                        Text(_caption, style: context.nbText.caption),
                       ],
                     ),
                   ),

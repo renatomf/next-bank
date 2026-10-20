@@ -59,7 +59,7 @@ class MenuCard extends StatelessWidget {
                   item.label,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: NbType.caption.copyWith(color: colors.text),
+                  style: context.nbText.caption.copyWith(color: colors.text),
                 ),
               ],
             ),
@@ -85,7 +85,7 @@ class _NewBadge extends StatelessWidget {
       ),
       child: Text(
         'Novo',
-        style: NbType.cardLabel.copyWith(color: colors.onPrimary),
+        style: context.nbText.cardLabel.copyWith(color: colors.onPrimary),
       ),
     );
   }

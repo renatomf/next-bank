@@ -33,7 +33,6 @@ class _RechargeAmountScreenState extends State<RechargeAmountScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
     final carrier = widget.carrier;
 
     return Scaffold(
@@ -60,17 +59,10 @@ class _RechargeAmountScreenState extends State<RechargeAmountScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                carrier.name,
-                                style: NbType.caption.copyWith(
-                                  color: colors.textMuted,
-                                ),
-                              ),
+                              Text(carrier.name, style: context.nbText.caption),
                               Text(
                                 'Recarga de celular ${carrier.name}',
-                                style: NbType.bodyText.copyWith(
-                                  color: colors.text,
-                                ),
+                                style: context.nbText.bodyText,
                               ),
                             ],
                           ),
@@ -80,13 +72,10 @@ class _RechargeAmountScreenState extends State<RechargeAmountScreen> {
                     const SizedBox(height: NbSpace.xl),
                     Text(
                       'Escolha o valor da recarga para ${widget.phone}',
-                      style: NbType.screenTitle.copyWith(color: colors.text),
+                      style: context.nbText.screenTitle,
                     ),
                     const SizedBox(height: NbSpace.xl),
-                    Text(
-                      'Valor da recarga',
-                      style: NbType.bodyText.copyWith(color: colors.text),
-                    ),
+                    Text('Valor da recarga', style: context.nbText.bodyText),
                     const SizedBox(height: NbSpace.md),
                     _AmountGrid(
                       pickedCents: _pickedCents,

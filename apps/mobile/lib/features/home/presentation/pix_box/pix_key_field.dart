@@ -107,7 +107,7 @@ class _CpfInput extends StatelessWidget {
       decoration: InputDecoration(
         hintText: 'Digite ou cole uma chave CPF',
         // A smaller hint, so all of it fits the field.
-        hintStyle: NbType.caption.copyWith(color: colors.textMuted),
+        hintStyle: context.nbText.caption,
         filled: true,
         fillColor: colors.surface2,
         border: OutlineInputBorder(

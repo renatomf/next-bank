@@ -51,14 +51,8 @@ class AutomaticPaymentTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   spacing: NbSpace.xs,
                   children: [
-                    Text(
-                      title,
-                      style: NbType.caption.copyWith(color: colors.textMuted),
-                    ),
-                    Text(
-                      amount,
-                      style: NbType.bodyText.copyWith(color: colors.text),
-                    ),
+                    Text(title, style: context.nbText.caption),
+                    Text(amount, style: context.nbText.bodyText),
                   ],
                 ),
               ),

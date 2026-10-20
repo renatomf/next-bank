@@ -11,7 +11,6 @@ class CreditCardPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
     void sayComingSoon() =>
         showNbToast(context, 'Em breve.', icon: Icons.info_outline);
 
@@ -34,10 +33,7 @@ class CreditCardPanel extends StatelessWidget {
               ),
           ],
         ),
-        Text(
-          'Últimas compras',
-          style: NbType.sectionTitle.copyWith(color: colors.text),
-        ),
+        Text('Últimas compras', style: context.nbText.sectionTitle),
         for (final purchase in examplePurchases) _PurchaseRow(purchase),
       ],
     );
@@ -66,18 +62,12 @@ class _InvoiceCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: NbSpace.sm,
         children: [
-          Text(
-            'Fatura atual',
-            style: NbType.caption.copyWith(color: colors.textMuted),
-          ),
+          Text('Fatura atual', style: context.nbText.caption),
           Text(
             formatReais(exampleInvoiceCents).full,
-            style: NbType.screenTitle.copyWith(color: colors.text),
+            style: context.nbText.screenTitle,
           ),
-          Text(
-            'Vence em $exampleInvoiceDue',
-            style: NbType.caption.copyWith(color: colors.textMuted),
-          ),
+          Text('Vence em $exampleInvoiceDue', style: context.nbText.caption),
           ClipRRect(
             borderRadius: BorderRadius.circular(NbSpace.xs),
             child: LinearProgressIndicator(
@@ -89,7 +79,7 @@ class _InvoiceCard extends StatelessWidget {
           ),
           Text(
             'Limite disponível ${formatReais(available).full}',
-            style: NbType.caption.copyWith(color: colors.textMuted),
+            style: context.nbText.caption,
           ),
           const SizedBox(height: NbSpace.sm),
           PrimaryButton(label: 'Pagar fatura', onPressed: onPay),
@@ -106,29 +96,18 @@ class _PurchaseRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
-
     return Row(
       children: [
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                purchase.name,
-                style: NbType.bodyText.copyWith(color: colors.text),
-              ),
-              Text(
-                purchase.date,
-                style: NbType.caption.copyWith(color: colors.textMuted),
-              ),
+              Text(purchase.name, style: context.nbText.bodyText),
+              Text(purchase.date, style: context.nbText.caption),
             ],
           ),
         ),
-        Text(
-          formatReais(purchase.cents).full,
-          style: NbType.bodyText.copyWith(color: colors.text),
-        ),
+        Text(formatReais(purchase.cents).full, style: context.nbText.bodyText),
       ],
     );
   }

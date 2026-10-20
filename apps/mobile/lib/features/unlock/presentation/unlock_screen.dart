@@ -103,7 +103,7 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
                       const SizedBox(height: NbSpace.sm),
                       Text(
                         'Seu dinheiro, um passo à frente.',
-                        style: NbType.bodyText.copyWith(
+                        style: context.nbText.bodyText.copyWith(
                           color: colors.textMuted,
                         ),
                       ),
@@ -147,11 +147,10 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
 
   List<Widget> _pinAccess() {
     final state = ref.watch(unlockControllerProvider);
-    final colors = context.nbColors;
     return [
       Text(
         'Digite seu PIN para acessar a conta.',
-        style: NbType.caption.copyWith(color: colors.textMuted),
+        style: context.nbText.caption,
       ),
       const SizedBox(height: NbSpace.lg),
       if (state.blocked)

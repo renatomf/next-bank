@@ -75,7 +75,9 @@ class _AssistantField extends StatelessWidget {
                   Expanded(
                     child: Text(
                       'Posso te ajudar?',
-                      style: NbType.bodyText.copyWith(color: colors.textMuted),
+                      style: context.nbText.bodyText.copyWith(
+                        color: colors.textMuted,
+                      ),
                     ),
                   ),
                 ],

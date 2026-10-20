@@ -40,12 +40,12 @@ class InvestorProfileBox extends StatelessWidget {
           Text(
             title,
             textAlign: TextAlign.center,
-            style: NbType.sectionTitle.copyWith(color: colors.text),
+            style: context.nbText.sectionTitle,
           ),
           Text(
             description,
             textAlign: TextAlign.center,
-            style: NbType.caption.copyWith(color: colors.textMuted),
+            style: context.nbText.caption,
           ),
           const SizedBox(height: NbSpace.sm),
           PrimaryButton(

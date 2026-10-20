@@ -67,7 +67,6 @@ class _PixContactsState extends State<PixContacts> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
     final wanted = _query.trim().toLowerCase();
     final contacts = [
       for (final contact in exampleContacts)
@@ -81,10 +80,7 @@ class _PixContactsState extends State<PixContacts> {
         const SizedBox(height: NbSpace.xl),
         Semantics(
           header: true,
-          child: Text(
-            'Contatos Pix',
-            style: NbType.sectionTitle.copyWith(color: colors.text),
-          ),
+          child: Text('Contatos Pix', style: context.nbText.sectionTitle),
         ),
         const SizedBox(height: NbSpace.md),
         TextField(
@@ -135,11 +131,11 @@ class _MultiplePixCard extends StatelessWidget {
                     children: [
                       Text(
                         'Faça vários Pix de uma vez',
-                        style: NbType.bodyStrong.copyWith(color: colors.text),
+                        style: context.nbText.bodyStrong,
                       ),
                       Text(
                         'Mais praticidade e rapidez nas suas transferências.',
-                        style: NbType.caption.copyWith(color: colors.textMuted),
+                        style: context.nbText.caption,
                       ),
                     ],
                   ),
@@ -161,8 +157,6 @@ class _ContactRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
-
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: NbSpace.sm),
       child: Row(
@@ -171,14 +165,8 @@ class _ContactRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  contact.name,
-                  style: NbType.bodyText.copyWith(color: colors.text),
-                ),
-                Text(
-                  contact.bank,
-                  style: NbType.caption.copyWith(color: colors.textMuted),
-                ),
+                Text(contact.name, style: context.nbText.bodyText),
+                Text(contact.bank, style: context.nbText.caption),
               ],
             ),
           ),

@@ -19,8 +19,6 @@ class HelpTopics extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -43,7 +41,7 @@ class HelpTopics extends StatelessWidget {
         ),
         Text(
           'Selecione o assunto e navegue nas dúvidas e dicas relacionadas.',
-          style: NbType.caption.copyWith(color: colors.textMuted),
+          style: context.nbText.caption,
         ),
         const SizedBox(height: NbSpace.lg),
         NbGrid(

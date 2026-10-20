@@ -43,12 +43,14 @@ class AssistantScreen extends ConsumerWidget {
                     const SizedBox(height: NbSpace.xl),
                     Text(
                       'Olá, $firstName',
-                      style: NbType.bodyText.copyWith(color: colors.textMuted),
+                      style: context.nbText.bodyText.copyWith(
+                        color: colors.textMuted,
+                      ),
                     ),
                     const SizedBox(height: NbSpace.xs),
                     Text(
                       'Como podemos começar?',
-                      style: NbType.screenTitle.copyWith(color: colors.text),
+                      style: context.nbText.screenTitle,
                     ),
                     const SizedBox(height: NbSpace.lg),
                     for (final agent in assistantAgents)
@@ -85,9 +87,7 @@ class AssistantScreen extends ConsumerWidget {
                       Text(
                         'Respostas geradas por IA',
                         textAlign: TextAlign.center,
-                        style: NbType.cardLabel.copyWith(
-                          color: colors.textMuted,
-                        ),
+                        style: context.nbText.cardLabel,
                       ),
                     ],
                   ),
