@@ -1,6 +1,8 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:next_bank/core/cards/example_cards.dart';
+import 'package:next_bank/core/ui/cards/card_lock_toggle.dart';
+import 'package:next_bank/core/ui/cards/payment_card.dart';
 
 /// "Meus cartões" on the Home (v1.1.0 plan, task 4.15): the cards' carousel,
 /// as on the cards screen, with a lock and "Detalhes" under each card. The

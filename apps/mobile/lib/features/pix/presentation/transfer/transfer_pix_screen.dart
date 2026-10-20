@@ -1,5 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:next_bank/core/ui/pix/pix_mark.dart';
 import 'package:next_bank/features/pix/presentation/transfer/bank_account_tab.dart';
 import 'package:next_bank/features/pix/presentation/transfer/pix_key_tab.dart';
 

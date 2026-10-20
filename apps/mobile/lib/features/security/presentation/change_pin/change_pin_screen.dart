@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:next_bank/core/ui/common_copy.dart';
 import 'package:next_bank/features/security/presentation/change_pin/change_pin_controller.dart';
 
 /// A new transaction PIN with the password (week 7 plan, D5): also how a PIN
@@ -83,12 +84,14 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
                 label: 'Sua senha',
                 controller: _password,
                 obscureText: true,
+                revealLabels: CommonCopy.revealSecret,
                 autofillHints: const [AutofillHints.password],
                 errorText: state.passwordError,
                 enabled: !state.submitting,
               ),
               const SizedBox(height: NbSpace.lg),
               PinField(
+                revealLabels: CommonCopy.revealSecret,
                 label: 'Novo PIN',
                 controller: _newPin,
                 errorText: state.pinError,
@@ -96,6 +99,7 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
               ),
               const SizedBox(height: NbSpace.lg),
               PinField(
+                revealLabels: CommonCopy.revealSecret,
                 label: 'Digite o novo PIN de novo',
                 controller: _confirmPin,
                 errorText: state.confirmError,

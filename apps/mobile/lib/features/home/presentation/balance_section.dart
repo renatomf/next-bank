@@ -2,6 +2,8 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/account/account_providers.dart';
+import 'package:next_bank/core/ui/balance/balance_card.dart';
+import 'package:next_bank/core/ui/common_copy.dart';
 
 /// The balance card: loading, ready, or an error with "Tentar de novo". The
 /// eye hides the balance on every screen at once (MOB-05).
@@ -22,6 +24,7 @@ class BalanceSection extends ConsumerWidget {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: NbSpace.xl),
         child: ErrorState(
+          retryLabel: CommonCopy.retry,
           message: 'Não foi possível carregar seu saldo.',
           onRetry: () => ref.invalidate(accountProvider),
         ),

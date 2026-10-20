@@ -161,7 +161,13 @@ void main() {
 
     testWidgets('never suggests or corrects hidden text', (tester) async {
       await tester.pumpWidget(
-        host(const NbTextField(label: 'Senha', obscureText: true)),
+        host(
+          const NbTextField(
+            label: 'Senha',
+            obscureText: true,
+            revealLabels: (show: 'Mostrar senha', hide: 'Ocultar senha'),
+          ),
+        ),
       );
 
       final field = tester.widget<TextField>(find.byType(TextField));
@@ -182,6 +188,7 @@ void main() {
         host(
           PinField(
             label: 'PIN',
+            revealLabels: (show: 'Mostrar senha', hide: 'Ocultar senha'),
             controller: controller,
             onCompleted: completed.add,
           ),

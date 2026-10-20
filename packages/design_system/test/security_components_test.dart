@@ -18,6 +18,7 @@ void main() {
                   title: 'Encerrar sessão?',
                   message: 'O aparelho sai da sua conta.',
                   confirmLabel: 'Encerrar',
+                  cancelLabel: 'Cancelar',
                 );
               },
               child: const Text('open'),
@@ -53,6 +54,7 @@ void main() {
                   title: 'Encerrar sessão?',
                   message: 'O aparelho sai da sua conta.',
                   confirmLabel: 'Encerrar',
+                  cancelLabel: 'Cancelar',
                 );
               },
               child: const Text('open'),
@@ -89,6 +91,7 @@ void main() {
                   title: 'Encerrar sessão?',
                   message: 'O aparelho sai da sua conta.',
                   confirmLabel: 'Encerrar',
+                  cancelLabel: 'Cancelar',
                 );
               },
               child: const Text('open'),

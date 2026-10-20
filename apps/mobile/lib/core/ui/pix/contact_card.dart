@@ -1,5 +1,4 @@
-import 'package:design_system/src/theme.dart';
-import 'package:design_system/src/tokens.dart';
+import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 
 /// Who receives a Pix (brief, section 7; pix-dark mockup): the initial, the

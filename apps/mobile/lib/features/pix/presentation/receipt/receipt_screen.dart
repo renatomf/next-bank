@@ -5,6 +5,8 @@ import 'package:next_bank/core/account/account_providers.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/share/image_sharer.dart';
 import 'package:next_bank/core/share/widget_png.dart';
+import 'package:next_bank/core/ui/common_copy.dart';
+import 'package:next_bank/core/ui/pix/receipt_card.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/pix_formats.dart';
 import 'package:next_bank/features/pix/presentation/pix_providers.dart';
@@ -60,6 +62,7 @@ class ReceiptScreen extends ConsumerWidget {
                   ],
                   AsyncError() => [
                     ErrorState(
+                      retryLabel: CommonCopy.retry,
                       message: 'Não foi possível carregar o comprovante.',
                       onRetry: () =>
                           ref.invalidate(pixTransferProvider(transferId)),

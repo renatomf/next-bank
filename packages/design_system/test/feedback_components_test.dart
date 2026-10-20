@@ -77,6 +77,7 @@ void main() {
           ErrorState(
             message: 'Não foi possível carregar seu saldo.',
             onRetry: () => retries++,
+            retryLabel: 'Tentar de novo',
           ),
         ),
       );

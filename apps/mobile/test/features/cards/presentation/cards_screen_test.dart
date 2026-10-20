@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/session_controller.dart';
+import 'package:next_bank/core/ui/cards/payment_card.dart';
 import 'package:next_bank/features/cards/presentation/cards_screen.dart';
 
 import '../../../support/device_stores.dart';

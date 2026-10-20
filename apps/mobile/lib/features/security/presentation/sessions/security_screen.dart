@@ -7,6 +7,7 @@ import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/clock.dart';
 import 'package:next_bank/core/refresh_failure.dart';
 import 'package:next_bank/core/statement/statement_texts.dart';
+import 'package:next_bank/core/ui/common_copy.dart';
 import 'package:next_bank/features/security/domain/active_session.dart';
 import 'package:next_bank/features/security/presentation/biometrics/biometrics_tile.dart';
 import 'package:next_bank/features/security/presentation/sessions/sessions_controller.dart';
@@ -113,6 +114,7 @@ class _Sessions extends ConsumerWidget {
         ],
       ),
       AsyncError() => ErrorState(
+        retryLabel: CommonCopy.retry,
         message: 'Não foi possível carregar os aparelhos.',
         onRetry: () => ref.invalidate(sessionsControllerProvider),
       ),
@@ -144,6 +146,7 @@ class _SessionTile extends ConsumerWidget {
       message:
           'O aparelho sai da sua conta e precisa entrar de novo com a senha.',
       confirmLabel: 'Encerrar',
+      cancelLabel: CommonCopy.cancel,
     );
     if (!confirmed) return;
     unawaited(ref.read(sessionsControllerProvider.notifier).revoke(session.id));

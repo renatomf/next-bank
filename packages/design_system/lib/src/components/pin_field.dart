@@ -9,6 +9,7 @@ class PinField extends StatelessWidget {
   const new({
     required this.label,
     required this.controller,
+    required this.revealLabels,
     this.errorText,
     this.onCompleted,
     this.enabled = true,
@@ -30,6 +31,9 @@ class PinField extends StatelessWidget {
   /// False while the form is sending.
   final bool enabled;
 
+  /// What the screen reader says on the button that shows or hides the PIN.
+  final ({String show, String hide}) revealLabels;
+
   /// PIN length (domain-model.md 3.1).
   static const int length = 4;
 
@@ -41,6 +45,7 @@ class PinField extends StatelessWidget {
     enabled: enabled,
     keyboardType: TextInputType.number,
     obscureText: true,
+    revealLabels: revealLabels,
     inputFormatters: [
       FilteringTextInputFormatter.digitsOnly,
       LengthLimitingTextInputFormatter(length),

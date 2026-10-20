@@ -2,7 +2,7 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-// A Home shortcut takes any widget as its icon, such as the Pix symbol
+// A shortcut takes any widget as its icon, such as the app's Pix symbol
 // (week 8 plan, V6 and V7); a plain icon keeps the accent color.
 void main() {
   Future<void> pumpTile(WidgetTester tester, Widget icon) => tester.pumpWidget(
@@ -15,9 +15,9 @@ void main() {
   );
 
   testWidgets('shows a widget as its icon', (tester) async {
-    await pumpTile(tester, const PixMark());
+    await pumpTile(tester, const FlutterLogo());
 
-    expect(find.byType(PixMark), findsOneWidget);
+    expect(find.byType(FlutterLogo), findsOneWidget);
     expect(find.bySemanticsLabel('Área Pix'), findsOneWidget);
   });
 
@@ -28,10 +28,14 @@ void main() {
     expect(IconTheme.of(context).color, NbColors.dark.accent);
   });
 
-  // S21 checkpoint of v1.1.0: every shortcut's icon in one size, the Pix
-  // symbol included.
+  // S21 checkpoint of v1.1.0: every shortcut's icon in one size, a widget
+  // of its own size included.
   for (final (name, icon, type) in [
-    ('the Pix symbol', const PixMark(size: 40) as Widget, PixMark),
+    (
+      'a widget of its own size',
+      const FlutterLogo(size: 40) as Widget,
+      FlutterLogo,
+    ),
     ('a plain icon', const Icon(Icons.qr_code_2), Icon),
   ]) {
     testWidgets('draws $name in the shortcut icon size', (tester) async {

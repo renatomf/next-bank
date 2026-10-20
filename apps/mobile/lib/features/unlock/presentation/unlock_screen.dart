@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/session/biometric_pin_store.dart';
 import 'package:next_bank/core/session/greeting_name_store.dart';
+import 'package:next_bank/core/ui/common_copy.dart';
 import 'package:next_bank/features/unlock/presentation/unlock_controller.dart';
 
 /// The Unlock screen (screen 5; F-16; v1.1.0 plan, task 2): what the
@@ -158,6 +159,7 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
         InfoNotice(message: state.error ?? '')
       else
         PinField(
+          revealLabels: CommonCopy.revealSecret,
           label: 'PIN de 4 dígitos',
           controller: _pin,
           errorText: state.error,
