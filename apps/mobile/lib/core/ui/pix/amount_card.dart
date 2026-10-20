@@ -1,8 +1,4 @@
-import 'package:design_system/src/components/glass_art.dart';
-import 'package:design_system/src/components/icon_circle_button.dart';
-import 'package:design_system/src/components/money_text.dart';
-import 'package:design_system/src/components/skeleton.dart';
-import 'package:design_system/src/tokens.dart';
+import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 
 /// The amount being sent (brief, section 7; pix-dark mockup): always dark

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/share/text_sharer.dart';
+import 'package:next_bank/core/ui/common_copy.dart';
 import 'package:next_bank/features/pix/domain/br_code.dart';
 import 'package:next_bank/features/pix/domain/pix_amount.dart';
 import 'package:next_bank/features/pix/presentation/receive/receive_pix_controller.dart';
@@ -68,7 +69,11 @@ class _ReceivePixScreenState extends ConsumerState<ReceivePixScreen> {
                   ),
                 )
               else if (error != null)
-                ErrorState(message: error, onRetry: controller.load)
+                ErrorState(
+                  message: error,
+                  onRetry: controller.load,
+                  retryLabel: CommonCopy.retry,
+                )
               else if (code != null) ...[
                 Center(
                   child: ClipRRect(

@@ -10,7 +10,7 @@ Future<bool> showConfirmDialog(
   required String title,
   required String message,
   required String confirmLabel,
-  String cancelLabel = 'Cancelar',
+  required String cancelLabel,
 }) async {
   final confirmed = await showDialog<bool>(
     context: context,
@@ -32,7 +32,7 @@ class ConfirmDialog extends StatelessWidget {
     required this.title,
     required this.message,
     required this.confirmLabel,
-    this.cancelLabel = 'Cancelar',
+    required this.cancelLabel,
     super.key,
   });
 

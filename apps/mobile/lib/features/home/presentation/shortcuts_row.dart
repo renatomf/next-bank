@@ -1,5 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:next_bank/core/ui/pix/pix_mark.dart';
 
 /// The Home's four shortcuts, side by side across the width (S21 checkpoint
 /// of v1.1.0): Área Pix, Pagar, Transferir and Recarga; "Receber" lives in

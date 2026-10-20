@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/account/account_providers.dart';
 import 'package:next_bank/core/session/biometric_pin_store.dart';
 import 'package:next_bank/core/statement/statement_controller.dart';
+import 'package:next_bank/core/ui/common_copy.dart';
+import 'package:next_bank/core/ui/pix/contact_card.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/pix_formats.dart';
 import 'package:next_bank/features/pix/presentation/pix_providers.dart';
@@ -92,6 +94,7 @@ class _ReviewPixScreenState extends ConsumerState<ReviewPixScreen> {
                 AsyncData(value: final transfer) => _review(transfer),
                 AsyncError() => [
                   ErrorState(
+                    retryLabel: CommonCopy.retry,
                     message: 'Não foi possível carregar o Pix.',
                     onRetry: () =>
                         ref.invalidate(pixTransferProvider(widget.transferId)),
@@ -175,6 +178,7 @@ class _ReviewPixScreenState extends ConsumerState<ReviewPixScreen> {
         const SizedBox(height: NbSpace.lg),
       ],
       PinField(
+        revealLabels: CommonCopy.revealSecret,
         label: 'Digite seu PIN para enviar',
         controller: _pin,
         errorText: error,

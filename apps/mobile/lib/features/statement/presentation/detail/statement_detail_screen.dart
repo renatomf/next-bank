@@ -5,6 +5,8 @@ import 'package:next_bank/core/clock.dart';
 import 'package:next_bank/core/statement/statement_controller.dart';
 import 'package:next_bank/core/statement/statement_item.dart';
 import 'package:next_bank/core/statement/statement_texts.dart';
+import 'package:next_bank/core/ui/common_copy.dart';
+import 'package:next_bank/core/ui/pix/contact_card.dart';
 
 /// The detail of one movement (screen 12; D3): what the statement already
 /// has, read from the pages loaded (T4-2). Only a Pix sent links to its
@@ -60,6 +62,7 @@ class StatementDetailScreen extends ConsumerWidget {
                   ),
                 },
                 AsyncError() => ErrorState(
+                  retryLabel: CommonCopy.retry,
                   message: 'Não foi possível carregar o extrato.',
                   onRetry: () => ref.invalidate(statementProvider),
                 ),

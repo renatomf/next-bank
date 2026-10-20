@@ -3,8 +3,9 @@ import 'dart:math';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:next_bank/core/ui/balance/balance_card.dart';
 
-import 'support/glass_art.dart';
+import '../../../support/glass_art.dart';
 
 Widget host(Widget child, {ThemeData? theme}) => MaterialApp(
   theme: theme ?? NbTheme.dark(),

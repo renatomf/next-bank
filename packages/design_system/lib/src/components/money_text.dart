@@ -29,16 +29,24 @@ class MoneyText extends StatelessWidget {
   const new({
     required this.cents,
     this.hidden = false,
+    this.hiddenLabel,
     this.color,
     this.mutedColor,
     super.key,
-  });
+  }) : assert(
+         !hidden || hiddenLabel != null,
+         'a hidden amount needs a label to read aloud',
+       );
 
   /// The amount, in integer cents.
   final int cents;
 
   /// True to hide the amount from people beside the customer.
   final bool hidden;
+
+  /// What the screen reader says while the amount is hidden, such as "Saldo
+  /// oculto".
+  final String? hiddenLabel;
 
   /// Color of the integer part.
   final Color? color;
@@ -67,7 +75,7 @@ class MoneyText extends StatelessWidget {
     // Its own node: inside a list or a card it must not merge with siblings.
     return Semantics(
       container: true,
-      label: parts?.full ?? 'Saldo oculto',
+      label: parts?.full ?? hiddenLabel,
       excludeSemantics: true,
       child: Row(
         mainAxisSize: MainAxisSize.min,

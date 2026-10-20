@@ -1,6 +1,4 @@
-import 'package:design_system/src/components/money_text.dart';
-import 'package:design_system/src/theme.dart';
-import 'package:design_system/src/tokens.dart';
+import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 
 /// One movement in a list (brief, section 7; home-dark mockup): an arrow in a

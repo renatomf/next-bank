@@ -1,9 +1,7 @@
-import 'package:design_system/src/components/balance_amount.dart';
-import 'package:design_system/src/components/glass_art.dart';
-import 'package:design_system/src/components/glass_panel.dart';
-import 'package:design_system/src/components/icon_circle_button.dart';
-import 'package:design_system/src/tokens.dart';
+import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+
+import 'package:next_bank/core/ui/balance/balance_amount.dart';
 
 /// One action at the foot of a [BalanceCard].
 typedef BalanceCardAction = ({

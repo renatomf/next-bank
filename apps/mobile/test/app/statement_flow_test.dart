@@ -8,6 +8,8 @@ import 'package:next_bank/app/redirect.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/statement/statement_item.dart';
 import 'package:next_bank/core/statement/statement_query.dart';
+import 'package:next_bank/core/ui/balance/balance_card.dart';
+import 'package:next_bank/core/ui/statement/transaction_item.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';

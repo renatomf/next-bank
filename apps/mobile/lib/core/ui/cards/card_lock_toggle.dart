@@ -1,5 +1,4 @@
-import 'package:design_system/src/theme.dart';
-import 'package:design_system/src/tokens.dart';
+import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 
 /// A card's lock, switching between "Desbloqueado" and "Bloqueado" (v1.1.0

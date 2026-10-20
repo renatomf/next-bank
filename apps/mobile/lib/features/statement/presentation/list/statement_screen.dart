@@ -11,6 +11,9 @@ import 'package:next_bank/core/statement/statement_controller.dart';
 import 'package:next_bank/core/statement/statement_item.dart';
 import 'package:next_bank/core/statement/statement_query.dart';
 import 'package:next_bank/core/statement/statement_texts.dart';
+import 'package:next_bank/core/ui/balance/balance_card.dart';
+import 'package:next_bank/core/ui/common_copy.dart';
+import 'package:next_bank/core/ui/statement/transaction_item.dart';
 
 /// The statement (screen 11, redesigned in v1.1.0, task 4.1): back and the
 /// title on top, the balance card with its actions, the filters, the
@@ -215,6 +218,7 @@ class _Content extends ConsumerWidget {
       ],
       AsyncError() => [
         ErrorState(
+          retryLabel: CommonCopy.retry,
           message: 'Não foi possível carregar o extrato.',
           onRetry: () => ref.invalidate(filteredStatementProvider),
         ),
@@ -290,6 +294,7 @@ class _Footer extends ConsumerWidget {
         semanticsLabel: 'Carregando mais movimentações',
       ),
       _ when error != null => ErrorState(
+        retryLabel: CommonCopy.retry,
         message: error,
         onRetry: () =>
             unawaited(ref.read(filteredStatementProvider.notifier).loadMore()),

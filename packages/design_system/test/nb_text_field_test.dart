@@ -10,7 +10,11 @@ void main() {
         MaterialApp(
           theme: NbTheme.dark(),
           home: Scaffold(
-            body: NbTextField(label: 'Senha', obscureText: obscureText),
+            body: NbTextField(
+              label: 'Senha',
+              obscureText: obscureText,
+              revealLabels: (show: 'Mostrar senha', hide: 'Ocultar senha'),
+            ),
           ),
         ),
       );

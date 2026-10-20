@@ -1,6 +1,7 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:next_bank/core/ui/common_copy.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/processing/processing_controller.dart';
 
@@ -51,6 +52,7 @@ class ProcessingScreen extends ConsumerWidget {
                 ),
                 AsyncError() => Center(
                   child: ErrorState(
+                    retryLabel: CommonCopy.retry,
                     message: 'Não foi possível consultar o Pix.',
                     onRetry: () => ref.invalidate(provider),
                   ),

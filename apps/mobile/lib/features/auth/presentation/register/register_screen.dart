@@ -4,6 +4,7 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/cpf.dart';
+import 'package:next_bank/core/ui/common_copy.dart';
 import 'package:next_bank/features/auth/presentation/register/register_controller.dart';
 
 /// Registration (screen 3). The CPF is drawn by the app and cannot be
@@ -121,6 +122,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   controller: _password,
                   errorText: state.passwordError,
                   obscureText: true,
+                  revealLabels: CommonCopy.revealSecret,
                   autofillHints: const [AutofillHints.newPassword],
                   textInputAction: TextInputAction.done,
                   onSubmitted: (_) => _submit(),

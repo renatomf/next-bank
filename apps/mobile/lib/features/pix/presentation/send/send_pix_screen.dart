@@ -7,6 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/account/account_providers.dart';
 import 'package:next_bank/core/cpf.dart';
 import 'package:next_bank/core/cpf_input_formatter.dart';
+import 'package:next_bank/core/ui/pix/amount_card.dart';
+import 'package:next_bank/core/ui/pix/contact_card.dart';
 import 'package:next_bank/features/pix/domain/pix_amount.dart';
 import 'package:next_bank/features/pix/presentation/pix_formats.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_controller.dart';

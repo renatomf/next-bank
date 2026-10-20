@@ -2,6 +2,7 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:next_bank/app/redirect.dart';
+import 'package:next_bank/core/ui/pix/pix_mark.dart';
 
 /// The frame of the app's areas: the screen above the navigation bar docked
 /// at the bottom (week 7 plan, D7; week 8 plan, V4; domain-model.md 10). Part

@@ -82,7 +82,13 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        host(const MoneyText(cents: 1000000, hidden: true)),
+        host(
+          const MoneyText(
+            cents: 1000000,
+            hidden: true,
+            hiddenLabel: 'Saldo oculto',
+          ),
+        ),
       );
 
       final mask = tester.widget<Text>(find.text('••••••'));
@@ -92,7 +98,13 @@ void main() {
     // MOB-05: someone beside the customer must not read the balance.
     testWidgets('hides every digit when hidden', (tester) async {
       await tester.pumpWidget(
-        host(const MoneyText(cents: 1000000, hidden: true)),
+        host(
+          const MoneyText(
+            cents: 1000000,
+            hidden: true,
+            hiddenLabel: 'Saldo oculto',
+          ),
+        ),
       );
 
       expect(
@@ -113,7 +125,13 @@ void main() {
       final shownSize = tester.getSize(find.byType(MoneyText));
 
       await tester.pumpWidget(
-        host(const MoneyText(cents: 1000000, hidden: true)),
+        host(
+          const MoneyText(
+            cents: 1000000,
+            hidden: true,
+            hiddenLabel: 'Saldo oculto',
+          ),
+        ),
       );
 
       expect(tester.getRect(find.text(r'R$')).top, shown.top);

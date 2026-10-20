@@ -1,6 +1,8 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:next_bank/core/ui/cards/card_lock_toggle.dart';
+import 'package:next_bank/core/ui/cards/payment_card.dart';
 
 // The cards' shared pieces (v1.1.0 plan, tasks 4.14 and 4.15), used by the
 // Home and the cards screen.

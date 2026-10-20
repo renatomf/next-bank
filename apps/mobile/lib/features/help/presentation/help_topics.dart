@@ -1,5 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:next_bank/core/ui/pix/pix_mark.dart';
 import 'package:next_bank/features/help/presentation/help_screen.dart';
 
 /// "Dúvidas por produto": six topics of what the app has, in two rows of

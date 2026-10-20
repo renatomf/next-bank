@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:next_bank/core/ui/common_copy.dart';
 import 'package:next_bank/features/security/presentation/change_password/change_password_controller.dart';
 
 /// A new password with the current one (week 7 plan, D4): the other devices
@@ -91,6 +92,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 label: 'Senha atual',
                 controller: _current,
                 obscureText: true,
+                revealLabels: CommonCopy.revealSecret,
                 autofillHints: const [AutofillHints.password],
                 errorText: state.currentPasswordError,
                 enabled: !state.submitting,
@@ -100,6 +102,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 label: 'Nova senha',
                 controller: _new,
                 obscureText: true,
+                revealLabels: CommonCopy.revealSecret,
                 autofillHints: const [AutofillHints.newPassword],
                 errorText: state.newPasswordError,
                 enabled: !state.submitting,
@@ -109,6 +112,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 label: 'Digite a nova senha de novo',
                 controller: _confirm,
                 obscureText: true,
+                revealLabels: CommonCopy.revealSecret,
                 errorText: state.confirmError,
                 enabled: !state.submitting,
               ),

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:next_bank/core/ui/common_copy.dart';
 import 'package:next_bank/features/security/presentation/biometrics/biometrics_controller.dart';
 
 /// "Usar biometria" in Security (v1.1.0 plan, task 2): shown only with
@@ -134,6 +135,7 @@ class _PinSheetState extends State<_PinSheet> {
           ),
           const SizedBox(height: NbSpace.lg),
           PinField(
+            revealLabels: CommonCopy.revealSecret,
             label: 'PIN de 4 dígitos',
             controller: _pin,
             onCompleted: (pin) => Navigator.of(context).pop(pin),

@@ -21,11 +21,19 @@ class NbTextField extends StatefulWidget {
     this.enabled = true,
     this.readOnly = false,
     this.suffix,
+    this.revealLabels,
     super.key,
-  });
+  }) : assert(
+         !obscureText || revealLabels != null,
+         'a hidden text needs the labels of its show and hide button',
+       );
 
   /// Shown above the field and read by screen readers.
   final String label;
+
+  /// What the screen reader says on the button that shows or hides an
+  /// [obscureText] value, such as "Mostrar senha" and "Ocultar senha".
+  final ({String show, String hide})? revealLabels;
 
   /// Holds the typed text.
   final TextEditingController? controller;
@@ -103,18 +111,19 @@ class _NbTextFieldState extends State<NbTextField> {
           decoration: InputDecoration(
             errorText: widget.errorText,
             errorMaxLines: 3,
-            suffixIcon: widget.obscureText
-                ? IconButton(
-                    icon: Icon(
-                      _shown
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                      color: colors.textMuted,
-                      semanticLabel: _shown ? 'Ocultar senha' : 'Mostrar senha',
-                    ),
-                    onPressed: () => setState(() => _shown = !_shown),
-                  )
-                : widget.suffix,
+            suffixIcon: switch (widget.revealLabels) {
+              final labels? when widget.obscureText => IconButton(
+                icon: Icon(
+                  _shown
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                  color: colors.textMuted,
+                  semanticLabel: _shown ? labels.hide : labels.show,
+                ),
+                onPressed: () => setState(() => _shown = !_shown),
+              ),
+              _ => widget.suffix,
+            },
             semanticCounterText: '',
           ),
         ),

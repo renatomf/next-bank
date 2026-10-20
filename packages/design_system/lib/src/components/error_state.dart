@@ -9,7 +9,7 @@ class ErrorState extends StatelessWidget {
   const new({
     required this.message,
     required this.onRetry,
-    this.retryLabel = 'Tentar de novo',
+    required this.retryLabel,
     super.key,
   });
 

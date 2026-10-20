@@ -1,5 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:next_bank/core/ui/pix/pix_mark.dart';
 
 /// Pix Automático and Minhas chaves, in one row split by a line.
 class PixLinks extends StatelessWidget {

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/cards/example_cards.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
+import 'package:next_bank/core/ui/cards/payment_card.dart';
 import 'package:next_bank/features/cards/presentation/credit_card_panel.dart';
 import 'package:next_bank/features/cards/presentation/debit_card_panel.dart';
 

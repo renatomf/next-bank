@@ -1,7 +1,6 @@
-import 'package:design_system/src/components/money_text.dart';
-import 'package:design_system/src/components/skeleton.dart';
-import 'package:design_system/src/tokens.dart';
+import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:next_bank/core/ui/common_copy.dart';
 
 /// What the glass panel of a balance card shows: "Saldo disponível" with
 /// the masked account over the balance, or placeholders while either is
@@ -62,6 +61,7 @@ class _Balance extends StatelessWidget {
           child: MoneyText(
             cents: cents,
             hidden: hidden,
+            hiddenLabel: CommonCopy.hiddenBalance,
             color: NbGlassColors.text,
             mutedColor: NbGlassColors.textMuted,
           ),

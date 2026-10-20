@@ -1,6 +1,7 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:next_bank/core/ui/pix/pix_mark.dart';
 
 // The official Pix symbol, by the developer's exception to the rule on
 // third-party marks (week 8 plan, V6): drawn from its path, no dependency.

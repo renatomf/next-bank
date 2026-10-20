@@ -1,6 +1,4 @@
-import 'package:design_system/src/components/glass_art.dart';
-import 'package:design_system/src/components/next_logo.dart';
-import 'package:design_system/src/tokens.dart';
+import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 
 /// A card as it looks in the hand (v1.1.0 plan, tasks 4.14 and 4.15): the
