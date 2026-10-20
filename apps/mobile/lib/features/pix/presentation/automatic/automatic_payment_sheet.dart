@@ -11,10 +11,6 @@ Future<void> showAutomaticPaymentSheet(
 ) => showModalBottomSheet<void>(
   context: context,
   isScrollControlled: true,
-  backgroundColor: context.nbColors.surface,
-  shape: const RoundedRectangleBorder(
-    borderRadius: BorderRadius.vertical(top: Radius.circular(NbRadius.box)),
-  ),
   builder: (_) => AutomaticPaymentSheet(payment: payment),
 );
 
@@ -31,7 +27,6 @@ class AutomaticPaymentSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.nbColors;
     final profile = ref.watch(profileProvider).value;
     void sayComingSoon() =>
         showNbToast(context, 'Em breve.', icon: Icons.info_outline);
@@ -44,7 +39,7 @@ class AutomaticPaymentSheet extends ConsumerWidget {
           spacing: NbSpace.lg,
           children: [
             _CompanyHeader(payment: payment),
-            Divider(height: 1, color: colors.border),
+            const Divider(),
             _DetailRow(label: 'Valor', value: Text(payment.amount)),
             _DetailRow(
               label: 'Frequência',
@@ -126,13 +121,10 @@ class _CompanyHeader extends StatelessWidget {
                 header: true,
                 child: Text(
                   payment.company,
-                  style: NbType.sectionTitle.copyWith(color: colors.text),
+                  style: context.nbText.sectionTitle,
                 ),
               ),
-              Text(
-                'CNPJ 00.000.000/0000-00',
-                style: NbType.caption.copyWith(color: colors.textMuted),
-              ),
+              Text('CNPJ 00.000.000/0000-00', style: context.nbText.caption),
             ],
           ),
         ),
@@ -162,7 +154,7 @@ class _DetailRow extends StatelessWidget {
         Expanded(
           child: Text(
             label,
-            style: NbType.bodyText.copyWith(color: colors.textMuted),
+            style: context.nbText.bodyText.copyWith(color: colors.textMuted),
           ),
         ),
         const SizedBox(width: NbSpace.md),
@@ -172,7 +164,7 @@ class _DetailRow extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: DefaultTextStyle.merge(
               textAlign: TextAlign.end,
-              style: NbType.bodyText.copyWith(color: colors.text),
+              style: context.nbText.bodyText,
               child: value,
             ),
           ),

@@ -13,7 +13,7 @@ class AccountCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.nbColors;
     final account = ref.watch(accountProvider).value;
-    final detail = NbType.caption.copyWith(color: colors.textMuted);
+    final detail = context.nbText.caption;
 
     return Container(
       padding: const EdgeInsets.all(NbSpace.lg),
@@ -34,7 +34,7 @@ class AccountCard extends ConsumerWidget {
                   account == null
                       ? 'Conta corrente'
                       : 'Conta corrente: ${_lastFour(account.number)}',
-                  style: NbType.bodyStrong.copyWith(color: colors.text),
+                  style: context.nbText.bodyStrong,
                 ),
                 Text('Banco: next bank', style: detail),
                 if (account != null)

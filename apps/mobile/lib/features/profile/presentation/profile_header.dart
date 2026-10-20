@@ -18,7 +18,6 @@ class ProfileHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.nbColors;
     final profile = ref.watch(profileProvider).value;
     final cpf = profile?.cpfMasked;
 
@@ -47,11 +46,7 @@ class ProfileHeader extends ConsumerWidget {
             Flexible(child: switchAccount),
           ],
         ),
-        if (cpf != null)
-          Text(
-            'CPF: $cpf',
-            style: NbType.caption.copyWith(color: colors.textMuted),
-          ),
+        if (cpf != null) Text('CPF: $cpf', style: context.nbText.caption),
       ],
     );
   }

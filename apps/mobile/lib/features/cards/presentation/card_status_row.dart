@@ -36,7 +36,7 @@ class _CardStatusRowState extends State<CardStatusRow> {
           Expanded(
             child: Text(
               _locked ? 'Cartão bloqueado' : 'Cartão desbloqueado',
-              style: NbType.bodyText.copyWith(color: colors.text),
+              style: context.nbText.bodyText,
             ),
           ),
           TextButton(

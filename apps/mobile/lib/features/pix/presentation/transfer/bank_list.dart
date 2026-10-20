@@ -44,7 +44,7 @@ class _BankListState extends State<BankList> {
         if (banks.isEmpty)
           Text(
             'Nenhum banco encontrado.',
-            style: NbType.bodyText.copyWith(color: colors.textMuted),
+            style: context.nbText.bodyText.copyWith(color: colors.textMuted),
           )
         else
           MenuGroup(
@@ -94,16 +94,13 @@ class BankTile extends StatelessWidget {
             children: [
               InitialsAvatar(initials: bank.initials),
               const SizedBox(width: NbSpace.md),
-              Expanded(
-                child: Text(
-                  bank.name,
-                  style: NbType.bodyText.copyWith(color: colors.text),
-                ),
-              ),
+              Expanded(child: Text(bank.name, style: context.nbText.bodyText)),
               const SizedBox(width: NbSpace.sm),
               Text(
                 bank.code,
-                style: NbType.bodyText.copyWith(color: colors.textMuted),
+                style: context.nbText.bodyText.copyWith(
+                  color: colors.textMuted,
+                ),
               ),
             ],
           ),

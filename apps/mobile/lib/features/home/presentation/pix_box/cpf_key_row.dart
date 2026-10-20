@@ -58,15 +58,13 @@ class _CpfLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
     final cpf = cpfMasked;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('CPF', style: NbType.bodyText.copyWith(color: colors.text)),
-        if (cpf != null)
-          Text(cpf, style: NbType.caption.copyWith(color: colors.textMuted)),
+        Text('CPF', style: context.nbText.bodyText),
+        if (cpf != null) Text(cpf, style: context.nbText.caption),
       ],
     );
   }

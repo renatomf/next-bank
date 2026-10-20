@@ -13,7 +13,6 @@ class KeySuggestions extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.nbColors;
     // READ-02: the CPF only as the server masks it.
     final cpf = ref.watch(profileProvider).value?.cpfMasked ?? '';
 
@@ -22,10 +21,7 @@ class KeySuggestions extends ConsumerWidget {
       children: [
         Semantics(
           header: true,
-          child: Text(
-            'Cadastre também:',
-            style: NbType.sectionTitle.copyWith(color: colors.text),
-          ),
+          child: Text('Cadastre também:', style: context.nbText.sectionTitle),
         ),
         const SizedBox(height: NbSpace.md),
         MenuGroup(
@@ -70,17 +66,11 @@ class _SuggestionRow extends StatelessWidget {
                   runSpacing: NbSpace.xs,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Text(
-                      pixKey.type,
-                      style: NbType.bodyStrong.copyWith(color: colors.text),
-                    ),
+                    Text(pixKey.type, style: context.nbText.bodyStrong),
                     if (recommended) const _RecommendedBadge(),
                   ],
                 ),
-                Text(
-                  pixKey.value,
-                  style: NbType.caption.copyWith(color: colors.textMuted),
-                ),
+                Text(pixKey.value, style: context.nbText.caption),
               ],
             ),
           ),
@@ -106,7 +96,7 @@ class _RecommendedBadge extends StatelessWidget {
       ),
       child: Text(
         'Recomendada',
-        style: NbType.cardLabel.copyWith(color: colors.accent),
+        style: context.nbText.cardLabel.copyWith(color: colors.accent),
       ),
     );
   }
@@ -118,21 +108,13 @@ class _OtherDataField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
-
     return Padding(
       padding: const EdgeInsets.all(NbSpace.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Cadastrar com outros dados',
-            style: NbType.bodyStrong.copyWith(color: colors.text),
-          ),
-          Text(
-            'Digite um e-mail ou celular:',
-            style: NbType.caption.copyWith(color: colors.textMuted),
-          ),
+          Text('Cadastrar com outros dados', style: context.nbText.bodyStrong),
+          Text('Digite um e-mail ou celular:', style: context.nbText.caption),
           const SizedBox(height: NbSpace.md),
           const Row(
             children: [

@@ -93,8 +93,6 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
-
     return Scaffold(
       body: GlowBackground(
         child: SafeArea(
@@ -123,11 +121,9 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                     for (final (index, group)
                         in _tabs[_tabController.index].indexed) ...[
                       if (index > 0)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: NbSpace.lg,
-                          ),
-                          child: Divider(height: 1, color: colors.border),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: NbSpace.lg),
+                          child: Divider(),
                         ),
                       group,
                     ],

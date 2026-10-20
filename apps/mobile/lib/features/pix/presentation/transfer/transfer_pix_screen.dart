@@ -82,7 +82,7 @@ class _TransferPixScreenState extends State<TransferPixScreen> {
                       ),
                     ),
                     const SizedBox(height: NbSpace.md),
-                    Divider(height: 1, color: colors.border),
+                    const Divider(),
                     const SizedBox(height: NbSpace.md),
                     if (_byAccount)
                       const BankAccountTab()
@@ -111,8 +111,6 @@ class _TitleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
-
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       spacing: NbSpace.md,
@@ -130,7 +128,7 @@ class _TitleRow extends StatelessWidget {
                   child: Text(
                     'Fazer Pix ou TED',
                     maxLines: 1,
-                    style: NbType.sectionTitle.copyWith(color: colors.text),
+                    style: context.nbText.sectionTitle,
                   ),
                 ),
               ),
@@ -144,7 +142,9 @@ class _TitleRow extends StatelessWidget {
                 showNbToast(context, 'Em breve.', icon: Icons.info_outline),
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: NbSpace.md),
-              textStyle: NbType.caption.copyWith(fontWeight: FontWeight.w700),
+              textStyle: context.nbText.caption.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
             ),
             child: const FittedBox(
               fit: BoxFit.scaleDown,

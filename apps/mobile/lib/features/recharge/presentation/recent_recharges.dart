@@ -107,7 +107,7 @@ class _CardText extends StatelessWidget {
     return Text(
       text,
       textAlign: TextAlign.center,
-      style: NbType.caption.copyWith(
+      style: context.nbText.caption.copyWith(
         color: muted ? colors.textMuted : colors.text,
       ),
     );

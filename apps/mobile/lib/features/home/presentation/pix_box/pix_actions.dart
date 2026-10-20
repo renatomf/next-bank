@@ -24,12 +24,7 @@ class PixActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.nbColors;
-    final divider = VerticalDivider(
-      width: 1,
-      indent: NbSpace.md,
-      endIndent: NbSpace.md,
-      color: colors.border,
-    );
+    const divider = VerticalDivider(indent: NbSpace.md, endIndent: NbSpace.md);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -105,7 +100,7 @@ class _PixAction extends StatelessWidget {
                 child: Text(
                   text,
                   textAlign: TextAlign.center,
-                  style: NbType.caption.copyWith(color: colors.text),
+                  style: context.nbText.caption.copyWith(color: colors.text),
                 ),
               ),
             ],

@@ -40,7 +40,7 @@ class PixAutomaticScreen extends StatelessWidget {
               const SizedBox(height: NbSpace.xl),
               Text(
                 'Gerencie suas contas no Pix Automático',
-                style: NbType.screenTitle.copyWith(color: colors.text),
+                style: context.nbText.screenTitle,
               ),
               const SizedBox(height: NbSpace.lg),
               Align(
@@ -61,7 +61,7 @@ class PixAutomaticScreen extends StatelessWidget {
                     header: true,
                     child: Text(
                       'Cadastradas',
-                      style: NbType.sectionTitle.copyWith(color: colors.text),
+                      style: context.nbText.sectionTitle,
                     ),
                   ),
                 ],

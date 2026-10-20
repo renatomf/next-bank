@@ -53,14 +53,8 @@ class InvestmentLinkCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     spacing: NbSpace.xs,
                     children: [
-                      Text(
-                        title,
-                        style: NbType.bodyStrong.copyWith(color: colors.text),
-                      ),
-                      Text(
-                        description,
-                        style: NbType.caption.copyWith(color: colors.textMuted),
-                      ),
+                      Text(title, style: context.nbText.bodyStrong),
+                      Text(description, style: context.nbText.caption),
                     ],
                   ),
                 ),

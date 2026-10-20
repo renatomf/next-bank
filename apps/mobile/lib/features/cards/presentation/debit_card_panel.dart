@@ -12,7 +12,6 @@ class DebitCardPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
     void sayComingSoon() =>
         showNbToast(context, 'Em breve.', icon: Icons.info_outline);
 
@@ -43,7 +42,7 @@ class DebitCardPanel extends StatelessWidget {
             Expanded(
               child: Text(
                 'Configurações rápidas',
-                style: NbType.sectionTitle.copyWith(color: colors.text),
+                style: context.nbText.sectionTitle,
               ),
             ),
             TextButton(
@@ -100,13 +99,13 @@ class _PreApprovedBox extends StatelessWidget {
         children: [
           Text(
             'Você tem $limit de limite pré-aprovado',
-            style: NbType.bodyStrong.copyWith(color: colors.text),
+            style: context.nbText.bodyStrong,
           ),
-          Divider(height: 1, color: colors.border),
+          const Divider(),
           Text(
             'Mais liberdade nas suas compras: ative a função crédito do seu '
             'cartão e comece a usar.',
-            style: NbType.caption.copyWith(color: colors.textMuted),
+            style: context.nbText.caption,
           ),
           TextButton(onPressed: onActivate, child: const Text('Ativar')),
         ],

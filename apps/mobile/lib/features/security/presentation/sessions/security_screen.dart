@@ -174,12 +174,12 @@ class _SessionTile extends ConsumerWidget {
               children: [
                 Text(
                   session.current ? '$name · Este aparelho' : name,
-                  style: NbType.bodyText.copyWith(color: colors.text),
+                  style: context.nbText.bodyText,
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'Último uso: ${movementTime(session.lastUsedAt, now)}',
-                  style: NbType.caption.copyWith(color: colors.textMuted),
+                  style: context.nbText.caption,
                 ),
               ],
             ),
@@ -246,15 +246,9 @@ class _Action extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        title,
-                        style: NbType.bodyText.copyWith(color: colors.text),
-                      ),
+                      Text(title, style: context.nbText.bodyText),
                       const SizedBox(height: 2),
-                      Text(
-                        caption,
-                        style: NbType.caption.copyWith(color: colors.textMuted),
-                      ),
+                      Text(caption, style: context.nbText.caption),
                     ],
                   ),
                 ),

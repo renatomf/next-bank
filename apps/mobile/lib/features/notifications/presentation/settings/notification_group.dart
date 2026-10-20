@@ -29,8 +29,6 @@ class NotificationGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -39,22 +37,14 @@ class NotificationGroup extends StatelessWidget {
           child: Text(title, style: Theme.of(context).textTheme.titleMedium),
         ),
         const SizedBox(height: NbSpace.xs),
-        Text(
-          description,
-          style: NbType.caption.copyWith(color: colors.textMuted),
-        ),
+        Text(description, style: context.nbText.caption),
         const SizedBox(height: NbSpace.sm),
         for (final channel in channels)
           // The channel's name is read with its switch.
           MergeSemantics(
             child: Row(
               children: [
-                Expanded(
-                  child: Text(
-                    channel,
-                    style: NbType.bodyText.copyWith(color: colors.text),
-                  ),
-                ),
+                Expanded(child: Text(channel, style: context.nbText.bodyText)),
                 // A little smaller than Material's, at the developer's
                 // request; scaling keeps the touch area.
                 Transform.scale(

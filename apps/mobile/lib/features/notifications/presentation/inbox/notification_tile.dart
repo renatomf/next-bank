@@ -36,8 +36,6 @@ class NotificationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
-
     return Semantics(
       button: true,
       label: '$category, $date. $preview. $unread não lidas',
@@ -64,18 +62,11 @@ class NotificationTile extends StatelessWidget {
                             category,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: NbType.bodyStrong.copyWith(
-                              color: colors.text,
-                            ),
+                            style: context.nbText.bodyStrong,
                           ),
                         ),
                         const SizedBox(width: NbSpace.sm),
-                        Text(
-                          date,
-                          style: NbType.caption.copyWith(
-                            color: colors.textMuted,
-                          ),
-                        ),
+                        Text(date, style: context.nbText.caption),
                       ],
                     ),
                     Row(
@@ -85,9 +76,7 @@ class NotificationTile extends StatelessWidget {
                             preview,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: NbType.caption.copyWith(
-                              color: colors.textMuted,
-                            ),
+                            style: context.nbText.caption,
                           ),
                         ),
                         const SizedBox(width: NbSpace.sm),
@@ -139,7 +128,7 @@ class _UnreadBadge extends StatelessWidget {
       decoration: BoxDecoration(color: colors.primary, shape: BoxShape.circle),
       child: Text(
         '$count',
-        style: NbType.cardLabel.copyWith(color: colors.onPrimary),
+        style: context.nbText.cardLabel.copyWith(color: colors.onPrimary),
       ),
     );
   }

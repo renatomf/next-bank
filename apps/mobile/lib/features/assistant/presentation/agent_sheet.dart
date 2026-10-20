@@ -8,10 +8,6 @@ Future<void> showAgentSheet(BuildContext context) async {
   final picked = await showModalBottomSheet<AssistantAgent>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: context.nbColors.surface,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(NbRadius.box)),
-    ),
     builder: (_) => const AgentSheet(),
   );
   if (picked != null && context.mounted) {
@@ -27,8 +23,6 @@ class AgentSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
-
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(NbSpace.screen),
@@ -43,7 +37,7 @@ class AgentSheet extends StatelessWidget {
                     header: true,
                     child: Text(
                       'Qual agente quer usar?',
-                      style: NbType.screenTitle.copyWith(color: colors.text),
+                      style: context.nbText.screenTitle,
                     ),
                   ),
                 ),
@@ -97,14 +91,8 @@ class _AgentRow extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     spacing: NbSpace.xs,
                     children: [
-                      Text(
-                        agent.name,
-                        style: NbType.bodyStrong.copyWith(color: colors.text),
-                      ),
-                      Text(
-                        agent.description,
-                        style: NbType.caption.copyWith(color: colors.textMuted),
-                      ),
+                      Text(agent.name, style: context.nbText.bodyStrong),
+                      Text(agent.description, style: context.nbText.caption),
                     ],
                   ),
                 ),

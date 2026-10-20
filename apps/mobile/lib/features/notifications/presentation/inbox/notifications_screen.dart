@@ -32,7 +32,6 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
     final today = ref.watch(nowProvider)();
 
     return Scaffold(
@@ -79,7 +78,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                     final day = today.subtract(Duration(days: index ~/ 2));
                     return Column(
                       children: [
-                        if (index > 0) Divider(height: 1, color: colors.border),
+                        if (index > 0) const Divider(),
                         NotificationTile(
                           icon: example.icon,
                           category: example.category,

@@ -89,7 +89,7 @@ class _AttachMenu extends StatelessWidget {
             leadingIcon: Icon(icon, size: NbSize.icon, color: colors.accent),
             style: MenuItemButton.styleFrom(
               foregroundColor: colors.text,
-              textStyle: NbType.bodyText,
+              textStyle: context.nbText.bodyText,
               padding: const EdgeInsets.symmetric(horizontal: NbSpace.lg),
               minimumSize: const Size(0, NbSize.button),
             ),

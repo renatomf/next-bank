@@ -220,7 +220,7 @@ class _Party extends StatelessWidget {
           ),
         ),
         const SizedBox(height: NbSpace.md),
-        Text(name, style: NbType.bodyStrong.copyWith(color: colors.text)),
+        Text(name, style: context.nbText.bodyStrong),
         const SizedBox(height: 2),
         Text(detail, style: text.bodySmall?.copyWith(color: colors.textMuted)),
       ],
