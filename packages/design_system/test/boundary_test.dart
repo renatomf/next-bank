@@ -41,4 +41,33 @@ void main() {
 
     expect(violations, isEmpty, reason: violations.join('\n'));
   });
+
+  // ADR 0014 (G3): four layers, each built only on the ones before it, so a
+  // token never depends on a widget and a component never on a pattern.
+  test('every file sits in a layer and imports only the layers before it', () {
+    const layers = ['tokens', 'theme', 'components', 'patterns'];
+    final layerOf = RegExp(r'src[/\\](\w+)[/\\]');
+    final importedLayer = RegExp(r"^import 'package:design_system/src/(\w+)/");
+
+    final violations = <String>[];
+    for (final file in Directory('lib/src').listSync(recursive: true)) {
+      if (file is! File || !file.path.endsWith('.dart')) continue;
+      final layer = layerOf.firstMatch(file.path)?[1];
+      if (!layers.contains(layer)) {
+        violations.add(
+          '${file.path}: not in tokens/, theme/, components/ '
+          'or patterns/',
+        );
+        continue;
+      }
+      for (final line in file.readAsLinesSync()) {
+        final target = importedLayer.firstMatch(line)?[1];
+        if (target != null && layers.indexOf(target) > layers.indexOf(layer!)) {
+          violations.add('${file.path}: $layer cannot import $target');
+        }
+      }
+    }
+
+    expect(violations, isEmpty, reason: violations.join('\n'));
+  });
 }
