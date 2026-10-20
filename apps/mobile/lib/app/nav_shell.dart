@@ -40,7 +40,7 @@ class NavShell extends StatelessWidget {
         ],
         trailing: const [
           // Short enough for the bar (S21 checkpoint).
-          (icon: Icons.stacked_line_chart, label: 'Invest'),
+          (icon: Icons.analytics_outlined, label: 'Invest'),
           (icon: Icons.more_horiz, label: 'Menu'),
         ],
         // The official symbol, by the developer's exception (week 8 plan, V6).
