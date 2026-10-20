@@ -174,12 +174,7 @@ export class CustomerLedgerAccounts {
     if (!account) throw new Error(`No ledger account for account ${accountId}`);
 
     // One more than a page tells whether another page follows.
-    const rows = await repository.statementPage(
-      account.id,
-      after,
-      STATEMENT_PAGE_SIZE + 1,
-      filter,
-    );
+    const rows = await repository.statementPage(account.id, after, STATEMENT_PAGE_SIZE + 1, filter);
     const page = rows.slice(0, STATEMENT_PAGE_SIZE);
     const last = page.at(-1);
     return {
