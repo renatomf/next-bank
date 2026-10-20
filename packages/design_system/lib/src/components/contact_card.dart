@@ -35,7 +35,7 @@ class ContactCard extends StatelessWidget {
         padding: const EdgeInsets.all(NbSpace.lg),
         decoration: BoxDecoration(
           color: colors.surface,
-          borderRadius: BorderRadius.circular(NbRadius.block),
+          borderRadius: BorderRadius.circular(NbRadius.box),
           border: Border.all(
             color: selected ? colors.accent : colors.border,
             width: selected ? 1.5 : 1,

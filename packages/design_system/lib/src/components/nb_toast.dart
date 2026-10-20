@@ -95,7 +95,7 @@ class _NbToastState extends State<NbToast> {
           color: colors.surface2,
           elevation: 6,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(NbRadius.block),
+            borderRadius: BorderRadius.circular(NbRadius.box),
             side: BorderSide(color: colors.border),
           ),
           child: Padding(

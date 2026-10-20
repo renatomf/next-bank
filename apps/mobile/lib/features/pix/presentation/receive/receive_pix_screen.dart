@@ -72,7 +72,7 @@ class _ReceivePixScreenState extends ConsumerState<ReceivePixScreen> {
               else if (code != null) ...[
                 Center(
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(NbRadius.block),
+                    borderRadius: BorderRadius.circular(NbRadius.box),
                     child: QrCodeView(
                       data: code,
                       semanticLabel: 'QR Code para receber o Pix',

@@ -53,7 +53,7 @@ class BiometricsTile extends ConsumerWidget {
         child: Material(
           color: colors.surface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(NbRadius.block),
+            borderRadius: BorderRadius.circular(NbRadius.box),
             side: BorderSide(color: colors.border),
           ),
           clipBehavior: Clip.antiAlias,

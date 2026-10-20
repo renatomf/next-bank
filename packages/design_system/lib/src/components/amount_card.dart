@@ -35,16 +35,16 @@ class AmountCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final balance = balanceCents;
-    final label = NbType.bodyText.copyWith(color: NbBalanceCardColors.text);
-    final small = NbType.caption.copyWith(color: NbBalanceCardColors.textMuted);
+    final label = NbType.bodyText.copyWith(color: NbGlassColors.text);
+    final small = NbType.caption.copyWith(color: NbGlassColors.textMuted);
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(NbRadius.card),
-        border: Border.all(color: NbBalanceCardColors.border),
+        border: Border.all(color: NbGlassColors.border),
         // The balance card's mint glow underneath, so both cards match.
         boxShadow: const [
           BoxShadow(
-            color: NbBalanceCardColors.shadow,
+            color: NbGlassColors.shadow,
             offset: Offset(0, 18),
             blurRadius: 42,
             spreadRadius: -12,
@@ -58,7 +58,7 @@ class AmountCard extends StatelessWidget {
             const Positioned.fill(child: GlassArt()),
             // The texts sit right on the art: the deep tint keeps them AA.
             const Positioned.fill(
-              child: ColoredBox(color: NbBalanceCardColors.tintDeep),
+              child: ColoredBox(color: NbGlassColors.tintDeep),
             ),
             Padding(
               padding: const EdgeInsets.all(NbSpace.screen),
@@ -76,8 +76,8 @@ class AmountCard extends StatelessWidget {
                           alignment: Alignment.centerLeft,
                           child: MoneyText(
                             cents: cents,
-                            color: NbBalanceCardColors.text,
-                            mutedColor: NbBalanceCardColors.textMuted,
+                            color: NbGlassColors.text,
+                            mutedColor: NbGlassColors.textMuted,
                           ),
                         ),
                       ),
@@ -87,9 +87,9 @@ class AmountCard extends StatelessWidget {
                           icon: Icons.edit_outlined,
                           label: 'Digitar o valor',
                           onPressed: onEdit,
-                          background: NbBalanceCardColors.button,
-                          foreground: NbBalanceCardColors.text,
-                          borderColor: NbBalanceCardColors.buttonBorder,
+                          background: NbGlassColors.button,
+                          foreground: NbGlassColors.text,
+                          borderColor: NbGlassColors.buttonBorder,
                           iconSize: 18,
                         )
                       else
@@ -99,7 +99,7 @@ class AmountCard extends StatelessWidget {
                             child: Icon(
                               Icons.lock_outline,
                               size: 20,
-                              color: NbBalanceCardColors.text,
+                              color: NbGlassColors.text,
                             ),
                           ),
                         ),
@@ -113,7 +113,7 @@ class AmountCard extends StatelessWidget {
                         const Skeleton(
                           width: 96,
                           height: 14,
-                          color: NbBalanceCardColors.placeholder,
+                          color: NbGlassColors.placeholder,
                         )
                       else
                         Semantics(
@@ -128,7 +128,7 @@ class AmountCard extends StatelessWidget {
                                 ? r'R$ ••••••'
                                 : formatReais(balance).full,
                             style: NbType.caption.copyWith(
-                              color: NbBalanceCardColors.text,
+                              color: NbGlassColors.text,
                               fontWeight: FontWeight.w700,
                               fontVariations: const [FontVariation.weight(700)],
                             ),

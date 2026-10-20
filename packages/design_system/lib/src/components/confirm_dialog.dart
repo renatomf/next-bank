@@ -54,7 +54,7 @@ class ConfirmDialog extends StatelessWidget {
     return AlertDialog(
       backgroundColor: colors.surface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(NbRadius.block),
+        borderRadius: BorderRadius.circular(NbRadius.box),
       ),
       title: Text(
         title,

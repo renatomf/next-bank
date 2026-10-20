@@ -159,7 +159,7 @@ class _SessionTile extends ConsumerWidget {
       padding: const EdgeInsets.all(NbSpace.lg),
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(NbRadius.block),
+        borderRadius: BorderRadius.circular(NbRadius.box),
         border: Border.all(color: colors.border),
       ),
       child: Row(
@@ -230,7 +230,7 @@ class _Action extends StatelessWidget {
       child: Material(
         color: colors.surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(NbRadius.block),
+          borderRadius: BorderRadius.circular(NbRadius.box),
           side: BorderSide(color: colors.border),
         ),
         clipBehavior: Clip.antiAlias,

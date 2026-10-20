@@ -143,8 +143,11 @@ void main() {
       await pump(tester, const NbIconCircle(icon: Icons.bolt));
 
       expect(
-        find.descendant(
-          of: find.byType(NbIconCircle),
+        find.ancestor(
+          of: find.descendant(
+            of: find.byType(NbIconCircle),
+            matching: find.byType(Container),
+          ),
           matching: find.byType(ExcludeSemantics),
         ),
         findsOneWidget,
@@ -241,14 +244,14 @@ void main() {
         tester
             .widget<Transform>(
               find
-                  .ancestor(
-                    of: find.byType(Switch),
+                  .descendant(
+                    of: find.byType(NbSwitch),
                     matching: find.byType(Transform),
                   )
                   .first,
             )
             .transform
-            .getMaxScaleOnAxis(),
+            .entry(0, 0),
         0.75,
       );
       await tester.tap(find.byType(Switch));
