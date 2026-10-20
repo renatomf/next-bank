@@ -10,7 +10,6 @@ import 'package:next_bank/core/profile/profile.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/app_lock.dart';
 import 'package:next_bank/core/session/session_controller.dart';
-import 'package:next_bank/features/areas/presentation/area_placeholder_screen.dart';
 import 'package:next_bank/features/assistant/presentation/assistant_screen.dart';
 import 'package:next_bank/features/auth/presentation/create_pin/create_pin_screen.dart';
 import 'package:next_bank/features/auth/presentation/login/login_screen.dart';
@@ -21,6 +20,7 @@ import 'package:next_bank/features/auth/presentation/splash/splash_screen.dart';
 import 'package:next_bank/features/cards/presentation/cards_screen.dart';
 import 'package:next_bank/features/help/presentation/help_screen.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
+import 'package:next_bank/features/investments/presentation/investments_screen.dart';
 import 'package:next_bank/features/menu/presentation/menu_screen.dart';
 import 'package:next_bank/features/notifications/presentation/inbox/notifications_screen.dart';
 import 'package:next_bank/features/notifications/presentation/settings/notification_settings_screen.dart';
@@ -141,13 +141,10 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
             ),
           ),
           // v1.1.0 plan, task 4.11: title only, until their layouts.
-          for (final (path, title) in [
-            (AppRoutes.investments, 'Investimentos'),
-          ])
-            GoRoute(
-              path: path,
-              builder: (_, _) => AreaPlaceholderScreen(title: title),
-            ),
+          GoRoute(
+            path: AppRoutes.investments,
+            builder: (_, _) => const InvestmentsScreen(),
+          ),
           GoRoute(
             path: AppRoutes.cards,
             builder: (_, state) {
