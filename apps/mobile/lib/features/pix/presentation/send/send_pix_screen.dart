@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/account/account_providers.dart';
+import 'package:next_bank/core/cpf.dart';
 import 'package:next_bank/core/cpf_input_formatter.dart';
 import 'package:next_bank/features/pix/domain/pix_amount.dart';
 import 'package:next_bank/features/pix/presentation/pix_formats.dart';
@@ -17,11 +20,16 @@ class SendPixScreen extends ConsumerStatefulWidget {
     required this.onBack,
     required this.onReceive,
     required this.onReview,
+    this.initialCpf,
     super.key,
   });
 
   /// Leaves the Pix.
   final VoidCallback onBack;
+
+  /// A CPF key, in digits, to open with, filled in and looked up: the one
+  /// typed in the Home's Pix box (v1.1.0 plan, task 4.2).
+  final String? initialCpf;
 
   /// Opens "Receber", with the QR Code (v1.1.0 plan, task 3).
   final VoidCallback onReceive;
@@ -36,11 +44,30 @@ class SendPixScreen extends ConsumerStatefulWidget {
 class _SendPixScreenState extends ConsumerState<SendPixScreen> {
   final _amount = FocusNode();
   final _description = TextEditingController();
+  late final _cpf = TextEditingController(
+    text: widget.initialCpf == null ? null : formatCpf(widget.initialCpf!),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    final cpf = _cpf.text;
+    if (cpf.isNotEmpty) {
+      // After the first frame: a provider cannot change during a build.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        unawaited(
+          (ref.read(sendPixControllerProvider.notifier)..typeKey(cpf)).lookup(),
+        );
+      });
+    }
+  }
 
   @override
   void dispose() {
     _amount.dispose();
     _description.dispose();
+    _cpf.dispose();
     super.dispose();
   }
 
@@ -158,6 +185,7 @@ class _SendPixScreenState extends ConsumerState<SendPixScreen> {
               ] else
                 NbTextField(
                   label: 'Chave CPF',
+                  controller: _cpf,
                   keyboardType: TextInputType.number,
                   textInputAction: TextInputAction.search,
                   // Digits only; the mask shows as they are typed (v1.1.0

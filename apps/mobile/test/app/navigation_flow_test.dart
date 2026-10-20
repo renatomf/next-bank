@@ -2,7 +2,10 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/api_failure.dart';
+import 'package:next_bank/features/cards/presentation/cards_screen.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
+import 'package:next_bank/features/investments/presentation/investments_screen.dart';
+import 'package:next_bank/features/menu/presentation/menu_screen.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
 import 'package:next_bank/features/profile/presentation/profile_screen.dart';
 import 'package:next_bank/features/security/presentation/change_pin/change_pin_screen.dart';
@@ -34,6 +37,15 @@ Future<void> tapBar(WidgetTester tester, String label) async {
   await tester.pumpAndSettle();
 }
 
+/// The profile's Configurações tab, from the Home's header (v1.1.0 plan,
+/// tasks 4.4 and 4.11).
+Future<void> openProfileSettings(WidgetTester tester) async {
+  await tester.tap(find.bySemanticsLabel('Abrir perfil'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Configurações'));
+  await tester.pumpAndSettle();
+}
+
 // The floating bar through the real router (week 7 plan, D7;
 // domain-model.md 10).
 void main() {
@@ -41,22 +53,30 @@ void main() {
     await openHome(tester);
     expect(bar, findsOneWidget);
 
-    for (final (label, screen) in [
-      ('Extrato', StatementScreen),
-      ('Segurança', SecurityScreen),
-      ('Perfil', ProfileScreen),
-    ]) {
-      await tapBar(tester, label);
-      expect(find.byType(screen), findsOneWidget, reason: label);
-      expect(
-        tester.getSemantics(
-          find.descendant(of: bar, matching: find.bySemanticsLabel(label)),
-        ),
-        isSemantics(label: label, isSelected: true, isButton: true),
-      );
-    }
+    // v1.1.0 plan, task 4.16: Invest opens the investments' tabs.
+    await tapBar(tester, 'Invest');
+    expect(find.byType(InvestmentsScreen), findsOneWidget);
+    expect(
+      tester.getSemantics(
+        find.descendant(of: bar, matching: find.bySemanticsLabel('Invest')),
+      ),
+      isSemantics(label: 'Invest', isSelected: true, isButton: true),
+    );
+    // v1.1.0 plan, task 4.14: Cartões is the cards' carousel.
+    await tapBar(tester, 'Cartões');
+    expect(find.byType(CardsScreen), findsOneWidget);
+
+    // v1.1.0 plan, task 4.13: the Menu is the full menu.
+    await tapBar(tester, 'Menu');
+    expect(find.byType(MenuScreen), findsOneWidget);
+    expect(
+      tester.getSemantics(
+        find.descendant(of: bar, matching: find.bySemanticsLabel('Menu')),
+      ),
+      isSemantics(label: 'Menu', isSelected: true, isButton: true),
+    );
     await tapBar(tester, 'Início');
-    expect(find.text('Últimas movimentações'), findsOneWidget);
+    expect(find.text('Digite ou cole uma chave CPF'), findsOneWidget);
   });
 
   // Week 8 plan, V1 and V4: docked at the bottom, the bar never covers the
@@ -66,7 +86,7 @@ void main() {
   ) async {
     await openHome(tester);
 
-    for (final label in ['Início', 'Extrato', 'Pix', 'Segurança', 'Perfil']) {
+    for (final label in ['Início', 'Cartões', 'Pix', 'Invest', 'Menu']) {
       expect(
         find.descendant(of: bar, matching: find.text(label)),
         findsOneWidget,
@@ -78,6 +98,30 @@ void main() {
       lessThanOrEqualTo(tester.getRect(bar).top),
     );
   });
+
+  // S21 checkpoint: Invest, short enough for the bar, shows a framed chart,
+  // as the reference.
+  testWidgets('shows a framed chart on Invest', (tester) async {
+    await openHome(tester);
+
+    expect(
+      find.descendant(of: bar, matching: find.byIcon(Icons.analytics_outlined)),
+      findsOneWidget,
+    );
+  });
+
+  // S21 checkpoint: each area of the bar goes back to the Home, as the Pix.
+  for (final label in ['Cartões', 'Invest', 'Menu']) {
+    testWidgets('goes back to the Home from $label', (tester) async {
+      await openHome(tester);
+      await tapBar(tester, label);
+
+      await tester.tap(find.bySemanticsLabel('Voltar'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(HomeScreen), findsOneWidget);
+    });
+  }
 
   // D7: the flows open over the areas, without the bar.
   testWidgets('the Pix opens over the bar, and back returns to it', (
@@ -94,13 +138,14 @@ void main() {
     expect(bar, findsOneWidget);
   });
 
-  testWidgets('the PIN change opens over Security, without the bar', (
+  // v1.1.0 plan, task 4.11: Security left the bar; the profile reaches it.
+  testWidgets('the PIN change opens from the profile, without the bar', (
     tester,
   ) async {
     await openHome(tester);
-    await tapBar(tester, 'Segurança');
+    await openProfileSettings(tester);
 
-    await tester.tap(find.bySemanticsLabel(RegExp('Trocar PIN')).first);
+    await tester.tap(find.bySemanticsLabel('Trocar PIN'));
     await tester.pumpAndSettle();
 
     expect(find.byType(ChangePinScreen), findsOneWidget);
@@ -115,8 +160,21 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(StatementScreen), findsOneWidget);
-    expect(find.bySemanticsLabel('Voltar'), findsNothing);
     expect(bar, findsOneWidget);
+  });
+
+  // v1.1.0 plan, task 4.1 (developer's call): the statement always has a
+  // back arrow, which returns to the Home.
+  testWidgets('goes back to the Home from the statement', (tester) async {
+    await openHome(tester);
+    await tester.tap(find.bySemanticsLabel('Ver extrato'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.bySemanticsLabel('Voltar'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(StatementScreen), findsNothing);
+    expect(find.byType(HomeScreen), findsOneWidget);
   });
 
   testWidgets('the profile shows the customer and the masked account', (
@@ -124,11 +182,14 @@ void main() {
   ) async {
     await openHome(tester);
 
-    await tapBar(tester, 'Perfil');
+    await tester.tap(find.bySemanticsLabel('Abrir perfil'));
+    await tester.pumpAndSettle();
 
     expect(find.text('Ana Souza'), findsOneWidget);
-    expect(find.text('next bank · Ag 0001 · Conta •••• 0004'), findsOneWidget);
-    await tester.tap(find.bySemanticsLabel(RegExp('^Segurança,')));
+    expect(find.text('Conta corrente: •••• 0004'), findsOneWidget);
+    await tester.tap(find.text('Configurações'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('Aparelhos conectados e biometria'));
     await tester.pumpAndSettle();
     expect(find.byType(SecurityScreen), findsOneWidget);
   });
@@ -139,7 +200,7 @@ void main() {
   ) async {
     final clock = FakeMonotonicClock();
     await openHome(tester, clock: clock);
-    await tapBar(tester, 'Perfil');
+    await tapBar(tester, 'Invest');
 
     [
       AppLifecycleState.inactive,
@@ -159,7 +220,7 @@ void main() {
   });
 
   // D5, end to end: a locked PIN offers only "Sair"; the password signs back
-  // in and resets the PIN on Profile > Segurança > Trocar PIN.
+  // in and resets the PIN on Profile > Configurações > Trocar PIN.
   testWidgets('recovers a locked PIN with the password', (tester) async {
     tester.view.physicalSize = const Size(1080, 3600);
     addTearDown(tester.view.reset);
@@ -183,10 +244,8 @@ void main() {
     await tester.enterText(find.byType(TextField).at(1), 'a long passphrase');
     await tester.tap(find.widgetWithText(FilledButton, 'Entrar'));
     await tester.pumpAndSettle();
-    await tapBar(tester, 'Perfil');
-    await tester.tap(find.bySemanticsLabel(RegExp('^Segurança,')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.bySemanticsLabel(RegExp('Trocar PIN')).first);
+    await openProfileSettings(tester);
+    await tester.tap(find.bySemanticsLabel('Trocar PIN'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).at(0), 'a long passphrase');
     await tester.enterText(find.byType(TextField).at(1), '1597');
@@ -198,7 +257,7 @@ void main() {
       (password: 'a long passphrase', newPin: '1597'),
     ]);
     expect(find.text('PIN alterado.'), findsOneWidget);
-    expect(find.byType(SecurityScreen), findsOneWidget);
+    expect(find.byType(ProfileScreen), findsOneWidget);
   });
 
   // Brief, section 8: system font scale up to 1.3x on a small phone. Found
@@ -215,8 +274,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
 
-    await tapBar(tester, 'Perfil');
-
+    await tester.tap(find.bySemanticsLabel('Abrir perfil'));
+    await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+
+    // v1.1.0 plan, task 4.11: the new areas fit too.
+    for (final label in ['Cartões', 'Invest', 'Menu']) {
+      await tapBar(tester, label);
+      expect(tester.takeException(), isNull, reason: label);
+    }
   });
 }

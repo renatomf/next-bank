@@ -37,8 +37,21 @@ export interface LedgerPort {
     tx: Transaction,
     accountId: string,
     after: StatementPosition | null,
+    filter: StatementFilter,
   ): Promise<StatementPage>;
 }
+
+/**
+ * What narrows a statement page (v1.1.0 plan, task 4.1): one kind at a time
+ * and part of the counterparty's name, both optional.
+ */
+export interface StatementFilter {
+  kind: 'IN' | 'OUT' | 'PIX' | 'RECEIPT' | null;
+  search: string | null;
+}
+
+/** No filter: the whole statement. */
+export const NO_STATEMENT_FILTER: StatementFilter = { kind: null, search: null };
 
 /** Where a statement page ends; opaque to Accounts, which only passes it back. */
 export interface StatementPosition {

@@ -29,7 +29,11 @@ class StatementDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final statement = ref.watch(statementProvider);
+    // Opened from the statement screen, the movement may be only in its
+    // filtered list; from the Home, in the whole statement.
+    final statement = ref.exists(filteredStatementProvider)
+        ? ref.watch(filteredStatementProvider)
+        : ref.watch(statementProvider);
     return Scaffold(
       body: GlowBackground(
         child: SafeArea(

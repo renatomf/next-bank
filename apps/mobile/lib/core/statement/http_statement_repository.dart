@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/statement/statement_item.dart';
+import 'package:next_bank/core/statement/statement_query.dart';
 import 'package:next_bank/core/statement/statement_repository.dart';
 import 'package:nextbank_api/nextbank_api.dart' as api;
 
@@ -16,10 +17,23 @@ class HttpStatementRepository implements StatementRepository {
   final api.DefaultApi _api;
 
   @override
-  Future<StatementPage> page([String? cursor]) async {
+  Future<StatementPage> page({
+    String? cursor,
+    StatementQuery query = allMovements,
+  }) async {
     final api.Statement? statement;
     try {
-      statement = (await _api.getMyStatement(cursor: cursor)).data;
+      statement = (await _api.getMyStatement(
+        cursor: cursor,
+        filter: switch (query.filter) {
+          null => null,
+          StatementFilter.incoming => 'IN',
+          StatementFilter.outgoing => 'OUT',
+          StatementFilter.pix => 'PIX',
+          StatementFilter.receipt => 'RECEIPT',
+        },
+        q: query.search,
+      )).data;
     } on DioException catch (error) {
       throw apiFailureOf(error);
     }

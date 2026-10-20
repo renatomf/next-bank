@@ -16,7 +16,7 @@ class HttpProfileRepository implements ProfileRepository {
   Future<Profile> fetch() async {
     try {
       final me = (await _api.getMe()).data!;
-      return Profile(name: me.name, hasPin: me.hasPin);
+      return Profile(name: me.name, cpfMasked: me.cpfMasked, hasPin: me.hasPin);
     } on DioException catch (error) {
       throw apiFailureOf(error);
     }

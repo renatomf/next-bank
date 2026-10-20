@@ -29,6 +29,15 @@ abstract final class AppRoutes {
   /// task 4).
   static const String pixScan = '$pix/scan';
 
+  /// Transferring a Pix (v1.1.0 plan, task 4.2): blank for now.
+  static const String pixTransfer = '$pix/transfer';
+
+  /// Pix Automático (v1.1.0 plan, task 4.2): blank for now.
+  static const String pixAutomatic = '$pix/automatic';
+
+  /// The customer's Pix keys (v1.1.0 plan, task 4.2): blank for now.
+  static const String pixKeys = '$pix/keys';
+
   /// Receiving a Pix by QR Code (v1.1.0 plan, task 3).
   static const String pixReceive = '$pix/receive';
 
@@ -48,8 +57,53 @@ abstract final class AppRoutes {
   /// The detail of the movement [itemId] (screen 12).
   static String statementItem(String itemId) => '$statement/$itemId';
 
+  /// Help, over the Home (v1.1.0 plan, task 4.5).
+  static const String help = '/help';
+
+  /// Recargas, over the Home (v1.1.0 plan, task 4.12).
+  static const String recharge = '/recharge';
+
+  /// The amount of a recharge, over the carriers.
+  static const String rechargeAmount = '$recharge/amount';
+
+  /// The assistant, over the Home (v1.1.0 plan, task 4.10).
+  static const String assistant = '/assistant';
+
+  /// Notifications, over the Home (v1.1.0 plan, task 4.6).
+  static const String notifications = '/notifications';
+
+  /// The notification settings, over the notifications.
+  static const String notificationSettings = '$notifications/settings';
+
+  /// Cartões, an area of the bar (v1.1.0 plan, task 4.11).
+  static const String cards = '/cards';
+
+  /// Investimentos, an area of the bar.
+  static const String investments = '/investments';
+
+  /// The full menu, an area of the bar.
+  static const String menu = '/menu';
+
   /// The customer and the way out (screen 13).
   static const String profile = '/profile';
+
+  /// The theme picker, over the profile (v1.1.0 plan, task 4.4).
+  static const String profileTheme = '$profile/theme';
+
+  /// Security opened from the profile, over it, with the way back.
+  static const String profileSecurity = '$profile/security';
+
+  /// Blank for now: the customer's registration data.
+  static const String personalData = '$profile/personal-data';
+
+  /// Blank for now: an account shared with someone else.
+  static const String sharedAccount = '$profile/shared-account';
+
+  /// Blank for now: inviting friends.
+  static const String inviteFriends = '$profile/invite-friends';
+
+  /// Blank for now: the customer's accounts.
+  static const String manageAccounts = '$profile/manage-accounts';
 
   /// Sessions and credentials (screen 14).
   static const String security = '/security';

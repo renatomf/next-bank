@@ -41,9 +41,9 @@ statementOf(List<String> ids) {
   return (repository: repository, arrive: (ids) => current = ids);
 }
 
-// Found on a device: with the app open, a Pix received never showed, neither
-// in the balance nor in the latest movements. The Home reads both again when
-// the app comes back and when the customer pulls it down.
+// Found on a device: with the app open, a Pix received never showed in the
+// balance. The Home reads it again when the app comes back and when the
+// customer pulls it down. (Its latest movements left in v1.1.0, task 4.2.)
 void main() {
   late FakeAccountRepository account;
 
@@ -65,13 +65,12 @@ void main() {
     await showBalance(tester);
   }
 
-  testWidgets('reads the balance and movements again when the app comes back', (
+  testWidgets('reads the balance again when the app comes back', (
     tester,
   ) async {
     final statement = statementOf(['funding']);
     await openHome(tester, statement.repository);
     expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
-    expect(find.text('Pix recebido'), findsNothing);
 
     account.balanceCents = 1010000;
     statement.arrive(['received', 'funding']);
@@ -79,10 +78,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.bySemanticsLabel(r'R$ 10.100,00'), findsOneWidget);
-    expect(find.text('Pix recebido'), findsOneWidget);
   });
 
-  testWidgets('reads them again when the customer pulls the Home down', (
+  testWidgets('reads it again when the customer pulls the Home down', (
     tester,
   ) async {
     final statement = statementOf(['funding']);
@@ -98,7 +96,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.bySemanticsLabel(r'R$ 10.100,00'), findsOneWidget);
-    expect(find.text('Pix recebido'), findsOneWidget);
   });
 
   // Found on a device (week 8 plan, V1): offline, a pull replaced the balance
@@ -126,7 +123,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.bySemanticsLabel(r'R$ 10.000,00'), findsOneWidget);
-    expect(find.text('Pix recebido'), findsOneWidget);
     expect(find.byType(ErrorState), findsNothing);
     final toast = find.byType(NbToast);
     expect(toast, findsOneWidget);

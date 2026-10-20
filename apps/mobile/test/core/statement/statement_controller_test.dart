@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/statement/statement_controller.dart';
 import 'package:next_bank/core/statement/statement_item.dart';
+import 'package:next_bank/core/statement/statement_query.dart';
 
 import '../../support/fake_statement_repository.dart';
 
@@ -196,5 +197,137 @@ void main() {
     final container = await open(repository);
 
     expect(viewOf(container).items.single.transferId, 'pix-1');
+  });
+
+  // The statement screen's own list (v1.1.0 plan, task 4.1): filtered on the
+  // server, while the Home keeps the whole statement.
+  group('filtered', () {
+    StatementView filteredOf(ProviderContainer container) =>
+        container.read(filteredStatementProvider).requireValue;
+
+    Future<ProviderContainer> setUpFiltered(
+      FakeStatementRepository repository,
+    ) async {
+      final container = ProviderContainer(
+        overrides: [statementRepositoryProvider.overrideWithValue(repository)],
+      );
+      addTearDown(container.dispose);
+      container
+        ..listen(filteredStatementProvider, (_, _) {})
+        ..listen(statementProvider, (_, _) {});
+      await container.read(filteredStatementProvider.future);
+      await container.read(statementProvider.future);
+      return container;
+    }
+
+    test("asks with the screen's filter and search", () async {
+      final repository = FakeStatementRepository({
+        null: () async => pageOf(['a']),
+      });
+      final container = await setUpFiltered(repository);
+
+      container.read(statementQueryProvider.notifier)
+        ..toggle(StatementFilter.incoming)
+        ..search('  mari ');
+      await container.read(filteredStatementProvider.future);
+
+      expect(repository.queries.last, (
+        filter: StatementFilter.incoming,
+        search: 'mari',
+      ));
+      expect(filteredOf(container).items.map((item) => item.id), ['a']);
+    });
+
+    test('reloads from the first page when the filter changes', () async {
+      final repository = FakeStatementRepository({
+        null: () async => pageOf(['a'], 'c1'),
+        'c1': () async => pageOf(['b']),
+      });
+      final container = await setUpFiltered(repository);
+      await container.read(filteredStatementProvider.notifier).loadMore();
+
+      container
+          .read(statementQueryProvider.notifier)
+          .toggle(StatementFilter.pix);
+      await container.read(filteredStatementProvider.future);
+
+      expect(repository.cursors.last, isNull);
+      expect(filteredOf(container).items.map((item) => item.id), ['a']);
+    });
+
+    test('pages with the same filter', () async {
+      final repository = FakeStatementRepository({
+        null: () async => pageOf(['a'], 'c1'),
+        'c1': () async => pageOf(['b']),
+      });
+      final container = await setUpFiltered(repository);
+      container
+          .read(statementQueryProvider.notifier)
+          .toggle(StatementFilter.outgoing);
+      await container.read(filteredStatementProvider.future);
+
+      await container.read(filteredStatementProvider.notifier).loadMore();
+
+      expect(repository.cursors.last, 'c1');
+      expect(repository.queries.last.filter, StatementFilter.outgoing);
+    });
+
+    test("keeps the Home's statement whole", () async {
+      final repository = FakeStatementRepository({
+        null: () async => pageOf(['a']),
+      });
+      final container = await setUpFiltered(repository);
+
+      container
+          .read(statementQueryProvider.notifier)
+          .toggle(StatementFilter.receipt);
+      await container.read(filteredStatementProvider.future);
+      container.invalidate(statementProvider);
+      await container.read(statementProvider.future);
+
+      expect(repository.queries.last, allMovements);
+    });
+  });
+
+  // One filter at a time (X2); a search of fewer than two letters is none.
+  group('the query', () {
+    StatementQuery queryOf(ProviderContainer container) =>
+        container.read(statementQueryProvider);
+
+    ProviderContainer setUpQuery() {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      container.listen(statementQueryProvider, (_, _) {});
+      return container;
+    }
+
+    test('starts with the whole statement', () {
+      expect(queryOf(setUpQuery()), allMovements);
+    });
+
+    test('takes one filter at a time, and clears it on a second tap', () {
+      final container = setUpQuery();
+      final query = container.read(statementQueryProvider.notifier)
+        ..toggle(StatementFilter.incoming)
+        ..toggle(StatementFilter.pix);
+
+      expect(queryOf(container).filter, StatementFilter.pix);
+
+      query.toggle(StatementFilter.pix);
+
+      expect(queryOf(container).filter, isNull);
+    });
+
+    test('searches the trimmed text, and nothing under two letters', () {
+      final container = setUpQuery();
+      final query = container.read(statementQueryProvider.notifier)
+        ..search('  ma  ');
+
+      expect(queryOf(container).search, 'ma');
+
+      query.search(' m ');
+
+      expect(queryOf(container).search, isNull);
+    });
   });
 }

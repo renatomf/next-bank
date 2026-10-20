@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/account/account_providers.dart';
@@ -10,7 +11,11 @@ import 'package:next_bank/core/clock.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/core/statement/statement_controller.dart';
+import 'package:next_bank/features/home/presentation/cards_box.dart';
+import 'package:next_bank/features/home/presentation/greeting_header.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
+import 'package:next_bank/features/home/presentation/pix_box/cpf_key_row.dart';
+import 'package:next_bank/features/home/presentation/pix_box/pix_box.dart';
 
 import '../../../support/device_stores.dart';
 import '../../../support/fake_account_repository.dart';
@@ -28,6 +33,16 @@ Future<void> pumpHome(
   VoidCallback? onPay,
   VoidCallback? onReceive,
   VoidCallback? onStatement,
+  ValueChanged<String>? onPixWithKey,
+  VoidCallback? onTransfer,
+  VoidCallback? onAutomatic,
+  VoidCallback? onKeys,
+  VoidCallback? onProfile,
+  VoidCallback? onHelp,
+  VoidCallback? onNotifications,
+  VoidCallback? onAssistant,
+  VoidCallback? onRecharge,
+  ValueChanged<int>? onCardDetails,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -50,7 +65,16 @@ Future<void> pumpHome(
           onPay: onPay ?? () {},
           onReceive: onReceive ?? () {},
           onStatement: onStatement ?? () {},
-          onMovement: (_) {},
+          onPixWithKey: onPixWithKey ?? (_) {},
+          onTransfer: onTransfer ?? () {},
+          onAutomatic: onAutomatic ?? () {},
+          onKeys: onKeys ?? () {},
+          onProfile: onProfile ?? () {},
+          onHelp: onHelp ?? () {},
+          onNotifications: onNotifications ?? () {},
+          onAssistant: onAssistant ?? () {},
+          onRecharge: onRecharge ?? () {},
+          onCardDetails: onCardDetails ?? (_) {},
         ),
       ),
     ),
@@ -112,6 +136,32 @@ void main() {
     expect(find.byType(DisplayTitle), findsNothing);
   });
 
+  // S21 checkpoint: the header's logo a little larger.
+  testWidgets('draws the header logo a little larger', (tester) async {
+    await pumpHome(tester);
+    await tester.pumpAndSettle();
+
+    final logo = find
+        .descendant(
+          of: find.byType(GreetingHeader),
+          matching: find.byType(NextLogo),
+        )
+        .first;
+    expect(tester.widget<NextLogo>(logo).size, 28);
+  });
+
+  // v1.1.0 plan, task 4.4: the icon and the name are the way to the profile.
+  testWidgets('opens the profile from the icon and the name', (tester) async {
+    var opened = 0;
+    await pumpHome(tester, onProfile: () => opened++);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.bySemanticsLabel('Abrir perfil'));
+    await tester.tap(find.text('Ana'));
+
+    expect(opened, 2);
+  });
+
   // Week 8 plan, V6 and V7: four shortcuts; only the Pix opens a screen, the
   // others say they are coming.
   testWidgets('opens the Pix from its shortcut, with its symbol', (
@@ -134,11 +184,20 @@ void main() {
     expect(opened, 1);
   });
 
-  // v1.1.0 plan, task 4: "Pagar" reads a Pix QR Code.
+  // v1.1.0 plan, task 4: "Pagar" reads a Pix QR Code; at the S21
+  // checkpoint it takes a barcode, for the boleto to come.
   testWidgets('opens the QR Code reading on "Pagar"', (tester) async {
     var paid = 0;
     await pumpHome(tester, onPay: () => paid++);
     await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(
+        of: find.widgetWithText(ActionTile, 'Pagar'),
+        matching: find.byType(BarcodeIcon),
+      ),
+      findsOneWidget,
+    );
 
     await tester.tap(find.text('Pagar'));
     await tester.pumpAndSettle();
@@ -166,65 +225,425 @@ void main() {
     expect(find.widgetWithText(TextButton, 'Ver extrato'), findsNothing);
   });
 
-  // v1.1.0 plan, task 3, at the S21 checkpoint: "Receber" beside "Pagar".
-  testWidgets('opens "Receber" on its shortcut', (tester) async {
-    var received = 0;
-    await pumpHome(tester, onReceive: () => received++);
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Receber'));
-    await tester.pumpAndSettle();
-
-    expect(received, 1);
-  });
-
-  // Developer's call at the S21 checkpoint: the shortcuts scroll sideways.
-  testWidgets('lists the shortcuts sideways, in order', (tester) async {
+  // Developer's call at the S21 checkpoint: four fixed shortcuts sharing
+  // the width, no sideways list; "Receber" lives in the Pix box.
+  testWidgets('lays four shortcuts side by side, across the width', (
+    tester,
+  ) async {
     await pumpHome(tester);
     await tester.pumpAndSettle();
 
-    // The nearest list above the tiles; the Home's own list scrolls down.
-    final list = tester.widget<ListView>(
-      find
-          .ancestor(
-            of: find.widgetWithText(ActionTile, 'Área Pix'),
-            matching: find.byType(ListView),
-          )
-          .first,
-    );
-    expect(list.scrollDirection, Axis.horizontal);
+    final tiles = find.byType(ActionTile);
     final labels = tester
-        .widgetList<ActionTile>(find.byType(ActionTile))
+        .widgetList<ActionTile>(tiles)
         .map((tile) => tile.label);
-    expect(labels, ['Área Pix', 'Pagar', 'Receber', 'Transferir', 'Recarga']);
+    expect(labels, ['Área Pix', 'Pagar', 'Transferir', 'Recarga']);
+    expect(
+      find.ancestor(of: tiles.first, matching: find.byType(ListView)),
+      findsOneWidget, // only the Home's own list, scrolling down
+    );
+    final screen = tester.getSize(find.byType(HomeScreen)).width;
+    expect(tester.getTopLeft(tiles.first).dx, NbSpace.screen);
+    expect(tester.getTopRight(tiles.last).dx, screen - NbSpace.screen);
+    final tops = tester
+        .widgetList(tiles)
+        .map((tile) => tester.getTopLeft(find.byWidget(tile)).dy)
+        .toSet();
+    expect(tops, hasLength(1));
   });
 
-  for (final shortcut in ['Transferir', 'Recarga']) {
-    testWidgets('says "$shortcut" is coming, without leaving', (tester) async {
-      var opened = 0;
-      await pumpHome(tester, onPix: () => opened++);
+  // v1.1.0 plan, task 4.15: "Meus cartões" below the Pix box, a lock and
+  // Detalhes under each card.
+  group('the cards box', () {
+    Future<void> openBox(WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1080, 4800);
+      addTearDown(tester.view.reset);
       await tester.pumpAndSettle();
+    }
 
-      await tester.tap(find.text(shortcut));
-      await tester.pumpAndSettle();
+    Finder inBox(Finder finder) =>
+        find.descendant(of: find.byType(CardsBox), matching: finder);
 
-      expect(find.widgetWithText(NbToast, 'Em breve.'), findsOneWidget);
-      expect(opened, 0);
+    testWidgets('sits below the Pix box with both cards', (tester) async {
+      await pumpHome(tester);
+      await openBox(tester);
+
+      expect(find.text('Meus cartões'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.byType(CardsBox)).dy,
+        greaterThan(tester.getBottomLeft(find.byType(PixBox)).dy),
+      );
+      expect(inBox(find.byType(PaymentCard)), findsNWidgets(2));
+      expect(inBox(find.byType(CardLockToggle)), findsNWidgets(2));
     });
-  }
 
-  // Week 8 plan, V11: help and notifications beside the help field.
-  for (final button in ['Ajuda', 'Notificações']) {
-    testWidgets('says "$button" is coming', (tester) async {
+    testWidgets('toggles a card lock on the screen', (tester) async {
+      await pumpHome(tester);
+      await openBox(tester);
+
+      await tester.tap(inBox(find.byType(CardLockToggle)).first);
+      await tester.pump();
+
+      expect(inBox(find.text('Bloqueado')), findsOneWidget);
+    });
+
+    // S21 checkpoint: the lock on the start, Detalhes on the end, apart.
+    testWidgets('puts Detalhes on the right edge of the card', (tester) async {
+      await pumpHome(tester);
+      await openBox(tester);
+      // A wide screen: Detalhes needs much less than its share of the row.
+      tester.view.devicePixelRatio = 1.5;
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpAndSettle();
+
+      final card = inBox(find.byType(PaymentCard)).first;
+      final details = inBox(find.widgetWithText(TextButton, 'Detalhes')).first;
+      expect(
+        tester.getTopRight(details).dx,
+        moreOrLessEquals(tester.getTopRight(card).dx, epsilon: 1),
+      );
+    });
+
+    testWidgets('opens the details of the card on', (tester) async {
+      final opened = <int>[];
+      await pumpHome(tester, onCardDetails: opened.add);
+      await openBox(tester);
+
+      await tester.tap(
+        inBox(find.widgetWithText(TextButton, 'Detalhes')).first,
+      );
+      await tester.drag(inBox(find.byType(PageView)), const Offset(-500, 0));
+      await tester.pumpAndSettle();
+      await tester.tap(inBox(find.widgetWithText(TextButton, 'Detalhes')).last);
+
+      expect(opened, [0, 1]);
+    });
+  });
+
+  // v1.1.0 plan, task 4.2: the Pix box, in place of the latest movements.
+  group('the Pix box', () {
+    Finder keyField() => find.descendant(
+      of: find.byType(PixBox),
+      matching: find.byType(TextField),
+    );
+
+    Future<void> scrollToBox(WidgetTester tester) async {
+      await tester.scrollUntilVisible(
+        find.text('Minhas\nchaves'),
+        200,
+        scrollable: find
+            .descendant(
+              of: find.byType(HomeScreen),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('takes the place of the latest movements', (tester) async {
       await pumpHome(tester);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.bySemanticsLabel(button));
+      expect(find.byType(PixBox), findsOneWidget);
+      expect(find.text('Últimas movimentações'), findsNothing);
+    });
+
+    testWidgets('opens the Pix with a valid CPF, in digits', (tester) async {
+      final keys = <String>[];
+      await pumpHome(tester, onPixWithKey: keys.add);
+      await tester.pumpAndSettle();
+      await scrollToBox(tester);
+
+      await tester.enterText(keyField(), '52998224725');
+      await tester.tap(find.bySemanticsLabel('Continuar com a chave'));
       await tester.pumpAndSettle();
 
-      expect(find.widgetWithText(NbToast, 'Em breve.'), findsOneWidget);
+      expect(keys, ['52998224725']);
     });
-  }
+
+    testWidgets('opens the Pix area when the field is empty', (tester) async {
+      var opened = 0;
+      await pumpHome(tester, onPix: () => opened++);
+      await tester.pumpAndSettle();
+      await scrollToBox(tester);
+
+      await tester.tap(find.bySemanticsLabel('Continuar com a chave'));
+      await tester.pumpAndSettle();
+
+      expect(opened, 1);
+    });
+
+    testWidgets('says an invalid CPF is invalid, going nowhere (PIX-07)', (
+      tester,
+    ) async {
+      final keys = <String>[];
+      var opened = 0;
+      await pumpHome(tester, onPixWithKey: keys.add, onPix: () => opened++);
+      await tester.pumpAndSettle();
+      await scrollToBox(tester);
+
+      await tester.enterText(keyField(), '12345678900');
+      await tester.tap(find.bySemanticsLabel('Continuar com a chave'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('CPF inválido.'), findsOneWidget);
+      expect(keys, isEmpty);
+      expect(opened, 0);
+    });
+
+    for (final (label, callback) in [
+      ('Transferir Pix', 'transfer'),
+      ('Pagar QR Code', 'pay'),
+      ('Gerar QR Code', 'receive'),
+      ('Pix Automático', 'automatic'),
+      ('Minhas chaves', 'keys'),
+    ]) {
+      testWidgets('runs "$label"', (tester) async {
+        final ran = <String>[];
+        await pumpHome(
+          tester,
+          onTransfer: () => ran.add('transfer'),
+          onPay: () => ran.add('pay'),
+          onReceive: () => ran.add('receive'),
+          onAutomatic: () => ran.add('automatic'),
+          onKeys: () => ran.add('keys'),
+        );
+        await tester.pumpAndSettle();
+        await scrollToBox(tester);
+
+        await tester.tap(
+          find.descendant(
+            of: find.byType(PixBox),
+            matching: find.bySemanticsLabel(label),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(ran, [callback]);
+      });
+    }
+
+    // Developer's call at the checkpoint: the CPF masked by the server on
+    // the start, "Cadastrar" (no action yet) on the end.
+    testWidgets('shows the masked CPF, with "Cadastrar" apart on the end', (
+      tester,
+    ) async {
+      await pumpHome(tester);
+      await tester.pumpAndSettle();
+      await scrollToBox(tester);
+
+      expect(find.text('***.444.777-**'), findsOneWidget);
+
+      // On the row's two ends (developer's call): the icon on the start, the
+      // "Cadastrar" text on the end, both one padding from the edge.
+      final row = find.byType(CpfKeyRow);
+      final icon = find.descendant(
+        of: row,
+        matching: find.byIcon(Icons.badge_outlined),
+      );
+      final register = find.text('Cadastrar');
+      expect(
+        tester.getTopLeft(icon).dx - tester.getTopLeft(row).dx,
+        moreOrLessEquals(NbSpace.md, epsilon: 1),
+      );
+      expect(
+        tester.getTopRight(row).dx - tester.getTopRight(register).dx,
+        moreOrLessEquals(NbSpace.md, epsilon: 1),
+      );
+    });
+
+    // As in the reference: the icon on the link's start edge, the text
+    // centered in the room beside it.
+    for (final (label, text) in [
+      ('Pix Automático', 'Pix\nAutomático'),
+      ('Minhas chaves', 'Minhas\nchaves'),
+    ]) {
+      testWidgets('puts the icon of "$label" on the start, its text centered', (
+        tester,
+      ) async {
+        await pumpHome(tester);
+        await tester.pumpAndSettle();
+        await scrollToBox(tester);
+
+        final link = find.descendant(
+          of: find.byType(PixBox),
+          matching: find.bySemanticsLabel(label),
+        );
+        final icon = find
+            .descendant(
+              of: link,
+              matching: find.byWidgetPredicate(
+                (widget) => widget is PixMark || widget is Icon,
+              ),
+            )
+            .first;
+        final words = find.descendant(of: link, matching: find.text(text));
+
+        expect(
+          tester.getTopLeft(icon).dx - tester.getTopLeft(link).dx,
+          lessThanOrEqualTo(NbSpace.lg),
+        );
+        expect(tester.widget<Text>(words).textAlign, TextAlign.center);
+        // Centered between the icon and the link's end.
+        final room =
+            (tester.getTopRight(icon).dx + tester.getTopRight(link).dx) / 2;
+        expect(tester.getCenter(words).dx, moreOrLessEquals(room, epsilon: 8));
+      });
+    }
+
+    // Developer's call: two-line labels, as in the reference.
+    testWidgets('breaks the labels in two lines', (tester) async {
+      await pumpHome(tester);
+      await tester.pumpAndSettle();
+      await scrollToBox(tester);
+
+      for (final label in [
+        'Transferir\nPix',
+        'Pagar\nQR Code',
+        'Gerar\nQR Code',
+        'Pix\nAutomático',
+        'Minhas\nchaves',
+      ]) {
+        expect(find.text(label), findsOneWidget, reason: label);
+      }
+    });
+
+    // Found at the checkpoint: on a narrow column with large text, a word
+    // wider than the column broke in the middle ("Transferi/r"). The labels
+    // keep their two lines, shrinking to fit instead.
+    testWidgets('never breaks a word on a small phone at 1.3x text', (
+      tester,
+    ) async {
+      tester.view
+        ..physicalSize = const Size(320 * 3, 568 * 3)
+        ..devicePixelRatio = 3;
+      tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+      await pumpHome(tester);
+      await tester.pumpAndSettle();
+      await scrollToBox(tester);
+
+      for (final label in [
+        'Transferir\nPix',
+        'Pagar\nQR Code',
+        'Gerar\nQR Code',
+        'Pix\nAutomático',
+        'Minhas\nchaves',
+      ]) {
+        expect(lineCount(tester, find.text(label)), 2, reason: label);
+      }
+    });
+
+    // S21 checkpoint: the links' words in the actions' color; only their
+    // icons stay green.
+    testWidgets('writes the links in the color of the actions', (tester) async {
+      await pumpHome(tester);
+      await tester.pumpAndSettle();
+      await scrollToBox(tester);
+
+      Color? colorOf(String text) =>
+          tester.widget<Text>(find.text(text)).style?.color;
+
+      final actions = colorOf('Pagar\nQR Code');
+      expect(colorOf('Pix\nAutomático'), actions);
+      expect(colorOf('Minhas\nchaves'), actions);
+      final key = tester.widget<IconTheme>(
+        find
+            .ancestor(
+              of: find.byIcon(Icons.key_outlined),
+              matching: find.byType(IconTheme),
+            )
+            .first,
+      );
+      expect(key.data.color, NbColors.dark.accent);
+    });
+
+    testWidgets('puts the Pix symbol on "Pix Automático", split from "Minhas '
+        'chaves" by a line', (tester) async {
+      await pumpHome(tester);
+      await tester.pumpAndSettle();
+      await scrollToBox(tester);
+
+      final automatic = find.descendant(
+        of: find.byType(PixBox),
+        matching: find.bySemanticsLabel('Pix Automático'),
+      );
+      expect(
+        find.descendant(
+          of: find.byType(PixBox),
+          matching: find.byType(PixMark),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        tester.getCenter(automatic).dy,
+        moreOrLessEquals(
+          tester
+              .getCenter(
+                find.descendant(
+                  of: find.byType(PixBox),
+                  matching: find.bySemanticsLabel('Minhas chaves'),
+                ),
+              )
+              .dy,
+          epsilon: 1,
+        ),
+      );
+    });
+  });
+
+  // v1.1.0 plan, task 4.9: the Transferir shortcut opens the transfer.
+  testWidgets('opens the transfer on the "Transferir" shortcut', (
+    tester,
+  ) async {
+    var opened = 0;
+    await pumpHome(tester, onTransfer: () => opened++);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(ActionTile, 'Transferir'));
+    await tester.pumpAndSettle();
+
+    expect(opened, 1);
+    expect(find.widgetWithText(NbToast, 'Em breve.'), findsNothing);
+  });
+
+  // v1.1.0 plan, task 4.12: the Recarga shortcut opens the recharges.
+  testWidgets('opens the recharges on the "Recarga" shortcut', (tester) async {
+    var opened = 0;
+    await pumpHome(tester, onRecharge: () => opened++);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(ActionTile, 'Recarga'));
+    await tester.pumpAndSettle();
+
+    expect(opened, 1);
+    expect(find.widgetWithText(NbToast, 'Em breve.'), findsNothing);
+  });
+
+  // v1.1.0 plan, task 4.6: the bell opens the notifications.
+  testWidgets('opens the notifications', (tester) async {
+    var opened = 0;
+    await pumpHome(tester, onNotifications: () => opened++);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.bySemanticsLabel('Notificações'));
+
+    expect(opened, 1);
+  });
+
+  // v1.1.0 plan, task 4.5: the help button opens the help screen.
+  testWidgets('opens the help', (tester) async {
+    var opened = 0;
+    await pumpHome(tester, onHelp: () => opened++);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.bySemanticsLabel('Ajuda'));
+
+    expect(opened, 1);
+  });
 
   // Week 8 plan, V13: the four shortcuts share one size, labels on one line.
   testWidgets('lays the shortcuts out in one size', (tester) async {
@@ -238,18 +657,30 @@ void main() {
     expect(sizes, hasLength(1));
   });
 
-  // Week 8 plan, V9: the help field is a button that says it is coming.
-  testWidgets('says the assistant is coming', (tester) async {
+  // S21 checkpoint: the arrows fill less of their box than the other
+  // glyphs, so "Transferir" draws them a little larger.
+  testWidgets('draws the Transferir arrows a little larger', (tester) async {
     await pumpHome(tester);
+    await tester.pumpAndSettle();
+
+    final arrows = find.descendant(
+      of: find.widgetWithText(ActionTile, 'Transferir'),
+      matching: find.byIcon(Icons.swap_horiz),
+    );
+    final drawn = tester.getBottomRight(arrows) - tester.getTopLeft(arrows);
+    expect(drawn.dx, greaterThan(NbSize.icon));
+  });
+
+  // v1.1.0 plan, task 4.10: the help field opens the assistant.
+  testWidgets('opens the assistant from the help field', (tester) async {
+    var opened = 0;
+    await pumpHome(tester, onAssistant: () => opened++);
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Posso te ajudar?'));
     await tester.pumpAndSettle();
 
-    expect(
-      find.widgetWithText(NbToast, 'Em breve: assistente com IA.'),
-      findsOneWidget,
-    );
+    expect(opened, 1);
   });
 
   // MOB-05, week 8 plan V14: the balance starts hidden at every opening, and
@@ -306,4 +737,14 @@ void main() {
 
     expect(tester.takeException(), isNull);
   });
+}
+
+/// How many lines the text found by [finder] was laid out in.
+int lineCount(WidgetTester tester, Finder finder) {
+  final paragraph = tester.renderObject<RenderParagraph>(finder);
+  final text = paragraph.text.toPlainText();
+  final boxes = paragraph.getBoxesForSelection(
+    TextSelection(baseOffset: 0, extentOffset: text.length),
+  );
+  return boxes.map((box) => box.top).toSet().length;
 }
