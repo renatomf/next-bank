@@ -29,12 +29,7 @@ class MenuScreen extends StatelessWidget {
                 onPressed: onBack,
               ),
               const SizedBox(height: NbSpace.lg),
-              const TextField(
-                decoration: InputDecoration(
-                  hintText: 'Buscar no app',
-                  prefixIcon: Icon(Icons.search),
-                ),
-              ),
+              const NbSearchField(hint: 'Buscar no app'),
               for (final section in menuSections) ...[
                 const SizedBox(height: NbSpace.xl),
                 Semantics(

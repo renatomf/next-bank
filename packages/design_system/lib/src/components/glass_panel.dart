@@ -32,9 +32,9 @@ class GlassPanel extends StatelessWidget {
           width: double.infinity,
           padding: padding,
           decoration: BoxDecoration(
-            color: NbBalanceCardColors.glass,
+            color: NbGlassColors.glass,
             borderRadius: shape,
-            border: Border.all(color: NbBalanceCardColors.glassBorder),
+            border: Border.all(color: NbGlassColors.glassBorder),
           ),
           child: child,
         ),

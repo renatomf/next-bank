@@ -67,7 +67,11 @@ class _SuggestionRow extends StatelessWidget {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Text(pixKey.type, style: context.nbText.bodyStrong),
-                    if (recommended) const _RecommendedBadge(),
+                    if (recommended)
+                      const NbTag(
+                        label: 'Recomendada',
+                        tone: NbTagTone.outlined,
+                      ),
                   ],
                 ),
                 Text(pixKey.value, style: context.nbText.caption),
@@ -76,27 +80,6 @@ class _SuggestionRow extends StatelessWidget {
           ),
           const _RegisterButton(),
         ],
-      ),
-    );
-  }
-}
-
-class _RecommendedBadge extends StatelessWidget {
-  const new();
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.nbColors;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: NbSpace.sm, vertical: 2),
-      decoration: BoxDecoration(
-        border: Border.all(color: colors.accent),
-        borderRadius: BorderRadius.circular(NbSpace.sm),
-      ),
-      child: Text(
-        'Recomendada',
-        style: context.nbText.cardLabel.copyWith(color: colors.accent),
       ),
     );
   }

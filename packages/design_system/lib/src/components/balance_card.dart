@@ -62,11 +62,11 @@ class BalanceCard extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(NbRadius.box),
-        border: Border.all(color: NbBalanceCardColors.border),
+        border: Border.all(color: NbGlassColors.border),
         boxShadow: const [
           // CSS 0 18px 50px -12px: a 50 px CSS blur is a 42 px Flutter one.
           BoxShadow(
-            color: NbBalanceCardColors.shadow,
+            color: NbGlassColors.shadow,
             offset: Offset(0, 18),
             blurRadius: 42,
             spreadRadius: -12,
@@ -107,7 +107,7 @@ class BalanceCard extends StatelessWidget {
                       child: Text(
                         'Saldo',
                         style: NbType.sectionTitle.copyWith(
-                          color: NbBalanceCardColors.text,
+                          color: NbGlassColors.text,
                         ),
                       ),
                     ),
@@ -118,9 +118,9 @@ class BalanceCard extends StatelessWidget {
                           : Icons.visibility_outlined,
                       label: hidden ? 'Mostrar saldo' : 'Ocultar saldo',
                       onPressed: onToggleHidden,
-                      background: NbBalanceCardColors.button,
-                      foreground: NbBalanceCardColors.text,
-                      borderColor: NbBalanceCardColors.buttonBorder,
+                      background: NbGlassColors.button,
+                      foreground: NbGlassColors.text,
+                      borderColor: NbGlassColors.buttonBorder,
                       iconSize: 18,
                     ),
                   ],
@@ -181,9 +181,9 @@ class _StatementLink extends StatelessWidget {
           children: [
             Text(
               'Extrato',
-              style: NbType.bodyText.copyWith(color: NbBalanceCardColors.text),
+              style: NbType.bodyText.copyWith(color: NbGlassColors.text),
             ),
-            const Icon(Icons.chevron_right, color: NbBalanceCardColors.text),
+            const Icon(Icons.chevron_right, color: NbGlassColors.text),
           ],
         ),
       ),
@@ -197,9 +197,9 @@ const LinearGradient _homeTint = LinearGradient(
   begin: Alignment.topCenter,
   end: Alignment.bottomCenter,
   colors: [
-    NbBalanceCardColors.tintDeep,
-    NbBalanceCardColors.tintDeep,
-    NbBalanceCardColors.tintLight,
+    NbGlassColors.tintDeep,
+    NbGlassColors.tintDeep,
+    NbGlassColors.tintLight,
   ],
   stops: [0, 0.3, 0.6],
 );
@@ -209,10 +209,10 @@ const LinearGradient _footTint = LinearGradient(
   begin: Alignment.topCenter,
   end: Alignment.bottomCenter,
   colors: [
-    NbBalanceCardColors.tintDeep,
-    NbBalanceCardColors.tintDeep,
-    NbBalanceCardColors.tintLight,
-    NbBalanceCardColors.tintDeep,
+    NbGlassColors.tintDeep,
+    NbGlassColors.tintDeep,
+    NbGlassColors.tintLight,
+    NbGlassColors.tintDeep,
   ],
   stops: [0, 0.3, 0.55, 0.8],
 );
@@ -236,7 +236,7 @@ class _Actions extends StatelessWidget {
                 thickness: 1,
                 indent: NbSpace.sm,
                 endIndent: NbSpace.sm,
-                color: NbBalanceCardColors.buttonBorder,
+                color: NbGlassColors.buttonBorder,
               ),
             Expanded(child: _Action(action: action)),
           ],
@@ -265,14 +265,14 @@ class _Action extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(action.icon, size: 22, color: NbBalanceCardColors.text),
+            Icon(action.icon, size: 22, color: NbGlassColors.text),
             const SizedBox(height: NbSpace.xs),
             FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
                 action.label,
                 maxLines: 1,
-                style: NbType.caption.copyWith(color: NbBalanceCardColors.text),
+                style: NbType.caption.copyWith(color: NbGlassColors.text),
               ),
             ),
           ],

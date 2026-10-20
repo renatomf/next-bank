@@ -25,13 +25,8 @@ class InvestorProfileBox extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.nbColors;
 
-    return Container(
+    return NbSurface(
       padding: const EdgeInsets.all(NbSpace.xl),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(NbRadius.box),
-        border: Border.all(color: colors.border),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: NbSpace.md,

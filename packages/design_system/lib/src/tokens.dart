@@ -14,10 +14,10 @@ abstract final class NbBrand {
   static const Color actionGlow = Color(0x5900FFC8);
 }
 
-/// The balance card's own palette (brief, section 2.3), exactly as in the
-/// Home mockup's CSS: the card is always dark, in both modes, so its colors
-/// do not come from the theme.
-abstract final class NbBalanceCardColors {
+/// The palette of dark glass over the art (brief, section 2.3), exactly as
+/// in the mockup's CSS: glass is always dark, in both modes, so its colors do
+/// not come from the theme. The balance card and the Pix amount card use it.
+abstract final class NbGlassColors {
   /// Card border: mint at 22%.
   static const Color border = Color(0x3800FFC8);
 
@@ -220,18 +220,18 @@ abstract final class NbRadius {
   /// Balance card and large cards.
   static const double card = 28;
 
-  /// Blocks, lists and contacts.
-  static const double block = 20;
-
   /// Text fields.
   static const double field = 16;
 
-  /// The Home's boxes (v1.1.0 checkpoint, 2026-10-16): a little tighter than
-  /// [card] — the balance card, the Pix box.
+  /// Boxes, blocks, lists and sheets: a little tighter than [card] (v1.1.0
+  /// checkpoint, 2026-10-16).
   static const double box = 20;
 
-  /// What sits inside a box, and the Home's shortcuts.
+  /// What sits inside a box, and shortcut tiles.
   static const double boxInner = 14;
+
+  /// Small tags such as "Novo".
+  static const double tag = 8;
 }
 
 /// Sizes (brief, sections 4 and 8).
@@ -239,8 +239,17 @@ abstract final class NbSize {
   /// Primary button height.
   static const double button = 56;
 
-  /// Minimum touch target.
+  /// Round controls and icon circles: 44, the iOS minimum.
   static const double touch = 44;
+
+  /// Android's minimum touch target, which the accessibility test checks.
+  static const double tapTarget = 48;
+
+  /// Icon circles at the start of a list row.
+  static const double avatar = 48;
+
+  /// The circle that tells how an operation ended.
+  static const double statusCircle = 72;
 
   /// One size for the icons of tiles, actions and links (S21 checkpoint of
   /// v1.1.0).

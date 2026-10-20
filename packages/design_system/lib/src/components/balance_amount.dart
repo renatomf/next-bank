@@ -52,9 +52,7 @@ class _Balance extends StatelessWidget {
       children: [
         Text(
           'Saldo disponível · Conta ${_masked(accountNumber)}',
-          style: NbType.cardLabel.copyWith(
-            color: NbBalanceCardColors.textMuted,
-          ),
+          style: NbType.cardLabel.copyWith(color: NbGlassColors.textMuted),
         ),
         const SizedBox(height: NbSpace.xs),
         // A large balance shrinks to fit instead of breaking the line.
@@ -64,8 +62,8 @@ class _Balance extends StatelessWidget {
           child: MoneyText(
             cents: cents,
             hidden: hidden,
-            color: NbBalanceCardColors.text,
-            mutedColor: NbBalanceCardColors.textMuted,
+            color: NbGlassColors.text,
+            mutedColor: NbGlassColors.textMuted,
           ),
         ),
       ],
@@ -90,17 +88,9 @@ class _LoadingBalance extends StatelessWidget {
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Skeleton(
-            width: 180,
-            height: 12,
-            color: NbBalanceCardColors.placeholder,
-          ),
+          Skeleton(width: 180, height: 12, color: NbGlassColors.placeholder),
           SizedBox(height: NbSpace.md),
-          Skeleton(
-            width: 200,
-            height: 34,
-            color: NbBalanceCardColors.placeholder,
-          ),
+          Skeleton(width: 200, height: 34, color: NbGlassColors.placeholder),
         ],
       ),
     );

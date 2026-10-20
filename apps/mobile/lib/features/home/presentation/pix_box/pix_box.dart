@@ -48,15 +48,7 @@ class PixBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
-
-    return Container(
-      padding: const EdgeInsets.all(NbSpace.lg),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(NbRadius.box),
-        border: Border.all(color: colors.border),
-      ),
+    return NbSurface(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

@@ -45,17 +45,12 @@ class NotificationGroup extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(child: Text(channel, style: context.nbText.bodyText)),
-                // A little smaller than Material's, at the developer's
-                // request; scaling keeps the touch area.
-                Transform.scale(
-                  scale: 0.8,
-                  child: Switch(
-                    value: isOn,
-                    onChanged: (_) => showNbToast(
-                      context,
-                      'Em breve.',
-                      icon: Icons.info_outline,
-                    ),
+                NbSwitch(
+                  value: isOn,
+                  onChanged: (_) => showNbToast(
+                    context,
+                    'Em breve.',
+                    icon: Icons.info_outline,
                   ),
                 ),
               ],

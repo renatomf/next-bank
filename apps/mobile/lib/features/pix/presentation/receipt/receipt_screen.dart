@@ -101,20 +101,11 @@ class _Receipt extends ConsumerWidget {
         : payerDetail(branch: account.branch, number: account.number);
     return Column(
       children: [
-        Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(
-            color: (completed ? colors.accent : colors.danger).withValues(
-              alpha: 0.14,
-            ),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            completed ? Icons.check : Icons.close,
-            size: 36,
-            color: completed ? colors.accent : colors.danger,
-          ),
+        NbIconCircle(
+          icon: completed ? Icons.check : Icons.close,
+          size: NbSize.statusCircle,
+          color: completed ? colors.accent : colors.danger,
+          tone: NbIconCircleTone.tinted,
         ),
         const SizedBox(height: NbSpace.md),
         Text(

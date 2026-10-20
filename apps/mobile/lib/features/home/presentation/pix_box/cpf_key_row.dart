@@ -15,14 +15,11 @@ class CpfKeyRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.nbColors;
 
-    return Container(
+    return NbSurface(
+      tone: NbSurfaceTone.inset,
       padding: const EdgeInsets.symmetric(
         horizontal: NbSpace.md,
         vertical: NbSpace.sm,
-      ),
-      decoration: BoxDecoration(
-        color: colors.surface2,
-        borderRadius: BorderRadius.circular(NbRadius.boxInner),
       ),
       // The CPF on the start, "Cadastrar" on the end: the CPF takes the room
       // left, which pushes the button to the edge.

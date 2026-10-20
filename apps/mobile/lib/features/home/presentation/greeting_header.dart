@@ -84,15 +84,10 @@ class _ProfileIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.nbColors;
 
-    return Container(
-      width: NbSize.touch,
-      height: NbSize.touch,
-      decoration: BoxDecoration(
-        color: colors.surface2,
-        shape: BoxShape.circle,
-        border: Border.all(color: colors.border),
-      ),
-      child: Icon(Icons.person_outline, color: colors.text),
+    return NbIconCircle(
+      icon: Icons.person_outline,
+      color: colors.text,
+      tone: NbIconCircleTone.outlined,
     );
   }
 }

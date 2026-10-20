@@ -100,16 +100,8 @@ class _IconCircle extends StatelessWidget {
   final IconData icon;
 
   @override
-  Widget build(BuildContext context) {
-    final colors = context.nbColors;
-
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(color: colors.surface2, shape: BoxShape.circle),
-      child: Icon(icon, size: NbSize.icon, color: colors.accent),
-    );
-  }
+  Widget build(BuildContext context) =>
+      NbIconCircle(icon: icon, size: NbSize.avatar);
 }
 
 class _UnreadBadge extends StatelessWidget {

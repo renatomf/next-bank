@@ -75,7 +75,7 @@ class _ScanPixScreenState extends ConsumerState<ScanPixScreen> {
                 )
               else ...[
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(NbRadius.block),
+                  borderRadius: BorderRadius.circular(NbRadius.box),
                   child: AspectRatio(
                     aspectRatio: 1,
                     child: scanner(

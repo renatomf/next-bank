@@ -83,16 +83,10 @@ class _PreApprovedBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
     final limit = formatReais(examplePreApprovedCents).full;
 
-    return Container(
-      padding: const EdgeInsets.all(NbSpace.lg),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(NbRadius.box),
-        border: Border.all(color: colors.accent),
-      ),
+    return NbSurface(
+      selected: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         spacing: NbSpace.sm,

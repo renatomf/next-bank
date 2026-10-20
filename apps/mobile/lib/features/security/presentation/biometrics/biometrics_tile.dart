@@ -53,7 +53,7 @@ class BiometricsTile extends ConsumerWidget {
         child: Material(
           color: colors.surface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(NbRadius.block),
+            borderRadius: BorderRadius.circular(NbRadius.box),
             side: BorderSide(color: colors.border),
           ),
           clipBehavior: Clip.antiAlias,
@@ -75,15 +75,12 @@ class BiometricsTile extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  // Smaller than Material's: the whole tile is the touch
-                  // target, so the switch only shows the state.
-                  Transform.scale(
-                    scale: 0.75,
-                    child: Switch(
-                      value: state.enabled,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      onChanged: state.saving ? null : (_) => toggle(),
-                    ),
+                  // The whole tile is the touch target, so the switch only
+                  // shows the state.
+                  NbSwitch(
+                    value: state.enabled,
+                    rowTakesTap: true,
+                    onChanged: state.saving ? null : (_) => toggle(),
                   ),
                 ],
               ),

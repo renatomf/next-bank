@@ -11,17 +11,10 @@ class AccountCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.nbColors;
     final account = ref.watch(accountProvider).value;
     final detail = context.nbText.caption;
 
-    return Container(
-      padding: const EdgeInsets.all(NbSpace.lg),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(NbRadius.box),
-        border: Border.all(color: colors.border),
-      ),
+    return NbSurface(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

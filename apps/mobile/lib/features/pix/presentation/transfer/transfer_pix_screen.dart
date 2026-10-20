@@ -26,8 +26,6 @@ class _TransferPixScreenState extends State<TransferPixScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
-
     return Scaffold(
       body: GlowBackground(
         child: SafeArea(
@@ -43,13 +41,7 @@ class _TransferPixScreenState extends State<TransferPixScreen> {
               const SizedBox(height: NbSpace.xl),
               const _TitleRow(),
               const SizedBox(height: NbSpace.lg),
-              Container(
-                padding: const EdgeInsets.all(NbSpace.lg),
-                decoration: BoxDecoration(
-                  color: colors.surface,
-                  borderRadius: BorderRadius.circular(NbRadius.box),
-                  border: Border.all(color: colors.border),
-                ),
+              NbSurface(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [

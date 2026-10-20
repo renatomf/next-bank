@@ -44,8 +44,8 @@ void main() {
 
       final word = tester.widget<Text>(find.text('Extrato'));
       final caret = tester.widget<Icon>(find.byIcon(Icons.chevron_right));
-      expect(word.style?.color, NbBalanceCardColors.text);
-      expect(caret.color, NbBalanceCardColors.text);
+      expect(word.style?.color, NbGlassColors.text);
+      expect(caret.color, NbGlassColors.text);
       // Justified apart: the word at the start, the caret at the end.
       expect(
         tester.getTopLeft(find.text('Extrato')).dx,
@@ -179,7 +179,7 @@ void main() {
       );
 
       final integer = tester.widget<Text>(find.text('10.000'));
-      expect(integer.style!.color, NbBalanceCardColors.text);
+      expect(integer.style!.color, NbGlassColors.text);
     });
 
     // Found on the Home: in a list, the card merged into one node read as a
@@ -287,25 +287,22 @@ void main() {
   // the balance and its label on the glass over the light tint.
   group('balance card contrast (AA)', () {
     final brightest = brightestArt();
-    final titleGround = Color.alphaBlend(
-      NbBalanceCardColors.tintDeep,
-      brightest,
-    );
+    final titleGround = Color.alphaBlend(NbGlassColors.tintDeep, brightest);
     final panelGround = Color.alphaBlend(
-      NbBalanceCardColors.glass,
-      Color.alphaBlend(NbBalanceCardColors.tintLight, brightest),
+      NbGlassColors.glass,
+      Color.alphaBlend(NbGlassColors.tintLight, brightest),
     );
 
     test('title on the deep tint', () {
       expect(
-        contrast(NbBalanceCardColors.text, titleGround),
+        contrast(NbGlassColors.text, titleGround),
         greaterThanOrEqualTo(4.5),
       );
     });
 
     for (final (name, color) in [
-      ('balance', NbBalanceCardColors.text),
-      ('label', NbBalanceCardColors.textMuted),
+      ('balance', NbGlassColors.text),
+      ('label', NbGlassColors.textMuted),
     ]) {
       test('$name on the glass', () {
         expect(contrast(color, panelGround), greaterThanOrEqualTo(4.5));

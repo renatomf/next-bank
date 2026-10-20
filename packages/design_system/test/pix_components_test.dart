@@ -111,7 +111,7 @@ void main() {
           .whereType<BoxDecoration>()
           .expand((decoration) => decoration.boxShadow ?? const <BoxShadow>[])
           .map((shadow) => shadow.color);
-      expect(glows, contains(NbBalanceCardColors.shadow));
+      expect(glows, contains(NbGlassColors.shadow));
     });
 
     // v1.1.0 checkpoint (2026-10-14): the same mint glass art as the
@@ -131,13 +131,10 @@ void main() {
     // Brief, section 8: the texts sit right on the art, so the whole card
     // takes the deep tint; AA over the brightest pixel the art can give.
     group('contrast (AA)', () {
-      final ground = Color.alphaBlend(
-        NbBalanceCardColors.tintDeep,
-        brightestArt(),
-      );
+      final ground = Color.alphaBlend(NbGlassColors.tintDeep, brightestArt());
       for (final (name, color) in [
-        ('amount and labels', NbBalanceCardColors.text),
-        (r'"R$" and cents', NbBalanceCardColors.textMuted),
+        ('amount and labels', NbGlassColors.text),
+        (r'"R$" and cents', NbGlassColors.textMuted),
       ]) {
         test('$name on the deep tint', () {
           final la = color.computeLuminance();
