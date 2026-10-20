@@ -19,7 +19,7 @@ dependencies:
   go_router: 17.5.0
   local_auth: 3.0.2
   # Pinned below 2.3.0 (2026-10-13) until it is two weeks old.
-  local_auth_android: 2.2.0
+  local_auth_android: 2.3.0
   # Reads the Pix QR Code with the camera (v1.1.0 plan, task 4; E1: ML Kit
   # bundled, so the first read needs no download).
   mobile_scanner: 7.4.2
