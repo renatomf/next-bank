@@ -24,6 +24,37 @@ describe('scrubEvent', () => {
     });
   });
 
+  // READ-06, as for the request log: a query string can carry a searched name
+  // or a statement cursor, which must never reach Sentry either.
+  it('keeps the request URL without its query string', () => {
+    const event = scrubEvent({
+      request: {
+        url: 'https://api.example/v1/me/statement?q=Mariana&cursor=abc',
+        method: 'GET',
+      },
+    });
+
+    expect(event.request).toEqual({
+      url: 'https://api.example/v1/me/statement',
+      method: 'GET',
+    });
+  });
+
+  it('keeps the URL of an HTTP breadcrumb without its query string', () => {
+    const event = scrubEvent({
+      breadcrumbs: [
+        {
+          category: 'http',
+          data: { url: '/v1/me/statement?q=Mariana', status_code: 200 },
+        },
+      ],
+    });
+
+    expect(event.breadcrumbs).toEqual([
+      { category: 'http', data: { url: '/v1/me/statement', status_code: 200 } },
+    ]);
+  });
+
   it('drops the user and redacts sensitive keys at any depth', () => {
     const event = scrubEvent({
       user: { id: 'u-1', email: 'ana@example.com', ip_address: '203.0.113.1' },
