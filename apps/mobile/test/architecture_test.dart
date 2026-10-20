@@ -63,6 +63,40 @@ void main() {
     expect(violations, isEmpty, reason: violations.join('\n'));
   });
 
+  // ADR 0014 (G1): boxes, circles, tags and switches come from the design
+  // system, so their look changes in one place. The exceptions draw
+  // something no other screen has; each says why.
+  test('screens build no boxes, colors or switches by hand', () {
+    const exceptions = {
+      // The receipt image, always light whatever the theme.
+      'lib/features/pix/presentation/receipt/shareable_receipt.dart',
+      // The fade from the glass art into the background.
+      'lib/features/unlock/presentation/unlock_screen.dart',
+      // The carousel's page dots, used once.
+      'lib/features/cards/presentation/cards_screen.dart',
+      // The unread count, a round tag used once.
+      'lib/features/notifications/presentation/inbox/notification_tile.dart',
+    };
+    const banned = {
+      'BoxDecoration(': 'NbSurface, NbIconCircle or NbTag',
+      'Color(0x': 'a color of context.nbColors',
+      ' Switch(': 'NbSwitch',
+    };
+    final violations = [
+      for (final file in [
+        ...dartFiles('lib/features'),
+        ...dartFiles('lib/core/ui'),
+      ])
+        if (!exceptions.contains(file.path.replaceAll(r'\', '/')))
+          for (final (index, line) in file.readAsLinesSync().indexed)
+            for (final MapEntry(key: code, value: use) in banned.entries)
+              if (line.contains(code))
+                '${file.path}:${index + 1}: use $use instead of $code',
+    ];
+
+    expect(violations, isEmpty, reason: violations.join('\n'));
+  });
+
   // MOB-01: nothing sensitive in plain preferences; tokens live only in the
   // Keychain / Keystore. V1 has nothing else to store there either.
   test('the app never uses shared preferences', () {
