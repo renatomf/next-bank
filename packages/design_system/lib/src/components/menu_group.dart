@@ -1,5 +1,5 @@
-import 'package:design_system/src/theme.dart';
-import 'package:design_system/src/tokens.dart';
+import 'package:design_system/src/theme/theme.dart';
+import 'package:design_system/src/tokens/tokens.dart';
 import 'package:flutter/material.dart';
 
 /// Rows of a menu in one card, split by a line between each two, as in the

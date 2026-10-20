@@ -1,6 +1,6 @@
+import 'package:design_system/src/components/css_gradients.dart';
 import 'package:design_system/src/components/dither.dart';
-import 'package:design_system/src/css_gradients.dart';
-import 'package:design_system/src/theme.dart';
+import 'package:design_system/src/theme/theme.dart';
 import 'package:flutter/material.dart';
 
 /// Screen background with the ambient mint glow at the top, as in the

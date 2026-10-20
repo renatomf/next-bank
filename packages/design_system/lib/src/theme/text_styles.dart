@@ -1,4 +1,4 @@
-import 'package:design_system/src/tokens.dart';
+import 'package:design_system/src/tokens/tokens.dart';
 import 'package:flutter/material.dart';
 
 /// The brief's text styles in the colors of a mode (v1.1.0 plan, task 4.17):

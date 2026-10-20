@@ -1,5 +1,5 @@
-import 'package:design_system/src/theme.dart';
-import 'package:design_system/src/tokens.dart';
+import 'package:design_system/src/theme/theme.dart';
+import 'package:design_system/src/tokens/tokens.dart';
 import 'package:flutter/material.dart';
 
 /// Nothing to show yet, said plainly (brief, section 7): an icon, a title and

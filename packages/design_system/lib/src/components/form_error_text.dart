@@ -1,4 +1,4 @@
-import 'package:design_system/src/theme.dart';
+import 'package:design_system/src/theme/theme.dart';
 import 'package:flutter/material.dart';
 
 /// Why a form could not be sent, as text (status never by color alone) and

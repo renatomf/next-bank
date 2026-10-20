@@ -1,4 +1,4 @@
-import 'package:design_system/src/tokens.dart';
+import 'package:design_system/src/tokens/tokens.dart';
 import 'package:flutter/material.dart';
 
 /// Items side by side, swiped one at a time; the next shows cut at the

@@ -1,4 +1,4 @@
-import 'package:design_system/src/theme.dart';
+import 'package:design_system/src/theme/theme.dart';
 import 'package:flutter/material.dart';
 
 /// A plain icon button, without the circle of the IconCircleButton, read by

@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:design_system/src/tokens.dart';
+import 'package:design_system/src/tokens/tokens.dart';
 import 'package:flutter/material.dart';
 
 /// The frosted glass the balance sits on, over the green art: blurred,

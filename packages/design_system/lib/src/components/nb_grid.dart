@@ -1,4 +1,4 @@
-import 'package:design_system/src/tokens.dart';
+import 'package:design_system/src/tokens/tokens.dart';
 import 'package:flutter/material.dart';
 
 /// A grid of equal columns (v1.1.0 plan, tasks 4.5, 4.12 and 4.13): the
