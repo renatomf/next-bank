@@ -11,6 +11,7 @@ import 'package:next_bank/core/clock.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/core/statement/statement_controller.dart';
+import 'package:next_bank/features/home/presentation/greeting_header.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
 import 'package:next_bank/features/home/presentation/pix_box/cpf_key_row.dart';
 import 'package:next_bank/features/home/presentation/pix_box/pix_box.dart';
@@ -38,6 +39,8 @@ Future<void> pumpHome(
   VoidCallback? onProfile,
   VoidCallback? onHelp,
   VoidCallback? onNotifications,
+  VoidCallback? onAssistant,
+  VoidCallback? onRecharge,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -67,6 +70,8 @@ Future<void> pumpHome(
           onProfile: onProfile ?? () {},
           onHelp: onHelp ?? () {},
           onNotifications: onNotifications ?? () {},
+          onAssistant: onAssistant ?? () {},
+          onRecharge: onRecharge ?? () {},
         ),
       ),
     ),
@@ -126,6 +131,20 @@ void main() {
       expect(find.text(greeting), findsNothing);
     }
     expect(find.byType(DisplayTitle), findsNothing);
+  });
+
+  // S21 checkpoint: the header's logo a little larger.
+  testWidgets('draws the header logo a little larger', (tester) async {
+    await pumpHome(tester);
+    await tester.pumpAndSettle();
+
+    final logo = find
+        .descendant(
+          of: find.byType(GreetingHeader),
+          matching: find.byType(NextLogo),
+        )
+        .first;
+    expect(tester.widget<NextLogo>(logo).size, 28);
   });
 
   // v1.1.0 plan, task 4.4: the icon and the name are the way to the profile.
@@ -447,6 +466,30 @@ void main() {
       }
     });
 
+    // S21 checkpoint: the links' words in the actions' color; only their
+    // icons stay green.
+    testWidgets('writes the links in the color of the actions', (tester) async {
+      await pumpHome(tester);
+      await tester.pumpAndSettle();
+      await scrollToBox(tester);
+
+      Color? colorOf(String text) =>
+          tester.widget<Text>(find.text(text)).style?.color;
+
+      final actions = colorOf('Pagar\nQR Code');
+      expect(colorOf('Pix\nAutomático'), actions);
+      expect(colorOf('Minhas\nchaves'), actions);
+      final key = tester.widget<IconTheme>(
+        find
+            .ancestor(
+              of: find.byIcon(Icons.key_outlined),
+              matching: find.byType(IconTheme),
+            )
+            .first,
+      );
+      expect(key.data.color, NbColors.dark.accent);
+    });
+
     testWidgets('puts the Pix symbol on "Pix Automático", split from "Minhas '
         'chaves" by a line', (tester) async {
       await pumpHome(tester);
@@ -496,19 +539,18 @@ void main() {
     expect(find.widgetWithText(NbToast, 'Em breve.'), findsNothing);
   });
 
-  for (final shortcut in ['Recarga']) {
-    testWidgets('says "$shortcut" is coming, without leaving', (tester) async {
-      var opened = 0;
-      await pumpHome(tester, onPix: () => opened++);
-      await tester.pumpAndSettle();
+  // v1.1.0 plan, task 4.12: the Recarga shortcut opens the recharges.
+  testWidgets('opens the recharges on the "Recarga" shortcut', (tester) async {
+    var opened = 0;
+    await pumpHome(tester, onRecharge: () => opened++);
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.text(shortcut));
-      await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(ActionTile, 'Recarga'));
+    await tester.pumpAndSettle();
 
-      expect(find.widgetWithText(NbToast, 'Em breve.'), findsOneWidget);
-      expect(opened, 0);
-    });
-  }
+    expect(opened, 1);
+    expect(find.widgetWithText(NbToast, 'Em breve.'), findsNothing);
+  });
 
   // v1.1.0 plan, task 4.6: the bell opens the notifications.
   testWidgets('opens the notifications', (tester) async {
@@ -558,18 +600,16 @@ void main() {
     expect(drawn.dx, greaterThan(NbSize.icon));
   });
 
-  // Week 8 plan, V9: the help field is a button that says it is coming.
-  testWidgets('says the assistant is coming', (tester) async {
-    await pumpHome(tester);
+  // v1.1.0 plan, task 4.10: the help field opens the assistant.
+  testWidgets('opens the assistant from the help field', (tester) async {
+    var opened = 0;
+    await pumpHome(tester, onAssistant: () => opened++);
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Posso te ajudar?'));
     await tester.pumpAndSettle();
 
-    expect(
-      find.widgetWithText(NbToast, 'Em breve: assistente com IA.'),
-      findsOneWidget,
-    );
+    expect(opened, 1);
   });
 
   // MOB-05, week 8 plan V14: the balance starts hidden at every opening, and

@@ -16,13 +16,15 @@ class NavShell extends StatelessWidget {
   /// The area's screen.
   final Widget child;
 
-  /// The areas of the bar, in order: Início and Extrato before the Pix,
-  /// Segurança and Perfil after it.
+  /// The areas of the bar, in order: Início and Cartões before the Pix,
+  /// Investimentos and Menu after it (v1.1.0 plan, task 4.11). The
+  /// statement, Security and the profile open from the Home and the
+  /// profile, still over the bar.
   static const List<String> areas = [
     AppRoutes.home,
-    AppRoutes.statement,
-    AppRoutes.security,
-    AppRoutes.profile,
+    AppRoutes.cards,
+    AppRoutes.investments,
+    AppRoutes.menu,
   ];
 
   @override
@@ -34,11 +36,11 @@ class NavShell extends StatelessWidget {
       bottomNavigationBar: NbNavBar(
         leading: const [
           (icon: Icons.home_outlined, label: 'Início'),
-          (icon: Icons.receipt_long_outlined, label: 'Extrato'),
+          (icon: Icons.credit_card, label: 'Cartões'),
         ],
         trailing: const [
-          (icon: Icons.shield_outlined, label: 'Segurança'),
-          (icon: Icons.person_outline, label: 'Perfil'),
+          (icon: Icons.analytics_outlined, label: 'Investimentos'),
+          (icon: Icons.more_horiz, label: 'Menu'),
         ],
         // The official symbol, by the developer's exception (week 8 plan, V6).
         action: (icon: const PixMark(), label: 'Pix'),

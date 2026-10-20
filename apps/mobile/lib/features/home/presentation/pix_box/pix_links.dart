@@ -84,7 +84,8 @@ class _PixLink extends StatelessWidget {
                   child: Text(
                     text,
                     textAlign: TextAlign.center,
-                    style: NbType.caption.copyWith(color: colors.accent),
+                    // The actions' color; only the icon is green.
+                    style: NbType.caption.copyWith(color: colors.text),
                   ),
                 ),
               ),

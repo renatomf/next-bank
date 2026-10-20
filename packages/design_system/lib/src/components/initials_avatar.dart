@@ -1,9 +1,11 @@
-import 'package:design_system/design_system.dart';
+import 'package:design_system/src/theme.dart';
+import 'package:design_system/src/tokens.dart';
 import 'package:flutter/material.dart';
 
-/// A bank's initials in a circle, in place of its logo: logos are marks of
-/// third parties (repository rules) and would weigh on the app.
-class BankInitials extends StatelessWidget {
+/// Initials in a circle, in place of a bank's or a phone carrier's logo:
+/// logos are marks of third parties (repository rules) and would weigh on
+/// the app (v1.1.0 plan, tasks 4.9 and 4.12).
+class InitialsAvatar extends StatelessWidget {
   /// Creates the circle with [initials].
   const new({required this.initials, super.key});
 

@@ -60,11 +60,29 @@ abstract final class AppRoutes {
   /// Help, over the Home (v1.1.0 plan, task 4.5).
   static const String help = '/help';
 
+  /// Recargas, over the Home (v1.1.0 plan, task 4.12).
+  static const String recharge = '/recharge';
+
+  /// The amount of a recharge, over the carriers.
+  static const String rechargeAmount = '$recharge/amount';
+
+  /// The assistant, over the Home (v1.1.0 plan, task 4.10).
+  static const String assistant = '/assistant';
+
   /// Notifications, over the Home (v1.1.0 plan, task 4.6).
   static const String notifications = '/notifications';
 
   /// The notification settings, over the notifications.
   static const String notificationSettings = '$notifications/settings';
+
+  /// Cartões, an area of the bar (v1.1.0 plan, task 4.11).
+  static const String cards = '/cards';
+
+  /// Investimentos, an area of the bar.
+  static const String investments = '/investments';
+
+  /// The full menu, an area of the bar.
+  static const String menu = '/menu';
 
   /// The customer and the way out (screen 13).
   static const String profile = '/profile';

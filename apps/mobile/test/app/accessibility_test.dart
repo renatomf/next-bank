@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:next_bank/app/redirect.dart';
 import 'package:next_bank/core/session/session_tokens.dart';
+import 'package:next_bank/features/areas/presentation/area_placeholder_screen.dart';
+import 'package:next_bank/features/assistant/presentation/assistant_screen.dart';
 import 'package:next_bank/features/auth/presentation/create_pin/create_pin_screen.dart';
 import 'package:next_bank/features/auth/presentation/login/login_screen.dart';
 import 'package:next_bank/features/auth/presentation/register/register_screen.dart';
@@ -23,6 +25,7 @@ import 'package:next_bank/features/pix/presentation/transfer/transfer_pix_screen
 import 'package:next_bank/features/profile/presentation/blank/profile_blank_screen.dart';
 import 'package:next_bank/features/profile/presentation/profile_screen.dart';
 import 'package:next_bank/features/profile/presentation/theme/theme_screen.dart';
+import 'package:next_bank/features/recharge/presentation/recharge_screen.dart';
 import 'package:next_bank/features/security/presentation/change_password/change_password_screen.dart';
 import 'package:next_bank/features/security/presentation/change_pin/change_pin_screen.dart';
 import 'package:next_bank/features/security/presentation/sessions/security_screen.dart';
@@ -171,6 +174,23 @@ final List<(String, Type, Future<void> Function(WidgetTester))> screens = [
     (tester) => openSignedIn(tester, AppRoutes.changePassword),
   ),
   ('Help', HelpScreen, (tester) => openSignedIn(tester, AppRoutes.help)),
+  (
+    'Recargas',
+    RechargeScreen,
+    (tester) => openSignedIn(tester, AppRoutes.recharge),
+  ),
+  ('Cartões', AreaPlaceholderScreen, (t) => openSignedIn(t, AppRoutes.cards)),
+  (
+    'Investimentos',
+    AreaPlaceholderScreen,
+    (tester) => openSignedIn(tester, AppRoutes.investments),
+  ),
+  ('Menu', AreaPlaceholderScreen, (t) => openSignedIn(t, AppRoutes.menu)),
+  (
+    'Assistant',
+    AssistantScreen,
+    (tester) => openSignedIn(tester, AppRoutes.assistant),
+  ),
   (
     'Pix Automático',
     PixAutomaticScreen,

@@ -1,9 +1,9 @@
-import 'package:design_system/src/theme.dart';
-import 'package:design_system/src/tokens.dart';
+import 'package:design_system/src/components/nb_chip.dart';
 import 'package:flutter/material.dart';
 
 /// A filter that turns on and off (v1.1.0 plan, task 4.1): a pill with an
-/// icon and its label; on, it takes the accent border and a check.
+/// icon and its label; on, it takes the accent border and a check. The
+/// look is the [NbChip]'s, shared with the app's action chips.
 class FilterPill extends StatelessWidget {
   /// Creates the pill.
   const new({
@@ -27,53 +27,10 @@ class FilterPill extends StatelessWidget {
   final IconData? icon;
 
   @override
-  Widget build(BuildContext context) {
-    final colors = context.nbColors;
-    final leading = selected ? Icons.check : icon;
-    return Semantics(
-      container: true,
-      button: true,
-      selected: selected,
-      label: label,
-      excludeSemantics: true,
-      child: Material(
-        color: selected ? colors.surface2 : colors.surface,
-        shape: StadiumBorder(
-          side: BorderSide(color: selected ? colors.accent : colors.border),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onPressed,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: NbSpace.lg,
-              vertical: NbSpace.sm,
-            ),
-            // On a narrow room the content shrinks to fit, whole; in a list
-            // that scrolls sideways it keeps its natural size.
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (leading != null) ...[
-                    Icon(
-                      leading,
-                      size: 18,
-                      color: selected ? colors.accent : colors.text,
-                    ),
-                    const SizedBox(width: NbSpace.sm),
-                  ],
-                  Text(
-                    label,
-                    style: NbType.bodyText.copyWith(color: colors.text),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => NbChip(
+    label: label,
+    icon: selected ? Icons.check : icon,
+    selected: selected,
+    onPressed: onPressed,
+  );
 }

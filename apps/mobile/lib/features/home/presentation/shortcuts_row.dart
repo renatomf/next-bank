@@ -2,15 +2,15 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 
 /// The Home's four shortcuts, side by side across the width (S21 checkpoint
-/// of v1.1.0): Área Pix, Pagar, Transferir and Recarga. Recarga comes with
-/// its screen and says so for now (week 8 plan, V7); "Receber" lives in the
-/// Pix box.
+/// of v1.1.0): Área Pix, Pagar, Transferir and Recarga; "Receber" lives in
+/// the Pix box.
 class ShortcutsRow extends StatelessWidget {
   /// Creates the row; the Home says where each shortcut goes.
   const new({
     required this.onPix,
     required this.onPay,
     required this.onTransfer,
+    required this.onRecharge,
     super.key,
   });
 
@@ -23,11 +23,11 @@ class ShortcutsRow extends StatelessWidget {
   /// Opens the transfer (v1.1.0 plan, task 4.9).
   final VoidCallback onTransfer;
 
+  /// Opens the recharges (v1.1.0 plan, task 4.12).
+  final VoidCallback onRecharge;
+
   @override
   Widget build(BuildContext context) {
-    void sayComingSoon() =>
-        showNbToast(context, 'Em breve.', icon: Icons.info_outline);
-
     // Each tile takes an equal share of the width, so the four keep one size
     // (week 8 plan, V13).
     return Row(
@@ -64,7 +64,7 @@ class ShortcutsRow extends StatelessWidget {
           child: ActionTile(
             icon: const Icon(Icons.phone_android),
             label: 'Recarga',
-            onPressed: sayComingSoon,
+            onPressed: onRecharge,
           ),
         ),
       ],

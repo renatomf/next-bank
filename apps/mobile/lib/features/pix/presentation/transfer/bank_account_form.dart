@@ -1,7 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:next_bank/features/pix/domain/bank.dart';
-import 'package:next_bank/features/pix/presentation/transfer/bank_initials.dart';
 
 /// The account at the picked bank: the bank with "Alterar", the agency and
 /// the account with its digit. Layout only: "Continuar" says it is coming,
@@ -26,7 +25,7 @@ class BankAccountForm extends StatelessWidget {
       children: [
         Row(
           children: [
-            BankInitials(initials: bank.initials),
+            InitialsAvatar(initials: bank.initials),
             const SizedBox(width: NbSpace.md),
             Expanded(
               child: Text(
