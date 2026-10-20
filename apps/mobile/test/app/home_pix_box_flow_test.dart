@@ -1,3 +1,4 @@
+import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
@@ -5,6 +6,7 @@ import 'package:next_bank/features/home/presentation/pix_box/pix_box.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/automatic/pix_automatic_screen.dart';
 import 'package:next_bank/features/pix/presentation/keys/pix_keys_screen.dart';
+import 'package:next_bank/features/pix/presentation/scan/scan_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/transfer/transfer_pix_screen.dart';
 
@@ -35,6 +37,35 @@ Future<void> tapInBox(WidgetTester tester, String label) async {
 
 // The Home's Pix box (v1.1.0 plan, task 4.2) through the real router.
 void main() {
+  // v1.1.0 plan, task 4.9: the Home's shortcut opens the transfer too.
+  testWidgets('opens Transferir from the Home shortcut, and back', (
+    tester,
+  ) async {
+    await openHome(tester, FakePixRepository());
+
+    await tester.tap(find.widgetWithText(ActionTile, 'Transferir'));
+    await tester.pumpAndSettle();
+    expect(find.byType(TransferPixScreen), findsOneWidget);
+
+    await tester.tap(find.bySemanticsLabel('Voltar'));
+    await tester.pumpAndSettle();
+    expect(find.byType(HomeScreen), findsOneWidget);
+  });
+
+  // S21 checkpoint: the transfer's camera opens the reading, as "Pagar".
+  testWidgets("opens the QR Code reading from Transferir's camera", (
+    tester,
+  ) async {
+    await openHome(tester, FakePixRepository());
+    await tester.tap(find.widgetWithText(ActionTile, 'Transferir'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.bySemanticsLabel('Ler QR Code'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ScanPixScreen), findsOneWidget);
+  });
+
   testWidgets('opens the Pix with the CPF typed, looked up at once', (
     tester,
   ) async {
@@ -60,18 +91,19 @@ void main() {
     expect(find.text('529.982.247-25'), findsOneWidget);
   });
 
-  for (final (label, screen) in [
-    ('Transferir Pix', TransferPixScreen),
-    ('Pix Automático', PixAutomaticScreen),
-    ('Minhas chaves', PixKeysScreen),
+  // Each with its own title: "Transferir Pix" opens Transferir.
+  for (final (label, screen, title) in [
+    ('Transferir Pix', TransferPixScreen, 'Transferir'),
+    ('Pix Automático', PixAutomaticScreen, 'Pix Automático'),
+    ('Minhas chaves', PixKeysScreen, 'Minhas chaves'),
   ]) {
-    testWidgets('opens "$label", blank for now, and goes back', (tester) async {
+    testWidgets('opens "$label" and goes back', (tester) async {
       await openHome(tester, FakePixRepository());
 
       await tapInBox(tester, label);
 
       expect(find.byType(screen), findsOneWidget);
-      expect(find.text(label), findsWidgets);
+      expect(find.widgetWithText(ScreenHeader, title), findsOneWidget);
 
       await tester.tap(find.bySemanticsLabel('Voltar'));
       await tester.pumpAndSettle();

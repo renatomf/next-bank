@@ -481,7 +481,22 @@ void main() {
     });
   });
 
-  for (final shortcut in ['Transferir', 'Recarga']) {
+  // v1.1.0 plan, task 4.9: the Transferir shortcut opens the transfer.
+  testWidgets('opens the transfer on the "Transferir" shortcut', (
+    tester,
+  ) async {
+    var opened = 0;
+    await pumpHome(tester, onTransfer: () => opened++);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(ActionTile, 'Transferir'));
+    await tester.pumpAndSettle();
+
+    expect(opened, 1);
+    expect(find.widgetWithText(NbToast, 'Em breve.'), findsNothing);
+  });
+
+  for (final shortcut in ['Recarga']) {
     testWidgets('says "$shortcut" is coming, without leaving', (tester) async {
       var opened = 0;
       await pumpHome(tester, onPix: () => opened++);

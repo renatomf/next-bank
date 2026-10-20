@@ -2,18 +2,26 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 
 /// The Home's four shortcuts, side by side across the width (S21 checkpoint
-/// of v1.1.0): Área Pix, Pagar, Transferir and Recarga. Transferir and
-/// Recarga come with their screens and say so for now (week 8 plan, V7);
-/// "Receber" lives in the Pix box.
+/// of v1.1.0): Área Pix, Pagar, Transferir and Recarga. Recarga comes with
+/// its screen and says so for now (week 8 plan, V7); "Receber" lives in the
+/// Pix box.
 class ShortcutsRow extends StatelessWidget {
   /// Creates the row; the Home says where each shortcut goes.
-  const new({required this.onPix, required this.onPay, super.key});
+  const new({
+    required this.onPix,
+    required this.onPay,
+    required this.onTransfer,
+    super.key,
+  });
 
   /// Opens the Pix area.
   final VoidCallback onPix;
 
   /// Opens the reading of a Pix QR Code; the boleto's barcode comes later.
   final VoidCallback onPay;
+
+  /// Opens the transfer (v1.1.0 plan, task 4.9).
+  final VoidCallback onTransfer;
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +57,7 @@ class ShortcutsRow extends StatelessWidget {
               child: const Icon(Icons.swap_horiz),
             ),
             label: 'Transferir',
-            onPressed: sayComingSoon,
+            onPressed: onTransfer,
           ),
         ),
         Expanded(
