@@ -32,19 +32,7 @@ class AutomaticPaymentTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: NbSpace.md),
           child: Row(
             children: [
-              Container(
-                width: NbSize.touch,
-                height: NbSize.touch,
-                decoration: BoxDecoration(
-                  color: colors.surface2,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  payment.icon,
-                  size: NbSize.icon,
-                  color: colors.accent,
-                ),
-              ),
+              NbIconCircle(icon: payment.icon),
               const SizedBox(width: NbSpace.md),
               Expanded(
                 child: Column(

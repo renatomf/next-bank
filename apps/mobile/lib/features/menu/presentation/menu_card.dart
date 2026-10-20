@@ -48,7 +48,7 @@ class MenuCard extends StatelessWidget {
                           alignment: Alignment.centerRight,
                           child: FittedBox(
                             fit: BoxFit.scaleDown,
-                            child: _NewBadge(),
+                            child: NbTag(label: 'Novo'),
                           ),
                         ),
                       ),
@@ -65,27 +65,6 @@ class MenuCard extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _NewBadge extends StatelessWidget {
-  const new();
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.nbColors;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: NbSpace.sm, vertical: 2),
-      decoration: BoxDecoration(
-        color: colors.primary,
-        borderRadius: BorderRadius.circular(NbSpace.sm),
-      ),
-      child: Text(
-        'Novo',
-        style: context.nbText.cardLabel.copyWith(color: colors.onPrimary),
       ),
     );
   }

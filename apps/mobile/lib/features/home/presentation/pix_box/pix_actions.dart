@@ -23,14 +23,11 @@ class PixActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
     const divider = VerticalDivider(indent: NbSpace.md, endIndent: NbSpace.md);
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.surface2,
-        borderRadius: BorderRadius.circular(NbRadius.boxInner),
-      ),
+    return NbSurface(
+      tone: NbSurfaceTone.inset,
+      padding: EdgeInsets.zero,
       // IntrinsicHeight lets the dividers run the height of the buttons.
       child: IntrinsicHeight(
         child: Row(

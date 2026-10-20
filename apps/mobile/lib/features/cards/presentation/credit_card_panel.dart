@@ -51,13 +51,7 @@ class _InvoiceCard extends StatelessWidget {
     final colors = context.nbColors;
     const available = exampleCreditLimitCents - exampleInvoiceCents;
 
-    return Container(
-      padding: const EdgeInsets.all(NbSpace.lg),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(NbRadius.box),
-        border: Border.all(color: colors.border),
-      ),
+    return NbSurface(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: NbSpace.sm,

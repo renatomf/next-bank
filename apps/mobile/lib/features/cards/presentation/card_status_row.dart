@@ -19,12 +19,9 @@ class _CardStatusRowState extends State<CardStatusRow> {
   Widget build(BuildContext context) {
     final colors = context.nbColors;
 
-    return Container(
+    return NbSurface(
+      tone: NbSurfaceTone.outlined,
       padding: const EdgeInsets.symmetric(horizontal: NbSpace.lg),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(NbRadius.boxInner),
-        border: Border.all(color: colors.border),
-      ),
       child: Row(
         spacing: NbSpace.md,
         children: [

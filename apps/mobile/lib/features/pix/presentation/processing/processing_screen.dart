@@ -120,14 +120,11 @@ class _Outcome extends StatelessWidget {
     return Column(
       children: [
         const Spacer(),
-        Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.14),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, size: 36, color: color),
+        NbIconCircle(
+          icon: icon,
+          size: NbSize.statusCircle,
+          color: color,
+          tone: NbIconCircleTone.tinted,
         ),
         const SizedBox(height: NbSpace.xl),
         Semantics(header: true, child: Text(title, style: text.headlineSmall)),

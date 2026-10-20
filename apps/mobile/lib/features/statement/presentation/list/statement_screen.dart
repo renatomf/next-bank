@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/account/account_providers.dart';
 import 'package:next_bank/core/api_failure.dart';
@@ -94,7 +93,12 @@ class _StatementScreenState extends ConsumerState<StatementScreen> {
       const SizedBox(height: NbSpace.xl),
       _Filters(selected: query.filter),
       const SizedBox(height: NbSpace.lg),
-      _SearchField(onChanged: _typeSearch),
+      NbSearchField(
+        hint: 'Busque a transação por nome',
+        // The server takes up to 60 characters (READ-04).
+        maxLength: 60,
+        onChanged: _typeSearch,
+      ),
       const SizedBox(height: NbSpace.lg),
     ];
     return Scaffold(
@@ -171,37 +175,6 @@ class _Filters extends ConsumerWidget {
       },
     ),
   );
-}
-
-class _SearchField extends StatelessWidget {
-  const new({required this.onChanged});
-
-  final ValueChanged<String> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.nbColors;
-    return TextField(
-      onChanged: onChanged,
-      textInputAction: TextInputAction.search,
-      // The server takes up to 60 characters (READ-04).
-      inputFormatters: [LengthLimitingTextInputFormatter(60)],
-      decoration: InputDecoration(
-        hintText: 'Busque a transação por nome',
-        prefixIcon: Icon(Icons.search, color: colors.textMuted),
-        filled: true,
-        fillColor: colors.surface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(NbRadius.pill),
-          borderSide: BorderSide(color: colors.border),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(NbRadius.pill),
-          borderSide: BorderSide(color: colors.border),
-        ),
-      ),
-    );
-  }
 }
 
 class _Content extends ConsumerWidget {

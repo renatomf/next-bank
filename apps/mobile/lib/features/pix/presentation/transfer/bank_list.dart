@@ -33,12 +33,9 @@ class _BankListState extends State<BankList> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        TextField(
+        NbSearchField(
+          hint: 'Buscar banco',
           onChanged: (query) => setState(() => _query = query),
-          decoration: const InputDecoration(
-            hintText: 'Buscar banco',
-            suffixIcon: Icon(Icons.search),
-          ),
         ),
         const SizedBox(height: NbSpace.lg),
         if (banks.isEmpty)

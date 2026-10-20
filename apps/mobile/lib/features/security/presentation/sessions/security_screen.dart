@@ -154,53 +154,49 @@ class _SessionTile extends ConsumerWidget {
     final colors = context.nbColors;
     final now = ref.watch(nowProvider)();
     final name = session.deviceLabel ?? 'Aparelho';
-    return Container(
-      margin: const EdgeInsets.only(bottom: NbSpace.sm),
-      padding: const EdgeInsets.all(NbSpace.lg),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(NbRadius.box),
-        border: Border.all(color: colors.border),
-      ),
-      child: Row(
-        children: [
-          ExcludeSemantics(
-            child: Icon(Icons.smartphone, color: colors.textMuted),
-          ),
-          const SizedBox(width: NbSpace.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  session.current ? '$name · Este aparelho' : name,
-                  style: context.nbText.bodyText,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Último uso: ${movementTime(session.lastUsedAt, now)}',
-                  style: context.nbText.caption,
-                ),
-              ],
+    return Padding(
+      padding: const EdgeInsets.only(bottom: NbSpace.sm),
+      child: NbSurface(
+        child: Row(
+          children: [
+            ExcludeSemantics(
+              child: Icon(Icons.smartphone, color: colors.textMuted),
             ),
-          ),
-          // D3: this device ends by signing out, on the Profile.
-          if (!session.current && revoking == session.id)
-            const SizedBox.square(
-              dimension: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                semanticsLabel: 'Encerrando a sessão',
+            const SizedBox(width: NbSpace.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    session.current ? '$name · Este aparelho' : name,
+                    style: context.nbText.bodyText,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Último uso: ${movementTime(session.lastUsedAt, now)}',
+                    style: context.nbText.caption,
+                  ),
+                ],
               ),
-            )
-          else if (!session.current)
-            TextButton(
-              onPressed: revoking == null
-                  ? () => _confirmAndRevoke(context, ref)
-                  : null,
-              child: const Text('Encerrar'),
             ),
-        ],
+            // D3: this device ends by signing out, on the Profile.
+            if (!session.current && revoking == session.id)
+              const SizedBox.square(
+                dimension: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  semanticsLabel: 'Encerrando a sessão',
+                ),
+              )
+            else if (!session.current)
+              TextButton(
+                onPressed: revoking == null
+                    ? () => _confirmAndRevoke(context, ref)
+                    : null,
+                child: const Text('Encerrar'),
+              ),
+          ],
+        ),
       ),
     );
   }

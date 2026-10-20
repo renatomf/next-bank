@@ -83,12 +83,9 @@ class _PixContactsState extends State<PixContacts> {
           child: Text('Contatos Pix', style: context.nbText.sectionTitle),
         ),
         const SizedBox(height: NbSpace.md),
-        TextField(
+        NbSearchField(
+          hint: 'Buscar contato',
           onChanged: (query) => setState(() => _query = query),
-          decoration: const InputDecoration(
-            hintText: 'Buscar contato',
-            prefixIcon: Icon(Icons.search),
-          ),
         ),
         const SizedBox(height: NbSpace.sm),
         for (final contact in contacts) _ContactRow(contact: contact),

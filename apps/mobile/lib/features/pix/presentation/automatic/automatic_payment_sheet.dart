@@ -99,19 +99,9 @@ class _CompanyHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.nbColors;
-
     return Row(
       children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: colors.surface2,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(payment.icon, size: NbSize.icon, color: colors.accent),
-        ),
+        NbIconCircle(icon: payment.icon, size: NbSize.avatar),
         const SizedBox(width: NbSpace.md),
         Expanded(
           child: Column(
