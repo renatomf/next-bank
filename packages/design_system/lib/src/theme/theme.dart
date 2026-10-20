@@ -1,5 +1,5 @@
-import 'package:design_system/src/text_styles.dart';
-import 'package:design_system/src/tokens.dart';
+import 'package:design_system/src/theme/text_styles.dart';
+import 'package:design_system/src/tokens/tokens.dart';
 import 'package:flutter/material.dart';
 
 /// Material themes built from the brief's tokens (dark is the default look).

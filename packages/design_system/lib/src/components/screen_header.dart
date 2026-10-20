@@ -1,5 +1,5 @@
 import 'package:design_system/src/components/icon_circle_button.dart';
-import 'package:design_system/src/tokens.dart';
+import 'package:design_system/src/tokens/tokens.dart';
 import 'package:flutter/material.dart';
 
 /// The header of an inner screen (pix-dark and comprovante-dark mockups): a

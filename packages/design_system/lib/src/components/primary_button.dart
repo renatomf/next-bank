@@ -1,5 +1,5 @@
-import 'package:design_system/src/theme.dart';
-import 'package:design_system/src/tokens.dart';
+import 'package:design_system/src/theme/theme.dart';
+import 'package:design_system/src/tokens/tokens.dart';
 import 'package:flutter/material.dart';
 
 /// Pill button for the main action of a screen (brief, section 7): 56 high,

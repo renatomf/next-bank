@@ -1,5 +1,5 @@
-import 'package:design_system/src/theme.dart';
-import 'package:design_system/src/tokens.dart';
+import 'package:design_system/src/theme/theme.dart';
+import 'package:design_system/src/tokens/tokens.dart';
 import 'package:flutter/material.dart';
 
 /// An amount in reais split for display: "10.000" and ",00", and the whole

@@ -1,4 +1,4 @@
-import 'package:design_system/src/css_gradients.dart';
+import 'package:design_system/src/components/css_gradients.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 

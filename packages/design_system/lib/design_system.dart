@@ -1,22 +1,22 @@
-/// next bank design system: tokens, theme and components built from
-/// docs/design/brief.md. Components join only together with a screen that
-/// uses them.
+/// next bank design system, built from docs/design/brief.md in four layers,
+/// each built only on the ones before it (ADR 0014): tokens, the theme,
+/// components and patterns. It knows no bank and carries no copy: screens
+/// give it their words. A component joins only together with a screen that
+/// uses it.
 library;
 
+// Components: reusable visual pieces.
 export 'src/components/action_tile.dart';
 export 'src/components/barcode_icon.dart';
 export 'src/components/confirm_dialog.dart';
 export 'src/components/display_title.dart';
 export 'src/components/dither.dart';
-export 'src/components/empty_state.dart';
-export 'src/components/error_state.dart';
 export 'src/components/filter_pill.dart';
 export 'src/components/form_error_text.dart';
 export 'src/components/glass_art.dart';
 export 'src/components/glass_panel.dart';
 export 'src/components/glow_background.dart';
 export 'src/components/icon_circle_button.dart';
-export 'src/components/info_notice.dart';
 export 'src/components/initials_avatar.dart';
 export 'src/components/menu_group.dart';
 export 'src/components/money_text.dart';
@@ -39,9 +39,15 @@ export 'src/components/primary_button.dart';
 export 'src/components/qr_code_view.dart';
 export 'src/components/screen_header.dart';
 export 'src/components/secondary_button.dart';
-export 'src/components/secure_hint.dart';
 export 'src/components/skeleton.dart';
 export 'src/components/status_badge.dart';
-export 'src/text_styles.dart';
-export 'src/theme.dart';
-export 'src/tokens.dart';
+// Patterns: components put together for a recurring need.
+export 'src/patterns/empty_state.dart';
+export 'src/patterns/error_state.dart';
+export 'src/patterns/info_notice.dart';
+export 'src/patterns/secure_hint.dart';
+// Theme: the tokens in Flutter's theme, light and dark.
+export 'src/theme/text_styles.dart';
+export 'src/theme/theme.dart';
+// Tokens: the values everything else is made of.
+export 'src/tokens/tokens.dart';

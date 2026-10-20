@@ -1,4 +1,4 @@
-import 'package:design_system/src/tokens.dart';
+import 'package:design_system/src/tokens/tokens.dart';
 import 'package:flutter/material.dart';
 
 /// The developer's green glass art (v1.1.0 checkpoint, 2026-10-14), tinted
