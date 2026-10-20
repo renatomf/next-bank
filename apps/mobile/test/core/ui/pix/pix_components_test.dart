@@ -251,5 +251,4 @@ void main() {
       expect(find.text('ID DA TRANSAÇÃO'), findsNothing);
     });
   });
-
 }
