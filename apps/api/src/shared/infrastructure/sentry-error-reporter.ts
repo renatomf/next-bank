@@ -12,7 +12,9 @@ const CPF = /\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/g;
 /**
  * What leaves for Sentry (week 8 plan, PR c): no request body, cookies,
  * credentials or user, the same keys the logs redact (API-04), and nothing
- * shaped like a CPF (LGPD). A pure function, so it is tested on its own.
+ * shaped like a CPF (LGPD). URLs leave without their query string, as in the
+ * request log (READ-06): it can carry a searched name or a statement cursor.
+ * A pure function, so it is tested on its own.
  */
 export function scrubEvent<T extends Partial<Event>>(event: T): T {
   const scrubbed = { ...event };
@@ -20,7 +22,7 @@ export function scrubEvent<T extends Partial<Event>>(event: T): T {
   if (scrubbed.request) {
     const { url, method, headers } = scrubbed.request;
     scrubbed.request = {
-      ...(url !== undefined ? { url } : {}),
+      ...(url !== undefined ? { url: withoutQuery(url) } : {}),
       ...(method !== undefined ? { method } : {}),
       ...(headers ? { headers: redact(headers) as Record<string, string> } : {}),
     };
@@ -33,7 +35,7 @@ export function scrubEvent<T extends Partial<Event>>(event: T): T {
     scrubbed.breadcrumbs = scrubbed.breadcrumbs.map((crumb) => ({
       ...crumb,
       ...(crumb.message !== undefined ? { message: maskCpf(crumb.message) } : {}),
-      ...(crumb.data ? { data: redact(crumb.data) as Record<string, unknown> } : {}),
+      ...(crumb.data ? { data: scrubCrumbData(crumb.data) } : {}),
     }));
   }
   if (scrubbed.message !== undefined) scrubbed.message = maskCpf(scrubbed.message);
@@ -61,6 +63,19 @@ function redact(value: unknown): unknown {
       return [[key, SENSITIVE.has(key.toLowerCase()) ? REDACTED : redact(inner)]];
     }),
   );
+}
+
+/** A breadcrumb's data redacted, an HTTP breadcrumb's URL without its query. */
+function scrubCrumbData(data: Record<string, unknown>): Record<string, unknown> {
+  const redacted = redact(data) as Record<string, unknown>;
+  return typeof redacted.url === 'string'
+    ? { ...redacted, url: withoutQuery(redacted.url) }
+    : redacted;
+}
+
+/** The URL up to its query string or fragment. */
+function withoutQuery(url: string): string {
+  return url.split(/[?#]/, 1)[0] ?? url;
 }
 
 function maskCpf(text: string): string {
