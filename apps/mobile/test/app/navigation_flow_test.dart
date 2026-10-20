@@ -99,12 +99,13 @@ void main() {
     );
   });
 
-  // S21 checkpoint: Invest, short enough for the bar, shows a line chart.
-  testWidgets('shows a line chart on Invest', (tester) async {
+  // S21 checkpoint: Invest, short enough for the bar, shows a framed chart,
+  // as the reference.
+  testWidgets('shows a framed chart on Invest', (tester) async {
     await openHome(tester);
 
     expect(
-      find.descendant(of: bar, matching: find.byIcon(Icons.stacked_line_chart)),
+      find.descendant(of: bar, matching: find.byIcon(Icons.analytics_outlined)),
       findsOneWidget,
     );
   });
