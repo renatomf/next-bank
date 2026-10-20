@@ -4,11 +4,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/features/menu/presentation/menu_card.dart';
 import 'package:next_bank/features/menu/presentation/menu_screen.dart';
 
-Future<void> pumpMenu(WidgetTester tester) async {
+Future<void> pumpMenu(WidgetTester tester, {VoidCallback? onBack}) async {
   tester.view.physicalSize = const Size(1080, 12000);
   addTearDown(tester.view.reset);
   await tester.pumpWidget(
-    MaterialApp(theme: NbTheme.dark(), home: const MenuScreen()),
+    MaterialApp(
+      theme: NbTheme.dark(),
+      home: MenuScreen(onBack: onBack ?? () {}),
+    ),
   );
   await tester.pumpAndSettle();
 }
@@ -77,6 +80,16 @@ void main() {
       expect(find.textContaining(mark), findsNothing, reason: mark);
     }
     expect(find.widgetWithText(MenuCard, 'Carteira digital'), findsWidgets);
+  });
+
+  // S21 checkpoint: a back arrow, as on the Pix screen.
+  testWidgets('goes back where the app says', (tester) async {
+    var back = 0;
+    await pumpMenu(tester, onBack: () => back++);
+
+    await tester.tap(find.bySemanticsLabel('Voltar'));
+
+    expect(back, 1);
   });
 
   testWidgets('says a card is coming', (tester) async {

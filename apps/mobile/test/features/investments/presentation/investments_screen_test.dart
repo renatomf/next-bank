@@ -4,11 +4,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/features/investments/presentation/investments_screen.dart';
 import 'package:next_bank/features/investments/presentation/recommended_shelf.dart';
 
-Future<void> pumpInvestments(WidgetTester tester) async {
+Future<void> pumpInvestments(
+  WidgetTester tester, {
+  VoidCallback? onBack,
+}) async {
   tester.view.physicalSize = const Size(1080, 4800);
   addTearDown(tester.view.reset);
   await tester.pumpWidget(
-    MaterialApp(theme: NbTheme.dark(), home: const InvestmentsScreen()),
+    MaterialApp(
+      theme: NbTheme.dark(),
+      home: InvestmentsScreen(onBack: onBack ?? () {}),
+    ),
   );
   await tester.pumpAndSettle();
 }
@@ -81,6 +87,16 @@ void main() {
       expect(find.textContaining('C6'), findsNothing, reason: tab);
       expect(find.textContaining('CTVM'), findsNothing, reason: tab);
     }
+  });
+
+  // S21 checkpoint: a back arrow, as on the Pix screen.
+  testWidgets('goes back where the app says', (tester) async {
+    var back = 0;
+    await pumpInvestments(tester, onBack: () => back++);
+
+    await tester.tap(find.bySemanticsLabel('Voltar'));
+
+    expect(back, 1);
   });
 
   testWidgets('says Definir perfil is coming', (tester) async {

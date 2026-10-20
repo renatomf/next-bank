@@ -110,6 +110,19 @@ void main() {
     );
   });
 
+  // S21 checkpoint: each area of the bar goes back to the Home, as the Pix.
+  for (final label in ['Cartões', 'Invest', 'Menu']) {
+    testWidgets('goes back to the Home from $label', (tester) async {
+      await openHome(tester);
+      await tapBar(tester, label);
+
+      await tester.tap(find.bySemanticsLabel('Voltar'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(HomeScreen), findsOneWidget);
+    });
+  }
+
   // D7: the flows open over the areas, without the bar.
   testWidgets('the Pix opens over the bar, and back returns to it', (
     tester,

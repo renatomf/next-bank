@@ -10,7 +10,11 @@ import '../../../support/device_stores.dart';
 import '../../../support/fake_profile_repository.dart';
 import '../../../support/fake_token_store.dart';
 
-Future<void> pumpCards(WidgetTester tester, {int initialIndex = 0}) async {
+Future<void> pumpCards(
+  WidgetTester tester, {
+  int initialIndex = 0,
+  VoidCallback? onBack,
+}) async {
   tester.view.physicalSize = const Size(1080, 4000);
   addTearDown(tester.view.reset);
   await tester.pumpWidget(
@@ -22,7 +26,7 @@ Future<void> pumpCards(WidgetTester tester, {int initialIndex = 0}) async {
       ],
       child: MaterialApp(
         theme: NbTheme.dark(),
-        home: CardsScreen(initialIndex: initialIndex),
+        home: CardsScreen(initialIndex: initialIndex, onBack: onBack ?? () {}),
       ),
     ),
   );
@@ -120,6 +124,16 @@ void main() {
       expect(comingSoon(), findsOneWidget);
     });
   }
+
+  // S21 checkpoint: a back arrow, as on the Pix screen.
+  testWidgets('goes back where the app says', (tester) async {
+    var back = 0;
+    await pumpCards(tester, onBack: () => back++);
+
+    await tester.tap(find.bySemanticsLabel('Voltar'));
+
+    expect(back, 1);
+  });
 
   testWidgets('says Pagar fatura is coming', (tester) async {
     await pumpCards(tester);
