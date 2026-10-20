@@ -53,17 +53,14 @@ void main() {
     await openHome(tester);
     expect(bar, findsOneWidget);
 
-    // v1.1.0 plan, task 4.16: Investimentos is the investments' tabs.
-    await tapBar(tester, 'Investimentos');
+    // v1.1.0 plan, task 4.16: Invest opens the investments' tabs.
+    await tapBar(tester, 'Invest');
     expect(find.byType(InvestmentsScreen), findsOneWidget);
     expect(
       tester.getSemantics(
-        find.descendant(
-          of: bar,
-          matching: find.bySemanticsLabel('Investimentos'),
-        ),
+        find.descendant(of: bar, matching: find.bySemanticsLabel('Invest')),
       ),
-      isSemantics(label: 'Investimentos', isSelected: true, isButton: true),
+      isSemantics(label: 'Invest', isSelected: true, isButton: true),
     );
     // v1.1.0 plan, task 4.14: Cartões is the cards' carousel.
     await tapBar(tester, 'Cartões');
@@ -89,7 +86,7 @@ void main() {
   ) async {
     await openHome(tester);
 
-    for (final label in ['Início', 'Cartões', 'Pix', 'Investimentos', 'Menu']) {
+    for (final label in ['Início', 'Cartões', 'Pix', 'Invest', 'Menu']) {
       expect(
         find.descendant(of: bar, matching: find.text(label)),
         findsOneWidget,
@@ -102,12 +99,12 @@ void main() {
     );
   });
 
-  // S21 checkpoint: Investimentos shows a dashboard's chart.
-  testWidgets('shows a dashboard chart on Investimentos', (tester) async {
+  // S21 checkpoint: Invest, short enough for the bar, shows a line chart.
+  testWidgets('shows a line chart on Invest', (tester) async {
     await openHome(tester);
 
     expect(
-      find.descendant(of: bar, matching: find.byIcon(Icons.analytics_outlined)),
+      find.descendant(of: bar, matching: find.byIcon(Icons.stacked_line_chart)),
       findsOneWidget,
     );
   });
@@ -189,7 +186,7 @@ void main() {
   ) async {
     final clock = FakeMonotonicClock();
     await openHome(tester, clock: clock);
-    await tapBar(tester, 'Investimentos');
+    await tapBar(tester, 'Invest');
 
     [
       AppLifecycleState.inactive,
@@ -268,7 +265,7 @@ void main() {
     expect(tester.takeException(), isNull);
 
     // v1.1.0 plan, task 4.11: the new areas fit too.
-    for (final label in ['Cartões', 'Investimentos', 'Menu']) {
+    for (final label in ['Cartões', 'Invest', 'Menu']) {
       await tapBar(tester, label);
       expect(tester.takeException(), isNull, reason: label);
     }
