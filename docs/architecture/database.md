@@ -338,6 +338,7 @@ LIMIT 21;                                      -- 20 itens + 1 para saber se há
 - **Índice:** `postings (ledger_account_id, created_at DESC, id DESC)` — a consulta lê só as linhas da página, independentemente do tamanho do histórico. Verificado com `EXPLAIN ANALYZE` na semana 6 (#81, migration `add_statement_index`): `Bitmap Index Scan on postings_statement_idx`, 0,73 ms numa conta com 217 partidas.
 - **Cursor:** `(created_at, id)` codificado em base64url, com o `created_at` como texto do Postgres em microssegundos, nunca um `Date` do JavaScript arredondado em milissegundos. Não precisa ser assinado: o filtro por conta é feito no servidor, então um cursor adulterado só navega no próprio extrato. O formato é validado, e o horário precisa ser um instante real (F-20); um cursor inválido retorna 422.
 - **Paginação estável:** um Pix novo durante a navegação não duplica nem pula itens (diferente de `OFFSET`).
+- **Filtro e busca (v1.1.0, tarefa 4.1):** duas condições opcionais na mesma consulta, refeitas em cada página: o tipo (`IN`/`OUT` pela direção da partida, `PIX` sem o `FUNDING`, `RECEIPT` os Pix enviados) e `counterparty_name ILIKE` com o termo entre `%`, escapando `\`, `%` e `_` do cliente (`ESCAPE`). Sem migration: o mesmo índice escolhe as partidas da conta e o filtro descarta as demais (`EXPLAIN ANALYZE`: `Bitmap Index Scan on postings_statement_idx`, 0,41 ms com filtro e busca). Busca sem acento (`unaccent`) e índice de trigramas ficam fora (X4).
 
 ## 9. Migrations
 

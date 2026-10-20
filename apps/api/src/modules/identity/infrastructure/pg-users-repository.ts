@@ -24,7 +24,7 @@ export class PgUsersRepository implements UsersRepository {
     'SELECT id, password_hash, status FROM identity.users WHERE email = $1';
 
   /** Served by the primary keys of users and transaction_pins. */
-  static readonly FIND_PROFILE_SQL = `SELECT u.name,
+  static readonly FIND_PROFILE_SQL = `SELECT u.name, u.cpf_masked,
       EXISTS (SELECT 1 FROM identity.transaction_pins p WHERE p.user_id = u.id) AS has_pin
     FROM identity.users u WHERE u.id = $1`;
 
@@ -80,12 +80,13 @@ export class PgUsersRepository implements UsersRepository {
   }
 
   async findProfile(id: string): Promise<Profile | null> {
-    const { rows } = await this.#client.query<{ name: string; has_pin: boolean }>(
-      PgUsersRepository.FIND_PROFILE_SQL,
-      [id],
-    );
+    const { rows } = await this.#client.query<{
+      name: string;
+      cpf_masked: string;
+      has_pin: boolean;
+    }>(PgUsersRepository.FIND_PROFILE_SQL, [id]);
     const row = rows[0];
-    return row ? { name: row.name, hasPin: row.has_pin } : null;
+    return row ? { name: row.name, cpfMasked: row.cpf_masked, hasPin: row.has_pin } : null;
   }
 
   /** Served by the primary key. */

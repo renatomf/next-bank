@@ -192,6 +192,7 @@ export class InMemoryDatabase implements UnitOfWork, IdentityRepositoriesFactory
             found
               ? {
                   name: found.state.name,
+                  cpfMasked: found.state.cpf.masked,
                   hasPin: tables.transactionPins.some((pin) => pin.userId === id),
                 }
               : null,

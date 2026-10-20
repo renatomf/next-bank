@@ -26,11 +26,12 @@ function setup() {
 }
 
 describe('GetProfile', () => {
-  it('returns the name and that the PIN is still pending', async () => {
+  it('returns the name, the masked CPF and that the PIN is still pending', async () => {
     const { getProfile } = setup();
 
     await expect(getProfile.execute('user-1')).resolves.toEqual({
       name: 'Maria Teste',
+      cpfMasked: '***.456.789-**',
       hasPin: false,
     });
   });
@@ -49,6 +50,7 @@ describe('GetProfile', () => {
 
     await expect(getProfile.execute('user-1')).resolves.toEqual({
       name: 'Maria Teste',
+      cpfMasked: '***.456.789-**',
       hasPin: true,
     });
   });

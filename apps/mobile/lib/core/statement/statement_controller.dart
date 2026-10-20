@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/api_messages.dart';
 import 'package:next_bank/core/statement/statement_item.dart';
+import 'package:next_bank/core/statement/statement_query.dart';
 import 'package:next_bank/core/statement/statement_repository.dart';
 
 /// Where the statement comes from. Bound to `HttpStatementRepository` by the
@@ -59,9 +60,17 @@ class StatementController extends AsyncNotifier<StatementView> {
   // Counts refreshes: a page asked before one belongs to a list that is gone.
   int _generation = 0;
 
+  /// What this list shows, read while it builds: a change rebuilds it.
+  StatementQuery watchQuery() => allMovements;
+
+  /// What this list shows, read for the next page.
+  StatementQuery readQuery() => allMovements;
+
   @override
   Future<StatementView> build() async {
-    final first = await ref.read(statementRepositoryProvider).page();
+    final first = await ref
+        .read(statementRepositoryProvider)
+        .page(query: watchQuery());
     return StatementView(items: first.items, nextCursor: first.nextCursor);
   }
 
@@ -76,7 +85,9 @@ class StatementController extends AsyncNotifier<StatementView> {
       StatementView(items: view.items, nextCursor: cursor, loadingMore: true),
     );
     try {
-      final next = await ref.read(statementRepositoryProvider).page(cursor);
+      final next = await ref
+          .read(statementRepositoryProvider)
+          .page(cursor: cursor, query: readQuery());
       if (!ref.mounted || generation != _generation) return;
       final shown = {for (final item in view.items) item.id};
       state = AsyncData(
@@ -107,4 +118,51 @@ class StatementController extends AsyncNotifier<StatementView> {
     ref.invalidateSelf();
     await future;
   }
+}
+
+/// The statement screen's filter and search (v1.1.0 plan, task 4.1),
+/// dropped with the screen.
+final NotifierProvider<StatementQueryController, StatementQuery>
+statementQueryProvider =
+    NotifierProvider.autoDispose<StatementQueryController, StatementQuery>(
+      StatementQueryController.new,
+    );
+
+/// One filter at a time (X2) and part of a name.
+class StatementQueryController extends Notifier<StatementQuery> {
+  @override
+  StatementQuery build() => allMovements;
+
+  /// Picks [filter], or clears it when it was already picked.
+  void toggle(StatementFilter filter) {
+    state = (
+      filter: state.filter == filter ? null : filter,
+      search: state.search,
+    );
+  }
+
+  /// Searches [text], trimmed; fewer than two letters is no search, as the
+  /// server takes 2 to 60.
+  void search(String text) {
+    final trimmed = text.trim();
+    state = (filter: state.filter, search: trimmed.length < 2 ? null : trimmed);
+  }
+}
+
+/// The statement screen's own list: the same paging, narrowed by the screen's
+/// query on the server, while the Home keeps the whole statement.
+final AsyncNotifierProvider<FilteredStatementController, StatementView>
+filteredStatementProvider = AsyncNotifierProvider.autoDispose(
+  FilteredStatementController.new,
+  retry: (_, _) => null,
+);
+
+/// [StatementController] narrowed by [statementQueryProvider]: a new query
+/// reloads it from the first page.
+class FilteredStatementController extends StatementController {
+  @override
+  StatementQuery watchQuery() => ref.watch(statementQueryProvider);
+
+  @override
+  StatementQuery readQuery() => ref.read(statementQueryProvider);
 }

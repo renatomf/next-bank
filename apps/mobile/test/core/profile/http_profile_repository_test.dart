@@ -16,16 +16,20 @@ HttpProfileRepository repositoryFor(ScriptedServer server) {
 
 void main() {
   group('HttpProfileRepository', () {
-    test('reads the name and whether the PIN exists', () async {
+    test('reads the name, the masked CPF and whether the PIN exists', () async {
       final server = ScriptedServer({
-        '/v1/me': (_) async =>
-            const JsonReply(200, {'name': 'Maria Teste', 'hasPin': false}),
+        '/v1/me': (_) async => const JsonReply(200, {
+          'name': 'Maria Teste',
+          'cpfMasked': '***.456.789-**',
+          'hasPin': false,
+        }),
       });
 
       final profile = await repositoryFor(server).fetch();
 
       expect(server.received.single.method, 'GET');
       expect(profile.name, 'Maria Teste');
+      expect(profile.cpfMasked, '***.456.789-**');
       expect(profile.hasPin, isFalse);
     });
 
@@ -43,7 +47,10 @@ void main() {
     // MASVS (code): data from the API is checked before use.
     test('refuses an answer without the PIN status', () async {
       final server = ScriptedServer({
-        '/v1/me': (_) async => const JsonReply(200, {'name': 'Maria Teste'}),
+        '/v1/me': (_) async => const JsonReply(200, {
+          'name': 'Maria Teste',
+          'cpfMasked': '***.456.789-**',
+        }),
       });
 
       await expectLater(

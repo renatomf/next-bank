@@ -22,6 +22,8 @@ class Me {
 
     required  this.name,
 
+    required  this.cpfMasked,
+
     required  this.hasPin,
   });
 
@@ -34,6 +36,18 @@ class Me {
 
 
   final String name;
+
+
+
+  @JsonKey(
+    
+    name: r'cpfMasked',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final String cpfMasked;
 
 
 
@@ -55,11 +69,13 @@ class Me {
     @override
     bool operator ==(Object other) => identical(this, other) || other is Me &&
       other.name == name &&
+      other.cpfMasked == cpfMasked &&
       other.hasPin == hasPin;
 
     @override
     int get hashCode =>
         name.hashCode +
+        cpfMasked.hashCode +
         hasPin.hashCode;
 
   factory Me.fromJson(Map<String, dynamic> json) => _$MeFromJson(json);

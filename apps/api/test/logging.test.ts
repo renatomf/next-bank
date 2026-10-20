@@ -73,4 +73,17 @@ describe('logs', () => {
       'line 1\n{"forged":true}',
     );
   });
+
+  // READ-06 (v1.1.0 plan, task 4.1): a query string can carry a searched
+  // name or a cursor; the request log keeps only the path.
+  it('logs the path of a request without its query string (READ-06)', async () => {
+    app.get('/test/query', { config: { public: true } }, () => ({ ok: true }));
+
+    await app.inject({ method: 'GET', url: '/test/query?q=Fake%20Searched%20Name&cursor=abc' });
+
+    const incoming = logs.lines().find((line) => line.msg === 'incoming request');
+    expect(incoming?.req).toMatchObject({ method: 'GET', url: '/test/query' });
+    expect(logs.raw()).not.toContain('Fake');
+    expect(logs.raw()).not.toContain('cursor');
+  });
 });
