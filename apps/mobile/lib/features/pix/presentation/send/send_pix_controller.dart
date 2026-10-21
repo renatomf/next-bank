@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/api_messages.dart';
 import 'package:next_bank/core/cpf.dart';
+import 'package:next_bank/core/idempotency_key.dart';
 import 'package:next_bank/features/pix/domain/br_code.dart';
 import 'package:next_bank/features/pix/domain/pix_amount.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';

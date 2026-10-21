@@ -4,6 +4,7 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/account/account_providers.dart';
+import 'package:next_bank/core/idempotency_key.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/scan/qr_scanner.dart';
 import 'package:next_bank/core/session/app_lock.dart';

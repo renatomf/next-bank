@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/api_messages.dart';
+import 'package:next_bank/core/idempotency_key.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/biometric_pin_store.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
