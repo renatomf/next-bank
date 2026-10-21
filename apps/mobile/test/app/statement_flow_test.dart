@@ -18,6 +18,7 @@ import 'package:next_bank/features/statement/presentation/list/statement_screen.
 import '../support/fake_pix_repository.dart';
 import '../support/fake_statement_repository.dart';
 import '../support/fake_token_store.dart';
+import '../support/fake_top_up_repository.dart';
 import '../support/pump_app.dart';
 
 StatementPage pageOf(List<StatementItem> items, [String? nextCursor]) =>
@@ -41,6 +42,7 @@ Future<void> openHome(
   WidgetTester tester,
   FakeStatementRepository statement, {
   FakePixRepository? pix,
+  FakeTopUpRepository? topUp,
 }) async {
   // Tall enough for the Home's latest movements to be built at once.
   tester.view.physicalSize = const Size(1080, 3600);
@@ -50,6 +52,7 @@ Future<void> openHome(
     store: FakeTokenStore(tokens),
     statement: statement,
     pix: pix,
+    topUp: topUp,
   );
   await unlockWithPin(tester);
 }
@@ -229,6 +232,35 @@ void main() {
       expect(find.text('Pulso Celular'), findsOneWidget);
       expect(find.text('Celular (11) *****-0001'), findsOneWidget);
       expect(find.textContaining('CPF'), findsNothing);
+    });
+
+    // v1.1.0 plan, task 5b: a top-up links to its own receipt.
+    testWidgets('opens the receipt of a top-up and comes back to it', (
+      tester,
+    ) async {
+      final topUp = FakeTopUpRepository();
+      await openHome(
+        tester,
+        FakeStatementRepository({
+          null: () async => pageOf([
+            movement('top-up', kind: StatementKind.topUp, topUpId: 'top-up-1'),
+          ]),
+        }),
+        topUp: topUp,
+      );
+      await openStatement(tester);
+      await tester.tap(statementRows().first);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.bySemanticsLabel('Ver comprovante'));
+      await tester.pumpAndSettle();
+      expect(find.text('Comprovante'), findsOneWidget);
+      expect(find.text('Recarga feita'), findsOneWidget);
+      expect(topUp.callsOf('fetch').single.topUpId, 'top-up-1');
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('Detalhe'), findsOneWidget);
     });
 
     // domain-model.md 10: Extrato → Detalhe → Comprovante, and back (T4-3).

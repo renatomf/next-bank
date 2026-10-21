@@ -9,6 +9,7 @@ StatementItem movement(
   StatementKind kind = StatementKind.pixReceived,
   int amountCents = 35000,
   String? transferId,
+  String? topUpId,
 }) => StatementItem(
   id: id,
   occurredAt: DateTime(2026, 10, 8, 9, 12),
@@ -29,6 +30,7 @@ StatementItem movement(
     ),
   },
   transferId: transferId,
+  topUpId: topUpId,
 );
 
 /// The statement without the API: [pages] answers each cursor (null for the

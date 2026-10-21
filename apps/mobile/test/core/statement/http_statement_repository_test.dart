@@ -172,6 +172,7 @@ void main() {
     expect(item.direction, MoneyDirection.outgoing);
     expect(item.counterparty?.name, 'Pulso Celular');
     expect(item.transferId, isNull);
+    expect(item.topUpId, '0b9a7c1e-5d2f-4a8b-9c3d-7e6f5a4b3c2e');
   });
 
   test('reports a cursor the server refused', () async {
@@ -228,6 +229,10 @@ void main() {
       ),
       ('a top-up coming in', {'kind': 'TOP_UP', 'direction': 'IN'}),
       ('a Pix receipt link on a top-up', {'kind': 'TOP_UP'}),
+      (
+        'a top-up receipt link on a Pix',
+        {'topUpId': '0b9a7c1e-5d2f-4a8b-9c3d-7e6f5a4b3c2e'},
+      ),
     ]) {
       test('is unexpected: $name', () async {
         final server = ScriptedServer({
