@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:next_bank/core/receipt_texts.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/pix_formats.dart';
 
