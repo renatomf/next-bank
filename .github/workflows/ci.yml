@@ -62,6 +62,8 @@ jobs:
       - run: pnpm --filter @nextbank/api typecheck
       - run: pnpm --filter @nextbank/api arch
       - run: pnpm --filter @nextbank/api test:coverage
+      # The deploy's client IP check, against a fake curl (API-14).
+      - run: sh infra/scripts/check-client-ip_test.sh
 
   mobile:
     name: Mobile

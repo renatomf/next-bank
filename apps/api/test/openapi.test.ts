@@ -32,6 +32,18 @@ describe('OpenAPI document', () => {
     });
   });
 
+  // API-14 (v1.1.0 plan, task 8): the address the API gives the caller, for
+  // the smoke test after a deploy.
+  it('describes GET /health/client-ip as a public read', () => {
+    const operation = document.paths['/health/client-ip']?.get;
+
+    expect(operation?.operationId).toBe('getClientIp');
+    expect(operation?.security).toBeUndefined();
+    expect(operation?.responses['200']?.content?.['application/json']?.schema).toEqual({
+      $ref: '#/components/schemas/ClientIp',
+    });
+  });
+
   it('describes POST /v1/auth/register with the request the client sends and its answers', () => {
     const operation = document.paths['/v1/auth/register']?.post;
 
@@ -54,6 +66,7 @@ describe('OpenAPI document', () => {
       'AuthorizePixTransferRequestInput',
       'ChangePasswordRequestInput',
       'ChangePinRequestInput',
+      'ClientIp',
       'CreatePinRequestInput',
       'CreatePixTransferRequestInput',
       'Health',
