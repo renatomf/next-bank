@@ -258,7 +258,7 @@ describe('POST /v1/pix/transfers/{transferId}/authorize', () => {
 
     expect(logs.raw()).not.toContain('"9516"');
     const { rows } = await pool.query<{ body: string }>(
-      'SELECT response_body::text AS body FROM payments.idempotency_records WHERE key = $1',
+      'SELECT response_body::text AS body FROM platform.idempotency_records WHERE key = $1',
       [key],
     );
     expect(rows[0]?.body).not.toContain('9516');

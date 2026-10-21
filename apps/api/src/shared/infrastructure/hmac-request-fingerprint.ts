@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto';
-import type { PiiKeys } from '../../../shared/infrastructure/aes-gcm-pii-protector.ts';
-import type { RequestFingerprint } from '../application/ports.ts';
+import type { PiiKeys } from './aes-gcm-pii-protector.ts';
+import type { RequestFingerprint } from '../application/idempotency.ts';
 
 /**
  * HMAC-SHA256 of a request, with its own prefix under the blind index key. A

@@ -1,4 +1,5 @@
 import type { AuditTrail, Transaction } from '../../../shared/application/ports.ts';
+import type { IdempotencyRepository } from '../../../shared/application/idempotency.ts';
 import type { Money } from '../../../shared/domain/money.ts';
 import type { PixKeyState, PixKeyType } from '../domain/pix-key.ts';
 import type { PixTransferState } from '../domain/pix-transfer.ts';
@@ -50,48 +51,6 @@ export interface PixTransfersRepository {
   /** Locks the Pix until the transaction ends: it changes state once (PIX-08). */
   lockForPayer(id: string, payerAccountId: string): Promise<PixTransferState | null>;
   update(transfer: PixTransferState): Promise<void>;
-}
-
-/** The answer a request produced, kept so a repeated request gets the same one. */
-export interface StoredResponse {
-  status: number;
-  body: unknown;
-}
-
-export interface IdempotencyClaim {
-  userId: string;
-  key: string;
-  operation: 'pix.create' | 'pix.authorize';
-  /** Keyed hash of the request; never covers the PIN (D4). */
-  requestHash: Uint8Array;
-  createdAt: Date;
-  expiresAt: Date;
-}
-
-export type ClaimResult =
-  | { claimed: true }
-  | {
-      claimed: false;
-      operation: string;
-      requestHash: Uint8Array;
-      /** Null while the first request is still running. */
-      response: StoredResponse | null;
-    };
-
-/** One record per customer and key (ADR 0007; database.md 5.4). */
-export interface IdempotencyRepository {
-  /**
-   * Claims the key for this request, or returns what the earlier one left. A
-   * concurrent request with the same key waits here until the first commits;
-   * waiting too long fails with RequestInProgress.
-   */
-  claim(claim: IdempotencyClaim): Promise<ClaimResult>;
-  complete(userId: string, key: string, response: StoredResponse): Promise<void>;
-}
-
-/** A keyed hash of a request, so a dump cannot brute-force what it contained. */
-export interface RequestFingerprint {
-  of(operation: string, payload: unknown): Uint8Array;
 }
 
 export type AccountStatus = 'ACTIVE' | 'BLOCKED' | 'CLOSED';

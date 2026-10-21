@@ -7,8 +7,12 @@ import type {
 import { DomainError } from '../../../shared/domain/domain-error.ts';
 import { NotFound } from '../../../shared/domain/not-found.ts';
 import { type AuthorizationRefusal, PixAuthorizationRefused } from '../domain/errors.ts';
+import {
+  Idempotency,
+  type RequestFingerprint,
+  type StoredResponse,
+} from '../../../shared/application/idempotency.ts';
 import { type PixFailureReason, PixTransfer } from '../domain/pix-transfer.ts';
-import { Idempotency } from './idempotency.ts';
 import { type PixTransferView, viewOf } from './pix-transfer-view.ts';
 import type {
   AccountsPort,
@@ -18,8 +22,6 @@ import type {
   PaymentsRepositories,
   PaymentsRepositoriesFactory,
   PayeeAccount,
-  RequestFingerprint,
-  StoredResponse,
 } from './ports.ts';
 
 export interface AuthorizePixTransferInput {

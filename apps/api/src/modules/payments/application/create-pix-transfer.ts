@@ -12,8 +12,8 @@ import {
   TooManyKeyLookups,
 } from '../domain/errors.ts';
 import { type PixKeyType, pixKeyValue } from '../domain/pix-key.ts';
+import { Idempotency, type RequestFingerprint } from '../../../shared/application/idempotency.ts';
 import { PixTransfer } from '../domain/pix-transfer.ts';
-import { Idempotency } from './idempotency.ts';
 import type { PixTransferView } from './pix-transfer-view.ts';
 import { viewOf } from './pix-transfer-view.ts';
 import type {
@@ -24,7 +24,6 @@ import type {
   PaymentsRepositories,
   PaymentsRepositoriesFactory,
   PixKeyValueProtector,
-  RequestFingerprint,
 } from './ports.ts';
 
 export interface CreatePixTransferInput {

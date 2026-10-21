@@ -254,7 +254,7 @@ describe('POST /v1/pix/transfers', () => {
     expect(logs.raw()).not.toContain(digits);
     const { rows } = await pool.query<{ body: string; hash: Buffer }>(
       `SELECT response_body::text AS body, request_hash AS hash
-       FROM payments.idempotency_records WHERE key = $1`,
+       FROM platform.idempotency_records WHERE key = $1`,
       [key],
     );
     expect(rows[0]?.body).not.toContain(digits);
