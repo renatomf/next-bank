@@ -16,6 +16,7 @@ const valid = {
   PII_ENCRYPTION_KEY: randomBytes(32).toString('base64'),
   PII_HMAC_KEY: randomBytes(32).toString('base64'),
   PIN_PEPPER: randomBytes(32).toString('base64'),
+  TOP_UP_PHONE_KEY: randomBytes(32).toString('base64'),
 };
 
 function withEnv(change: Record<string, string | undefined>) {
@@ -47,6 +48,7 @@ describe('loadConfig', () => {
       'PII_ENCRYPTION_KEY',
       'PII_HMAC_KEY',
       'PIN_PEPPER',
+      'TOP_UP_PHONE_KEY',
     ]) {
       expect(() => loadConfig({})).toThrow(new RegExp(name));
     }
@@ -140,6 +142,28 @@ describe('loadConfig', () => {
       expect(withEnv({ PIN_PEPPER: valid.PII_HMAC_KEY })).toThrow(
         /PIN_PEPPER: must differ from the CPF keys/,
       );
+    });
+  });
+
+  // v1.1.0 plan, task 5 (TOP-01, decision R6): the top-up number has its own
+  // encryption key, so leaking or rotating one key never touches the other.
+  describe('top-up phone key', () => {
+    it('loads the 32-byte key', () => {
+      expect(loadConfig(valid).topUpPhoneKey).toHaveLength(32);
+    });
+
+    it('refuses a key that is not 32 bytes', () => {
+      expect(withEnv({ TOP_UP_PHONE_KEY: randomBytes(16).toString('base64') })).toThrow(
+        /TOP_UP_PHONE_KEY: must be 32 bytes in base64/,
+      );
+    });
+
+    it('refuses reusing any other key as the phone key', () => {
+      for (const other of [valid.PII_ENCRYPTION_KEY, valid.PII_HMAC_KEY, valid.PIN_PEPPER]) {
+        expect(withEnv({ TOP_UP_PHONE_KEY: other })).toThrow(
+          /TOP_UP_PHONE_KEY: must differ from the other keys/,
+        );
+      }
     });
   });
 
