@@ -3,6 +3,7 @@ import 'package:nextbank_api/src/model/auth_tokens.dart';
 import 'package:nextbank_api/src/model/authorize_pix_transfer_request_input.dart';
 import 'package:nextbank_api/src/model/change_password_request_input.dart';
 import 'package:nextbank_api/src/model/change_pin_request_input.dart';
+import 'package:nextbank_api/src/model/client_ip.dart';
 import 'package:nextbank_api/src/model/create_pin_request_input.dart';
 import 'package:nextbank_api/src/model/create_pix_transfer_request_input.dart';
 import 'package:nextbank_api/src/model/create_pix_transfer_request_input_key.dart';
@@ -54,6 +55,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ChangePasswordRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ChangePinRequestInput':
           return ChangePinRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ClientIp':
+          return ClientIp.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreatePinRequestInput':
           return CreatePinRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreatePixTransferRequestInput':

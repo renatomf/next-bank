@@ -7,6 +7,9 @@ api_url="$1"
 
 curl -fsS --max-time 60 "$api_url/health" > /dev/null
 
+# The login counters must see the real client behind the proxies (API-14).
+sh "$(dirname "$0")/check-client-ip.sh" "$api_url"
+
 tokens=$(curl -fsS --max-time 30 -X POST "$api_url/v1/auth/login" \
   -H 'content-type: application/json' \
   -d '{"email":"ana.demo@example.com","password":"demo-ana-next-bank"}')

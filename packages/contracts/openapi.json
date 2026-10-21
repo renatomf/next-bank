@@ -131,6 +131,19 @@
         ],
         "additionalProperties": false
       },
+      "ClientIp": {
+        "type": "object",
+        "properties": {
+          "ip": {
+            "type": "string",
+            "description": "The address the API gives the caller, the one its limits count"
+          }
+        },
+        "required": [
+          "ip"
+        ],
+        "additionalProperties": false
+      },
       "CreatePinRequestInput": {
         "type": "object",
         "properties": {
@@ -755,6 +768,23 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/client-ip": {
+      "get": {
+        "operationId": "getClientIp",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientIp"
                 }
               }
             }
