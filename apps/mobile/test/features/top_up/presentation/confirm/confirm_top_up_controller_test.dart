@@ -5,12 +5,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/idempotency_key.dart';
 import 'package:next_bank/core/session/biometric_pin_store.dart';
+import 'package:next_bank/core/session/greeting_name_store.dart';
+import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/features/top_up/domain/top_up.dart';
 import 'package:next_bank/features/top_up/presentation/confirm/confirm_top_up_controller.dart';
 import 'package:next_bank/features/top_up/presentation/top_up_providers.dart';
 
 import '../../../../support/fake_biometric_pin_store.dart';
+import '../../../../support/fake_greeting_name_store.dart';
 import '../../../../support/fake_pix_repository.dart' show sequentialKeys;
+import '../../../../support/fake_token_store.dart';
 import '../../../../support/fake_top_up_repository.dart';
 
 const TopUpDraft _draft = (
@@ -30,6 +34,8 @@ const TopUpDraft _draft = (
         biometrics ?? FakeBiometricPinStore(),
       ),
       topUpRepositoryProvider.overrideWithValue(repository),
+      tokenStoreProvider.overrideWithValue(FakeTokenStore(tokens)),
+      greetingNameStoreProvider.overrideWithValue(FakeGreetingNameStore()),
       idempotencyKeysProvider.overrideWithValue(sequentialKeys()),
     ],
   );
@@ -197,16 +203,71 @@ void main() {
       expect(repository.callsOf('create'), hasLength(1));
     });
 
-    test('is dropped with the screen', () async {
+    test('is dropped after a refusal', () async {
+      final (container, repository) = setUpConfirm();
+      repository.createAnswer = () async =>
+          throw const ApiRejected(ApiErrorCode.pinIncorrect);
+
+      await controllerOf(container).confirm('7413');
+      container.invalidate(confirmTopUpControllerProvider(_draft));
+
+      expect(stateOf(container).outcomeUnknown, isFalse);
+      expect(await controllerOf(container).retry(), isNull);
+      expect(repository.callsOf('create'), hasLength(1));
+    });
+
+    test('is dropped when the customer signs out', () async {
+      final (container, repository) = setUpConfirm();
+      repository.createAnswer = () async => throw const ApiUnreachable();
+      await container.read(sessionProvider.future);
+      await controllerOf(container).confirm('2580');
+
+      await container.read(sessionProvider.notifier).signOut();
+      container.invalidate(confirmTopUpControllerProvider(_draft));
+
+      expect(stateOf(container).outcomeUnknown, isFalse);
+      expect(await controllerOf(container).retry(), isNull);
+    });
+  });
+
+  // F-39, MOB-07 (attack first): the answer was lost and the customer left
+  // the screen. The top-up may have been done; opening the same one again
+  // must carry the same key, so the server answers what it recorded and
+  // never tops up twice.
+  group('an answer lost before leaving the screen', () {
+    test('comes back when the same top-up is opened again', () async {
       final (container, repository) = setUpConfirm();
       repository.createAnswer = () async => throw const ApiUnreachable();
       await controllerOf(container).confirm('2580');
 
       container.invalidate(confirmTopUpControllerProvider(_draft));
-      repository.createAnswer = () async => topUpDone();
 
-      expect(await controllerOf(container).retry(), isNull);
-      expect(repository.callsOf('create'), hasLength(1));
+      expect(stateOf(container).outcomeUnknown, isTrue);
+      expect(stateOf(container).error, _unknownOutcome);
+    });
+
+    test('is tried again with the same key and PIN', () async {
+      final (container, repository) = setUpConfirm();
+      repository.createAnswer = () async => throw const ApiUnreachable();
+      await controllerOf(container).confirm('2580');
+      container.invalidate(confirmTopUpControllerProvider(_draft));
+
+      repository.createAnswer = () async => topUpDone();
+      final done = await controllerOf(container).retry();
+
+      expect(done?.id, 'top-up-1');
+      expect(attempts(repository), [('key-1', '2580'), ('key-1', '2580')]);
+    });
+
+    test('takes no new PIN until it is answered', () async {
+      final (container, repository) = setUpConfirm();
+      repository.createAnswer = () async => throw const ApiUnreachable();
+      await controllerOf(container).confirm('2580');
+      container.invalidate(confirmTopUpControllerProvider(_draft));
+
+      await controllerOf(container).confirm('1357');
+
+      expect(attempts(repository), [('key-1', '2580')]);
     });
   });
 

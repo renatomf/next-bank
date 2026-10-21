@@ -177,4 +177,44 @@ void main() {
     final keys = topUp.callsOf('create').map((call) => call.idempotencyKey);
     expect(keys.toSet(), hasLength(1));
   });
+
+  // F-39: leaving after a lost answer is said before it happens, and the
+  // same top-up opened again offers only the same attempt.
+  testWidgets('warns before leaving a top-up whose answer was lost', (
+    tester,
+  ) async {
+    final topUp = FakeTopUpRepository()
+      ..createAnswer = () async => throw const ApiUnreachable();
+    await openTopUps(tester, topUp);
+    await chooseTopUp(tester);
+    await typePin(tester);
+
+    await tester.tap(find.bySemanticsLabel('Voltar'));
+    await tester.pumpAndSettle();
+    expect(find.text('A recarga pode ter sido feita'), findsOneWidget);
+    await tester.tap(find.text('Ficar'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ConfirmTopUpScreen), findsOneWidget);
+
+    await tester.tap(find.bySemanticsLabel('Voltar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Sair'));
+    await tester.pumpAndSettle();
+    expect(find.byType(TopUpAmountScreen), findsOneWidget);
+
+    await tester.tap(find.bySemanticsLabel('Continuar'));
+    await tester.pumpAndSettle();
+    expect(find.byType(PinField), findsNothing);
+    expect(find.bySemanticsLabel('Tentar de novo'), findsOneWidget);
+  });
+
+  testWidgets('leaves without asking when nothing is pending', (tester) async {
+    await openTopUps(tester, FakeTopUpRepository());
+    await chooseTopUp(tester);
+
+    await tester.tap(find.bySemanticsLabel('Voltar'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(TopUpAmountScreen), findsOneWidget);
+  });
 }
