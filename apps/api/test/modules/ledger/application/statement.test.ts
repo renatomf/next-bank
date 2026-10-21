@@ -59,6 +59,7 @@ describe('CustomerLedgerAccounts.statement', () => {
           amount: Money.of(1_000_000n),
           counterparty: { name: 'next bank', documentMasked: null },
           transferId: null,
+          topUpId: null,
         },
       ],
       next: null,
@@ -88,6 +89,41 @@ describe('CustomerLedgerAccounts.statement', () => {
       counterparty: ANA,
       transferId: null,
     });
+  });
+
+  // v1.1.0 plan, task 5: a top-up is money out to the operator, with its
+  // receipt; never mistaken for a Pix.
+  it('shows a top-up as money out to the operator, with its receipt', async () => {
+    const { clock, accounts } = await setup();
+    clock.current = new Date('2026-10-08T12:10:00.000Z');
+    await accounts.topUp(tx, {
+      topUpId: 'top-up-1',
+      accountId: 'account-a',
+      operatorId: 'pulso-celular',
+      amount: Money.of(3_000n),
+      counterparty: { name: 'Pulso Celular', documentMasked: '(11) *****-0001' },
+    });
+
+    const [topUp] = (await accounts.statement(tx, 'account-a', null)).items;
+
+    expect(topUp).toMatchObject({
+      kind: 'TOP_UP',
+      direction: 'OUT',
+      amount: Money.of(3_000n),
+      counterparty: { name: 'Pulso Celular', documentMasked: '(11) *****-0001' },
+      transferId: null,
+      topUpId: 'top-up-1',
+    });
+  });
+
+  it('gives a sent Pix no top-up link', async () => {
+    const { clock, accounts } = await setup();
+    clock.current = new Date('2026-10-08T12:05:00.000Z');
+    await pix(accounts, 'pix-1', 8_000n);
+
+    const [sent] = (await accounts.statement(tx, 'account-a', null)).items;
+
+    expect(sent).toMatchObject({ kind: 'PIX_SENT', transferId: 'pix-1', topUpId: null });
   });
 
   it('lists newest first and pages by 20, with where to continue', async () => {
