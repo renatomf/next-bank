@@ -32,7 +32,7 @@ import 'package:next_bank/features/security/presentation/change_pin/change_pin_s
 import 'package:next_bank/features/security/presentation/sessions/security_screen.dart';
 import 'package:next_bank/features/statement/presentation/detail/statement_detail_screen.dart';
 import 'package:next_bank/features/statement/presentation/list/statement_screen.dart';
-import 'package:next_bank/features/top_up/presentation/recharge_screen.dart';
+import 'package:next_bank/features/top_up/presentation/operators/top_up_operators_screen.dart';
 import 'package:next_bank/features/unlock/presentation/unlock_screen.dart';
 
 import '../support/fake_pix_repository.dart';
@@ -178,8 +178,8 @@ final List<(String, Type, Future<void> Function(WidgetTester))> screens = [
   ('Help', HelpScreen, (tester) => openSignedIn(tester, AppRoutes.help)),
   (
     'Recargas',
-    RechargeScreen,
-    (tester) => openSignedIn(tester, AppRoutes.recharge),
+    TopUpOperatorsScreen,
+    (tester) => openSignedIn(tester, AppRoutes.topUps),
   ),
   ('Cartões', CardsScreen, (t) => openSignedIn(t, AppRoutes.cards)),
   (

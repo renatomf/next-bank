@@ -63,6 +63,10 @@ class HttpStatementRepository implements StatementRepository {
       throw const ApiUnexpected();
     }
     if (!sent && item.transferId != null) throw const ApiUnexpected();
+    // Only a top-up links to a top-up receipt.
+    if (kind != StatementKind.topUp && item.topUpId != null) {
+      throw const ApiUnexpected();
+    }
     final cents = item.amount.amount;
     if (cents <= 0) throw const ApiUnexpected();
     final counterparty = item.counterparty;
@@ -79,6 +83,7 @@ class HttpStatementRepository implements StatementRepository {
               documentMasked: counterparty.documentMasked,
             ),
       transferId: item.transferId,
+      topUpId: item.topUpId,
     );
   }
 }

@@ -60,11 +60,17 @@ abstract final class AppRoutes {
   /// Help, over the Home (v1.1.0 plan, task 4.5).
   static const String help = '/help';
 
-  /// Recargas, over the Home (v1.1.0 plan, task 4.12).
-  static const String recharge = '/recharge';
+  /// Recargas, over the Home (v1.1.0 plan, tasks 4.12 and 5b).
+  static const String topUps = '/top-ups';
 
-  /// The amount of a recharge, over the carriers.
-  static const String rechargeAmount = '$recharge/amount';
+  /// The number and the amount of a top-up, over the operators.
+  static const String topUpAmount = '$topUps/amount';
+
+  /// The confirmation of a top-up with the PIN.
+  static const String topUpConfirm = '$topUps/confirm';
+
+  /// The receipt of the top-up [topUpId].
+  static String topUpReceipt(String topUpId) => '$topUps/receipt/$topUpId';
 
   /// The assistant, over the Home (v1.1.0 plan, task 4.10).
   static const String assistant = '/assistant';

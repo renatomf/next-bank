@@ -10,13 +10,15 @@ import 'package:next_bank/core/ui/pix/contact_card.dart';
 
 /// The detail of one movement (screen 12; D3): what the statement already
 /// has, read from the pages loaded (T4-2). Only a Pix sent links to its
-/// receipt, since only the payer reads a Pix (PIX-01).
+/// receipt, since only the payer reads a Pix (PIX-01); a top-up links to its
+/// own.
 class StatementDetailScreen extends ConsumerWidget {
   /// Creates the detail of the movement [itemId].
   const new({
     required this.itemId,
     required this.onBack,
     required this.onReceipt,
+    required this.onTopUpReceipt,
     super.key,
   });
 
@@ -28,6 +30,9 @@ class StatementDetailScreen extends ConsumerWidget {
 
   /// Opens the receipt of the Pix with this id.
   final ValueChanged<String> onReceipt;
+
+  /// Opens the receipt of the top-up with this id.
+  final ValueChanged<String> onTopUpReceipt;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -54,6 +59,7 @@ class StatementDetailScreen extends ConsumerWidget {
                   final StatementItem item => _Detail(
                     item: item,
                     onReceipt: onReceipt,
+                    onTopUpReceipt: onTopUpReceipt,
                   ),
                   null => const EmptyState(
                     icon: Icons.search_off,
@@ -88,10 +94,15 @@ String _detailOf(StatementKind kind, String? document) => switch (kind) {
 };
 
 class _Detail extends ConsumerWidget {
-  const new({required this.item, required this.onReceipt});
+  const new({
+    required this.item,
+    required this.onReceipt,
+    required this.onTopUpReceipt,
+  });
 
   final StatementItem item;
   final ValueChanged<String> onReceipt;
+  final ValueChanged<String> onTopUpReceipt;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -100,6 +111,7 @@ class _Detail extends ConsumerWidget {
     final counterparty = item.counterparty;
     final document = counterparty?.documentMasked;
     final transferId = item.transferId;
+    final topUpId = item.topUpId;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -134,6 +146,13 @@ class _Detail extends ConsumerWidget {
           SecondaryButton(
             label: 'Ver comprovante',
             onPressed: () => onReceipt(transferId),
+          ),
+        ],
+        if (topUpId != null) ...[
+          const SizedBox(height: NbSpace.xl),
+          SecondaryButton(
+            label: 'Ver comprovante',
+            onPressed: () => onTopUpReceipt(topUpId),
           ),
         ],
       ],
