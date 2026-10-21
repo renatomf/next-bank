@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/features/investments/presentation/investments_screen.dart';
 import 'package:next_bank/features/investments/presentation/recommended_shelf.dart';
 
+import '../../../support/example_tag.dart';
+
 Future<void> pumpInvestments(
   WidgetTester tester, {
   VoidCallback? onBack,
@@ -120,6 +122,20 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
+    });
+  }
+
+  // D7, revised (v1.1.0 plan, task 6): the made-up rates say they are
+  // examples, on both tabs that show them.
+  for (final tab in ['Rentabilidade', 'Investir']) {
+    testWidgets('marks the recommended rates as examples on $tab', (
+      tester,
+    ) async {
+      await pumpInvestments(tester);
+      if (tab != 'Rentabilidade') await openTab(tester, tab);
+
+      final heading = find.text('Investimentos recomendados');
+      expect(exampleTagIn(blockOf<Row>(heading)), findsOneWidget);
     });
   }
 }

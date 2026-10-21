@@ -92,6 +92,24 @@ void main() {
     expect(violations, isEmpty, reason: violations.join('\n'));
   });
 
+  // D7, revised (v1.1.0 plan, task 6): real figures come from the server;
+  // made-up ones, on layout-only screens, live in example_*.dart files, where
+  // a review sees them, and their block carries the "Exemplo" tag.
+  test('a figure in reais is written only in an example file', () {
+    final money = RegExp(r'R\$ ?\d');
+    const where =
+        'a made-up figure belongs in an example_*.dart file, marked "Exemplo"';
+    final violations = [
+      for (final file in dartFiles('lib/features'))
+        if (!file.uri.pathSegments.last.startsWith('example_'))
+          for (final (index, line) in file.readAsLinesSync().indexed)
+            if (!line.trimLeft().startsWith('//') && money.hasMatch(line))
+              '${file.path}:${index + 1}: $where',
+    ];
+
+    expect(violations, isEmpty, reason: violations.join('\n'));
+  });
+
   // MOB-01: nothing sensitive in plain preferences; tokens live only in the
   // Keychain / Keystore. V1 has nothing else to store there either.
   test('the app never uses shared preferences', () {

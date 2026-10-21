@@ -9,6 +9,7 @@ import 'package:next_bank/features/pix/presentation/automatic/automatic_payment_
 import 'package:next_bank/features/pix/presentation/automatic/pix_automatic_screen.dart';
 
 import '../../../../support/device_stores.dart';
+import '../../../../support/example_tag.dart';
 import '../../../../support/fake_profile_repository.dart';
 import '../../../../support/fake_token_store.dart';
 
@@ -137,4 +138,22 @@ void main() {
       },
     );
   }
+
+  // D7, revised (v1.1.0 plan, task 6): made-up amounts say they are examples.
+  testWidgets('marks the accounts and their amount as examples', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1080, 3600);
+    addTearDown(tester.view.reset);
+    await pumpAutomatic(tester);
+
+    expect(
+      exampleTagIn(blockOf<Row>(find.text('Cadastradas'))),
+      findsOneWidget,
+    );
+
+    await openFirstAccount(tester);
+
+    expect(exampleTagIn(blockOf<Row>(find.text('Valor'))), findsOneWidget);
+  });
 }
