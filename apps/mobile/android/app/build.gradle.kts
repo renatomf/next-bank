@@ -19,6 +19,12 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    // MainActivity reads BuildConfig.BUILD_TYPE to secure the release window
+    // (MOB-14); AGP 8 leaves BuildConfig off unless asked.
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "dev.renatomf.nextbank"
         // You can update the following values to match your application needs.
