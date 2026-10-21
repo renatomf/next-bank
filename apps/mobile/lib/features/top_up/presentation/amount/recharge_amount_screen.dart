@@ -1,6 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
-import 'package:next_bank/features/recharge/domain/carrier.dart';
+import 'package:next_bank/features/top_up/domain/carrier.dart';
 
 /// The amount of a recharge (v1.1.0 plan, task 4.12), layout only for now:
 /// the carrier, the number and the amounts, one picked at a time.

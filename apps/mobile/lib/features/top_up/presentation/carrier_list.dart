@@ -1,6 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
-import 'package:next_bank/features/recharge/domain/carrier.dart';
+import 'package:next_bank/features/top_up/domain/carrier.dart';
 
 /// "Recargas": the phone carriers, each with its initials in place of its
 /// logo, a third-party mark.

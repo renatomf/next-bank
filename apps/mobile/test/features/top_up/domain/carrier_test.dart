@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:next_bank/features/recharge/domain/carrier.dart';
+import 'package:next_bank/features/top_up/domain/carrier.dart';
 
 // The phone carriers a recharge can go to (v1.1.0 plan, task 4.12).
 void main() {

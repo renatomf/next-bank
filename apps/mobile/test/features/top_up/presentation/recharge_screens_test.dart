@@ -1,10 +1,10 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:next_bank/features/recharge/domain/carrier.dart';
-import 'package:next_bank/features/recharge/presentation/amount/recharge_amount_screen.dart';
-import 'package:next_bank/features/recharge/presentation/example_recharges.dart';
-import 'package:next_bank/features/recharge/presentation/recharge_screen.dart';
+import 'package:next_bank/features/top_up/domain/carrier.dart';
+import 'package:next_bank/features/top_up/presentation/amount/recharge_amount_screen.dart';
+import 'package:next_bank/features/top_up/presentation/example_recharges.dart';
+import 'package:next_bank/features/top_up/presentation/recharge_screen.dart';
 
 Future<void> pumpScreen(WidgetTester tester, Widget screen) async {
   tester.view.physicalSize = const Size(1080, 3000);

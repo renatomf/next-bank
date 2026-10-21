@@ -2,8 +2,8 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
-import 'package:next_bank/features/recharge/presentation/amount/recharge_amount_screen.dart';
-import 'package:next_bank/features/recharge/presentation/recharge_screen.dart';
+import 'package:next_bank/features/top_up/presentation/amount/recharge_amount_screen.dart';
+import 'package:next_bank/features/top_up/presentation/recharge_screen.dart';
 
 import '../support/fake_token_store.dart';
 import '../support/pump_app.dart';

@@ -37,14 +37,14 @@ import 'package:next_bank/features/pix/presentation/transfer/transfer_pix_screen
 import 'package:next_bank/features/profile/presentation/blank/profile_blank_screen.dart';
 import 'package:next_bank/features/profile/presentation/profile_screen.dart';
 import 'package:next_bank/features/profile/presentation/theme/theme_screen.dart';
-import 'package:next_bank/features/recharge/domain/carrier.dart';
-import 'package:next_bank/features/recharge/presentation/amount/recharge_amount_screen.dart';
-import 'package:next_bank/features/recharge/presentation/recharge_screen.dart';
 import 'package:next_bank/features/security/presentation/change_password/change_password_screen.dart';
 import 'package:next_bank/features/security/presentation/change_pin/change_pin_screen.dart';
 import 'package:next_bank/features/security/presentation/sessions/security_screen.dart';
 import 'package:next_bank/features/statement/presentation/detail/statement_detail_screen.dart';
 import 'package:next_bank/features/statement/presentation/list/statement_screen.dart';
+import 'package:next_bank/features/top_up/domain/carrier.dart';
+import 'package:next_bank/features/top_up/presentation/amount/recharge_amount_screen.dart';
+import 'package:next_bank/features/top_up/presentation/recharge_screen.dart';
 import 'package:next_bank/features/unlock/presentation/unlock_screen.dart';
 
 /// The app's navigation. It lives outside the features because it is the

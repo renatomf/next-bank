@@ -1,9 +1,9 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
-import 'package:next_bank/features/recharge/domain/carrier.dart';
-import 'package:next_bank/features/recharge/presentation/carrier_list.dart';
-import 'package:next_bank/features/recharge/presentation/example_recharges.dart';
-import 'package:next_bank/features/recharge/presentation/recent_recharges.dart';
+import 'package:next_bank/features/top_up/domain/carrier.dart';
+import 'package:next_bank/features/top_up/presentation/carrier_list.dart';
+import 'package:next_bank/features/top_up/presentation/example_recharges.dart';
+import 'package:next_bank/features/top_up/presentation/recent_recharges.dart';
 
 /// Recargas (v1.1.0 plan, task 4.12), layout only for now: the recent
 /// recharges and the phone carriers, each opening the amount choice. Task 5
