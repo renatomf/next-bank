@@ -84,12 +84,28 @@ async function pix(
   return transferId;
 }
 
+/** A top-up posted in the ledger, as CreateTopUp would (v1.1.0 plan, task 5). */
+async function topUp(customer: Customer, cents: bigint): Promise<string> {
+  const topUpId = randomUUID();
+  await unitOfWork.run((tx) =>
+    ledger.customerAccounts.topUp(tx, {
+      topUpId,
+      accountId: customer.accountId,
+      operatorId: 'pulso-celular',
+      amount: Money.of(cents),
+      counterparty: { name: 'Pulso Celular', documentMasked: '(11) *****-0001' },
+    }),
+  );
+  return topUpId;
+}
+
 interface Page {
   items: {
     id: string;
     kind: string;
     direction: string;
     transferId: string | null;
+    topUpId?: string | null;
     counterparty: { name: string } | null;
   }[];
   nextCursor: string | null;
@@ -298,6 +314,26 @@ describe('GET /v1/me/statement, filtered', () => {
 
     expect(items).toHaveLength(2);
     expect(items.every((item) => item.kind === 'PIX_SENT' && item.transferId !== null)).toBe(true);
+  });
+
+  // v1.1.0 plan, task 5: a top-up is money out with a receipt, never a Pix.
+  it('keeps a top-up out of the Pix filter (PIX)', async () => {
+    const ana = await busyCustomer();
+    await topUp(ana, 3_000n);
+
+    const { items } = await filtered(ana, '?filter=PIX');
+
+    expect(items.map((item) => item.kind)).toEqual(['PIX_RECEIVED', 'PIX_SENT', 'PIX_SENT']);
+  });
+
+  it('counts a top-up as having a receipt, with its link (RECEIPT)', async () => {
+    const ana = await busyCustomer();
+    const topUpId = await topUp(ana, 3_000n);
+
+    const { items } = await filtered(ana, '?filter=RECEIPT');
+
+    expect(items[0]).toMatchObject({ kind: 'TOP_UP', direction: 'OUT', topUpId });
+    expect(items).toHaveLength(3);
   });
 
   it('finds by part of the name, in any case', async () => {
