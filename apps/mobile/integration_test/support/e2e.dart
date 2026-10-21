@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/api_config.dart';
+import 'package:next_bank/features/auth/presentation/login/login_screen.dart';
 
 // The demo accounts the seed creates (apps/api/scripts/seed-demo.ts):
 // fictitious people, data and passwords, public on purpose.
@@ -68,31 +69,21 @@ Future<void> signIn(
   );
   if (find.text('Entrar com outra conta').evaluate().isNotEmpty) {
     await tester.tap(find.text('Entrar com outra conta'));
+    await waitFor(tester, find.byType(LoginScreen));
   }
-  // On the CI emulator the login was seen to go away between filling it and
-  // tapping "Entrar" (PR #163, twice, with a session left by the test
-  // before): it is filled and tapped only once it stays, a few times at
-  // most, and a failure says what was on screen instead.
-  final button = find.widgetWithText(FilledButton, 'Entrar');
-  for (var attempt = 0; attempt < 3; attempt++) {
-    await waitFor(tester, button);
-    await tester.enterText(find.byType(TextField).at(0), email);
-    await tester.enterText(find.byType(TextField).at(1), password);
-    await tester.pumpAndSettle();
-    if (button.evaluate().isEmpty) continue;
-    // Login with the password goes straight to the Home (week 6 plan, D5).
-    await tester.tap(button);
-    await waitFor(tester, find.bySemanticsLabel('Área Pix'));
-    return;
-  }
-  throw TestFailure('The login did not stay on screen: ${textsOnScreen()}');
+  await tester.enterText(find.byType(TextField).at(0), email);
+  await tester.enterText(find.byType(TextField).at(1), password);
+  // The keyboard the fields open pushes "Entrar" out of a small screen, as
+  // on the CI emulator, where the list then does not even build it (PR
+  // #163): close it and scroll to the button. Login with the password goes
+  // straight to the Home (week 6 plan, D5).
+  await scrollAndTap(
+    tester,
+    LoginScreen,
+    find.widgetWithText(FilledButton, 'Entrar'),
+  );
+  await waitFor(tester, find.bySemanticsLabel('Área Pix'));
 }
-
-/// Every text on screen, to tell what showed when a step failed.
-List<String> textsOnScreen() => [
-  for (final element in find.byType(Text).evaluate())
-    if ((element.widget as Text).data case final String text) text,
-];
 
 /// The random key of the customer [email], straight from the API, as the
 /// "Receber" screen asks for it (v1.1.0 plan, task 3).
