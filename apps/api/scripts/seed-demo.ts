@@ -155,6 +155,7 @@ if (import.meta.main) {
             hmacKey: config.pii.hmacKey,
           },
           pinPepper: config.pinPepper,
+          topUpPhoneKey: config.topUpPhoneKey,
         },
       });
       try {

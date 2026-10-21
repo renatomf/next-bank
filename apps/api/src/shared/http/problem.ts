@@ -13,8 +13,10 @@ export interface Problem {
   code?: string;
   /** Attempts left after a wrong PIN (PinIncorrect). */
   remainingAttempts?: number;
-  /** The limit in force (LimitExceeded). */
+  /** The limit in force (LimitExceeded, TopUpLimitExceeded). */
   limit?: { amount: number; currency: 'BRL' };
+  /** What is left of the limit today (TopUpLimitExceeded). */
+  remaining?: { amount: number; currency: 'BRL' };
 }
 
 export const PROBLEM_CONTENT_TYPE = 'application/problem+json';
@@ -27,6 +29,7 @@ export const ProblemSchema = z
     code: z.string().optional(),
     remainingAttempts: z.int().min(0).optional(),
     limit: MoneySchema.optional(),
+    remaining: MoneySchema.optional(),
   })
   .meta({ id: 'Problem' });
 
@@ -65,6 +68,10 @@ const CATALOG_STATUS: Readonly<Record<string, number>> = {
   RequestInProgress: 409,
   InvalidTransferState: 409,
   TransferExpired: 409,
+  InvalidPhoneNumber: 422,
+  UnknownTopUpOperator: 422,
+  InvalidTopUpAmount: 422,
+  TopUpLimitExceeded: 422,
 };
 
 /** Generic RFC 9457 response: never carries stack, SQL or internal detail (API-03). */
@@ -79,6 +86,8 @@ export function problem(
   if (details.remainingAttempts !== undefined) body.remainingAttempts = details.remainingAttempts;
   if (details.limitCents !== undefined)
     body.limit = { amount: details.limitCents, currency: 'BRL' };
+  if (details.remainingCents !== undefined)
+    body.remaining = { amount: details.remainingCents, currency: 'BRL' };
   return body;
 }
 
