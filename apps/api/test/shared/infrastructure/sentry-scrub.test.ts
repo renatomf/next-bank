@@ -83,4 +83,19 @@ describe('scrubEvent', () => {
     expect(event.message).toBe('lookup of [CPF] failed');
     expect(event.exception.values[0]?.value).toBe('cpf [CPF] is busy');
   });
+
+  // MOB-02, v1.1.0 plan task 5: the number of a top-up never reaches Sentry.
+  it('redacts a phone number by its key and by its shape', () => {
+    const event = scrubEvent({
+      message: 'top-up to (11) 90000-0001 failed',
+      exception: { values: [{ type: 'Error', value: 'number 11 90000-0001 refused' }] },
+      extra: { input: { phoneNumber: '11900000001', operatorId: 'pulso-celular' } },
+    });
+
+    expect(event.message).toBe('top-up to [PHONE] failed');
+    expect(event.exception.values[0]?.value).toBe('number [PHONE] refused');
+    expect(event.extra).toEqual({
+      input: { phoneNumber: '[REDACTED]', operatorId: 'pulso-celular' },
+    });
+  });
 });
