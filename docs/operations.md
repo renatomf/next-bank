@@ -99,6 +99,8 @@ Em **Settings › Secrets and variables › Actions › Variables**, no nível d
 
 ## 6. Verificação do IP do cliente (API-14), obrigatória a cada mudança de hospedagem
 
+**Desde a v1.1.0 (tarefa 8), a verificação roda sozinha** no smoke test, depois de cada deploy e de cada reset da demo (`infra/scripts/check-client-ip.sh`): ela pede `GET /health/client-ip` três vezes do runner do GitHub (uma comum, uma com `X-Forwarded-For` forjado, outra comum) e falha dizendo se o `TRUST_PROXY` sobe ou desce. O passo manual abaixo fica para diagnosticar uma falha dela ou para medir uma hospedagem nova.
+
 Entre o cliente e a API há **três** saltos: a Cloudflare e dois proxies do Render. `TRUST_PROXY=3`, verificado em 2026-10-13. Com `1`, a API enxergava um endereço interno do Render (`10.x`) como cliente; com `2`, um servidor da Cloudflare (`104.x`, `172.70.x`), diferente a cada requisição. Nos dois casos, os visitantes dividiam contadores de tentativas que não eram deles (F-29).
 
 A verificação é feita **do computador**, e não do celular: na rede móvel (CGNAT), a operadora pode mostrar um IP diferente para cada site, e a comparação não serve. Em Git Bash:
