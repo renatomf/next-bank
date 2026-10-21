@@ -126,6 +126,7 @@ describe('GET /v1/me/statement', () => {
           amount: { amount: 1_000_000, currency: 'BRL' },
           counterparty: { name: 'next bank', documentMasked: null },
           transferId: null,
+          topUpId: null,
         },
       ],
       nextCursor: null,

@@ -62,11 +62,13 @@ export interface StatementPosition {
 export interface StatementItem {
   id: string;
   occurredAt: Date;
-  kind: 'PIX_SENT' | 'PIX_RECEIVED' | 'DEMO_FUNDING';
+  kind: 'PIX_SENT' | 'PIX_RECEIVED' | 'DEMO_FUNDING' | 'TOP_UP';
   direction: 'IN' | 'OUT';
   amount: Money;
   counterparty: { name: string; documentMasked: string | null } | null;
   transferId: string | null;
+  /** The top-up of a TOP_UP item: the link to its receipt (v1.1.0 plan, task 5). */
+  topUpId: string | null;
 }
 
 export interface StatementPage {
