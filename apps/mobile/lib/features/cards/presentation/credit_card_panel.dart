@@ -1,5 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:next_bank/core/ui/example_tag.dart';
 import 'package:next_bank/features/cards/presentation/example_card_figures.dart';
 
 /// What the credit card shows below the carousel: the current invoice, the
@@ -33,7 +34,17 @@ class CreditCardPanel extends StatelessWidget {
               ),
           ],
         ),
-        Text('Últimas compras', style: context.nbText.sectionTitle),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Últimas compras',
+                style: context.nbText.sectionTitle,
+              ),
+            ),
+            const ExampleTag(),
+          ],
+        ),
         for (final purchase in examplePurchases) _PurchaseRow(purchase),
       ],
     );
@@ -56,7 +67,14 @@ class _InvoiceCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: NbSpace.sm,
         children: [
-          Text('Fatura atual', style: context.nbText.caption),
+          Row(
+            children: [
+              Expanded(
+                child: Text('Fatura atual', style: context.nbText.caption),
+              ),
+              const ExampleTag(),
+            ],
+          ),
           Text(
             formatReais(exampleInvoiceCents).full,
             style: context.nbText.screenTitle,

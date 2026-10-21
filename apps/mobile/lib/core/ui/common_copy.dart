@@ -10,6 +10,10 @@ abstract final class CommonCopy {
   /// What the screen reader says for an amount the customer hid.
   static const String hiddenBalance = 'Saldo oculto';
 
+  /// The tag on a made-up figure of a layout-only screen (D7, revised in the
+  /// v1.1.0 plan, task 6).
+  static const String example = 'Exemplo';
+
   /// The button that shows or hides a password or a PIN.
   static const ({String show, String hide}) revealSecret = (
     show: 'Mostrar senha',

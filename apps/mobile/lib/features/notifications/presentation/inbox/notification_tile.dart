@@ -1,5 +1,7 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:next_bank/core/ui/common_copy.dart';
+import 'package:next_bank/core/ui/example_tag.dart';
 
 /// One notification: its icon in a circle, the category and the date, the
 /// preview in up to two lines and how many are unread. Read by screen
@@ -13,6 +15,7 @@ class NotificationTile extends StatelessWidget {
     required this.date,
     required this.unread,
     required this.onTap,
+    this.madeUpFigure = false,
     super.key,
   });
 
@@ -34,11 +37,17 @@ class NotificationTile extends StatelessWidget {
   /// Called on tap.
   final VoidCallback onTap;
 
+  /// Whether [preview] cites a made-up figure: the tag says so (D7, revised
+  /// in the v1.1.0 plan, task 6).
+  final bool madeUpFigure;
+
   @override
   Widget build(BuildContext context) {
+    final example = madeUpFigure ? ' ${CommonCopy.example}.' : '';
+
     return Semantics(
       button: true,
-      label: '$category, $date. $preview. $unread não lidas',
+      label: '$category, $date. $preview.$example $unread não lidas',
       onTap: onTap,
       excludeSemantics: true,
       child: InkWell(
@@ -83,6 +92,9 @@ class NotificationTile extends StatelessWidget {
                         _UnreadBadge(count: unread),
                       ],
                     ),
+                    // On its own line: beside the category and the date it
+                    // does not fit a small phone at 1.3x text.
+                    if (madeUpFigure) const ExampleTag(),
                   ],
                 ),
               ),

@@ -85,6 +85,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                           preview: example.preview,
                           date: '${day.day} ${shortMonth(day.month)}',
                           unread: example.unread,
+                          madeUpFigure: example.madeUpFigure,
                           onTap: () => showNbToast(
                             context,
                             'Em breve.',
