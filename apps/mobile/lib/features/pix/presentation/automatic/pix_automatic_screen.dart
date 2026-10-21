@@ -1,5 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:next_bank/core/ui/example_tag.dart';
 import 'package:next_bank/features/pix/presentation/automatic/automatic_payment_sheet.dart';
 import 'package:next_bank/features/pix/presentation/automatic/automatic_payment_tile.dart';
 import 'package:next_bank/features/pix/presentation/automatic/example_automatic_payments.dart';
@@ -57,13 +58,16 @@ class PixAutomaticScreen extends StatelessWidget {
                 spacing: NbSpace.md,
                 children: [
                   Icon(Icons.check_circle_outline, color: colors.success),
-                  Semantics(
-                    header: true,
-                    child: Text(
-                      'Cadastradas',
-                      style: context.nbText.sectionTitle,
+                  Expanded(
+                    child: Semantics(
+                      header: true,
+                      child: Text(
+                        'Cadastradas',
+                        style: context.nbText.sectionTitle,
+                      ),
                     ),
                   ),
+                  const ExampleTag(),
                 ],
               ),
               const SizedBox(height: NbSpace.sm),

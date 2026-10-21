@@ -1,5 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:next_bank/core/ui/example_tag.dart';
 import 'package:next_bank/features/cards/presentation/card_status_row.dart';
 import 'package:next_bank/features/cards/presentation/example_card_figures.dart';
 
@@ -91,9 +92,18 @@ class _PreApprovedBox extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         spacing: NbSpace.sm,
         children: [
-          Text(
-            'Você tem $limit de limite pré-aprovado',
-            style: context.nbText.bodyStrong,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: NbSpace.sm,
+            children: [
+              Expanded(
+                child: Text(
+                  'Você tem $limit de limite pré-aprovado',
+                  style: context.nbText.bodyStrong,
+                ),
+              ),
+              const ExampleTag(),
+            ],
           ),
           const Divider(),
           Text(

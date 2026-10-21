@@ -2,6 +2,7 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
+import 'package:next_bank/core/ui/example_tag.dart';
 import 'package:next_bank/features/pix/presentation/automatic/example_automatic_payments.dart';
 
 /// Opens the details of [payment] in a sheet over the screen.
@@ -40,7 +41,15 @@ class AutomaticPaymentSheet extends ConsumerWidget {
           children: [
             _CompanyHeader(payment: payment),
             const Divider(),
-            _DetailRow(label: 'Valor', value: Text(payment.amount)),
+            _DetailRow(
+              label: 'Valor',
+              value: Wrap(
+                spacing: NbSpace.sm,
+                alignment: WrapAlignment.end,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [Text(payment.amount), const ExampleTag()],
+              ),
+            ),
             _DetailRow(
               label: 'Frequência',
               value: _IconValue(

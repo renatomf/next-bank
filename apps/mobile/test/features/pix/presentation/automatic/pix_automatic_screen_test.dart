@@ -6,6 +6,7 @@ import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/features/pix/presentation/automatic/automatic_payment_sheet.dart';
 import 'package:next_bank/features/pix/presentation/automatic/automatic_payment_tile.dart';
+import 'package:next_bank/features/pix/presentation/automatic/example_automatic_payments.dart';
 import 'package:next_bank/features/pix/presentation/automatic/pix_automatic_screen.dart';
 
 import '../../../../support/device_stores.dart';
@@ -31,7 +32,15 @@ Future<void> pumpAutomatic(WidgetTester tester, {VoidCallback? onBack}) async {
 }
 
 Future<void> openFirstAccount(WidgetTester tester) async {
-  await tester.tap(find.byType(AutomaticPaymentTile).first);
+  // On a small phone the list starts below the fold: scroll to it first.
+  final first = exampleAutomaticPayments.first;
+  final account = find.text('${first.company} · ${first.description}');
+  await tester.scrollUntilVisible(
+    account,
+    200,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await tester.tap(account);
   await tester.pumpAndSettle();
 }
 

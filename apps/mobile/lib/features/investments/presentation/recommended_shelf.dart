@@ -1,5 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:next_bank/core/ui/example_tag.dart';
 import 'package:next_bank/features/investments/presentation/example_investments.dart';
 
 /// "Investimentos recomendados": the made-up offers, scrolling sideways,
@@ -13,12 +14,19 @@ class RecommendedShelf extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Semantics(
-          header: true,
-          child: Text(
-            'Investimentos recomendados',
-            style: context.nbText.sectionTitle,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: Semantics(
+                header: true,
+                child: Text(
+                  'Investimentos recomendados',
+                  style: context.nbText.sectionTitle,
+                ),
+              ),
+            ),
+            const ExampleTag(),
+          ],
         ),
         Text(
           'Produtos escolhidos para o seu perfil',
