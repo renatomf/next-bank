@@ -241,7 +241,7 @@ describe('POST /v1/top-ups', () => {
     const response = await topUp(customer, { pin: '0000' });
 
     expect(response.statusCode).toBe(422);
-    expect(response.json()).toMatchObject({ code: 'PinIncorrect', remainingAttempts: 2 });
+    expect(response.json()).toMatchObject({ code: 'PinIncorrect', remainingAttempts: 4 });
     expect(await availableCents(customer)).toBe(before);
   });
 
@@ -253,8 +253,8 @@ describe('POST /v1/top-ups', () => {
     const repeated = await topUp(customer, { pin: '0000' }, key);
     const next = await topUp(customer, { pin: '1111' });
 
-    expect(repeated.json()).toMatchObject({ code: 'PinIncorrect', remainingAttempts: 2 });
-    expect(next.json()).toMatchObject({ code: 'PinIncorrect', remainingAttempts: 1 });
+    expect(repeated.json()).toMatchObject({ code: 'PinIncorrect', remainingAttempts: 4 });
+    expect(next.json()).toMatchObject({ code: 'PinIncorrect', remainingAttempts: 3 });
   });
 
   it('refuses what passes R$ 200 in the day, saying what is left (TopUpLimitExceeded)', async () => {
@@ -270,8 +270,8 @@ describe('POST /v1/top-ups', () => {
     expect(response.statusCode).toBe(422);
     expect(response.json()).toMatchObject({
       code: 'TopUpLimitExceeded',
-      limitCents: 20000,
-      remainingCents: 0,
+      limit: { amount: 20000, currency: 'BRL' },
+      remaining: { amount: 0, currency: 'BRL' },
     });
   });
 
