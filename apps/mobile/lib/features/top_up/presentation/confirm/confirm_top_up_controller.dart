@@ -4,6 +4,7 @@ import 'package:next_bank/core/api_messages.dart';
 import 'package:next_bank/core/idempotency_key.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/session/biometric_pin_store.dart';
+import 'package:next_bank/core/session/session_controller.dart';
 import 'package:next_bank/features/top_up/domain/top_up.dart';
 import 'package:next_bank/features/top_up/presentation/top_up_providers.dart';
 
@@ -15,6 +16,41 @@ typedef TopUpDraft = ({
   String phoneMasked,
   int amountCents,
 });
+
+/// An attempt whose answer has not come: its PIN and key go again together
+/// (MOB-07).
+typedef PendingTopUp = ({String pin, String key, bool fromBiometrics});
+
+/// The attempts without an answer, by draft (F-39). They outlive the screen:
+/// a top-up whose answer was lost may have been done, so leaving and opening
+/// the same one again must carry the same key, and the server answers what
+/// it recorded instead of topping up twice. Only in memory, each dropped on
+/// its answer, and all of them on signing out (MOB-02).
+final class PendingTopUps {
+  final Map<TopUpDraft, PendingTopUp> _byDraft = {};
+
+  /// The attempt of [draft] still without an answer, if any.
+  PendingTopUp? of(TopUpDraft draft) => _byDraft[draft];
+
+  /// Keeps [attempt] until [draft] is answered.
+  void keep(TopUpDraft draft, PendingTopUp attempt) =>
+      _byDraft[draft] = attempt;
+
+  /// Forgets the attempt of [draft], answered.
+  void drop(TopUpDraft draft) => _byDraft.remove(draft);
+}
+
+/// One set per signed-in customer: a new session starts with none.
+final Provider<PendingTopUps> pendingTopUpsProvider = Provider((ref) {
+  // Signing out starts it over; loading the session on start does not.
+  ref.watch(sessionProvider.select((session) => session.value is SignedOut));
+  return PendingTopUps();
+});
+
+/// The text of a top-up whose answer was lost.
+const String _unknownOutcome =
+    'Não conseguimos confirmar a recarga. Tente de novo: ela não será '
+    'feita duas vezes.';
 
 /// What the confirmation shows. Never holds the PIN (MOB-02).
 final class ConfirmTopUpState {
@@ -60,15 +96,13 @@ class ConfirmTopUpController extends Notifier<ConfirmTopUpState> {
   /// What is being topped up.
   final TopUpDraft draft;
 
-  // The attempt whose answer has not come: its PIN and key go again together
-  // (MOB-07). Held only in memory and dropped on any answer (MOB-02).
-  ({String pin, String key, bool fromBiometrics})? _unanswered;
-
   @override
   ConfirmTopUpState build() {
-    // A rebuild keeps this instance: the PIN must not outlive the state.
-    _unanswered = null;
-    return const ConfirmTopUpState();
+    // Opened again with an answer still lost: only the same attempt (F-39).
+    final pending = ref.watch(pendingTopUpsProvider).of(draft);
+    return pending == null
+        ? const ConfirmTopUpState()
+        : const ConfirmTopUpState(outcomeUnknown: true, error: _unknownOutcome);
   }
 
   bool get _busy => state.verifying || state.blocked || state.outcomeUnknown;
@@ -115,15 +149,15 @@ class ConfirmTopUpController extends Notifier<ConfirmTopUpState> {
   /// Repeats the attempt whose answer was lost, with its PIN and key, so the
   /// server answers with what it recorded. Null when there is none.
   Future<TopUp?> retry() {
-    final unanswered = _unanswered;
-    if (unanswered == null || state.verifying) return Future.value();
-    return _topUp(unanswered);
+    final pending = ref.read(pendingTopUpsProvider).of(draft);
+    if (pending == null || state.verifying) return Future.value();
+    return _topUp(pending);
   }
 
-  Future<TopUp?> _topUp(
-    ({String pin, String key, bool fromBiometrics}) attempt,
-  ) async {
-    _unanswered = attempt;
+  Future<TopUp?> _topUp(PendingTopUp attempt) async {
+    // Read now: the answer may come after the screen closed, and what it
+    // decides about the attempt must still happen.
+    final pending = ref.read(pendingTopUpsProvider)..keep(draft, attempt);
     state = const ConfirmTopUpState(verifying: true);
     try {
       final done = await ref
@@ -135,18 +169,19 @@ class ConfirmTopUpController extends Notifier<ConfirmTopUpState> {
             pin: attempt.pin,
             idempotencyKey: attempt.key,
           );
-      _unanswered = null;
+      pending.drop(draft);
       if (!ref.mounted) return null;
       state = const ConfirmTopUpState();
       return done;
     } on ApiFailure catch (failure) {
+      final next = _stateAfter(failure);
+      if (!next.outcomeUnknown) pending.drop(draft);
       if (!ref.mounted) return null;
       // Catalog: the account has no PIN; the profile read again sends the
       // router to the PIN creation.
       if (failure case ApiRejected(code: ApiErrorCode.pinNotCreated)) {
         ref.invalidate(profileProvider);
       }
-      final next = _stateAfter(failure);
       // A kept PIN the server refuses is out of date, and a locked PIN must
       // be reset with the password: either way, it is no longer kept.
       final refused =
@@ -158,7 +193,6 @@ class ConfirmTopUpController extends Notifier<ConfirmTopUpState> {
         if (!ref.mounted) return null;
       }
       state = next;
-      if (!state.outcomeUnknown) _unanswered = null;
       return null;
     }
   }
@@ -167,12 +201,9 @@ class ConfirmTopUpController extends Notifier<ConfirmTopUpState> {
 ConfirmTopUpState _stateAfter(ApiFailure failure) => switch (failure) {
   ApiUnreachable() ||
   ApiUnexpected() ||
-  ApiRejected(code: ApiErrorCode.requestInProgress) => const ConfirmTopUpState(
-    outcomeUnknown: true,
-    error:
-        'Não conseguimos confirmar a recarga. Tente de novo: ela não será '
-        'feita duas vezes.',
-  ),
+  ApiRejected(
+    code: ApiErrorCode.requestInProgress,
+  ) => const ConfirmTopUpState(outcomeUnknown: true, error: _unknownOutcome),
   ApiRejected(code: ApiErrorCode.pinLocked || ApiErrorCode.pinResetRequired) =>
     ConfirmTopUpState(blocked: true, error: messageFor(failure)),
   ApiRejected() => ConfirmTopUpState(error: messageFor(failure)),

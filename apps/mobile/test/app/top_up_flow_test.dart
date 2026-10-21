@@ -196,8 +196,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(ConfirmTopUpScreen), findsOneWidget);
 
-    await tester.tap(find.bySemanticsLabel('Voltar'));
+    // The system back asks too.
+    await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
+    expect(find.text('A recarga pode ter sido feita'), findsOneWidget);
     await tester.tap(find.text('Sair'));
     await tester.pumpAndSettle();
     expect(find.byType(TopUpAmountScreen), findsOneWidget);

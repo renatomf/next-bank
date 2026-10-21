@@ -69,44 +69,76 @@ class _ConfirmTopUpScreenState extends ConsumerState<ConfirmTopUpScreen> {
     widget.onDone(done);
   }
 
+  /// Leaves the confirmation. With an answer still lost the top-up may have
+  /// been done, so the customer is told first (F-39); opening the same one
+  /// again brings back the same attempt.
+  Future<void> _leave() async {
+    final state = ref.read(confirmTopUpControllerProvider(widget.draft));
+    if (state.outcomeUnknown) {
+      final leave = await showConfirmDialog(
+        context,
+        title: 'A recarga pode ter sido feita',
+        message:
+            'Não conseguimos confirmar a recarga. Confira o extrato antes de '
+            'fazer outra: se ela foi feita, aparece lá.',
+        confirmLabel: 'Sair',
+        cancelLabel: 'Ficar',
+      );
+      if (!leave || !mounted) return;
+    }
+    widget.onBack();
+  }
+
   @override
   Widget build(BuildContext context) {
     final draft = widget.draft;
     final text = Theme.of(context).textTheme;
-    return Scaffold(
-      body: GlowBackground(
-        child: SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.all(NbSpace.screen),
-            children: [
-              ScreenHeader(
-                title: 'Confirmar recarga',
-                icon: Icons.arrow_back,
-                iconLabel: 'Voltar',
-                onPressed: widget.onBack,
-              ),
-              const SizedBox(height: NbSpace.xl),
-              Center(child: MoneyText(cents: draft.amountCents)),
-              const SizedBox(height: NbSpace.sm),
-              Center(
-                child: Text('para ${draft.phoneMasked}', style: text.bodySmall),
-              ),
-              const SizedBox(height: NbSpace.xl),
-              Row(
-                spacing: NbSpace.md,
-                children: [
-                  InitialsAvatar(initials: draft.operator.initials),
-                  Expanded(
-                    child: Text(
-                      'Recarga de celular ${draft.operator.name}',
-                      style: context.nbText.bodyText,
-                    ),
+    final pending = ref.watch(
+      confirmTopUpControllerProvider(draft).select((s) => s.outcomeUnknown),
+    );
+    return PopScope(
+      canPop: !pending,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) unawaited(_leave());
+      },
+      child: Scaffold(
+        body: GlowBackground(
+          child: SafeArea(
+            child: ListView(
+              padding: const EdgeInsets.all(NbSpace.screen),
+              children: [
+                ScreenHeader(
+                  title: 'Confirmar recarga',
+                  icon: Icons.arrow_back,
+                  iconLabel: 'Voltar',
+                  onPressed: () => unawaited(_leave()),
+                ),
+                const SizedBox(height: NbSpace.xl),
+                Center(child: MoneyText(cents: draft.amountCents)),
+                const SizedBox(height: NbSpace.sm),
+                Center(
+                  child: Text(
+                    'para ${draft.phoneMasked}',
+                    style: text.bodySmall,
                   ),
-                ],
-              ),
-              const SizedBox(height: NbSpace.xl),
-              ..._confirmation(),
-            ],
+                ),
+                const SizedBox(height: NbSpace.xl),
+                Row(
+                  spacing: NbSpace.md,
+                  children: [
+                    InitialsAvatar(initials: draft.operator.initials),
+                    Expanded(
+                      child: Text(
+                        'Recarga de celular ${draft.operator.name}',
+                        style: context.nbText.bodyText,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: NbSpace.xl),
+                ..._confirmation(),
+              ],
+            ),
           ),
         ),
       ),
