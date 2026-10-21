@@ -30,7 +30,13 @@ flowchart LR
     LE[Ledger<br/>lançamentos e saldos]
     PA[Payments<br/>Pix, chaves, idempotência]
     AU[Audit<br/>trilha de auditoria]
+    TU[TopUps<br/>recarga de celular, v1.1.0]
     OP[Operations<br/>Fase 3]
+
+    TU -- "verifica PIN (porta)" --> ID
+    TU -- "consulta conta e status (porta)" --> AC
+    TU -- "registra lançamento (porta, mesma transação)" --> LE
+    TU -. eventos .-> AU
 
     PA -- "verifica PIN e lê nome do titular (porta)" --> ID
     PA -- "consulta conta e status (porta)" --> AC
@@ -137,7 +143,7 @@ flowchart LR
 **`AuditEvent`**
 - Atributos: `id`, `occurredAt`, `actorType` (`USER`, `SYSTEM`, `STAFF`), `actorId`, `action`, `subjectType`, `subjectId`, `requestId`, `metadata`
 - Invariantes: só inclusão; `metadata` **nunca** contém senha, PIN, token, CPF completo ou valor de chave Pix completo
-- Ações da V1: `USER_REGISTERED`, `LOGIN_SUCCEEDED`, `LOGIN_FAILED`, `SESSION_CREATED`, `SESSION_REVOKED`, `REFRESH_REUSE_DETECTED`, `PIN_CREATED`, `PIN_LOCKED`, `PIN_CHANGED`, `PASSWORD_CHANGED`, `ACCOUNT_OPENED`, `PIX_CREATED`, `PIX_COMPLETED`, `PIX_FAILED`, `PIX_CANCELLED`
+- Ações da V1: `USER_REGISTERED`, `LOGIN_SUCCEEDED`, `LOGIN_FAILED`, `SESSION_CREATED`, `SESSION_REVOKED`, `REFRESH_REUSE_DETECTED`, `PIN_CREATED`, `PIN_LOCKED`, `PIN_CHANGED`, `PASSWORD_CHANGED`, `ACCOUNT_OPENED`, `PIX_CREATED`, `PIX_COMPLETED`, `PIX_FAILED`, `PIX_CANCELLED`, `TOP_UP_COMPLETED` (v1.1.0: a operadora e o valor, nunca o número)
 
 ## 4. Máquina de estados do Pix
 
@@ -165,6 +171,7 @@ stateDiagram-v2
 |---|---|---|---|
 | `customer:<accountId>` | CUSTOMER | 1 | Saldo de cada cliente |
 | `system:funding` | SYSTEM | 1 | Origem do saldo de demonstração |
+| `system:top-up-<operadora>` | SYSTEM | v1.1.0 | O que as recargas devem a cada operadora (uma conta por operadora: Onda Móvel, Pulso Celular, Rede Nova) |
 | `system:pix_clearing` | SYSTEM | 2 | Conta transitória: Pix enviado aguardando liquidação |
 | `system:bacen_settlement` | SYSTEM | 2 | Espelho da conta do banco no Bacen (liquidação) |
 
@@ -222,6 +229,7 @@ Se o Pix falhar (saldo insuficiente, limite, conta indisponível), **nenhum lan�
 | Tentativas de PIN | 5, depois bloqueio de 30 min | `TransactionPin.Verify` |
 | Chaves por conta | até 5 | `PixKey` |
 | Consultas de chave | até 30 por hora por cliente; consultas a chaves inexistentes contam em dobro | Rate limit na consulta de chave (evita varredura de dados pessoais) |
+| Recarga de celular (v1.1.0) | R$ 15, 20, 30 ou 50; até R$ 200 por dia de `America/Sao_Paulo`; só números `(DD) 90000-XXXX` | `CreateTopUp`, com a soma do dia lida depois da trava da conta do ledger |
 
 O limite noturno é inspirado na regra do Bacen, simplificado para valor por transação. Limite acumulado por período fica como evolução.
 
@@ -245,11 +253,11 @@ O extrato não é um agregado: é uma consulta (lado de leitura do CQRS) que lê
 | Campo exibido | Origem |
 |---|---|
 | Data e hora | `Posting.createdAt` |
-| Tipo (Pix enviado, Pix recebido, Depósito inicial) | `JournalEntry.kind` + direção da partida |
+| Tipo (Pix enviado, Pix recebido, Depósito inicial, Recarga de celular) | `JournalEntry.kind` + direção da partida |
 | Contraparte (nome e documento mascarado) | `Posting.counterpartyName`, `Posting.counterpartyDocumentMasked` |
 | Valor com sinal | Partida da conta do cliente: crédito `+`, débito `−` |
 | Status | Na V1, só Pix `COMPLETED` geram lançamento; logo, todo item do extrato está concluído |
-| Link para comprovante | `JournalEntry.referenceId` (id do Pix) |
+| Link para comprovante | `JournalEntry.referenceId` (id do Pix, ou da recarga desde a v1.1.0: `topUpId`, com a operadora e o número mascarado como contraparte) |
 
 - **Paginação por cursor** em (`createdAt`, `id`), do mais recente para o mais antigo, 20 itens por página.
 - **Filtros (extra):** período e tipo (entradas/saídas).
@@ -283,7 +291,11 @@ O extrato não é um agregado: é uma consulta (lado de leitura do CQRS) que lê
 | `InvalidAmount` | 422 | Pix | "Informe um valor válido." |
 | `InsufficientFunds` | 422 | Pix, Revisar | "Saldo insuficiente." |
 | `LimitExceeded` | 422 | Pix, Revisar | "Valor acima do seu limite de R$ X por Pix." (`X` vem do campo `limit` da resposta: o servidor sabe qual limite vale agora, PIX-10) |
-| `AccountBlocked` | 422 | Pix | "Sua conta está bloqueada. Fale com o suporte." |
+| `AccountBlocked` | 422 | Pix, Recarga | "Sua conta está bloqueada. Fale com o suporte." |
+| `InvalidPhoneNumber` | 422 | Recarga | "Use um número fictício: (DD) 90000-XXXX." (só o intervalo fictício é aceito, TOP-01; v1.1.0) |
+| `UnknownTopUpOperator` | 422 | Recarga | "Escolha uma operadora da lista." (o app só oferece as da API: indica cliente desatualizado ou adulterado) |
+| `InvalidTopUpAmount` | 422 | Recarga | "Escolha um dos valores da lista." (idem) |
+| `TopUpLimitExceeded` | 422 | Recarga | "Você pode recarregar até R$ X por dia. Restam R$ Y hoje." (`X` e `Y` vêm dos campos `limit` e `remaining` da resposta; o dia é o de `America/Sao_Paulo`) |
 | `PayeeUnavailable` | 422 | Revisar | "A conta de destino não pode receber Pix agora." |
 | `TransferExpired` | 409 | Revisar | "O tempo para confirmar acabou. Comece de novo." |
 | `InvalidTransferState` | 409 | Revisar | "Este Pix já foi processado." |
@@ -291,7 +303,9 @@ O extrato não é um agregado: é uma consulta (lado de leitura do CQRS) que lê
 | `RequestInProgress` | 409 | — | O app aguarda e consulta o resultado |
 | `NotFound` (inclui recurso de outro usuário) | 404 | Qualquer | "Não encontrado." |
 
-Formato da resposta: RFC 7807, com `type`, `title`, `status`, `code` (o nome do erro) e campos extras quando úteis (ex.: `remainingAttempts`, `limit`).
+Formato da resposta: RFC 7807, com `type`, `title`, `status`, `code` (o nome do erro) e campos extras quando úteis (ex.: `remainingAttempts`, `limit`, `remaining`).
+
+**Na recarga** (v1.1.0, tarefa 5), `PinIncorrect`, `PinLocked` e `PinResetRequired` também ficam gravados com a chave de idempotência, como na autorização do Pix: a tentativa contada continua contada, e a mesma requisição recebe a mesma recusa. `InsufficientFunds`, `TopUpLimitExceeded` e `AccountBlocked` são erros, porque nenhuma recarga nasce.
 
 **Na autorização do Pix** (tela 8 → 9), `InsufficientFunds`, `LimitExceeded`, `AccountBlocked` e `PayeeUnavailable` não são erros: o Pix foi processado e falhou, então a resposta é 200 com o Pix em `FAILED` e o motivo em `failureReason` (`INSUFFICIENT_FUNDS`, `LIMIT_EXCEEDED`, `ACCOUNT_BLOCKED`, `PAYEE_UNAVAILABLE`), o estado "falhou (com motivo)" da tela 9. Na criação (tela 7), os mesmos casos continuam erros, porque nenhum Pix nasce. `PinIncorrect`, `PinLocked`, `PinResetRequired` e `TransferExpired` continuam erros na autorização e ficam gravados com a chave de idempotência: a mesma requisição repetida recebe a mesma resposta sem conferir o PIN de novo (plano da semana 5, D5).
 

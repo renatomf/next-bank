@@ -165,6 +165,15 @@ A V1 fica publicada para avaliação por recrutadores. Uma demo aberta tem risco
 | DEMO-04 | Uso da demo para hospedar conteúdo ofensivo (nomes, descrições de Pix) | T | Visitante | Limite de tamanho nos campos; reset diário | Descrição acima de 140 caracteres → 422 | 5 |
 | DEMO-05 | Comprovante da demo usado como comprovante falso de um pagamento real (golpe do comprovante), ou comprovante de um Pix não concluído usado para fingir pagamento | S | Visitante | A imagem compartilhada traz no rodapé o aviso de que o next bank é fictício; o aviso também fica no comprovante na tela. Sem marca d'água nem legenda (decisões do desenvolvedor): um recorte pode tirar o aviso, risco aceito numa demo com dados fictícios; "Compartilhar" só existe para Pix concluído | Testes de widget e golden do comprovante: aviso sempre presente; sem botão fora do status concluído | v1.1.0 |
 
+### 5.7 Recarga de celular (v1.1.0)
+
+A recarga move dinheiro como o Pix: valem também PIX-04 (corpo estrito), PIX-05 (o mesmo PIN, com bloqueio), PIX-09 (auditoria na mesma transação), READ-01 e READ-02 (comprovante só do dono, com o número mascarado). A operadora é falsa e confirma na hora (plano da v1.1.0, D5).
+
+| ID | Ameaça | STRIDE | Ator | Mitigação | Teste | Sem. |
+|---|---|---|---|---|---|---|
+| TOP-01 | Recarregar ou guardar o número de uma pessoa real | I | Visitante, A5 | Só o intervalo fictício `(DD) 90000-XXXX`, com DDD válido (`InvalidPhoneNumber` para o resto); o número é cifrado com AES-256-GCM sob uma chave só dele (`TOP_UP_PHONE_KEY`, decisão R6), preso à coluna pelo dado associado; respostas, extrato e auditoria só levam o número mascarado; logs e Sentry redigem a chave `phoneNumber` e o formato de celular | `phone-number.test.ts`; `top-up-routes.test.ts`: número real → 422, o cifrado no banco não contém os dígitos, o log não contém o número, a auditoria não o leva; `sentry-scrub.test.ts`: número pela chave e pelo formato | v1.1.0 |
+| TOP-02 | Recarga duplicada, ou o mesmo saldo e o mesmo limite do dia gastos duas vezes por requisições simultâneas | T | A2, rede | `Idempotency-Key` (a idempotência compartilhada, ADR 0015); travas na ordem do `database.md`, seção 7: a conta do ledger do cliente em `FOR UPDATE` antes de ler o saldo e a soma do dia | `top-up-routes.test.ts`: mesma chave → mesma resposta e um só débito; chave reusada com outro pedido → 422; 2 × R$ 30 sobre R$ 40 e 2 × R$ 50 com R$ 150 gastos no dia → um 201 e um 422, contra o Postgres real | v1.1.0 |
+
 ## 6. Decisões de segurança
 
 | # | Decisão | Proposta |

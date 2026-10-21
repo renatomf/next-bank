@@ -17,7 +17,7 @@
 | Classe | Exemplos | Tratamento |
 |---|---|---|
 | **Segredo** | senha, PIN, refresh token | Só hash (Argon2id para senha/PIN; SHA-256 para refresh token de alta entropia). Nunca recuperável |
-| **Pessoal sensível** | CPF, valor de chave Pix | Criptografado (AES-256-GCM) + índice cego (HMAC-SHA256) para busca e unicidade + versão mascarada para exibição |
+| **Pessoal sensível** | CPF, valor de chave Pix, número de uma recarga | Criptografado (AES-256-GCM) + índice cego (HMAC-SHA256) para busca e unicidade + versão mascarada para exibição. O número da recarga não tem índice cego: nunca se busca por ele |
 | **Pessoal** | nome, e-mail | Texto puro; acesso restrito; nunca em logs |
 | **Financeiro** | saldos, lançamentos, Pix | Texto puro; append-only quando aplicável; auditado |
 | **Técnico** | IDs, timestamps, status | Texto puro |
@@ -27,6 +27,7 @@
 **Chaves (variáveis de ambiente, nunca no repositório):**
 - `PII_ENCRYPTION_KEY` (32 bytes): cifra AES-256-GCM. Cada valor cifrado guarda `key_version`, o que permite rotação gradual.
 - `PII_HMAC_KEY` (32 bytes): índice cego. Rotacionar exige recalcular os índices (procedimento documentado no runbook, fora da V1).
+- `TOP_UP_PHONE_KEY` (32 bytes, v1.1.0): cifra o número das recargas, separada da do CPF (TOP-01, decisão R6), para vazar ou trocar uma não afetar a outra.
 
 **Risco aceito na V1 e caminho de evolução:** em bancos reais, essas chaves não ficam em variáveis de ambiente: ficam num **KMS/HSM**, com *envelope encryption* (uma chave mestra no KMS cifra as chaves de dados, e a aplicação nunca vê a chave mestra). Na V1, a criptografia fica atrás da porta `CpfProtector` (o token de acesso, atrás da `AccessTokenIssuer`). Com KMS, a chave nunca sai do serviço, então é a implementação dessas portas que muda; o restante do código não muda.
 
@@ -273,11 +274,21 @@ erDiagram
 
 **`platform.idempotency_records`** (desde a v1.1.0, ADR 0015: num schema comum, para o Pix e a recarga usarem a mesma tabela sem um módulo escrever no schema do outro)
 - PK `(user_id, key)` — escopo por usuário; uma requisição concorrente com a mesma chave espera no `INSERT … ON CONFLICT DO NOTHING` até a primeira terminar
-- `operation`: o comando protegido (`pix.create`, `pix.authorize`); mesma chave em operação diferente é recusada
+- `operation`: o comando protegido (`pix.create`, `pix.authorize`, `top-up.create`); mesma chave em operação diferente é recusada
 - `request_hash`: HMAC-SHA256 da requisição com chave do servidor, nunca com o PIN (semana 5, D4)
 - `status`: `CHECK (status IN ('IN_PROGRESS','COMPLETED'))`; resposta presente exatamente quando concluída; validade de até 24 h (`CHECK`)
 - `response_body` só contém dados já mascarados (é a resposta enviada ao cliente) ou a recusa gravada (PIN incorreto, bloqueado, Pix expirado)
 - Índice `(expires_at)`: entra com o job de limpeza (semana 8)
+
+### 5.4.1 `top_ups` (v1.1.0, tarefa 5)
+
+**`top_ups`** (só inclusão: toda recarga nasce concluída nesta versão, D5)
+- `operator_id`: `CHECK` com as três operadoras; `amount`: `CHECK (amount IN (1500, 2000, 3000, 5000))`; `currency = 'BRL'`; `status = 'COMPLETED'`
+- Número cifrado (`phone_ciphertext`, `phone_key_version`) com a chave própria e o dado associado `top_ups.top_ups.phone`; `phone_masked` com `CHECK` do formato `(DD) *****-NNNN`, o único que sai nas respostas, no extrato e no comprovante
+- `provider_reference`: a referência da operadora, com tamanho limitado
+- **Índice `(account_id, created_at)`**: sustenta a soma do dia para o limite (`account_id = $1 AND created_at >= $2`) — `EXPLAIN ANALYZE`: `Index Scan using top_ups_account_id_created_at_idx`, 0,16 ms. O comprovante é pela PK com o filtro do dono (`Index Scan using top_ups_pkey`, 0,01 ms)
+- `GRANT`: só `SELECT, INSERT` para a API
+- No ledger: três contas de sistema `system:top-up-<operadora>` e o tipo `TOP_UP` em `journal_entries.kind`; o débito do cliente leva a operadora e o número mascarado como contraparte
 
 ### 5.5 `audit`
 
@@ -292,7 +303,7 @@ erDiagram
 | Papel | Uso | Permissões |
 |---|---|---|
 | `nextbank_migrator` | Só no pipeline de migrations | Dono dos schemas; DDL |
-| `nextbank_app` | API em execução | `SELECT, INSERT, UPDATE` nas tabelas mutáveis; **apenas `SELECT, INSERT`** em `ledger.journal_entries`, `ledger.postings` e `audit.audit_events`; `DELETE` só em `identity.refresh_tokens` e `payments.idempotency_records` (jobs de limpeza); sem DDL, sem `TRUNCATE` |
+| `nextbank_app` | API em execução | `SELECT, INSERT, UPDATE` nas tabelas mutáveis; **apenas `SELECT, INSERT`** em `ledger.journal_entries`, `ledger.postings` e `audit.audit_events`; `DELETE` só em `identity.refresh_tokens` e `platform.idempotency_records` (jobs de limpeza); sem DDL, sem `TRUNCATE` |
 
 **Defesa em profundidade:** além dos `GRANT`s, triggers `BEFORE UPDATE OR DELETE` em `journal_entries`, `postings` e `audit_events` lançam erro. Assim, nem um acesso com papel errado altera o histórico.
 
@@ -317,6 +328,8 @@ Conexões sempre com TLS (`sslmode=verify-full` no ambiente publicado). O papel 
 9. Insere eventos de auditoria; grava a resposta em `idempotency_records`
 10. `COMMIT` (aqui roda a verificação diferida de Σ débitos = Σ créditos)
 
+**`CreateTopUp` (v1.1.0)** segue a mesma ordem, sem o passo 2 (não há recurso anterior a travar): idempotência; PIN `FOR UPDATE`; conta `FOR SHARE`; a conta do ledger do cliente `FOR UPDATE`; só então lê o saldo e a **soma das recargas do dia**, de modo que duas recargas simultâneas do mesmo cliente não passam juntas pelo saldo nem pelo limite diário; lançamento, recarga, auditoria e resposta.
+
 Erros de negócio (PIN incorreto, saldo insuficiente) **também fazem commit** do que mudou (tentativas, status `FAILED`, auditoria, resposta idempotente). Só falhas técnicas fazem rollback, e aí a chave de idempotência some junto, permitindo nova tentativa.
 
 ## 8. Extrato: consulta e índice
@@ -338,7 +351,7 @@ LIMIT 21;                                      -- 20 itens + 1 para saber se há
 - **Índice:** `postings (ledger_account_id, created_at DESC, id DESC)` — a consulta lê só as linhas da página, independentemente do tamanho do histórico. Verificado com `EXPLAIN ANALYZE` na semana 6 (#81, migration `add_statement_index`): `Bitmap Index Scan on postings_statement_idx`, 0,73 ms numa conta com 217 partidas.
 - **Cursor:** `(created_at, id)` codificado em base64url, com o `created_at` como texto do Postgres em microssegundos, nunca um `Date` do JavaScript arredondado em milissegundos. Não precisa ser assinado: o filtro por conta é feito no servidor, então um cursor adulterado só navega no próprio extrato. O formato é validado, e o horário precisa ser um instante real (F-20); um cursor inválido retorna 422.
 - **Paginação estável:** um Pix novo durante a navegação não duplica nem pula itens (diferente de `OFFSET`).
-- **Filtro e busca (v1.1.0, tarefa 4.1):** duas condições opcionais na mesma consulta, refeitas em cada página: o tipo (`IN`/`OUT` pela direção da partida, `PIX` sem o `FUNDING`, `RECEIPT` os Pix enviados) e `counterparty_name ILIKE` com o termo entre `%`, escapando `\`, `%` e `_` do cliente (`ESCAPE`). Sem migration: o mesmo índice escolhe as partidas da conta e o filtro descarta as demais (`EXPLAIN ANALYZE`: `Bitmap Index Scan on postings_statement_idx`, 0,41 ms com filtro e busca). Busca sem acento (`unaccent`) e índice de trigramas ficam fora (X4).
+- **Filtro e busca (v1.1.0, tarefa 4.1):** duas condições opcionais na mesma consulta, refeitas em cada página: o tipo (`IN`/`OUT` pela direção da partida, `PIX` só os `PIX_INTERNAL` desde a tarefa 5, para uma recarga não aparecer como Pix; `RECEIPT` os Pix enviados e as recargas) e `counterparty_name ILIKE` com o termo entre `%`, escapando `\`, `%` e `_` do cliente (`ESCAPE`). Sem migration: o mesmo índice escolhe as partidas da conta e o filtro descarta as demais (`EXPLAIN ANALYZE`: `Bitmap Index Scan on postings_statement_idx`, 0,41 ms com filtro e busca). Busca sem acento (`unaccent`) e índice de trigramas ficam fora (X4).
 
 ## 9. Migrations
 
