@@ -8,6 +8,8 @@ const Set<String> _sensitiveKeys = {
   'pin',
   'newpin',
   'cpf',
+  // The number of a top-up (MOB-02).
+  'phonenumber',
   'pixkey',
   'value',
   'token',
@@ -21,6 +23,9 @@ const Set<String> _sensitiveKeys = {
 
 // A CPF with or without its mask, as a customer would type it.
 final RegExp _cpf = RegExp(r'\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b');
+
+// A mobile number with or without its mask, as on a top-up: (11) 90000-0001.
+final RegExp _phone = RegExp(r'\(?\b\d{2}\)?[\s-]?9\d{4}-?\d{4}\b');
 
 /// Runs [app], reporting unexpected errors to Sentry only when the build
 /// carries a DSN (`--dart-define=SENTRY_DSN=...`; week 8 plan, PR c).
@@ -45,7 +50,8 @@ Future<void> runWithErrorReporting(void Function() app) async {
 }
 
 /// What leaves for Sentry (MOB-02): no user, only the address of a request,
-/// and no CPF in messages or exceptions. A pure function, tested on its own.
+/// and no CPF nor phone number in messages or exceptions. A pure function,
+/// tested on its own.
 SentryEvent scrubEvent(SentryEvent event) {
   event.user = null;
   final request = event.request;
@@ -54,20 +60,20 @@ SentryEvent scrubEvent(SentryEvent event) {
   }
   final message = event.message;
   if (message != null) {
-    event.message = SentryMessage(_maskCpf(message.formatted));
+    event.message = SentryMessage(_maskPersonalNumbers(message.formatted));
   }
   for (final exception in event.exceptions ?? const <SentryException>[]) {
     final value = exception.value;
-    if (value != null) exception.value = _maskCpf(value);
+    if (value != null) exception.value = _maskPersonalNumbers(value);
   }
   event.breadcrumbs = event.breadcrumbs?.map(scrubBreadcrumb).toList();
   return event;
 }
 
-/// A breadcrumb without sensitive values nor CPFs.
+/// A breadcrumb without sensitive values, CPFs nor phone numbers.
 Breadcrumb scrubBreadcrumb(Breadcrumb crumb) {
   final message = crumb.message;
-  if (message != null) crumb.message = _maskCpf(message);
+  if (message != null) crumb.message = _maskPersonalNumbers(message);
   final data = crumb.data;
   if (data != null) {
     crumb.data = {
@@ -75,11 +81,12 @@ Breadcrumb scrubBreadcrumb(Breadcrumb crumb) {
         key: _sensitiveKeys.contains(key.toLowerCase())
             ? '[REDACTED]'
             : value is String
-            ? _maskCpf(value)
+            ? _maskPersonalNumbers(value)
             : value,
     };
   }
   return crumb;
 }
 
-String _maskCpf(String text) => text.replaceAll(_cpf, '[CPF]');
+String _maskPersonalNumbers(String text) =>
+    text.replaceAll(_cpf, '[CPF]').replaceAll(_phone, '[PHONE]');
