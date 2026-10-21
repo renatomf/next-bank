@@ -12,7 +12,7 @@ import { CreatePixTransfer } from '../../../../src/modules/payments/application/
 import type { PixTransferView } from '../../../../src/modules/payments/application/pix-transfer-view.ts';
 import { AesGcmPixKeyProtector } from '../../../../src/modules/payments/infrastructure/aes-gcm-pix-key-protector.ts';
 import { CryptoEndToEndIds } from '../../../../src/modules/payments/infrastructure/crypto-end-to-end-ids.ts';
-import { HmacRequestFingerprint } from '../../../../src/modules/payments/infrastructure/hmac-request-fingerprint.ts';
+import { HmacRequestFingerprint } from '../../../../src/shared/infrastructure/hmac-request-fingerprint.ts';
 import { PgPaymentsRepositories } from '../../../../src/modules/payments/infrastructure/pg-payments-repositories.ts';
 import type { Clock } from '../../../../src/shared/application/ports.ts';
 import { PgUnitOfWork } from '../../../../src/shared/infrastructure/pg-unit-of-work.ts';

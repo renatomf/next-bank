@@ -1,12 +1,16 @@
+import type {
+  ClaimResult,
+  IdempotencyClaim,
+  IdempotencyRepository,
+  RequestFingerprint,
+  StoredResponse,
+} from '../../../../src/shared/application/idempotency.ts';
 import { DomainError } from '../../../../src/shared/domain/domain-error.ts';
 import type {
   AccountsPort,
   EndToEndIds,
   PinCheck,
   PixPosting,
-  ClaimResult,
-  IdempotencyClaim,
-  IdempotencyRepository,
   IdentityPort,
   LedgerPort,
   PaymentsRepositories,
@@ -14,11 +18,9 @@ import type {
   PayeeAccount,
   PixKeyValueProtector,
   ProtectedKeyValue,
-  RequestFingerprint,
   SealedKeyValue,
   StoredPixKey,
   StoredRandomKey,
-  StoredResponse,
 } from '../../../../src/modules/payments/application/ports.ts';
 import type { PixKeyState, PixKeyType } from '../../../../src/modules/payments/domain/pix-key.ts';
 import type { PixTransferState } from '../../../../src/modules/payments/domain/pix-transfer.ts';

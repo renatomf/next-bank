@@ -65,24 +65,6 @@ export class AccountBlocked extends DomainError {
   }
 }
 
-/** The same Idempotency-Key came with another request: a client bug (ADR 0007). */
-export class IdempotencyKeyReused extends DomainError {
-  readonly code = 'IdempotencyKeyReused';
-
-  constructor() {
-    super('Idempotency key already used for another request');
-  }
-}
-
-/** The first request with this key is still running; the client asks again later. */
-export class RequestInProgress extends DomainError {
-  readonly code = 'RequestInProgress';
-
-  constructor() {
-    super('A request with this idempotency key is still in progress');
-  }
-}
-
 /**
  * An authorization the customer must act on, recorded before answering
  * (ADR 0010, rule 3) and stored with the idempotency key, so a repeated request

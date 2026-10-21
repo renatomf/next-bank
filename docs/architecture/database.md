@@ -166,7 +166,7 @@ erDiagram
         timestamptz completed_at
         timestamptz updated_at
     }
-    payments_idempotency_records {
+    platform_idempotency_records {
         uuid user_id PK
         uuid key PK
         text operation
@@ -271,7 +271,7 @@ erDiagram
 - `GRANT`: `SELECT, INSERT` e `UPDATE` só nas colunas de estado: o que foi pedido (pagador, recebedor, valor, descrição) nunca muda
 - Índices `(payer_account_id, created_at DESC)` e `(expires_at) WHERE status = 'AWAITING_AUTH'`: entram com a lista de Pix e com o job de expiração (semana 8). Na semana 5 toda consulta é pela PK, sempre com o filtro do pagador
 
-**`idempotency_records`**
+**`platform.idempotency_records`** (desde a v1.1.0, ADR 0015: num schema comum, para o Pix e a recarga usarem a mesma tabela sem um módulo escrever no schema do outro)
 - PK `(user_id, key)` — escopo por usuário; uma requisição concorrente com a mesma chave espera no `INSERT … ON CONFLICT DO NOTHING` até a primeira terminar
 - `operation`: o comando protegido (`pix.create`, `pix.authorize`); mesma chave em operação diferente é recusada
 - `request_hash`: HMAC-SHA256 da requisição com chave do servidor, nunca com o PIN (semana 5, D4)
