@@ -76,7 +76,7 @@ Este documento descreve como a V1 é publicada e mantida, com custo zero: Neon (
    | `HOST` | `0.0.0.0` |
    | `TRUST_PROXY` | `3` (Cloudflare e dois proxies do Render; ver a verificação no passo 6) |
    | `DATABASE_URL` | a URL da **API** do passo 2 |
-   | `JWT_PRIVATE_KEY`, `JWT_KEY_ID`, `PII_ENCRYPTION_KEY`, `PII_HMAC_KEY`, `PII_KEY_VERSION`, `PIN_PEPPER` | do `generate-dev-keys.ts` |
+   | `JWT_PRIVATE_KEY`, `JWT_KEY_ID`, `PII_ENCRYPTION_KEY`, `PII_HMAC_KEY`, `PII_KEY_VERSION`, `PIN_PEPPER`, `TOP_UP_PHONE_KEY` (desde a v1.1.0) | do `generate-dev-keys.ts` |
 
 4. Em Settings, copie o **Deploy Hook**. Ele é segredo: quem tem a URL consegue disparar deploys.
 
@@ -166,5 +166,5 @@ O monitor só conhece a URL pública do `/health`. Nenhum segredo vai para o Upt
 - **Deploy:** automático depois de cada merge na `main` com o CI verde, ou manual pelo workflow.
 - **Reset:** todo dia às 06:00 UTC, ou manual. As contas de visitantes somem, e Ana e Bruno voltam com o saldo de demonstração.
 - **Despertador:** a cada 5 min, pelo UptimeRobot. Se chegar o e-mail de que a API caiu, veja os logs do Render e o `/health`.
-- **Trocar uma chave da API:** gere de novo na sua máquina, atualize no Render e faça um deploy manual. Trocar `PII_*` ou o `PIN_PEPPER` invalida os CPFs e PINs já gravados. Na demo, rode o reset logo em seguida.
+- **Trocar uma chave da API:** gere de novo na sua máquina, atualize no Render e faça um deploy manual. Trocar `PII_*`, o `PIN_PEPPER` ou a `TOP_UP_PHONE_KEY` invalida os CPFs, os PINs e os números de recarga já gravados. Na demo, rode o reset logo em seguida.
 - **Segredo vazado:** troque-o na origem (Neon, Render ou GitHub) na hora. Apagar um commit não basta, porque o repositório é público.
