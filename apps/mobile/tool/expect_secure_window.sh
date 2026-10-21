@@ -14,27 +14,32 @@ adb shell am start -W -n "$package/.MainActivity" >/dev/null
 # The first frame takes a moment on an emulator.
 sleep 5
 
-# The app window's flags in dumpsys: the "fl=" value inside its "Window #"
-# block ("pfl=" holds private flags, not these). Recent Android prints them
-# as hex (fl=81812100), older as names (fl=... SECURE ...).
+# The app window's flags in dumpsys: the rest of the "fl=" line inside its
+# "Window #" block ("pfl=" holds private flags, not these). Some Android
+# builds print them as one hex number (fl=81812100 on the S21), others as
+# names on one line (fl=LAYOUT_IN_SCREEN ... SECURE on the CI emulator).
 flags=$(adb shell dumpsys window windows | tr -d '\r' | awk -v pkg="$package" '
   /^  Window #/ { inside = index($0, pkg "/") > 0 }
-  inside && match($0, /(^|[^p])fl=[^ ]+/) {
-    print substr($0, RSTART, RLENGTH); exit
+  inside && match($0, /(^|[^p])fl=/) {
+    print substr($0, RSTART + RLENGTH); exit
   }
-' | sed 's/^.*fl=//')
+')
 
 if [ -z "$flags" ]; then
   echo "MOB-14: no window of $package found; did the app start?" >&2
   exit 1
 fi
 
-# FLAG_SECURE is bit 0x2000 of WindowManager.LayoutParams.flags.
-case "$flags" in
-  *SECURE*) secure=1 ;;
-  *[!0-9a-fA-F]*) secure=0 ;;
-  *) secure=$(( (0x$flags & 0x2000) != 0 )) ;;
-esac
+# By name, SECURE as a whole word; as hex, FLAG_SECURE is bit 0x2000 of
+# WindowManager.LayoutParams.flags.
+first=${flags%% *}
+if printf ' %s ' "$flags" | grep -q ' SECURE '; then
+  secure=1
+elif printf '%s' "$first" | grep -qE '^[0-9a-fA-F]+$'; then
+  secure=$(( (0x$first & 0x2000) != 0 ))
+else
+  secure=0
+fi
 
 if [ "$secure" -ne 1 ]; then
   echo "MOB-14: the release window lacks FLAG_SECURE (fl=$flags);" >&2
