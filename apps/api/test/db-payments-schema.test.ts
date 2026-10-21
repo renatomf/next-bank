@@ -3,8 +3,8 @@ import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { testDatabaseUrl } from './helpers.ts';
 
-// Pix keys, transfers and idempotency records (database.md, sections 5.4, 6
-// and 10): the database refuses what the domain must never write.
+// Pix keys and transfers (database.md, sections 5.4, 6 and 10; the idempotency
+// records moved to the platform schema, ADR 0015): the database refuses what the domain must never write.
 describe('payments schema', () => {
   const app = new pg.Client({ connectionString: testDatabaseUrl() });
 
@@ -223,93 +223,11 @@ describe('payments schema', () => {
     });
   });
 
-  describe('idempotency records', () => {
-    async function insertRecord(
-      userId: string,
-      key: string,
-      columns: Record<string, unknown> = {},
-    ): Promise<void> {
-      const row: Record<string, unknown> = {
-        user_id: userId,
-        key,
-        operation: 'pix.create',
-        request_hash: randomBytes(32),
-        status: 'IN_PROGRESS',
-        response_status: null,
-        response_body: null,
-        created_at: new Date('2026-10-07T12:00:00Z'),
-        expires_at: new Date('2026-10-08T12:00:00Z'),
-        ...columns,
-      };
-      const names = Object.keys(row);
-      await app.query(
-        `INSERT INTO payments.idempotency_records (${names.join(', ')})
-         VALUES (${names.map((_, index) => `$${String(index + 1)}`).join(', ')})`,
-        Object.values(row),
-      );
-    }
-
-    it('keeps one record per user and key (T-DB-06)', async () => {
-      const userId = randomUUID();
-      const key = randomUUID();
-      await insertRecord(userId, key);
-
-      await expect(insertRecord(userId, key)).rejects.toThrow(/idempotency_records_pkey/);
-      await expect(insertRecord(randomUUID(), key)).resolves.toBeUndefined();
-    });
-
-    it('stores a response exactly when the request is completed', async () => {
-      await expect(
-        insertRecord(randomUUID(), randomUUID(), { status: 'COMPLETED' }),
-      ).rejects.toThrow(/idempotency_records_response_check/);
-      await expect(
-        insertRecord(randomUUID(), randomUUID(), { response_status: 201, response_body: {} }),
-      ).rejects.toThrow(/idempotency_records_response_check/);
-      await expect(
-        insertRecord(randomUUID(), randomUUID(), {
-          status: 'COMPLETED',
-          response_status: 201,
-          response_body: { id: randomUUID() },
-        }),
-      ).resolves.toBeUndefined();
-    });
-
-    it('accepts only known operations, a SHA-256 hash and 24 hours of validity', async () => {
-      await expect(
-        insertRecord(randomUUID(), randomUUID(), { operation: 'pix.refund' }),
-      ).rejects.toThrow(/check constraint/);
-      await expect(
-        insertRecord(randomUUID(), randomUUID(), { request_hash: randomBytes(16) }),
-      ).rejects.toThrow(/check constraint/);
-      await expect(
-        insertRecord(randomUUID(), randomUUID(), { expires_at: new Date('2026-10-09T12:00:00Z') }),
-      ).rejects.toThrow(/idempotency_records_expires_at_check/);
-    });
-
-    it('lets the API complete and clean up records', async () => {
-      const userId = randomUUID();
-      const key = randomUUID();
-      await insertRecord(userId, key);
-
-      await app.query(
-        `UPDATE payments.idempotency_records
-         SET status = 'COMPLETED', response_status = 201, response_body = '{}'
-         WHERE user_id = $1 AND key = $2`,
-        [userId, key],
-      );
-      const { rowCount } = await app.query(
-        'DELETE FROM payments.idempotency_records WHERE user_id = $1 AND key = $2',
-        [userId, key],
-      );
-      expect(rowCount).toBe(1);
-    });
-  });
-
   it('denies DDL and TRUNCATE in the schema to the API role (T-DB-13)', async () => {
     await expect(app.query('CREATE TABLE payments.intruder (id int)')).rejects.toThrow(
       /permission denied/,
     );
-    for (const table of ['pix_keys', 'pix_transfers', 'idempotency_records']) {
+    for (const table of ['pix_keys', 'pix_transfers']) {
       await expect(app.query(`TRUNCATE payments.${table}`)).rejects.toThrow(/permission denied/);
     }
   });
