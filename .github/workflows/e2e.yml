@@ -132,7 +132,14 @@ jobs:
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           working-directory: apps/mobile
-          script: flutter test integration_test --dart-define=API_BASE_URL=http://10.0.2.2:3000
+          # Then the attack test of MOB-14 on a release build (v1.1.0 plan,
+          # task 7). A release refuses plain HTTP (MOB-03); this check needs
+          # no API, so the address is one that never resolves.
+          script: |
+            flutter test integration_test --dart-define=API_BASE_URL=http://10.0.2.2:3000
+            sh tool/expect_secure_window_test.sh
+            flutter build apk --release --dart-define=API_BASE_URL=https://api.invalid
+            sh tool/expect_secure_window.sh
       - name: API log on failure
         if: failure()
         run: cat "$RUNNER_TEMP/api.log"
