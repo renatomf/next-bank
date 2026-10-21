@@ -37,6 +37,7 @@ import {
   receivingKeyRoutes,
   transferRoutes,
 } from './modules/payments/index.ts';
+import { createTopUpsModule, topUpRoutes } from './modules/top-ups/index.ts';
 import { healthRoutes } from './shared/http/health.ts';
 import { registerProblemHandlers } from './shared/http/problem.ts';
 import type { PiiKeys } from './shared/infrastructure/aes-gcm-pii-protector.ts';
@@ -56,7 +57,13 @@ export interface AppDependencies {
   /** Log destination; defaults to stdout. */
   logStream?: LogDestination;
   /** Signing and CPF keys: required, there is no insecure default. */
-  security: { accessTokenKeys: AccessTokenKeys; piiKeys: PiiKeys; pinPepper: Uint8Array };
+  security: {
+    accessTokenKeys: AccessTokenKeys;
+    piiKeys: PiiKeys;
+    pinPepper: Uint8Array;
+    /** The top-up number's own key (TOP-01, decision R6). */
+    topUpPhoneKey: Uint8Array;
+  };
   /** Proxies in front of the API (config TRUST_PROXY); none by default. */
   trustProxy?: number;
   /** The commit running, shown by the health check. */
@@ -182,6 +189,28 @@ export function buildApp({
       postPixTransfer: (tx, posting) => ledger.customerAccounts.transferPix(tx, posting),
     },
   });
+  // Top-ups reach Accounts, Identity and the Ledger only through the ports they define.
+  const topUps = createTopUpsModule({
+    unitOfWork,
+    clock,
+    ids,
+    piiKeys: security.piiKeys,
+    phoneKey: security.topUpPhoneKey,
+    accounts: {
+      findByHolder: (tx, userId) => accounts.directory.findByHolder(tx, userId),
+      lockForShare: async (tx, accountId) => {
+        const [locked] = await accounts.directory.lockForShare(tx, [accountId]);
+        // Found by its holder in the same transaction: it cannot be missing.
+        if (!locked) throw new Error('account missing while locking it');
+        return locked;
+      },
+    },
+    identity: { verifyPin: (tx, input) => identity.verifyPin.verify(tx, input) },
+    ledger: {
+      lockCustomerAccount: (tx, accountId) => ledger.customerAccounts.lockCustomer(tx, accountId),
+      postTopUp: (tx, posting) => ledger.customerAccounts.topUp(tx, posting),
+    },
+  });
   const registerCustomer = new RegisterCustomer({
     unitOfWork,
     identity: identity.registerUser,
@@ -214,6 +243,7 @@ export function buildApp({
     getPixTransfer: payments.getPixTransfer,
     cancelPixTransfer: payments.cancelPixTransfer,
   });
+  void app.register(topUpRoutes, { createTopUp: topUps.createTopUp, getTopUp: topUps.getTopUp });
   void app.register(myAccountRoutes, { getMyAccount: accounts.getMyAccount });
   void app.register(statementRoutes, { getMyStatement: accounts.getMyStatement });
 

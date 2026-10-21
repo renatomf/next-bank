@@ -21,6 +21,8 @@ abstract class _$StatementItemCWProxy {
 
   StatementItem transferId(String? transferId);
 
+  StatementItem topUpId(String? topUpId);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `StatementItem(...).copyWith.fieldName(value)`.
@@ -37,6 +39,7 @@ abstract class _$StatementItemCWProxy {
     Money amount,
     StatementCounterparty? counterparty,
     String? transferId,
+    String? topUpId,
   });
 }
 
@@ -70,6 +73,9 @@ class _$StatementItemCWProxyImpl implements _$StatementItemCWProxy {
   @override
   StatementItem transferId(String? transferId) => call(transferId: transferId);
 
+  @override
+  StatementItem topUpId(String? topUpId) => call(topUpId: topUpId);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `StatementItem(...).copyWith.fieldName(value)`.
@@ -87,6 +93,7 @@ class _$StatementItemCWProxyImpl implements _$StatementItemCWProxy {
     Object? amount = const $CopyWithPlaceholder(),
     Object? counterparty = const $CopyWithPlaceholder(),
     Object? transferId = const $CopyWithPlaceholder(),
+    Object? topUpId = const $CopyWithPlaceholder(),
   }) {
     return StatementItem(
       id: id == const $CopyWithPlaceholder() || id == null
@@ -118,6 +125,10 @@ class _$StatementItemCWProxyImpl implements _$StatementItemCWProxy {
           ? _value.transferId
           // ignore: cast_nullable_to_non_nullable
           : transferId as String?,
+      topUpId: topUpId == const $CopyWithPlaceholder()
+          ? _value.topUpId
+          // ignore: cast_nullable_to_non_nullable
+          : topUpId as String?,
     );
   }
 }
@@ -145,6 +156,7 @@ StatementItem _$StatementItemFromJson(Map<String, dynamic> json) =>
           'amount',
           'counterparty',
           'transferId',
+          'topUpId',
         ],
       );
       final val = StatementItem(
@@ -172,6 +184,7 @@ StatementItem _$StatementItemFromJson(Map<String, dynamic> json) =>
               : StatementCounterparty.fromJson(v as Map<String, dynamic>),
         ),
         transferId: $checkedConvert('transferId', (v) => v as String?),
+        topUpId: $checkedConvert('topUpId', (v) => v as String?),
       );
       return val;
     });
@@ -185,12 +198,14 @@ Map<String, dynamic> _$StatementItemToJson(StatementItem instance) =>
       'amount': instance.amount.toJson(),
       'counterparty': instance.counterparty?.toJson(),
       'transferId': instance.transferId,
+      'topUpId': instance.topUpId,
     };
 
 const _$StatementItemKindEnumEnumMap = {
   StatementItemKindEnum.PIX_SENT: 'PIX_SENT',
   StatementItemKindEnum.PIX_RECEIVED: 'PIX_RECEIVED',
   StatementItemKindEnum.DEMO_FUNDING: 'DEMO_FUNDING',
+  StatementItemKindEnum.TOP_UP: 'TOP_UP',
 };
 
 const _$StatementItemDirectionEnumEnumMap = {

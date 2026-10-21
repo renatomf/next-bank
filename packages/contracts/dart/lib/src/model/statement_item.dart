@@ -35,6 +35,8 @@ class StatementItem {
     required  this.counterparty,
 
     required  this.transferId,
+
+    required  this.topUpId,
   });
 
   @JsonKey(
@@ -121,6 +123,18 @@ class StatementItem {
 
 
 
+  @JsonKey(
+    
+    name: r'topUpId',
+    required: true,
+    includeIfNull: true,
+  )
+
+
+  final String? topUpId;
+
+
+
 
 
     @override
@@ -131,7 +145,8 @@ class StatementItem {
       other.direction == direction &&
       other.amount == amount &&
       other.counterparty == counterparty &&
-      other.transferId == transferId;
+      other.transferId == transferId &&
+      other.topUpId == topUpId;
 
     @override
     int get hashCode =>
@@ -141,7 +156,8 @@ class StatementItem {
         direction.hashCode +
         amount.hashCode +
         (counterparty == null ? 0 : counterparty.hashCode) +
-        (transferId == null ? 0 : transferId.hashCode);
+        (transferId == null ? 0 : transferId.hashCode) +
+        (topUpId == null ? 0 : topUpId.hashCode);
 
   factory StatementItem.fromJson(Map<String, dynamic> json) => _$StatementItemFromJson(json);
 
@@ -160,7 +176,9 @@ PIX_SENT(r'PIX_SENT'),
 @JsonValue(r'PIX_RECEIVED')
 PIX_RECEIVED(r'PIX_RECEIVED'),
 @JsonValue(r'DEMO_FUNDING')
-DEMO_FUNDING(r'DEMO_FUNDING');
+DEMO_FUNDING(r'DEMO_FUNDING'),
+@JsonValue(r'TOP_UP')
+TOP_UP(r'TOP_UP');
 
 const StatementItemKindEnum(this.value);
 

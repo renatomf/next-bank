@@ -91,12 +91,14 @@ const StatementItemSchema = z
   .strictObject({
     id: z.uuid(),
     occurredAt: z.iso.datetime(),
-    kind: z.enum(['PIX_SENT', 'PIX_RECEIVED', 'DEMO_FUNDING']),
+    kind: z.enum(['PIX_SENT', 'PIX_RECEIVED', 'DEMO_FUNDING', 'TOP_UP']),
     direction: z.enum(['IN', 'OUT']),
     amount: MoneySchema,
     counterparty: StatementCounterpartySchema.nullable(),
     // Only on a sent Pix: the link to its receipt (week 6 plan, D3).
     transferId: z.uuid().nullable(),
+    // Only on a top-up: the link to its receipt (v1.1.0 plan, task 5).
+    topUpId: z.uuid().nullable(),
   })
   .meta({ id: 'StatementItem' });
 

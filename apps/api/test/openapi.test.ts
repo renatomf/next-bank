@@ -69,6 +69,7 @@ describe('OpenAPI document', () => {
       'ClientIp',
       'CreatePinRequestInput',
       'CreatePixTransferRequestInput',
+      'CreateTopUpRequestInput',
       'Health',
       'LoginRequestInput',
       'Me',
@@ -88,6 +89,9 @@ describe('OpenAPI document', () => {
       'Statement',
       'StatementCounterparty',
       'StatementItem',
+      'TopUp',
+      'TopUpOperator',
+      'TopUpOperatorList',
       'VerifyPinRequestInput',
     ]);
   });
@@ -304,7 +308,24 @@ describe('OpenAPI document', () => {
       '/v1/pix/transfers/{transferId}',
       '/v1/pix/transfers/{transferId}/authorize',
       '/v1/pix/transfers/{transferId}/cancel',
+      '/v1/top-ups/{topUpId}',
     ]);
+  });
+
+  // TOP-02, PIX-05: a top-up moves money, so it is idempotent and asks for the PIN.
+  it('describes the top-up as a protected, idempotent command', () => {
+    const operation = document.paths['/v1/top-ups']?.post;
+
+    expect(operation?.operationId).toBe('createTopUp');
+    expect(operation?.security).toEqual([{ bearerAuth: [] }]);
+    expect(operation?.parameters).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ in: 'header', name: 'idempotency-key', required: true }),
+      ]),
+    );
+    expect(operation?.responses['201']?.content?.['application/json']?.schema).toEqual({
+      $ref: '#/components/schemas/TopUp',
+    });
   });
 
   // PIX-05, PIX-06: no Pix moves without the PIN, checked on the server.

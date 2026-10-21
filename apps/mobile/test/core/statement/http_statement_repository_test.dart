@@ -32,6 +32,7 @@ Map<String, Object?> sentItem([Map<String, Object?> changes = const {}]) => {
   'amount': {'amount': 35000, 'currency': 'BRL'},
   'counterparty': {'name': 'Mariana Costa', 'documentMasked': '***.456.789-**'},
   'transferId': _transferId,
+  'topUpId': null,
   ...changes,
 };
 
@@ -145,6 +146,34 @@ void main() {
     expect(items[1].counterparty, isNull);
   });
 
+  // v1.1.0 plan, task 5: a phone top-up leaves the account, with the operator
+  // and the masked number as its counterparty.
+  test('reads a phone top-up going out', () async {
+    final server = ScriptedServer({
+      _path: (_) async => JsonReply(
+        200,
+        page([
+          sentItem({
+            'kind': 'TOP_UP',
+            'counterparty': {
+              'name': 'Pulso Celular',
+              'documentMasked': '(11) *****-0001',
+            },
+            'transferId': null,
+            'topUpId': '0b9a7c1e-5d2f-4a8b-9c3d-7e6f5a4b3c2e',
+          }),
+        ]),
+      ),
+    });
+
+    final item = (await repositoryFor(server).page()).items.single;
+
+    expect(item.kind, StatementKind.topUp);
+    expect(item.direction, MoneyDirection.outgoing);
+    expect(item.counterparty?.name, 'Pulso Celular');
+    expect(item.transferId, isNull);
+  });
+
   test('reports a cursor the server refused', () async {
     final server = ScriptedServer({
       _path: (_) async => const ProblemReply(422, 'InvalidRequest'),
@@ -197,6 +226,8 @@ void main() {
         'a receipt link on a Pix received',
         {'kind': 'PIX_RECEIVED', 'direction': 'IN'},
       ),
+      ('a top-up coming in', {'kind': 'TOP_UP', 'direction': 'IN'}),
+      ('a Pix receipt link on a top-up', {'kind': 'TOP_UP'}),
     ]) {
       test('is unexpected: $name', () async {
         final server = ScriptedServer({

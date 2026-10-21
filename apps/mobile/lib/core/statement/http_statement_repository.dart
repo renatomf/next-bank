@@ -49,14 +49,17 @@ class HttpStatementRepository implements StatementRepository {
       api.StatementItemKindEnum.PIX_SENT => StatementKind.pixSent,
       api.StatementItemKindEnum.PIX_RECEIVED => StatementKind.pixReceived,
       api.StatementItemKindEnum.DEMO_FUNDING => StatementKind.demoFunding,
+      api.StatementItemKindEnum.TOP_UP => StatementKind.topUp,
     };
     final direction = switch (item.direction) {
       api.StatementItemDirectionEnum.IN => MoneyDirection.incoming,
       api.StatementItemDirectionEnum.OUT => MoneyDirection.outgoing,
     };
     final sent = kind == StatementKind.pixSent;
-    // Only a Pix sent goes out, and only it links to a receipt.
-    if (sent != (direction == MoneyDirection.outgoing)) {
+    final leaves = sent || kind == StatementKind.topUp;
+    // Only a Pix sent and a top-up go out, and only a Pix sent links to a
+    // Pix receipt.
+    if (leaves != (direction == MoneyDirection.outgoing)) {
       throw const ApiUnexpected();
     }
     if (!sent && item.transferId != null) throw const ApiUnexpected();

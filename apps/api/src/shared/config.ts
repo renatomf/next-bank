@@ -61,6 +61,8 @@ const schema = z
     PII_KEY_VERSION: z.coerce.number().int().min(1).default(1),
     // Server-side key mixed into the PIN hash (threat model API-13).
     PIN_PEPPER: key32,
+    // Encrypts the top-up phone numbers, apart from the CPF (TOP-01, decision R6).
+    TOP_UP_PHONE_KEY: key32,
   })
   .refine((env) => env.PII_HMAC_KEY !== env.PII_ENCRYPTION_KEY, {
     // One key for two purposes would let a weakness in one use expose the other.
@@ -72,6 +74,14 @@ const schema = z
     {
       message: 'must differ from the CPF keys',
       path: ['PIN_PEPPER'],
+    },
+  )
+  .refine(
+    (env) =>
+      ![env.PII_ENCRYPTION_KEY, env.PII_HMAC_KEY, env.PIN_PEPPER].includes(env.TOP_UP_PHONE_KEY),
+    {
+      message: 'must differ from the other keys',
+      path: ['TOP_UP_PHONE_KEY'],
     },
   )
   // ADR 0009: in production the database certificate is always checked.
@@ -94,6 +104,8 @@ export interface Config {
   jwt: { privateKey: KeyObject; keyId: string };
   pii: { encryptionKey: Buffer; hmacKey: Buffer; keyVersion: number };
   pinPepper: Buffer;
+  /** Encrypts the top-up phone numbers (TOP-01, decision R6). */
+  topUpPhoneKey: Buffer;
 }
 
 /** Validates the environment at boot. Error messages never include the received values. */
@@ -131,6 +143,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
       keyVersion: data.PII_KEY_VERSION,
     },
     pinPepper: required(decodeBase64(data.PIN_PEPPER)),
+    topUpPhoneKey: required(decodeBase64(data.TOP_UP_PHONE_KEY)),
   };
 }
 

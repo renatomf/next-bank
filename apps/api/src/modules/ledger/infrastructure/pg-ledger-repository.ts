@@ -148,7 +148,7 @@ export class PgLedgerRepository implements LedgerRepository {
       AND ($5::text IS NULL
         OR ($5 = 'IN' AND p.direction = 'C')
         OR ($5 = 'OUT' AND p.direction = 'D')
-        OR ($5 = 'PIX' AND je.kind <> 'FUNDING')
+        OR ($5 = 'PIX' AND je.kind = 'PIX_INTERNAL')
         OR ($5 = 'RECEIPT' AND je.kind <> 'FUNDING' AND p.direction = 'D'))
       AND ($6::text IS NULL OR p.counterparty_name ILIKE $6 ESCAPE '\\')
     ORDER BY p.created_at DESC, p.id DESC

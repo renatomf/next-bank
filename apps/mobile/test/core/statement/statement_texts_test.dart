@@ -31,6 +31,7 @@ void main() {
       (StatementKind.pixSent, 'Pix enviado'),
       (StatementKind.pixReceived, 'Pix recebido'),
       (StatementKind.demoFunding, 'Depósito inicial'),
+      (StatementKind.topUp, 'Recarga de celular'),
     ]) {
       test(kind.name, () {
         expect(statementTitle(kind), title);

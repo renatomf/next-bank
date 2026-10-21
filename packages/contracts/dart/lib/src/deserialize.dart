@@ -7,6 +7,7 @@ import 'package:nextbank_api/src/model/client_ip.dart';
 import 'package:nextbank_api/src/model/create_pin_request_input.dart';
 import 'package:nextbank_api/src/model/create_pix_transfer_request_input.dart';
 import 'package:nextbank_api/src/model/create_pix_transfer_request_input_key.dart';
+import 'package:nextbank_api/src/model/create_top_up_request_input.dart';
 import 'package:nextbank_api/src/model/health.dart';
 import 'package:nextbank_api/src/model/login_request_input.dart';
 import 'package:nextbank_api/src/model/me.dart';
@@ -25,6 +26,10 @@ import 'package:nextbank_api/src/model/session_list.dart';
 import 'package:nextbank_api/src/model/statement.dart';
 import 'package:nextbank_api/src/model/statement_counterparty.dart';
 import 'package:nextbank_api/src/model/statement_item.dart';
+import 'package:nextbank_api/src/model/top_up.dart';
+import 'package:nextbank_api/src/model/top_up_operator.dart';
+import 'package:nextbank_api/src/model/top_up_operator_list.dart';
+import 'package:nextbank_api/src/model/top_up_operator_list_operators_inner.dart';
 import 'package:nextbank_api/src/model/verify_pin_request_input.dart';
 
 final _regList = RegExp(r'^List<(.*)>$');
@@ -63,6 +68,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CreatePixTransferRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreatePixTransferRequestInputKey':
           return CreatePixTransferRequestInputKey.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreateTopUpRequestInput':
+          return CreateTopUpRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Health':
           return Health.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'LoginRequestInput':
@@ -99,6 +106,14 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return StatementCounterparty.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'StatementItem':
           return StatementItem.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'TopUp':
+          return TopUp.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'TopUpOperator':
+          return TopUpOperator.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'TopUpOperatorList':
+          return TopUpOperatorList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'TopUpOperatorListOperatorsInner':
+          return TopUpOperatorListOperatorsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'VerifyPinRequestInput':
           return VerifyPinRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
         default:

@@ -25,6 +25,7 @@ const app = buildApp({
       hmacKey: config.pii.hmacKey,
     },
     pinPepper: config.pinPepper,
+    topUpPhoneKey: config.topUpPhoneKey,
   },
 });
 

@@ -9,6 +9,8 @@ export const SENSITIVE_KEYS = [
   'newPassword',
   'newPin',
   'cpf',
+  // The number of a top-up (MOB-02).
+  'phoneNumber',
   'pixKey',
   // The value of a Pix key looked up or paid (a CPF, an e-mail...).
   'value',

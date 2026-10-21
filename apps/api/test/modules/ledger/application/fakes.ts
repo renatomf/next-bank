@@ -10,6 +10,10 @@ import type { LedgerAccountState } from '../../../../src/modules/ledger/domain/l
 
 export const FUNDING_ID = 'ledger-funding';
 
+/** The operators' system accounts (v1.1.0 plan, task 5), one per operator. */
+export const TOP_UP_OPERATOR_IDS = ['onda-movel', 'pulso-celular', 'rede-nova'] as const;
+export const topUpLedgerIdOf = (operatorId: string): string => `ledger-top-up-${operatorId}`;
+
 /** The transaction the use cases receive; the fake ledger ignores it. */
 export const tx: Transaction = { kind: 'transaction' };
 
@@ -32,6 +36,17 @@ export class InMemoryLedger implements LedgerRepositoryFactory {
       version: 0,
       createdAt: new Date('2026-10-07T00:00:00.000Z'),
     });
+    for (const operatorId of TOP_UP_OPERATOR_IDS) {
+      this.accounts.set(topUpLedgerIdOf(operatorId), {
+        id: topUpLedgerIdOf(operatorId),
+        code: `system:top-up-${operatorId}`,
+        kind: 'SYSTEM',
+        postedBalance: Money.zero(),
+        availableBalance: Money.zero(),
+        version: 0,
+        createdAt: new Date('2026-10-07T00:00:00.000Z'),
+      });
+    }
   }
 
   /** A customer ledger account with [cents] already on it. */

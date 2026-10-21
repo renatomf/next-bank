@@ -25,7 +25,17 @@ export interface PixTransferPosting {
   payee: PixParty;
 }
 
-export type StatementItemKind = 'PIX_SENT' | 'PIX_RECEIVED' | 'DEMO_FUNDING';
+/** A top-up leaving for an operator (v1.1.0 plan, task 5). */
+export interface TopUpPosting {
+  topUpId: string;
+  accountId: string;
+  operatorId: string;
+  amount: Money;
+  /** The operator and the masked number, as the statement shows them. */
+  counterparty: { name: string; documentMasked: string };
+}
+
+export type StatementItemKind = 'PIX_SENT' | 'PIX_RECEIVED' | 'DEMO_FUNDING' | 'TOP_UP';
 
 export interface StatementItem {
   /** The posting's id. */
@@ -37,6 +47,8 @@ export interface StatementItem {
   amount: Money;
   counterparty: { name: string; documentMasked: string | null } | null;
   transferId: string | null;
+  /** The top-up of a TOP_UP item: the link to its receipt. */
+  topUpId: string | null;
 }
 
 export interface StatementPage {
@@ -158,6 +170,58 @@ export class CustomerLedgerAccounts {
   }
 
   /**
+   * Locks the customer's ledger account (FOR UPDATE) without posting: a
+   * top-up takes it before reading the day's total, so two top-ups of one
+   * customer run one at a time (v1.1.0 plan, task 5).
+   */
+  async lockCustomer(tx: Transaction, accountId: string): Promise<void> {
+    const repository = this.#repositories.for(tx);
+    const customer = await repository.findByCode(customerCodeOf(accountId));
+    if (!customer) throw new Error(`No ledger account for account ${accountId}`);
+    await repository.lockForPosting([customer.id]);
+  }
+
+  /**
+   * A top-up (v1.1.0 plan, task 5): debit the customer, credit the operator's
+   * system account. Only the customer's posting keeps who was on the other
+   * side, for the statement. The top-up is the reference, so it is posted at
+   * most once (T-DB-05). A debit above the balance fails with
+   * InsufficientFunds before any write.
+   */
+  async topUp(tx: Transaction, input: TopUpPosting): Promise<void> {
+    const repository = this.#repositories.for(tx);
+    const customer = await repository.findByCode(customerCodeOf(input.accountId));
+    const operator = await repository.findByCode(topUpCodeOf(input.operatorId));
+    if (!customer || !operator) {
+      throw new Error(
+        `Cannot post top-up ${input.topUpId} to ${input.operatorId}: ledger account missing`,
+      );
+    }
+
+    await this.#postJournalEntry.execute(tx, {
+      kind: 'TOP_UP',
+      referenceType: 'TOP_UP',
+      referenceId: input.topUpId,
+      postings: [
+        {
+          ledgerAccountId: customer.id,
+          direction: 'DEBIT',
+          amount: input.amount,
+          counterpartyName: input.counterparty.name,
+          counterpartyDocumentMasked: input.counterparty.documentMasked,
+        },
+        {
+          ledgerAccountId: operator.id,
+          direction: 'CREDIT',
+          amount: input.amount,
+          counterpartyName: null,
+          counterpartyDocumentMasked: null,
+        },
+      ],
+    });
+  }
+
+  /**
    * One page of the statement (domain-model.md 8.1): newest first, the ledger
    * only, each item with the counterparty kept in its posting. A sent Pix
    * carries its transfer, the link to the receipt; a received one does not,
@@ -193,10 +257,25 @@ export class CustomerLedgerAccounts {
   }
 }
 
+/** The system account of a top-up operator: system:top-up-<id>. */
+function topUpCodeOf(operatorId: string): string {
+  return `system:top-up-${operatorId}`;
+}
+
+function kindOf(row: StatementRow): StatementItemKind {
+  switch (row.entryKind) {
+    case 'FUNDING':
+      return 'DEMO_FUNDING';
+    case 'TOP_UP':
+      return 'TOP_UP';
+    case 'PIX_INTERNAL':
+      return row.direction === 'DEBIT' ? 'PIX_SENT' : 'PIX_RECEIVED';
+  }
+}
+
 function statementItemOf(row: StatementRow): StatementItem {
   const sent = row.direction === 'DEBIT';
-  const kind: StatementItemKind =
-    row.entryKind === 'FUNDING' ? 'DEMO_FUNDING' : sent ? 'PIX_SENT' : 'PIX_RECEIVED';
+  const kind = kindOf(row);
   return {
     id: row.postingId,
     occurredAt: row.occurredAt,
@@ -208,5 +287,6 @@ function statementItemOf(row: StatementRow): StatementItem {
         ? null
         : { name: row.counterpartyName, documentMasked: row.counterpartyDocumentMasked },
     transferId: kind === 'PIX_SENT' ? row.referenceId : null,
+    topUpId: kind === 'TOP_UP' ? row.referenceId : null,
   };
 }

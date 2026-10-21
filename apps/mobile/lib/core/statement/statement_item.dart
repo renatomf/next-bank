@@ -8,6 +8,9 @@ enum StatementKind {
 
   /// The demo money the account opened with.
   demoFunding,
+
+  /// A phone top-up the customer paid (v1.1.0 plan, task 5).
+  topUp,
 }
 
 /// Whether the money came in or went out.

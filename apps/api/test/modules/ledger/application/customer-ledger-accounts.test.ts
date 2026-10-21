@@ -4,7 +4,7 @@ import { CustomerLedgerAccounts } from '../../../../src/modules/ledger/applicati
 import { PostJournalEntry } from '../../../../src/modules/ledger/application/post-journal-entry.ts';
 import { InsufficientFunds } from '../../../../src/modules/ledger/domain/errors.ts';
 import { FixedClock, SequentialIds } from '../../identity/application/fakes.ts';
-import { FUNDING_ID, InMemoryLedger, tx } from './fakes.ts';
+import { FUNDING_ID, InMemoryLedger, topUpLedgerIdOf, tx } from './fakes.ts';
 
 // What the other contexts ask of the ledger about a customer account
 // (domain-model.md, sections 5, 6 and 8): open it, fund it, read its balance.
@@ -142,6 +142,73 @@ describe('CustomerLedgerAccounts', () => {
     ).rejects.toThrow(InsufficientFunds);
     expect(ledger.entries.filter((entry) => entry.kind === 'PIX_INTERNAL')).toEqual([]);
     expect(ledger.balanceOf('id-1')).toBe(5_000n);
+  });
+
+  // v1.1.0 plan, task 5: the money leaves for the operator's system account;
+  // the customer's posting keeps the operator and the masked number, which is
+  // what the statement shows (READ-02).
+  const TOP_UP = {
+    topUpId: 'top-up-1',
+    accountId: 'account-a',
+    operatorId: 'pulso-celular',
+    amount: Money.of(3_000n),
+    counterparty: { name: 'Pulso Celular', documentMasked: '(11) *****-0001' },
+  };
+
+  it('posts a top-up from the customer to the operator, referencing the top-up', async () => {
+    const { ledger, accounts } = setup();
+    await accounts.open(tx, 'account-a');
+    await accounts.fund(tx, { accountId: 'account-a', amount: Money.of(10_000n) });
+
+    await accounts.topUp(tx, TOP_UP);
+
+    expect(ledger.balanceOf('id-1')).toBe(7_000n);
+    const topUp = ledger.entries.find((entry) => entry.kind === 'TOP_UP');
+    expect(topUp).toMatchObject({ referenceType: 'TOP_UP', referenceId: 'top-up-1' });
+    expect(topUp?.postings).toEqual([
+      expect.objectContaining({
+        ledgerAccountId: 'id-1',
+        direction: 'DEBIT',
+        amount: Money.of(3_000n),
+        counterpartyName: 'Pulso Celular',
+        counterpartyDocumentMasked: '(11) *****-0001',
+      }),
+      expect.objectContaining({
+        ledgerAccountId: topUpLedgerIdOf('pulso-celular'),
+        direction: 'CREDIT',
+        amount: Money.of(3_000n),
+        counterpartyName: null,
+        counterpartyDocumentMasked: null,
+      }),
+    ]);
+  });
+
+  it('refuses a top-up above the available balance and writes nothing (InsufficientFunds)', async () => {
+    const { ledger, accounts } = setup();
+    await accounts.open(tx, 'account-a');
+    await accounts.fund(tx, { accountId: 'account-a', amount: Money.of(1_000n) });
+
+    await expect(accounts.topUp(tx, TOP_UP)).rejects.toThrow(InsufficientFunds);
+    expect(ledger.entries.filter((entry) => entry.kind === 'TOP_UP')).toEqual([]);
+    expect(ledger.balanceOf('id-1')).toBe(1_000n);
+  });
+
+  it('locks the customer ledger account on its own, before the day total is read', async () => {
+    const { ledger, accounts } = setup();
+    await accounts.open(tx, 'account-a');
+
+    await accounts.lockCustomer(tx, 'account-a');
+
+    expect(ledger.locks.at(-1)).toEqual(['id-1']);
+  });
+
+  it('fails a top-up to an operator without a ledger account, a bug in the caller', async () => {
+    const { ledger, accounts } = setup();
+    await accounts.open(tx, 'account-a');
+    await accounts.fund(tx, { accountId: 'account-a', amount: Money.of(10_000n) });
+
+    await expect(accounts.topUp(tx, { ...TOP_UP, operatorId: 'vivo' })).rejects.toThrow(/vivo/);
+    expect(ledger.entries.filter((entry) => entry.kind === 'TOP_UP')).toEqual([]);
   });
 
   it('fails to fund an account that was never opened, a bug in the caller', async () => {

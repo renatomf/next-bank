@@ -45,10 +45,12 @@ export function testSecurity(): {
   accessTokenKeys: { privateKey: KeyObject; keyId: string };
   piiKeys: { keyVersion: number; encryptionKey: Buffer; hmacKey: Buffer };
   pinPepper: Buffer;
+  topUpPhoneKey: Buffer;
 } {
   return {
     accessTokenKeys: { privateKey: generateKeyPairSync('ed25519').privateKey, keyId: 'test-key' },
     piiKeys: { keyVersion: 1, encryptionKey: randomBytes(32), hmacKey: randomBytes(32) },
     pinPepper: randomBytes(32),
+    topUpPhoneKey: randomBytes(32),
   };
 }
