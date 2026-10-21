@@ -6,6 +6,8 @@ import 'package:next_bank/core/clock.dart';
 import 'package:next_bank/features/notifications/presentation/inbox/notification_tile.dart';
 import 'package:next_bank/features/notifications/presentation/inbox/notifications_screen.dart';
 
+import '../../../support/example_tag.dart';
+
 Future<void> pumpNotifications(
   WidgetTester tester, {
   VoidCallback? onBack,
@@ -100,5 +102,30 @@ void main() {
     await pumpNotifications(tester);
 
     expect(tester.takeException(), isNull);
+  });
+
+  // D7, revised (v1.1.0 plan, task 6): a notification that cites a made-up
+  // amount says it is an example; the others need no tag.
+  testWidgets('marks only the notifications with an amount as examples', (
+    tester,
+  ) async {
+    await pumpNotifications(tester);
+
+    final tiles = find.byType(NotificationTile);
+    var withAmount = 0;
+    for (var i = 0; i < tiles.evaluate().length; i++) {
+      final tile = tiles.at(i);
+      final citesAmount = find
+          .descendant(of: tile, matching: find.textContaining(r'R$'))
+          .evaluate()
+          .isNotEmpty;
+      if (citesAmount) withAmount++;
+      expect(
+        exampleTagIn(tile),
+        citesAmount ? findsOneWidget : findsNothing,
+        reason: 'notification $i',
+      );
+    }
+    expect(withAmount, greaterThan(0));
   });
 }

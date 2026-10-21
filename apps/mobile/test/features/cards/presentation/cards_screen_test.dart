@@ -8,6 +8,7 @@ import 'package:next_bank/core/ui/cards/payment_card.dart';
 import 'package:next_bank/features/cards/presentation/cards_screen.dart';
 
 import '../../../support/device_stores.dart';
+import '../../../support/example_tag.dart';
 import '../../../support/fake_profile_repository.dart';
 import '../../../support/fake_token_store.dart';
 
@@ -163,4 +164,32 @@ void main() {
       },
     );
   }
+
+  // D7, revised (v1.1.0 plan, task 6): made-up figures say they are examples.
+  testWidgets('marks the debit pre-approved limit as an example', (
+    tester,
+  ) async {
+    await pumpCards(tester);
+
+    final limit = blockOf<NbSurface>(
+      find.textContaining('limite pré-aprovado'),
+    );
+    expect(exampleTagIn(limit), findsOneWidget);
+  });
+
+  testWidgets('marks the credit invoice and purchases as examples', (
+    tester,
+  ) async {
+    await pumpCards(tester);
+    await swipeToCredit(tester);
+
+    expect(
+      exampleTagIn(blockOf<NbSurface>(find.text('Fatura atual'))),
+      findsOneWidget,
+    );
+    expect(
+      exampleTagIn(blockOf<Row>(find.text('Últimas compras'))),
+      findsOneWidget,
+    );
+  });
 }
