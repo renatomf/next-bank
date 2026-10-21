@@ -331,6 +331,13 @@ flowchart TD
     EX --> DT[12. Detalhe]
     DT --> CP
 
+    H --> RC[16. Recargas]
+    RC --> RV2[17. Número e valor]
+    RV2 --> RP[18. Confirmar + PIN]
+    RP --> RCP[19. Comprovante da recarga]
+    RCP --> H
+    DT --> RCP
+
     H --> PF[13. Perfil]
     PF --> SG[14. Segurança]
     PF -.-> MK[15. Minhas chaves - extra]
@@ -342,7 +349,7 @@ flowchart TD
 - Sessão expirada ou reuso de refresh detectado → volta ao Login a partir de qualquer tela.
 - App em segundo plano por mais de 5 minutos → volta ao Desbloqueio.
 - O Desbloqueio aparece na abertura do app com sessão guardada e após o tempo em segundo plano; depois do login com senha, o app vai direto para a Home, porque a senha acabou de ser conferida (plano da semana 6, D5).
-- O botão "voltar" do Comprovante leva à Home, nunca de volta à tela de PIN.
+- O botão "voltar" do Comprovante leva à Home, nunca de volta à tela de PIN. O mesmo vale para o comprovante da recarga (v1.1.0).
 
 ## 11. Estados por tela
 
@@ -362,6 +369,10 @@ flowchart TD
 | 12. Detalhe | carregando · pronto · `NotFound` |
 | 13. Perfil | pronto · tema (Sistema, Claro ou Escuro; plano da semana 7, D9) |
 | 14. Segurança | lista de sessões · encerrando sessão (confirmação) · trocar PIN |
+| 16. Recargas (v1.1.0) | carregando · operadoras da API · erro (tentar de novo) |
+| 17. Número e valor | padrão (aviso do número fictício sempre visível) · número fora do intervalo fictício · "Continuar" só com um valor escolhido |
+| 18. Confirmar + PIN | resumo · digitando PIN ou biometria · verificando · `PinIncorrect` · `PinLocked` e `PinResetRequired` (só "Voltar ao início") · `InsufficientFunds` · `TopUpLimitExceeded` (com o que resta no dia) · resposta perdida (só "Tentar de novo", com a mesma chave e o mesmo PIN, MOB-07) |
+| 19. Comprovante da recarga | carregando · concluída · erro (tentar de novo). Compartilhar como imagem: fora por ora (decisão R8) |
 
 ## 12. Decisões registradas nesta tarefa
 
