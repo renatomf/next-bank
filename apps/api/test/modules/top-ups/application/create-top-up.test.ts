@@ -84,9 +84,10 @@ describe('CreateTopUp', () => {
       id: 'id-1',
       operator: { id: 'pulso-celular', name: 'Pulso Celular', initials: 'PC' },
       phoneMasked: '(11) *****-0001',
-      amount: Money.of(3000n),
+      // Plain JSON, like the Pix view: stored as the idempotent response.
+      amount: { amount: 3000, currency: 'BRL' },
       status: 'COMPLETED',
-      createdAt: NOW,
+      createdAt: NOW.toISOString(),
     });
     expect(ledger.postings).toEqual([
       {

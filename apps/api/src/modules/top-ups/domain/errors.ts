@@ -27,6 +27,36 @@ export class InvalidTopUpAmount extends DomainError {
   }
 }
 
+export class AccountBlocked extends DomainError {
+  readonly code = 'AccountBlocked';
+
+  constructor() {
+    super('The account cannot send money');
+  }
+}
+
+/**
+ * A PIN refusal the customer must act on, kept with the idempotency key
+ * before answering (ADR 0010, rule 3): the attempt counted stays counted,
+ * and a repeated request gets the same refusal without checking again.
+ */
+export type TopUpRefusal = 'PinIncorrect' | 'PinLocked' | 'PinResetRequired';
+
+export class TopUpRefused extends DomainError {
+  readonly code: TopUpRefusal;
+  readonly #details: Readonly<Record<string, number>>;
+
+  constructor(code: TopUpRefusal, details: Readonly<Record<string, number>> = {}) {
+    super(`Top-up refused: ${code}`);
+    this.code = code;
+    this.#details = details;
+  }
+
+  override get details(): Readonly<Record<string, number>> {
+    return this.#details;
+  }
+}
+
 /** Top-ups of the day would pass the daily limit (D6). */
 export class TopUpLimitExceeded extends DomainError {
   readonly code = 'TopUpLimitExceeded';

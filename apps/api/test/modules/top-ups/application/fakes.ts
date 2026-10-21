@@ -54,7 +54,7 @@ export class FakeTopUpsRepositories implements TopUpsRepositoriesFactory {
     this.#log = log;
   }
 
-  for(_tx: Transaction): TopUpsRepositories {
+  for(): TopUpsRepositories {
     const idempotency: IdempotencyRepository = {
       claim: (claim): Promise<ClaimResult> => {
         const id = `${claim.userId}:${claim.key}`;
@@ -180,13 +180,10 @@ export class FakeProvider implements TopUpProvider {
   }
 }
 
-/** Reverses the digits: enough to show the number is never stored in clear. */
+/** Seals to a fixed text: enough to show the number is never stored in clear. */
 export class FakePhoneProtector implements PhoneProtector {
-  protect(digits: string): ProtectedPhone {
-    return {
-      ciphertext: new TextEncoder().encode([...digits].reverse().join('')),
-      keyVersion: 1,
-    };
+  protect(): ProtectedPhone {
+    return { ciphertext: new TextEncoder().encode('sealed'), keyVersion: 1 };
   }
 }
 
