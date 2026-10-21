@@ -5,6 +5,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
 import 'package:next_bank/features/top_up/presentation/amount/top_up_amount_screen.dart';
 import 'package:next_bank/features/top_up/presentation/confirm/confirm_top_up_screen.dart';
+import 'package:next_bank/features/top_up/presentation/receipt/top_up_receipt_screen.dart';
 import 'package:next_bank/main.dart' as app;
 
 import 'support/e2e.dart';
@@ -59,7 +60,11 @@ void main() {
     expect(find.text('Celular (11) *****-0001'), findsOneWidget);
 
     // Back home, the statement shows the top-up, which opens its receipt.
-    await tester.tap(find.text('Voltar ao início'));
+    await scrollAndTap(
+      tester,
+      TopUpReceiptScreen,
+      find.text('Voltar ao início'),
+    );
     await waitFor(tester, find.byType(HomeScreen));
     await scrollAndTap(
       tester,
