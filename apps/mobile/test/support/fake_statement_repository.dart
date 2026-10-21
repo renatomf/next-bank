@@ -2,7 +2,8 @@ import 'package:next_bank/core/statement/statement_item.dart';
 import 'package:next_bank/core/statement/statement_query.dart';
 import 'package:next_bank/core/statement/statement_repository.dart';
 
-/// A movement for tests: a Pix received from Mariana by default.
+/// A movement for tests: a Pix received from Mariana by default; a top-up
+/// goes to Pulso Celular, with its masked number.
 StatementItem movement(
   String id, {
   StatementKind kind = StatementKind.pixReceived,
@@ -12,16 +13,21 @@ StatementItem movement(
   id: id,
   occurredAt: DateTime(2026, 10, 8, 9, 12),
   kind: kind,
-  direction: kind == StatementKind.pixSent
+  direction: kind == StatementKind.pixSent || kind == StatementKind.topUp
       ? MoneyDirection.outgoing
       : MoneyDirection.incoming,
   amountCents: amountCents,
-  counterparty: kind == StatementKind.demoFunding
-      ? null
-      : const StatementCounterparty(
-          name: 'Mariana Costa',
-          documentMasked: '***.456.789-**',
-        ),
+  counterparty: switch (kind) {
+    StatementKind.demoFunding => null,
+    StatementKind.topUp => const StatementCounterparty(
+      name: 'Pulso Celular',
+      documentMasked: '(11) *****-0001',
+    ),
+    _ => const StatementCounterparty(
+      name: 'Mariana Costa',
+      documentMasked: '***.456.789-**',
+    ),
+  },
   transferId: transferId,
 );
 

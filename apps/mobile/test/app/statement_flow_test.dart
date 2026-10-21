@@ -208,6 +208,29 @@ void main() {
       expect(find.bySemanticsLabel('Ver comprovante'), findsNothing);
     });
 
+    // F-38: the number of a top-up is a phone, never a CPF.
+    testWidgets('shows a top-up with its operator and masked number', (
+      tester,
+    ) async {
+      await openHome(
+        tester,
+        FakeStatementRepository({
+          null: () async =>
+              pageOf([movement('top-up', kind: StatementKind.topUp)]),
+        }),
+      );
+      await openStatement(tester);
+
+      await tester.tap(statementRows().first);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Recarga de celular'), findsOneWidget);
+      expect(find.text('Saída'), findsOneWidget);
+      expect(find.text('Pulso Celular'), findsOneWidget);
+      expect(find.text('Celular (11) *****-0001'), findsOneWidget);
+      expect(find.textContaining('CPF'), findsNothing);
+    });
+
     // domain-model.md 10: Extrato → Detalhe → Comprovante, and back (T4-3).
     testWidgets('opens the receipt of a Pix sent and comes back to it', (
       tester,
