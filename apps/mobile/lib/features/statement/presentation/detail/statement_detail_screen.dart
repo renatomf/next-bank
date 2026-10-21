@@ -80,6 +80,13 @@ class StatementDetailScreen extends ConsumerWidget {
   }
 }
 
+/// What the masked document is: a top-up's is the number recharged, and a
+/// Pix's the other customer's CPF (F-38).
+String _detailOf(StatementKind kind, String? document) => switch (kind) {
+  StatementKind.topUp => document == null ? 'Celular' : 'Celular $document',
+  _ => document == null ? 'next bank' : 'CPF $document · next bank',
+};
+
 class _Detail extends ConsumerWidget {
   const new({required this.item, required this.onReceipt});
 
@@ -118,9 +125,7 @@ class _Detail extends ConsumerWidget {
           const SizedBox(height: NbSpace.xl),
           ContactCard(
             name: counterparty.name,
-            detail: document == null
-                ? 'next bank'
-                : 'CPF $document · next bank',
+            detail: _detailOf(item.kind, document),
             selected: false,
           ),
         ],
