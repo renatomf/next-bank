@@ -54,12 +54,16 @@ Future<void> signIn(
   required String email,
   required String password,
 }) async {
+  // Waits for one of the two screens by what only it has: the login's
+  // "Entrar" or the Unlock screen's "Entrar com outra conta". Any FilledButton
+  // would do neither: the Unlock screen's "Acessar conta" is one too, and it
+  // shows a frame before its link, so the login seemed open when it was not.
   await waitFor(
     tester,
     find.byWidgetPredicate(
       (widget) =>
-          widget is FilledButton ||
-          (widget is Text && widget.data == 'Entrar com outra conta'),
+          widget is Text &&
+          (widget.data == 'Entrar' || widget.data == 'Entrar com outra conta'),
     ),
   );
   if (find.text('Entrar com outra conta').evaluate().isNotEmpty) {
