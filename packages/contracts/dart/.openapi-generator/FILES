@@ -17,6 +17,7 @@ lib/src/model/client_ip.dart
 lib/src/model/create_pin_request_input.dart
 lib/src/model/create_pix_transfer_request_input.dart
 lib/src/model/create_pix_transfer_request_input_key.dart
+lib/src/model/create_top_up_request_input.dart
 lib/src/model/health.dart
 lib/src/model/login_request_input.dart
 lib/src/model/me.dart
@@ -35,4 +36,8 @@ lib/src/model/session_list.dart
 lib/src/model/statement.dart
 lib/src/model/statement_counterparty.dart
 lib/src/model/statement_item.dart
+lib/src/model/top_up.dart
+lib/src/model/top_up_operator.dart
+lib/src/model/top_up_operator_list.dart
+lib/src/model/top_up_operator_list_operators_inner.dart
 lib/src/model/verify_pin_request_input.dart

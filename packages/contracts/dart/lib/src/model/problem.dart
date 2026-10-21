@@ -32,6 +32,8 @@ class Problem {
      this.remainingAttempts,
 
      this.limit,
+
+     this.remaining,
   });
 
   @JsonKey(
@@ -110,6 +112,18 @@ class Problem {
 
 
 
+  @JsonKey(
+    
+    name: r'remaining',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final Money? remaining;
+
+
+
 
 
     @override
@@ -119,7 +133,8 @@ class Problem {
       other.status == status &&
       other.code == code &&
       other.remainingAttempts == remainingAttempts &&
-      other.limit == limit;
+      other.limit == limit &&
+      other.remaining == remaining;
 
     @override
     int get hashCode =>
@@ -128,7 +143,8 @@ class Problem {
         status.hashCode +
         code.hashCode +
         remainingAttempts.hashCode +
-        limit.hashCode;
+        limit.hashCode +
+        remaining.hashCode;
 
   factory Problem.fromJson(Map<String, dynamic> json) => _$ProblemFromJson(json);
 
