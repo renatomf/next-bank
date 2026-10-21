@@ -9,6 +9,13 @@ String messageFor(ApiFailure failure) => switch (failure) {
   // The server knows which limit applies now (PIX-10): the text names it.
   ApiRejected(code: ApiErrorCode.limitExceeded, :final limitCents?) =>
     'Valor acima do seu limite de ${formatReais(limitCents).full} por Pix.',
+  ApiRejected(
+    code: ApiErrorCode.topUpLimitExceeded,
+    :final limitCents?,
+    :final remainingCents?,
+  ) =>
+    'Você pode recarregar até ${formatReais(limitCents).full} por dia. '
+        'Restam ${formatReais(remainingCents).full} hoje.',
   ApiRejected(:final code) => _catalogText(code),
   ApiUnreachable() => 'Sem conexão. Tente de novo.',
   ApiUnexpected() => 'Algo deu errado. Tente de novo.',
@@ -65,6 +72,11 @@ String _catalogText(ApiErrorCode code) => switch (code) {
   ApiErrorCode.idempotencyKeyReused => 'Algo deu errado. Tente de novo.',
   ApiErrorCode.requestInProgress =>
     'Ainda estamos processando. Tente de novo em instantes.',
+  ApiErrorCode.invalidPhoneNumber => 'Use um número fictício: (DD) 90000-XXXX.',
+  ApiErrorCode.unknownTopUpOperator => 'Escolha uma operadora da lista.',
+  ApiErrorCode.invalidTopUpAmount => 'Escolha um dos valores da lista.',
+  ApiErrorCode.topUpLimitExceeded =>
+    'Valor acima do limite de recargas do dia.',
 };
 
 String _attemptsLeft(int remaining) => remaining == 1
