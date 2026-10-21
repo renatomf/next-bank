@@ -6,13 +6,13 @@ import {
 } from '../../../../src/modules/payments/application/create-pix-transfer.ts';
 import {
   AccountBlocked,
-  IdempotencyKeyReused,
   InsufficientFunds,
   LimitExceeded,
   PixKeyNotFound,
   SamePayerAndPayee,
   TooManyKeyLookups,
 } from '../../../../src/modules/payments/domain/errors.ts';
+import { IdempotencyKeyReused } from '../../../../src/shared/domain/idempotency-errors.ts';
 import { InMemoryKeyLookupQuota } from '../../../../src/modules/payments/infrastructure/in-memory-key-lookup-quota.ts';
 import { Money } from '../../../../src/shared/domain/money.ts';
 import { FixedClock, SequentialIds } from '../../identity/application/fakes.ts';

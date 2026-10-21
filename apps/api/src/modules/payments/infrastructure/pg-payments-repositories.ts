@@ -1,11 +1,9 @@
 import pg from 'pg';
 import type { Transaction } from '../../../shared/application/ports.ts';
 import { pgClientOf } from '../../../shared/infrastructure/pg-unit-of-work.ts';
+import { PgIdempotencyRepository } from '../../../shared/infrastructure/pg-idempotency-repository.ts';
 import { PgAuditTrail } from '../../audit/index.ts';
 import type {
-  ClaimResult,
-  IdempotencyClaim,
-  IdempotencyRepository,
   PaymentsRepositories,
   PaymentsRepositoriesFactory,
   PixKeysRepository,
@@ -13,9 +11,7 @@ import type {
   ProtectedKeyValue,
   StoredPixKey,
   StoredRandomKey,
-  StoredResponse,
 } from '../application/ports.ts';
-import { RequestInProgress } from '../domain/errors.ts';
 import type { PixKeyState, PixKeyType } from '../domain/pix-key.ts';
 import type {
   PixFailureReason,
@@ -232,81 +228,6 @@ function stateOf(row: TransferRow | undefined): PixTransferState | null {
         updatedAt: row.updated_at,
       }
     : null;
-}
-
-/** Waiting for a lock longer than the role's lock_timeout (API-12). */
-const LOCK_NOT_AVAILABLE = '55P03';
-
-export class PgIdempotencyRepository implements IdempotencyRepository {
-  readonly #client: pg.ClientBase;
-
-  constructor(client: pg.ClientBase) {
-    this.#client = client;
-  }
-
-  async claim(claim: IdempotencyClaim): Promise<ClaimResult> {
-    // A key past its 24 hours is free again (ADR 0007).
-    await this.#client.query(
-      `DELETE FROM payments.idempotency_records
-       WHERE user_id = $1 AND key = $2 AND expires_at <= $3`,
-      [claim.userId, claim.key, claim.createdAt],
-    );
-    let inserted: number | null;
-    try {
-      // A concurrent insert of the same key waits here until the first commits.
-      ({ rowCount: inserted } = await this.#client.query(
-        `INSERT INTO payments.idempotency_records
-           (user_id, key, operation, request_hash, status, created_at, expires_at)
-         VALUES ($1, $2, $3, $4, 'IN_PROGRESS', $5, $6)
-         ON CONFLICT (user_id, key) DO NOTHING`,
-        [
-          claim.userId,
-          claim.key,
-          claim.operation,
-          claim.requestHash,
-          claim.createdAt,
-          claim.expiresAt,
-        ],
-      ));
-    } catch (error) {
-      if (error instanceof pg.DatabaseError && error.code === LOCK_NOT_AVAILABLE) {
-        throw new RequestInProgress();
-      }
-      throw error;
-    }
-    if (inserted === 1) return { claimed: true };
-
-    const { rows } = await this.#client.query<{
-      operation: string;
-      request_hash: Buffer;
-      response_status: number | null;
-      response_body: unknown;
-    }>(
-      `SELECT operation, request_hash, response_status, response_body
-       FROM payments.idempotency_records WHERE user_id = $1 AND key = $2`,
-      [claim.userId, claim.key],
-    );
-    const row = rows[0];
-    if (row === undefined) throw new Error('Idempotency record vanished after a conflict');
-    return {
-      claimed: false,
-      operation: row.operation,
-      requestHash: row.request_hash,
-      response:
-        row.response_status === null
-          ? null
-          : { status: row.response_status, body: row.response_body },
-    };
-  }
-
-  async complete(userId: string, key: string, response: StoredResponse): Promise<void> {
-    await this.#client.query(
-      `UPDATE payments.idempotency_records
-       SET status = 'COMPLETED', response_status = $3, response_body = $4
-       WHERE user_id = $1 AND key = $2`,
-      [userId, key, response.status, JSON.stringify(response.body)],
-    );
-  }
 }
 
 /** The payments repositories and the audit trail on the connection of the shared transaction. */

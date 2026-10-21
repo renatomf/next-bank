@@ -5,10 +5,10 @@ import {
   type AuthorizePixTransferInput,
 } from '../../../../src/modules/payments/application/authorize-pix-transfer.ts';
 import {
-  IdempotencyKeyReused,
   InvalidTransferState,
   PixAuthorizationRefused,
 } from '../../../../src/modules/payments/domain/errors.ts';
+import { IdempotencyKeyReused } from '../../../../src/shared/domain/idempotency-errors.ts';
 import { PixTransfer } from '../../../../src/modules/payments/domain/pix-transfer.ts';
 import { Money } from '../../../../src/shared/domain/money.ts';
 import { NotFound } from '../../../../src/shared/domain/not-found.ts';

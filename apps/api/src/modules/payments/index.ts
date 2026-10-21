@@ -13,7 +13,7 @@ import { LookupPixKey } from './application/lookup-pix-key.ts';
 import type { AccountsPort, IdentityPort, LedgerPort } from './application/ports.ts';
 import { AesGcmPixKeyProtector } from './infrastructure/aes-gcm-pix-key-protector.ts';
 import { CryptoEndToEndIds } from './infrastructure/crypto-end-to-end-ids.ts';
-import { HmacRequestFingerprint } from './infrastructure/hmac-request-fingerprint.ts';
+import { HmacRequestFingerprint } from '../../shared/infrastructure/hmac-request-fingerprint.ts';
 import { InMemoryKeyLookupQuota } from './infrastructure/in-memory-key-lookup-quota.ts';
 import { PgPaymentsRepositories } from './infrastructure/pg-payments-repositories.ts';
 
