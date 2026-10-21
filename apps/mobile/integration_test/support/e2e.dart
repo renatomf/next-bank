@@ -68,14 +68,31 @@ Future<void> signIn(
   );
   if (find.text('Entrar com outra conta').evaluate().isNotEmpty) {
     await tester.tap(find.text('Entrar com outra conta'));
-    await waitFor(tester, find.widgetWithText(FilledButton, 'Entrar'));
   }
-  // Login with the password goes straight to the Home (week 6 plan, D5).
-  await tester.enterText(find.byType(TextField).at(0), email);
-  await tester.enterText(find.byType(TextField).at(1), password);
-  await tester.tap(find.widgetWithText(FilledButton, 'Entrar'));
-  await waitFor(tester, find.bySemanticsLabel('Área Pix'));
+  // On the CI emulator the login was seen to go away between filling it and
+  // tapping "Entrar" (PR #163, twice, with a session left by the test
+  // before): it is filled and tapped only once it stays, a few times at
+  // most, and a failure says what was on screen instead.
+  final button = find.widgetWithText(FilledButton, 'Entrar');
+  for (var attempt = 0; attempt < 3; attempt++) {
+    await waitFor(tester, button);
+    await tester.enterText(find.byType(TextField).at(0), email);
+    await tester.enterText(find.byType(TextField).at(1), password);
+    await tester.pumpAndSettle();
+    if (button.evaluate().isEmpty) continue;
+    // Login with the password goes straight to the Home (week 6 plan, D5).
+    await tester.tap(button);
+    await waitFor(tester, find.bySemanticsLabel('Área Pix'));
+    return;
+  }
+  throw TestFailure('The login did not stay on screen: ${textsOnScreen()}');
 }
+
+/// Every text on screen, to tell what showed when a step failed.
+List<String> textsOnScreen() => [
+  for (final element in find.byType(Text).evaluate())
+    if ((element.widget as Text).data case final String text) text,
+];
 
 /// The random key of the customer [email], straight from the API, as the
 /// "Receber" screen asks for it (v1.1.0 plan, task 3).
