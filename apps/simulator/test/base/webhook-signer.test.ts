@@ -11,7 +11,9 @@ const timestamp = 1_790_000_000;
 
 describe('signatureHeader', () => {
   it('signs the timestamp and the body with the secret', () => {
-    const expected = createHmac('sha256', secret).update(`${String(timestamp)}.${body}`).digest('hex');
+    const expected = createHmac('sha256', secret)
+      .update(`${String(timestamp)}.${body}`)
+      .digest('hex');
 
     expect(signatureHeader(secret, body, timestamp)).toBe(`t=${String(timestamp)},v1=${expected}`);
   });
