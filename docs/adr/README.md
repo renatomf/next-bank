@@ -22,6 +22,7 @@ Cada ADR registra **uma** decisão de arquitetura: o contexto, as alternativas c
 | [0014](0014-fronteiras-de-ui.md) | Fronteiras de UI: design system, `core/ui` e features | Aceito |
 | [0015](0015-idempotencia-compartilhada.md) | Idempotência compartilhada entre os módulos | Aceito |
 | [0016](0016-outbox-e-inbox.md) | Outbox transacional e inbox | Aceito |
+| [0017](0017-simulador-no-servico-da-api.md) | Simulador montado no serviço da API | Aceito |
 
 ## Template
 
