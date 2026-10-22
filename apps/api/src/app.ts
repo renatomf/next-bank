@@ -33,6 +33,7 @@ import {
 import { createLedgerModule } from './modules/ledger/index.ts';
 import {
   createPaymentsModule,
+  createPaymentsOutboxHandlers,
   keyLookupRoutes,
   receivingKeyRoutes,
   transferRoutes,
@@ -154,14 +155,6 @@ export function buildApp({
   const clock = new SystemClock();
   const ids = new UuidV7Generator();
   const unitOfWork = new PgUnitOfWork(pool);
-  // No handler yet: nothing writes a message while the Pix to other banks is off.
-  const { outbox } = createOutbox({
-    pool,
-    ids,
-    clock: () => clock.now(),
-    errorReporter,
-    handlers: new Map(),
-  });
   const ledger = createLedgerModule({ clock, ids });
   // Accounts reaches the ledger only through the port it defines (D2).
   const accounts = createAccountsModule({
@@ -182,6 +175,25 @@ export function buildApp({
   registerAuthentication(app, identity.accessTokenVerifier, identity.activeSessions, clock);
 
   void app.register(healthRoutes, { pool, ...(release ? { release } : {}) });
+  const paymentsIdentity = {
+    payeeOf: identity.payees.payeeOf.bind(identity.payees),
+    verifyPin: identity.verifyPin.verify.bind(identity.verifyPin),
+  };
+  const spi = null;
+  // The outbox takes only the types its worker delivers (ADR 0016).
+  const { outbox } = createOutbox({
+    pool,
+    ids,
+    clock: () => clock.now(),
+    errorReporter,
+    handlers: createPaymentsOutboxHandlers({
+      unitOfWork,
+      piiKeys: security.piiKeys,
+      accounts: accounts.directory,
+      identity: paymentsIdentity,
+      spi,
+    }),
+  });
   // Payments reaches Accounts and Identity only through the ports it defines.
   const payments = createPaymentsModule({
     unitOfWork,
@@ -189,16 +201,13 @@ export function buildApp({
     ids,
     piiKeys: security.piiKeys,
     accounts: accounts.directory,
-    identity: {
-      payeeOf: (tx, userId) => identity.payees.payeeOf(tx, userId),
-      verifyPin: (tx, input) => identity.verifyPin.verify(tx, input),
-    },
+    identity: paymentsIdentity,
     ledger: {
       availableBalance: (tx, accountId) => ledger.customerAccounts.availableBalance(tx, accountId),
       postPixTransfer: (tx, posting) => ledger.customerAccounts.transferPix(tx, posting),
       postExternalPix: (tx, posting) => ledger.customerAccounts.sendPixExternal(tx, posting),
     },
-    spi: null,
+    spi,
     outbox,
   });
   // Top-ups reach Accounts, Identity and the Ledger only through the ports they define.

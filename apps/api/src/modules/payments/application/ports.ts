@@ -21,7 +21,10 @@ export type SealedKeyValue = Pick<ProtectedKeyValue, 'ciphertext' | 'keyVersion'
 export interface PixKeyValueProtector {
   protect(type: PixKeyType, value: string): ProtectedKeyValue;
   blindIndex(type: PixKeyType, value: string): Uint8Array;
-  /** Only for the owner's own random key, which the QR Code has to carry. */
+  /**
+   * Only for the owner's own random key, which the QR Code has to carry, and
+   * for the payee's key of a Pix to another bank, which the SPI has to get.
+   */
   reveal(type: PixKeyType, sealed: SealedKeyValue): string;
 }
 
@@ -52,6 +55,13 @@ export interface PixTransfersRepository {
   /** Locks the Pix until the transaction ends: it changes state once (PIX-08). */
   lockForPayer(id: string, payerAccountId: string): Promise<PixTransferState | null>;
   update(transfer: PixTransferState): Promise<void>;
+  /**
+   * A Pix to another bank with its payee's sealed key, for the worker that
+   * sends it; no payer filter, so never called on a customer's request.
+   */
+  findExternalForSending(
+    id: string,
+  ): Promise<{ transfer: PixTransferState; payeeKey: SealedKeyValue } | null>;
 }
 
 export type AccountStatus = 'ACTIVE' | 'BLOCKED' | 'CLOSED';

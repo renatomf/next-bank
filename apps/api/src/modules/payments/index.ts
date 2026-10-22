@@ -1,16 +1,17 @@
 // Public API of the payments context: other modules and the application layer
 // use only what is exported here (ADR 0002, ADR 0010).
-import type { Outbox } from '../../shared/application/outbox.ts';
+import type { Outbox, OutboxHandler } from '../../shared/application/outbox.ts';
 import type { Clock, IdGenerator, UnitOfWork } from '../../shared/application/ports.ts';
 import type { PiiKeys } from '../../shared/infrastructure/aes-gcm-pii-protector.ts';
 import { RandomUuidGenerator } from '../../shared/infrastructure/system-ports.ts';
-import { AuthorizePixTransfer } from './application/authorize-pix-transfer.ts';
+import { AuthorizePixTransfer, SEND_EXTERNAL_PIX } from './application/authorize-pix-transfer.ts';
 import { CancelPixTransfer } from './application/cancel-pix-transfer.ts';
 import { CreateCpfKey } from './application/create-cpf-key.ts';
 import { CreatePixTransfer } from './application/create-pix-transfer.ts';
 import { GetPixTransfer } from './application/get-pix-transfer.ts';
 import { GetReceivingKey } from './application/get-receiving-key.ts';
 import { LookupPixKey } from './application/lookup-pix-key.ts';
+import { SendExternalPix } from './application/send-external-pix.ts';
 import type { AccountsPort, IdentityPort, LedgerPort, SpiPort } from './application/ports.ts';
 import { AesGcmPixKeyProtector } from './infrastructure/aes-gcm-pix-key-protector.ts';
 import { CryptoEndToEndIds } from './infrastructure/crypto-end-to-end-ids.ts';
@@ -44,6 +45,30 @@ export interface PaymentsModule {
   authorizePixTransfer: AuthorizePixTransfer;
   getPixTransfer: GetPixTransfer;
   cancelPixTransfer: CancelPixTransfer;
+}
+
+/**
+ * The messages Payments delivers through the outbox (ADR 0016), by type.
+ * Built apart from the module, which needs the outbox these feed; none while
+ * the Pix to other banks is off (P1).
+ */
+export function createPaymentsOutboxHandlers(settings: {
+  unitOfWork: UnitOfWork;
+  piiKeys: PiiKeys;
+  accounts: AccountsPort;
+  identity: IdentityPort;
+  spi: SpiPort | null;
+}): ReadonlyMap<string, OutboxHandler> {
+  if (settings.spi === null) return new Map();
+  const send = new SendExternalPix({
+    unitOfWork: settings.unitOfWork,
+    repositories: new PgPaymentsRepositories(),
+    protector: new AesGcmPixKeyProtector(settings.piiKeys),
+    accounts: settings.accounts,
+    identity: settings.identity,
+    spi: settings.spi,
+  });
+  return new Map([[SEND_EXTERNAL_PIX, (message) => send.handle(message)]]);
 }
 
 /** Builds the payments context with its production adapters. */

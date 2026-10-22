@@ -161,6 +161,28 @@ export class PgPixTransfersRepository implements PixTransfersRepository {
     return stateOf(rows[0]);
   }
 
+  /** Served by the primary key; only a Pix to another bank has a sealed key. */
+  async findExternalForSending(
+    id: string,
+  ): Promise<{ transfer: PixTransferState; payeeKey: SealedKeyValue } | null> {
+    const { rows } = await this.#client.query<
+      TransferRow & { payee_key_ciphertext: Uint8Array; payee_key_version: number }
+    >(
+      `SELECT ${TRANSFER_COLUMNS}, payee_key_ciphertext, payee_key_version
+       FROM payments.pix_transfers
+       WHERE id = $1 AND payee_key_ciphertext IS NOT NULL`,
+      [id],
+    );
+    const row = rows[0];
+    const transfer = stateOf(row);
+    return row && transfer
+      ? {
+          transfer,
+          payeeKey: { ciphertext: row.payee_key_ciphertext, keyVersion: row.payee_key_version },
+        }
+      : null;
+  }
+
   /** Only the state moves; what was asked never changes (database.md 6, column grants). */
   async update(transfer: PixTransferState): Promise<void> {
     await this.#client.query(
@@ -182,11 +204,12 @@ export class PgPixTransfersRepository implements PixTransfersRepository {
   }
 }
 
-const SELECT_TRANSFER = `SELECT id, end_to_end_id, payer_account_id, payee_account_id, payee_key_type,
+const TRANSFER_COLUMNS = `id, end_to_end_id, payer_account_id, payee_account_id, payee_key_type,
     payee_key_masked, payee_name, payee_document_masked, amount, currency, description, status,
     failure_reason, version, created_at, expires_at, authorized_at, completed_at, updated_at,
-    payee_ispb, payee_bank_name
-  FROM payments.pix_transfers`;
+    payee_ispb, payee_bank_name`;
+
+const SELECT_TRANSFER = `SELECT ${TRANSFER_COLUMNS} FROM payments.pix_transfers`;
 
 interface TransferRow {
   id: string;
