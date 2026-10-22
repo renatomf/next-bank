@@ -323,6 +323,14 @@ void main() {
     expect(loginButton, findsOneWidget);
   });
 
+  // S21 checkpoint of v1.1.0 task 5b: the login's logo as large as the
+  // splash's.
+  testWidgets('shows the login logo as large as the splash', (tester) async {
+    await pumpApp(tester, store: FakeTokenStore());
+
+    expect(tester.widget<NextLogo>(find.byType(NextLogo)).size, 48);
+  });
+
   // Brief, section 8: system font scale up to 1.3x on a small phone.
   for (final (screen, store, unlocked) in [
     ('login', FakeTokenStore.new, false),

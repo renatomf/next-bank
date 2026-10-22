@@ -56,7 +56,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             child: ListView(
               padding: const EdgeInsets.all(NbSpace.screen),
               children: [
-                const Align(alignment: Alignment.centerLeft, child: NextLogo()),
+                // As large as on the splash (S21 checkpoint of v1.1.0 task 5b).
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: NextLogo(size: 48),
+                ),
                 const SizedBox(height: NbSpace.xxl),
                 // The tagline of the Home mockup.
                 const DisplayTitle(
