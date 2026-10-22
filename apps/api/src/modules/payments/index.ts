@@ -1,5 +1,6 @@
 // Public API of the payments context: other modules and the application layer
 // use only what is exported here (ADR 0002, ADR 0010).
+import type { Outbox } from '../../shared/application/outbox.ts';
 import type { Clock, IdGenerator, UnitOfWork } from '../../shared/application/ports.ts';
 import type { PiiKeys } from '../../shared/infrastructure/aes-gcm-pii-protector.ts';
 import { RandomUuidGenerator } from '../../shared/infrastructure/system-ports.ts';
@@ -56,6 +57,8 @@ export function createPaymentsModule(settings: {
   ledger: LedgerPort;
   /** The DICT and the SPI; null while the Pix to other banks is off (P1). */
   spi: SpiPort | null;
+  /** Where a Pix to another bank waits to be sent (ADR 0016). */
+  outbox: Outbox;
 }): PaymentsModule {
   const repositories = new PgPaymentsRepositories();
   const protector = new AesGcmPixKeyProtector(settings.piiKeys);
@@ -109,6 +112,7 @@ export function createPaymentsModule(settings: {
       identity: settings.identity,
       ledger: settings.ledger,
       endToEndIds: new CryptoEndToEndIds(),
+      outbox: settings.outbox,
       clock: settings.clock,
       ids: settings.ids,
     }),

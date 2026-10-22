@@ -41,6 +41,7 @@ import { createTopUpsModule, topUpRoutes } from './modules/top-ups/index.ts';
 import { healthRoutes } from './shared/http/health.ts';
 import { registerProblemHandlers } from './shared/http/problem.ts';
 import type { PiiKeys } from './shared/infrastructure/aes-gcm-pii-protector.ts';
+import { createOutbox } from './shared/infrastructure/outbox-factory.ts';
 import { PgUnitOfWork } from './shared/infrastructure/pg-unit-of-work.ts';
 import type { ErrorReporter } from './shared/application/ports.ts';
 import { NoopErrorReporter } from './shared/infrastructure/sentry-error-reporter.ts';
@@ -153,6 +154,14 @@ export function buildApp({
   const clock = new SystemClock();
   const ids = new UuidV7Generator();
   const unitOfWork = new PgUnitOfWork(pool);
+  // No handler yet: nothing writes a message while the Pix to other banks is off.
+  const { outbox } = createOutbox({
+    pool,
+    ids,
+    clock: () => clock.now(),
+    errorReporter,
+    handlers: new Map(),
+  });
   const ledger = createLedgerModule({ clock, ids });
   // Accounts reaches the ledger only through the port it defines (D2).
   const accounts = createAccountsModule({
@@ -187,8 +196,10 @@ export function buildApp({
     ledger: {
       availableBalance: (tx, accountId) => ledger.customerAccounts.availableBalance(tx, accountId),
       postPixTransfer: (tx, posting) => ledger.customerAccounts.transferPix(tx, posting),
+      postExternalPix: (tx, posting) => ledger.customerAccounts.sendPixExternal(tx, posting),
     },
     spi: null,
+    outbox,
   });
   // Top-ups reach Accounts, Identity and the Ledger only through the ports they define.
   const topUps = createTopUpsModule({

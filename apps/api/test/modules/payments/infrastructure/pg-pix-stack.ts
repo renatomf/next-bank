@@ -73,6 +73,7 @@ export function pgPixStack(pool: pg.Pool, clock: Clock) {
   const ledgerPort = {
     availableBalance: ledger.customerAccounts.availableBalance.bind(ledger.customerAccounts),
     postPixTransfer: ledger.customerAccounts.transferPix.bind(ledger.customerAccounts),
+    postExternalPix: ledger.customerAccounts.sendPixExternal.bind(ledger.customerAccounts),
   };
   const create = new CreatePixTransfer({
     unitOfWork,
@@ -95,6 +96,8 @@ export function pgPixStack(pool: pg.Pool, clock: Clock) {
     identity,
     ledger: ledgerPort,
     endToEndIds: new CryptoEndToEndIds(),
+    // Pix between next bank customers only: none writes a message.
+    outbox: { enqueue: () => Promise.reject(new Error('internal Pix writes no message')) },
     clock,
     ids,
   });

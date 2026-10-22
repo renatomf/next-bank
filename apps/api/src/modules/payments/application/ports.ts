@@ -116,6 +116,14 @@ export interface PixPosting {
   payee: PixParty;
 }
 
+/** A Pix to another bank as the ledger posts it: the payee is not one of its accounts. */
+export interface ExternalPixPosting {
+  transferId: string;
+  payerAccountId: string;
+  amount: Money;
+  payee: PixParty;
+}
+
 /** What Payments needs from the Ledger (context map, domain-model.md section 2). */
 export interface LedgerPort {
   availableBalance(tx: Transaction, accountId: string): Promise<Money | null>;
@@ -124,6 +132,11 @@ export interface LedgerPort {
    * InsufficientFunds before writing anything when the balance does not cover it.
    */
   postPixTransfer(tx: Transaction, posting: PixPosting): Promise<void>;
+  /**
+   * Debits the payer to system:pix_clearing until the SPI answers (ADR 0005);
+   * fails like postPixTransfer when the balance does not cover it.
+   */
+  postExternalPix(tx: Transaction, posting: ExternalPixPosting): Promise<void>;
 }
 
 /** A key of another bank, as the DICT knows it: its owner only masked. */

@@ -4,6 +4,7 @@ import type {
   Transaction,
   UnitOfWork,
 } from '../../../shared/application/ports.ts';
+import type { Outbox } from '../../../shared/application/outbox.ts';
 import { DomainError } from '../../../shared/domain/domain-error.ts';
 import { NotFound } from '../../../shared/domain/not-found.ts';
 import { type AuthorizationRefusal, PixAuthorizationRefused } from '../domain/errors.ts';
@@ -42,9 +43,14 @@ export interface AuthorizePixTransferDependencies {
   identity: IdentityPort;
   ledger: LedgerPort;
   endToEndIds: EndToEndIds;
+  /** Where a Pix to another bank waits to be sent to the SPI (ADR 0016). */
+  outbox: Outbox;
   clock: Clock;
   ids: IdGenerator;
 }
+
+/** The message that sends a Pix to another bank to the SPI. */
+export const SEND_EXTERNAL_PIX = 'pix.send-external';
 
 /** Status of a stored refusal: what was recorded is answered as the catalog error. */
 const REFUSED = 0;
@@ -132,10 +138,20 @@ export class AuthorizePixTransfer {
 
     transfer.startProcessing(now);
     const failure = await this.#process(tx, transfer, payer, now);
-    if (failure === null) {
-      transfer.complete(this.#deps.endToEndIds.next(now), now);
-    } else {
+    const endToEndId = this.#deps.endToEndIds.next(now);
+    if (failure !== null) {
       transfer.fail(failure, now);
+    } else if (transfer.goesToAnotherBank) {
+      // Debited, the Pix waits for the SPI; the message that sends it commits
+      // with the debit or not at all (ADR 0016), and carries only the id.
+      transfer.awaitSettlement(endToEndId);
+      await this.#deps.outbox.enqueue(tx, {
+        type: SEND_EXTERNAL_PIX,
+        payload: { transferId: transfer.state.id },
+        requestId: input.requestId,
+      });
+    } else {
+      transfer.complete(endToEndId, now);
     }
     await repositories.pixTransfers.update(transfer.state);
     await this.#record(repositories, transfer, input, now);
@@ -151,25 +167,40 @@ export class AuthorizePixTransfer {
   ): Promise<PixFailureReason | null> {
     const { accounts, identity, ledger } = this.#deps;
     const { state } = transfer;
+    // A payee at another bank has no account here to lock or check.
     const payeeAccountId = state.payee.accountId;
-    if (payeeAccountId === null) throw new Error('A Pix to another bank is not posted here');
-    const locked = await accounts.lockForShare(tx, [payer.id, payeeAccountId]);
+    const locked = await accounts.lockForShare(
+      tx,
+      payeeAccountId === null ? [payer.id] : [payer.id, payeeAccountId],
+    );
     const statusOf = (id: string) => locked.find((account) => account.id === id)?.status;
     if (statusOf(payer.id) !== 'ACTIVE') return 'ACCOUNT_BLOCKED';
-    if (statusOf(payeeAccountId) !== 'ACTIVE') return 'PAYEE_UNAVAILABLE';
+    if (payeeAccountId !== null && statusOf(payeeAccountId) !== 'ACTIVE') {
+      return 'PAYEE_UNAVAILABLE';
+    }
     if (transfer.exceedsLimitAt(now)) return 'LIMIT_EXCEEDED';
 
-    const payerParty = await identity.payeeOf(tx, payer.holderUserId);
-    if (!payerParty) throw new Error(`Customer ${payer.holderUserId} has no profile`);
+    const payee = { name: state.payee.name, documentMasked: state.payee.documentMasked };
     try {
-      await ledger.postPixTransfer(tx, {
-        transferId: state.id,
-        payerAccountId: payer.id,
-        payeeAccountId,
-        amount: state.amount,
-        payer: payerParty,
-        payee: { name: state.payee.name, documentMasked: state.payee.documentMasked },
-      });
+      if (payeeAccountId === null) {
+        await ledger.postExternalPix(tx, {
+          transferId: state.id,
+          payerAccountId: payer.id,
+          amount: state.amount,
+          payee,
+        });
+      } else {
+        const payerParty = await identity.payeeOf(tx, payer.holderUserId);
+        if (!payerParty) throw new Error(`Customer ${payer.holderUserId} has no profile`);
+        await ledger.postPixTransfer(tx, {
+          transferId: state.id,
+          payerAccountId: payer.id,
+          payeeAccountId,
+          amount: state.amount,
+          payer: payerParty,
+          payee,
+        });
+      }
     } catch (error) {
       // The ledger refuses before writing: the transaction stays usable.
       if (error instanceof DomainError && error.code === 'InsufficientFunds') {
@@ -212,17 +243,18 @@ export class AuthorizePixTransfer {
     now: Date,
   ): Promise<void> {
     const { state } = transfer;
-    const completed = state.status === 'COMPLETED';
+    const failed = state.status === 'FAILED';
     await repositories.audit.record({
       id: this.#deps.ids.next(),
       occurredAt: now,
       actorType: 'USER',
       actorId: input.userId,
-      action: completed ? 'PIX_COMPLETED' : 'PIX_FAILED',
+      // Sent: on its way to another bank, which answers later (task 4).
+      action: failed ? 'PIX_FAILED' : state.status === 'COMPLETED' ? 'PIX_COMPLETED' : 'PIX_SENT',
       subjectType: 'PIX_TRANSFER',
       subjectId: state.id,
       requestId: input.requestId,
-      metadata: completed
+      metadata: !failed
         ? {
             sessionId: input.sessionId,
             amountCents: state.amount.toJsonAmount(),
