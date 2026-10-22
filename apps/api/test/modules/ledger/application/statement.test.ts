@@ -163,4 +163,26 @@ describe('CustomerLedgerAccounts.statement', () => {
       /account-unknown/,
     );
   });
+
+  // v1.2.0 plan, task 3: an external Pix is a Pix sent, linking to its receipt.
+  it('shows an external Pix as a Pix sent, with its payee and receipt', async () => {
+    const { accounts } = await setup();
+    await accounts.sendPixExternal(tx, {
+      transferId: 'pix-ext-1',
+      payerAccountId: 'account-a',
+      amount: Money.of(5_000n),
+      payee: { name: 'Clara Aurora Teixeira', documentMasked: '***.407.256-**' },
+    });
+
+    const [latest] = (await accounts.statement(tx, 'account-a', null)).items;
+
+    expect(latest).toMatchObject({
+      kind: 'PIX_SENT',
+      direction: 'OUT',
+      amount: Money.of(5_000n),
+      counterparty: { name: 'Clara Aurora Teixeira', documentMasked: '***.407.256-**' },
+      transferId: 'pix-ext-1',
+      topUpId: null,
+    });
+  });
 });
