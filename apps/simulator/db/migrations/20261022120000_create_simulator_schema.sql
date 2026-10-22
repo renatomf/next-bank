@@ -58,6 +58,9 @@ CREATE TABLE simulator.webhook_deliveries (
   status text NOT NULL CHECK (status IN ('PENDING', 'DELIVERED', 'DROPPED')),
   due_at timestamptz NOT NULL,
   attempts integer NOT NULL DEFAULT 0 CHECK (attempts >= 0),
+  -- A dispatcher's claim while it sends, outside any transaction; a claim
+  -- left by a dispatcher that died runs out, and the delivery is taken again.
+  locked_until timestamptz,
   delivered_at timestamptz,
   CONSTRAINT webhook_deliveries_delivered_at_status_check
     CHECK ((status = 'DELIVERED') = (delivered_at IS NOT NULL))
@@ -72,7 +75,7 @@ GRANT SELECT ON simulator.banks, simulator.dict_keys TO nextbank_simulator;
 GRANT SELECT, INSERT ON simulator.payments TO nextbank_simulator;
 GRANT UPDATE (status, reason, decided_at, settled_at) ON simulator.payments TO nextbank_simulator;
 GRANT SELECT, INSERT ON simulator.webhook_deliveries TO nextbank_simulator;
-GRANT UPDATE (status, due_at, attempts, delivered_at) ON simulator.webhook_deliveries
+GRANT UPDATE (status, due_at, attempts, delivered_at, locked_until) ON simulator.webhook_deliveries
   TO nextbank_simulator;
 
 -- Made-up banks and customers, with made-up but valid CPFs, masked.

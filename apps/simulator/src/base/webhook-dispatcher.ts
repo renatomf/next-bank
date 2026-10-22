@@ -24,8 +24,19 @@ interface DueRow {
   decided_at: Date | null;
 }
 
+/** A delivery claimed to be sent: its body, and how many times to send it. */
+interface Claimed {
+  id: string;
+  attempts: number;
+  body: string;
+  deliveries: 1 | 2;
+}
+
 /** A participant that does not answer gets the webhook again, up to this many times. */
 const MAX_ATTEMPTS = 10;
+
+/** How long a claim holds a delivery while it is sent; longer than any send. */
+const CLAIM_MS = 30_000;
 
 /**
  * Delivers the webhooks the SPI owes (v1.2.0 plan, task 1). When a payment's
@@ -35,9 +46,11 @@ const MAX_ATTEMPTS = 10;
  * (duplicated), as the fault profile draws (D5). The body comes from the
  * payment, so every delivery of an event is the same.
  *
- * Each due delivery is locked with SKIP LOCKED, so two dispatchers never send
- * the same one; the transaction stays open while it sends, so the send must
- * time out well before the role's idle timeout (10 s).
+ * No lock is held while the network is awaited: the due deliveries are
+ * claimed in one short transaction (SKIP LOCKED, so two dispatchers never
+ * claim the same one), sent with no transaction open, and their outcome
+ * recorded in another. A claim left by a dispatcher that died runs out after
+ * [CLAIM_MS], and the delivery is taken again.
  */
 export class WebhookDispatcher {
   readonly #deps: WebhookDispatcherDependencies;
@@ -46,13 +59,20 @@ export class WebhookDispatcher {
     this.#deps = deps;
   }
 
-  /** Delivers the webhooks due now, at most [limit]; returns how many it handled. */
+  /** Delivers the webhooks due now, at most [limit]; returns how many it claimed. */
   async dispatchDue(limit = 20): Promise<number> {
-    const { pool, clock } = this.#deps;
-    const now = clock();
-    const client = await pool.connect();
-    try {
-      await client.query('BEGIN');
+    const now = this.#deps.clock();
+    const claimed = await this.#claim(now, limit);
+    for (const delivery of claimed.toSend) {
+      const delivered = await this.#send(delivery, now);
+      await this.#record(delivery, delivered, now);
+    }
+    return claimed.count;
+  }
+
+  /** Decides the payments due, drops the lost webhooks and claims the rest. */
+  async #claim(now: Date, limit: number): Promise<{ count: number; toSend: Claimed[] }> {
+    return this.#transaction(async (client) => {
       // Served by webhook_deliveries_due_idx.
       const { rows } = await client.query<DueRow>(
         `SELECT d.id, d.event_id, d.attempts, p.end_to_end_id, p.payee_ispb,
@@ -60,69 +80,69 @@ export class WebhookDispatcher {
          FROM simulator.webhook_deliveries d
          JOIN simulator.payments p ON p.end_to_end_id = d.end_to_end_id
          WHERE d.status = 'PENDING' AND d.due_at <= $1
+           AND (d.locked_until IS NULL OR d.locked_until <= $1)
          ORDER BY d.due_at
          LIMIT $2
          FOR UPDATE OF d, p SKIP LOCKED`,
         [now, limit],
       );
-      for (const row of rows) await this.#handle(client, row, now);
-      await client.query('COMMIT');
-      return rows.length;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+      const toSend: Claimed[] = [];
+      for (const row of rows) {
+        const decided = row.status === 'PENDING' ? await this.#decide(client, row, now) : row;
+        // The fault is drawn once, at the first attempt; a retry is one delivery.
+        const deliveries = row.attempts === 0 ? this.#deps.faults.webhookDeliveries() : 1;
+        if (deliveries === 0) {
+          await client.query(
+            "UPDATE simulator.webhook_deliveries SET status = 'DROPPED' WHERE id = $1",
+            [row.id],
+          );
+          continue;
+        }
+        await client.query(
+          'UPDATE simulator.webhook_deliveries SET locked_until = $2 WHERE id = $1',
+          [row.id, new Date(now.getTime() + CLAIM_MS)],
+        );
+        toSend.push({ id: row.id, attempts: row.attempts, body: bodyOf(decided, now), deliveries });
+      }
+      return { count: rows.length, toSend };
+    });
   }
 
-  async #handle(client: pg.PoolClient, row: DueRow, now: Date): Promise<void> {
-    const decided = row.status === 'PENDING' ? await this.#decide(client, row, now) : row;
-    // The fault is drawn once, at the first attempt; a retry is one delivery.
-    const deliveries = row.attempts === 0 ? this.#deps.faults.webhookDeliveries() : 1;
-    if (deliveries === 0) {
-      await client.query(
-        "UPDATE simulator.webhook_deliveries SET status = 'DROPPED' WHERE id = $1",
-        [row.id],
-      );
-      return;
-    }
-
-    const body = JSON.stringify({
-      eventId: row.event_id,
-      version: 1,
-      endToEndId: row.end_to_end_id,
-      status: decided.status,
-      ...(decided.reason ? { reason: decided.reason } : {}),
-      occurredAt: (decided.decided_at ?? now).toISOString(),
-    });
+  async #send(delivery: Claimed, now: Date): Promise<boolean> {
     const headers = {
       'content-type': 'application/json',
       [SIGNATURE_HEADER]: signatureHeader(
         this.#deps.webhook.secret,
-        body,
+        delivery.body,
         Math.floor(now.getTime() / 1000),
       ),
     };
     let delivered = false;
-    for (let i = 0; i < deliveries; i++) {
-      if (await this.#deps.send(this.#deps.webhook.url, body, headers)) delivered = true;
+    for (let i = 0; i < delivery.deliveries; i++) {
+      if (await this.#deps.send(this.#deps.webhook.url, delivery.body, headers)) delivered = true;
     }
+    return delivered;
+  }
 
+  async #record(delivery: Claimed, delivered: boolean, now: Date): Promise<void> {
+    const attempts = delivery.attempts + 1;
     if (delivered) {
-      await client.query(
-        "UPDATE simulator.webhook_deliveries SET status = 'DELIVERED', delivered_at = $2, attempts = attempts + 1 WHERE id = $1",
-        [row.id, now],
+      await this.#deps.pool.query(
+        `UPDATE simulator.webhook_deliveries
+         SET status = 'DELIVERED', delivered_at = $2, attempts = $3, locked_until = NULL
+         WHERE id = $1`,
+        [delivery.id, now, attempts],
       );
       return;
     }
-    const attempts = row.attempts + 1;
     // 5 s, 10 s, 20 s… up to 5 minutes between attempts.
     const backoffMs = Math.min(5_000 * 2 ** (attempts - 1), 300_000);
-    await client.query(
-      'UPDATE simulator.webhook_deliveries SET attempts = $2, due_at = $3, status = $4 WHERE id = $1',
+    await this.#deps.pool.query(
+      `UPDATE simulator.webhook_deliveries
+       SET attempts = $2, due_at = $3, status = $4, locked_until = NULL
+       WHERE id = $1`,
       [
-        row.id,
+        delivery.id,
         attempts,
         new Date(now.getTime() + backoffMs),
         attempts >= MAX_ATTEMPTS ? 'DROPPED' : 'PENDING',
@@ -146,4 +166,30 @@ export class WebhookDispatcher {
     );
     return { ...row, status, reason, decided_at: now };
   }
+
+  async #transaction<T>(work: (client: pg.PoolClient) => Promise<T>): Promise<T> {
+    const client = await this.#deps.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const result = await work(client);
+      await client.query('COMMIT');
+      return result;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+}
+
+function bodyOf(row: DueRow, now: Date): string {
+  return JSON.stringify({
+    eventId: row.event_id,
+    version: 1,
+    endToEndId: row.end_to_end_id,
+    status: row.status,
+    ...(row.reason ? { reason: row.reason } : {}),
+    occurredAt: (row.decided_at ?? now).toISOString(),
+  });
 }

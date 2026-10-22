@@ -296,7 +296,7 @@ O schema do simulador do Bacen e dos outros parceiros (plano `v1.2.0-pix-assincr
 
 - **`banks`** e **`dict_keys`:** os bancos fictícios e as chaves dos seus clientes fictícios, com o documento já mascarado; só leitura para o papel.
 - **`payments`:** PK `end_to_end_id` (formato do Bacen), que torna o envio idempotente (`INSERT … ON CONFLICT DO NOTHING`); `request_hash` distingue a repetição de um pedido diferente com o mesmo id; `CHECK`s de valor, moeda, status e de coerência entre status, `reason`, `decided_at` e `settled_at`. O papel nunca altera o que foi pedido, só o desfecho.
-- **`webhook_deliveries`:** o webhook devido a cada pagamento; sem corpo guardado, porque ele é montado do pagamento, e assim uma nova tentativa manda o mesmo evento.
+- **`webhook_deliveries`:** o webhook devido a cada pagamento; sem corpo guardado, porque ele é montado do pagamento, e assim uma nova tentativa manda o mesmo evento. O despachante reserva as entregas vencidas numa transação curta (`SKIP LOCKED` e `locked_until`), envia sem transação aberta e registra o resultado em outra: nenhuma trava fica presa esperando a rede, e a reserva de um despachante que morreu vence em 30 s.
 - **Índices** (`EXPLAIN ANALYZE` no banco de testes): o DICT pela PK (`dict_keys_pkey`, 0,05 ms); o arquivo de liquidação por `payments_settled_at_idx`, parcial em `SETTLED` (0,03 ms); o despachante por `webhook_deliveries_due_idx`, parcial em `PENDING`, com `FOR UPDATE … SKIP LOCKED` (0,02 ms).
 
 ### 5.5 `audit`

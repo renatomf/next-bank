@@ -72,7 +72,7 @@ jobs:
       - run: pnpm --filter @nextbank/simulator format:check
       - run: pnpm --filter @nextbank/simulator lint
       - run: pnpm --filter @nextbank/simulator typecheck
-      - run: pnpm --filter @nextbank/simulator test
+      - run: pnpm --filter @nextbank/simulator test:coverage
 
   mobile:
     name: Mobile

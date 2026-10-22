@@ -11,5 +11,14 @@ export default defineConfig({
     globalSetup: ['test/global-setup.ts'],
     // Integration tests share the same database.
     fileParallelism: false,
+    // Coverage gate, as the API's (CLAUDE.md, section 5): the simulator's rules,
+    // its base and its modules. The server and the config are judged by their
+    // tests, not by a number.
+    coverage: {
+      provider: 'v8',
+      reporter: ['text-summary'],
+      include: ['src/base/**', 'src/modules/**'],
+      thresholds: { lines: 90, branches: 90, functions: 90, statements: 90 },
+    },
   },
 });

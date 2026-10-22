@@ -8,19 +8,24 @@ import type { Faults } from '../../base/faults.ts';
 // The Bacen's end-to-end id: E, the payer's ISPB, the time and 11 characters.
 const END_TO_END_ID = /^E[0-9]{8}[0-9]{12}[A-Za-z0-9]{11}$/;
 
-const PaymentRequestSchema = z.strictObject({
-  endToEndId: z.string().regex(END_TO_END_ID),
-  amount: z.strictObject({
-    amount: z.int().positive(),
-    currency: z.literal('BRL'),
-  }),
-  payer: z.strictObject({
-    ispb: z.string().regex(/^[0-9]{8}$/),
-    name: z.string().min(1).max(80),
-    documentMasked: z.string().min(1).max(20),
-  }),
-  payeeKey: z.string().min(1).max(77),
-});
+const PaymentRequestSchema = z
+  .strictObject({
+    endToEndId: z.string().regex(END_TO_END_ID),
+    amount: z.strictObject({
+      amount: z.int().positive(),
+      currency: z.literal('BRL'),
+    }),
+    payer: z.strictObject({
+      ispb: z.string().regex(/^[0-9]{8}$/),
+      name: z.string().min(1).max(80),
+      documentMasked: z.string().min(1).max(20),
+    }),
+    payeeKey: z.string().min(1).max(77),
+  })
+  // The Bacen's end-to-end id starts with the payer's ISPB.
+  .refine((body) => body.endToEndId.slice(1, 9) === body.payer.ispb, {
+    message: 'the end-to-end id must start with the payer ISPB',
+  });
 
 type PaymentRequest = z.infer<typeof PaymentRequestSchema>;
 
