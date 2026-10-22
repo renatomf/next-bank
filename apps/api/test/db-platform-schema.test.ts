@@ -109,6 +109,62 @@ describe('platform schema', () => {
     );
   });
 
+  // The outbox (v1.2.0 plan, task 2; ADR 0016): what a command must still
+  // tell the outside world, written in its own transaction.
+  describe('outbox messages', () => {
+    async function insertMessage(columns: Record<string, unknown> = {}): Promise<string> {
+      const row: Record<string, unknown> = {
+        id: randomUUID(),
+        type: 'pix.send-external',
+        payload: { transferId: randomUUID() },
+        request_id: null,
+        status: 'PENDING',
+        attempts: 0,
+        available_at: new Date(),
+        ...columns,
+      };
+      const names = Object.keys(row);
+      await app.query(
+        `INSERT INTO platform.outbox_messages (${names.join(', ')})
+         VALUES (${names.map((_, index) => `$${String(index + 1)}`).join(', ')})`,
+        Object.values(row),
+      );
+      return String(row.id);
+    }
+
+    it('takes a message to deliver', async () => {
+      await expect(insertMessage()).resolves.toBeTypeOf('string');
+    });
+
+    it.each([
+      ['an unknown status', { status: 'LOST' }],
+      ['a type out of format', { type: 'Pix Send' }],
+      ['a payload that is not an object', { payload: JSON.stringify([1, 2]) }],
+      ['a payload over 2 KB', { payload: { blob: 'x'.repeat(3_000) } }],
+      ['negative attempts', { attempts: -1 }],
+      ['a delivered message without its time', { status: 'DONE' }],
+    ])('refuses %s', async (_case, columns) => {
+      await expect(insertMessage(columns)).rejects.toThrow();
+    });
+
+    it('lets the API change only how a message is delivered, never what it says', async () => {
+      const id = await insertMessage();
+
+      await expect(
+        app.query(
+          "UPDATE platform.outbox_messages SET attempts = 1, last_error = 'Error' WHERE id = $1",
+          [id],
+        ),
+      ).resolves.toBeDefined();
+      await expect(
+        app.query("UPDATE platform.outbox_messages SET payload = '{}' WHERE id = $1", [id]),
+      ).rejects.toThrow(/permission denied/);
+      await expect(
+        app.query('DELETE FROM platform.outbox_messages WHERE id = $1', [id]),
+      ).rejects.toThrow(/permission denied/);
+    });
+  });
+
   it('leaves no idempotency table in the payments schema', async () => {
     const { rows } = await app.query<{ found: string | null }>(
       "SELECT to_regclass('payments.idempotency_records')::text AS found",
