@@ -2,6 +2,9 @@
   "name": "@nextbank/simulator",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
     "start": "node src/server.ts",
     "dev": "node --env-file=.env --watch src/server.ts",
