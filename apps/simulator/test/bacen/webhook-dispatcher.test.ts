@@ -180,4 +180,53 @@ describe('WebhookDispatcher', () => {
 
     for (const id of ids) expect(eventsOf(sent, id)).toHaveLength(1);
   });
+
+  // No lock is held while the network is awaited: a slow participant must
+  // never hold the rows or the pool's connections.
+  it('holds no lock on the delivery while it sends', async () => {
+    const id = await take();
+    let lockedDuringSend: boolean | undefined;
+    const send: Send = async () => {
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        await client.query(
+          'SELECT 1 FROM simulator.webhook_deliveries WHERE end_to_end_id = $1 FOR UPDATE NOWAIT',
+          [id],
+        );
+        lockedDuringSend = false;
+        await client.query('ROLLBACK');
+      } catch {
+        lockedDuringSend = true;
+        await client.query('ROLLBACK');
+      } finally {
+        client.release();
+      }
+      return true;
+    };
+
+    await dispatcher(send).dispatchDue();
+
+    expect(lockedDuringSend).toBe(false);
+    expect(await statusOf(id)).toMatchObject({ status: 'SETTLED' });
+  });
+
+  // A dispatcher that dies while sending leaves its claim behind: the
+  // delivery is taken again once the claim has run out, never before.
+  it('takes a delivery again only after a dead claim runs out', async () => {
+    const id = await take();
+    const now = Date.now() + 60_000;
+    await pool.query(
+      'UPDATE simulator.webhook_deliveries SET locked_until = $2 WHERE end_to_end_id = $1',
+      [id, new Date(now + 30_000)],
+    );
+    const early = receiver();
+    const late = receiver();
+
+    await dispatcher(early.send, {}, () => new Date(now)).dispatchDue();
+    await dispatcher(late.send, {}, () => new Date(now + 31_000)).dispatchDue();
+
+    expect(eventsOf(early.sent, id)).toEqual([]);
+    expect(eventsOf(late.sent, id)).toHaveLength(1);
+  });
 });

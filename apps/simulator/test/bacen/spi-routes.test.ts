@@ -88,12 +88,41 @@ describe('POST /spi/payments', () => {
     ['a fractional amount', { amount: { amount: 10.5, currency: 'BRL' } }],
     ['another currency', { amount: { amount: 1000, currency: 'USD' } }],
     ['an unknown field', { extra: true }],
+    // The Bacen's end-to-end id starts with the payer's ISPB.
+    [
+      "a payer other than the end-to-end id's",
+      { payer: { ispb: '12345678', name: 'Ana Demo', documentMasked: '***.444.777-**' } },
+    ],
   ])('refuses %s', async (_case, changes) => {
     const body = paymentRequest(changes);
 
     const response = await send(body);
 
     expect(response.statusCode).toBe(422);
+  });
+
+  // A body that is not JSON is the client's fault: 400, never a server error.
+  it('refuses a body that is not JSON with 400', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/spi/payments',
+      headers: { ...withKey, 'content-type': 'application/json' },
+      payload: '{"endToEndId":',
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({ code: 'BadRequest' });
+  });
+
+  it('refuses a body over the limit with 413', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/spi/payments',
+      headers: withKey,
+      payload: { ...paymentRequest(), padding: 'x'.repeat(20 * 1024) },
+    });
+
+    expect(response.statusCode).toBe(413);
   });
 
   it('refuses a call without the participant key (EXT-09)', async () => {
