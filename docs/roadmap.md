@@ -76,7 +76,7 @@ next-bank/
 ├── apps/
 │   ├── mobile/            # Flutter (movido da raiz)
 │   ├── api/               # Fastify — inclui as migrations SQL (dbmate)
-│   ├── bacen-sim/         # Fase 2
+│   ├── simulator/         # Fase 2: um simulador, um módulo por parceiro (bacen, depois carriers, billing, cards)
 │   └── backoffice/        # Fase 3 — Next.js
 ├── packages/
 │   └── contracts/         # OpenAPI + clientes gerados (Dart e TS)
@@ -336,7 +336,9 @@ Quem avalia o projeto precisa vê-lo funcionando **em menos de um minuto**, sem 
 
 **Objetivo:** provar consistência num mundo assíncrono e não confiável.
 
-### Simulador do Bacen (`apps/bacen-sim`)
+### Simulador do Bacen (módulo `bacen` de `apps/simulator`)
+
+O simulador é um só, com um módulo por parceiro; o do Bacen é o primeiro (plano `v1.2.0-pix-assincrono.md`, D13).
 
 - `GET /dict/keys/:key`: consulta de chaves externas (DICT)
 - `POST /spi/payments`: aceita o pagamento com `202` e confirma depois via webhook
@@ -394,7 +396,7 @@ Quem avalia o projeto precisa vê-lo funcionando **em menos de um minuto**, sem 
 | Versão | Produto | O que entra | Por quê, nessa ordem |
 |---|---|---|---|
 | `v1.4.0` | **Minhas chaves Pix e QR Code dinâmico** | Chaves e-mail e telefone (cadastrar, listar, excluir, sem duplicidade, cifradas como a de CPF); QR Code dinâmico no padrão BR Code. A chave aleatória e o QR estático (gerar, ler e validar o CRC) chegaram na `v1.1.0` | Está mais perto do domínio que já existe (Payments) e ativa o atalho "Pagar" |
-| `v1.5.0` | **Recarga assíncrona, boleto e contas de consumo** | Provedor simulado (`apps/provider-sim`) com sucesso, falha, timeout e duplicidade; máquina de estados com reserva de saldo, confirmação ou estorno; a recarga síncrona da `v1.1.0` passa a usá-lo; linha digitável do boleto bancário (47 dígitos) e de arrecadação de contas de consumo (48 dígitos) validada, com empresas fictícias | Mostra fluxo assíncrono, falhas e devolução de dinheiro sobre a base da Fase 2 (outbox, inbox, conta transitória); ativa "Recarga" |
+| `v1.5.0` | **Recarga assíncrona, boleto e contas de consumo** | Provedor simulado (módulos `carriers` e `billing` de `apps/simulator`) com sucesso, falha, timeout e duplicidade; máquina de estados com reserva de saldo, confirmação ou estorno; a recarga síncrona da `v1.1.0` passa a usá-lo; linha digitável do boleto bancário (47 dígitos) e de arrecadação de contas de consumo (48 dígitos) validada, com empresas fictícias | Mostra fluxo assíncrono, falhas e devolução de dinheiro sobre a base da Fase 2 (outbox, inbox, conta transitória); ativa "Recarga" |
 | `v2.0.0` | **Cartão de crédito** | Cartão virtual de demonstração (nunca PAN, CVV ou dados reais), bloqueio, limite, autorização com reserva em `available_balance`, compra negada e estornada, fatura, vencimento, pagamento e parcelamento | É o maior produto: um novo contexto (Cards) com ciclo de cobrança próprio. O cartão visual da Home (só interface) chegou na `v1.1.0` e passa a mostrar os dados do servidor |
 
 **Regras que continuam valendo:**
