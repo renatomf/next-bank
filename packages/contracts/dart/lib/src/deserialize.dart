@@ -17,6 +17,7 @@ import 'package:nextbank_api/src/model/my_account.dart';
 import 'package:nextbank_api/src/model/pix_key_lookup.dart';
 import 'package:nextbank_api/src/model/pix_key_lookup_request_input.dart';
 import 'package:nextbank_api/src/model/pix_payee.dart';
+import 'package:nextbank_api/src/model/pix_payee_bank.dart';
 import 'package:nextbank_api/src/model/pix_receiving_key.dart';
 import 'package:nextbank_api/src/model/pix_transfer.dart';
 import 'package:nextbank_api/src/model/problem.dart';
@@ -88,6 +89,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return PixKeyLookupRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PixPayee':
           return PixPayee.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PixPayeeBank':
+          return PixPayeeBank.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PixReceivingKey':
           return PixReceivingKey.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PixTransfer':

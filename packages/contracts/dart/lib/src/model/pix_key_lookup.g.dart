@@ -15,6 +15,8 @@ abstract class _$PixKeyLookupCWProxy {
 
   PixKeyLookup payeeDocumentMasked(String payeeDocumentMasked);
 
+  PixKeyLookup bank(PixPayeeBank? bank);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `PixKeyLookup(...).copyWith.fieldName(value)`.
@@ -28,6 +30,7 @@ abstract class _$PixKeyLookupCWProxy {
     String keyMasked,
     String payeeName,
     String payeeDocumentMasked,
+    PixPayeeBank? bank,
   });
 }
 
@@ -52,6 +55,9 @@ class _$PixKeyLookupCWProxyImpl implements _$PixKeyLookupCWProxy {
   PixKeyLookup payeeDocumentMasked(String payeeDocumentMasked) =>
       call(payeeDocumentMasked: payeeDocumentMasked);
 
+  @override
+  PixKeyLookup bank(PixPayeeBank? bank) => call(bank: bank);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `PixKeyLookup(...).copyWith.fieldName(value)`.
@@ -66,6 +72,7 @@ class _$PixKeyLookupCWProxyImpl implements _$PixKeyLookupCWProxy {
     Object? keyMasked = const $CopyWithPlaceholder(),
     Object? payeeName = const $CopyWithPlaceholder(),
     Object? payeeDocumentMasked = const $CopyWithPlaceholder(),
+    Object? bank = const $CopyWithPlaceholder(),
   }) {
     return PixKeyLookup(
       keyType: keyType == const $CopyWithPlaceholder() || keyType == null
@@ -86,6 +93,10 @@ class _$PixKeyLookupCWProxyImpl implements _$PixKeyLookupCWProxy {
           ? _value.payeeDocumentMasked
           // ignore: cast_nullable_to_non_nullable
           : payeeDocumentMasked as String,
+      bank: bank == const $CopyWithPlaceholder()
+          ? _value.bank
+          // ignore: cast_nullable_to_non_nullable
+          : bank as PixPayeeBank?,
     );
   }
 }
@@ -123,6 +134,12 @@ PixKeyLookup _$PixKeyLookupFromJson(Map<String, dynamic> json) =>
           'payeeDocumentMasked',
           (v) => v as String,
         ),
+        bank: $checkedConvert(
+          'bank',
+          (v) => v == null
+              ? null
+              : PixPayeeBank.fromJson(v as Map<String, dynamic>),
+        ),
       );
       return val;
     });
@@ -133,6 +150,7 @@ Map<String, dynamic> _$PixKeyLookupToJson(PixKeyLookup instance) =>
       'keyMasked': instance.keyMasked,
       'payeeName': instance.payeeName,
       'payeeDocumentMasked': instance.payeeDocumentMasked,
+      'bank': ?instance.bank?.toJson(),
     };
 
 const _$PixKeyLookupKeyTypeEnumEnumMap = {

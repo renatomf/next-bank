@@ -27,6 +27,7 @@ lib/src/model/my_account.dart
 lib/src/model/pix_key_lookup.dart
 lib/src/model/pix_key_lookup_request_input.dart
 lib/src/model/pix_payee.dart
+lib/src/model/pix_payee_bank.dart
 lib/src/model/pix_receiving_key.dart
 lib/src/model/pix_transfer.dart
 lib/src/model/problem.dart
