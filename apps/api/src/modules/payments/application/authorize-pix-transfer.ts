@@ -151,10 +151,12 @@ export class AuthorizePixTransfer {
   ): Promise<PixFailureReason | null> {
     const { accounts, identity, ledger } = this.#deps;
     const { state } = transfer;
-    const locked = await accounts.lockForShare(tx, [payer.id, state.payee.accountId]);
+    const payeeAccountId = state.payee.accountId;
+    if (payeeAccountId === null) throw new Error('A Pix to another bank is not posted here');
+    const locked = await accounts.lockForShare(tx, [payer.id, payeeAccountId]);
     const statusOf = (id: string) => locked.find((account) => account.id === id)?.status;
     if (statusOf(payer.id) !== 'ACTIVE') return 'ACCOUNT_BLOCKED';
-    if (statusOf(state.payee.accountId) !== 'ACTIVE') return 'PAYEE_UNAVAILABLE';
+    if (statusOf(payeeAccountId) !== 'ACTIVE') return 'PAYEE_UNAVAILABLE';
     if (transfer.exceedsLimitAt(now)) return 'LIMIT_EXCEEDED';
 
     const payerParty = await identity.payeeOf(tx, payer.holderUserId);
@@ -163,7 +165,7 @@ export class AuthorizePixTransfer {
       await ledger.postPixTransfer(tx, {
         transferId: state.id,
         payerAccountId: payer.id,
-        payeeAccountId: state.payee.accountId,
+        payeeAccountId,
         amount: state.amount,
         payer: payerParty,
         payee: { name: state.payee.name, documentMasked: state.payee.documentMasked },
