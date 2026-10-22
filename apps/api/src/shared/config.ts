@@ -27,10 +27,17 @@ const key32 = z.string().refine((value) => decodeBase64(value)?.length === 32, {
   message: 'must be 32 bytes in base64',
 });
 
+const postgresUrl = z.url({ protocol: /^postgres(ql)?$/ });
+
+/** On this machine, or over TLS: the participant's key never travels in clear (EXT-09). */
+function isLocalOrTls(value: string): boolean {
+  const url = URL.parse(value);
+  return url?.protocol === 'https:' || ['127.0.0.1', 'localhost'].includes(url?.hostname ?? '');
+}
+
 const schema = z
   .object({
-    DATABASE_URL: z
-      .url({ protocol: /^postgres(ql)?$/ })
+    DATABASE_URL: postgresUrl
       // The API never runs with the migration role (API-07).
       .refine((url) => URL.parse(url)?.username !== 'nextbank_migrator', {
         message: 'must not use the nextbank_migrator role',
@@ -63,6 +70,24 @@ const schema = z
     PIN_PEPPER: key32,
     // Encrypts the top-up phone numbers, apart from the CPF (TOP-01, decision R6).
     TOP_UP_PHONE_KEY: key32,
+    // The Pix to other banks (v1.2.0 plan, task 3): off until the SPI's
+    // answer is handled (P1), so a customer's money never waits forever.
+    EXTERNAL_PIX_ENABLED: z.enum(['true', 'false']).default('false'),
+    // Where the API calls the SPI: the simulator, on 127.0.0.1 in the service (P2).
+    SIMULATOR_URL: z
+      .url({ protocol: /^https?$/ })
+      .refine(isLocalOrTls, { message: 'must be on this machine or use https' })
+      .optional(),
+    // The key the API presents to the simulator, and the simulator asks (EXT-09).
+    SIMULATOR_PARTICIPANT_KEY: z.string().min(32).optional(),
+    // Set where the simulator is mounted in the API's service (D2), with its own role.
+    SIMULATOR_DATABASE_URL: postgresUrl
+      .refine((url) => URL.parse(url)?.username === 'nextbank_simulator', {
+        message: 'must use the nextbank_simulator role',
+      })
+      .optional(),
+    // The simulator's fault profile (D5, P4), read by the simulator itself.
+    SIMULATOR_FAULTS: z.string().max(1_000).optional(),
   })
   .refine((env) => env.PII_HMAC_KEY !== env.PII_ENCRYPTION_KEY, {
     // One key for two purposes would let a weakness in one use expose the other.
@@ -83,6 +108,30 @@ const schema = z
       message: 'must differ from the other keys',
       path: ['TOP_UP_PHONE_KEY'],
     },
+  )
+  .refine(
+    (env) =>
+      env.EXTERNAL_PIX_ENABLED === 'false' ||
+      (env.SIMULATOR_URL !== undefined && env.SIMULATOR_PARTICIPANT_KEY !== undefined),
+    {
+      message: 'SIMULATOR_URL and SIMULATOR_PARTICIPANT_KEY are required with EXTERNAL_PIX_ENABLED',
+      path: ['EXTERNAL_PIX_ENABLED'],
+    },
+  )
+  .refine(
+    (env) =>
+      env.SIMULATOR_DATABASE_URL === undefined || env.SIMULATOR_PARTICIPANT_KEY !== undefined,
+    {
+      message: 'SIMULATOR_PARTICIPANT_KEY is required with SIMULATOR_DATABASE_URL',
+      path: ['SIMULATOR_PARTICIPANT_KEY'],
+    },
+  )
+  .refine(
+    (env) =>
+      env.NODE_ENV !== 'production' ||
+      env.SIMULATOR_DATABASE_URL === undefined ||
+      URL.parse(env.SIMULATOR_DATABASE_URL)?.searchParams.get('sslmode') === 'verify-full',
+    { message: 'must use sslmode=verify-full in production', path: ['SIMULATOR_DATABASE_URL'] },
   )
   // ADR 0009: in production the database certificate is always checked.
   .refine(
@@ -106,6 +155,10 @@ export interface Config {
   pinPepper: Buffer;
   /** Encrypts the top-up phone numbers (TOP-01, decision R6). */
   topUpPhoneKey: Buffer;
+  /** The Pix to other banks, when on (P1). */
+  externalPix?: { simulatorUrl: string; participantKey: string };
+  /** The simulator mounted in the service (D2), when its database is set. */
+  simulator?: { databaseUrl: string; participantKey: string; faults?: string };
 }
 
 /** Validates the environment at boot. Error messages never include the received values. */
@@ -144,6 +197,23 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
     },
     pinPepper: required(decodeBase64(data.PIN_PEPPER)),
     topUpPhoneKey: required(decodeBase64(data.TOP_UP_PHONE_KEY)),
+    ...(data.EXTERNAL_PIX_ENABLED === 'true'
+      ? {
+          externalPix: {
+            simulatorUrl: required(data.SIMULATOR_URL ?? null),
+            participantKey: required(data.SIMULATOR_PARTICIPANT_KEY ?? null),
+          },
+        }
+      : {}),
+    ...(data.SIMULATOR_DATABASE_URL
+      ? {
+          simulator: {
+            databaseUrl: data.SIMULATOR_DATABASE_URL,
+            participantKey: required(data.SIMULATOR_PARTICIPANT_KEY ?? null),
+            ...(data.SIMULATOR_FAULTS ? { faults: data.SIMULATOR_FAULTS } : {}),
+          },
+        }
+      : {}),
   };
 }
 
