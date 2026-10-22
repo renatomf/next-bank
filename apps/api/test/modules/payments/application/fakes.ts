@@ -6,9 +6,12 @@ import type {
   StoredResponse,
 } from '../../../../src/shared/application/idempotency.ts';
 import { DomainError } from '../../../../src/shared/domain/domain-error.ts';
+import type { Outbox, OutboxMessage } from '../../../../src/shared/application/outbox.ts';
 import type {
   AccountsPort,
+  DictKey,
   EndToEndIds,
+  ExternalPixPosting,
   PinCheck,
   PixPosting,
   IdentityPort,
@@ -19,6 +22,8 @@ import type {
   PixKeyValueProtector,
   ProtectedKeyValue,
   SealedKeyValue,
+  SpiPayment,
+  SpiPort,
   StoredPixKey,
   StoredRandomKey,
 } from '../../../../src/modules/payments/application/ports.ts';
@@ -91,6 +96,8 @@ export class FakePaymentsRepositories implements PaymentsRepositoriesFactory {
   readonly randomKeys = new Map<string, StoredRandomKey>();
   /** Every random key offered for insertion, kept or not. */
   readonly offeredRandomKeys: PixKeyState[] = [];
+  /** The sealed key of each Pix to another bank, by the Pix id. */
+  readonly payeeKeys = new Map<string, SealedKeyValue>();
   lookups = 0;
 
   addKey(type: PixKeyType, value: string, key: StoredPixKey): void {
@@ -146,11 +153,19 @@ export class FakePaymentsRepositories implements PaymentsRepositoriesFactory {
         findRandomOf: (accountId) => Promise.resolve(this.randomKeys.get(accountId) ?? null),
       },
       pixTransfers: {
-        insert: (state) => {
+        insert: (state, payeeKey) => {
           this.transfers.push(state);
+          if (payeeKey) this.payeeKeys.set(state.id, payeeKey);
           return Promise.resolve();
         },
         findForPayer: (id, payerAccountId) => Promise.resolve(this.#transferOf(id, payerAccountId)),
+        findExternalForSending: (id) => {
+          const transfer = this.transfers.find((t) => t.id === id && t.payee.accountId === null);
+          const payeeKey = this.payeeKeys.get(id);
+          return Promise.resolve(
+            transfer && payeeKey ? { transfer: copyOf(transfer), payeeKey } : null,
+          );
+        },
         lockForPayer: (id, payerAccountId) => Promise.resolve(this.#transferOf(id, payerAccountId)),
         update: (state) => {
           const index = this.transfers.findIndex((transfer) => transfer.id === state.id);
@@ -218,6 +233,17 @@ class LedgerInsufficientFunds extends DomainError {
 export class FakeLedger implements LedgerPort {
   readonly balances = new Map<string, Money>();
   readonly posted: PixPosting[] = [];
+  /** Pix to other banks: debited from the payer to system:pix_clearing. */
+  readonly postedExternal: ExternalPixPosting[] = [];
+  postExternalPix(_tx: Transaction, posting: ExternalPixPosting): Promise<void> {
+    const balance = this.balances.get(posting.payerAccountId) ?? Money.zero();
+    if (balance.isLessThan(posting.amount)) {
+      return Promise.reject(new LedgerInsufficientFunds('Debit above the available balance'));
+    }
+    this.postedExternal.push(posting);
+    this.balances.set(posting.payerAccountId, balance.minus(posting.amount));
+    return Promise.resolve();
+  }
   postPixTransfer(_tx: Transaction, posting: PixPosting): Promise<void> {
     const balance = this.balances.get(posting.payerAccountId) ?? Money.zero();
     if (balance.isLessThan(posting.amount)) {
@@ -229,6 +255,43 @@ export class FakeLedger implements LedgerPort {
   }
   availableBalance(_tx: Transaction, accountId: string): Promise<Money | null> {
     return Promise.resolve(this.balances.get(accountId) ?? null);
+  }
+}
+
+/** The DICT and the SPI of other (made-up) banks, in memory. */
+export class FakeSpi implements SpiPort {
+  readonly keys = new Map<string, DictKey>();
+  readonly lookups: string[] = [];
+  readonly sent: SpiPayment[] = [];
+  /** Unreachable: every call throws, as a timeout would. */
+  down = false;
+
+  findKey(key: string): Promise<DictKey | null> {
+    if (this.down) return Promise.reject(new Error('DICT unreachable'));
+    this.lookups.push(key);
+    return Promise.resolve(this.keys.get(key) ?? null);
+  }
+  send(payment: SpiPayment): Promise<void> {
+    if (this.down) return Promise.reject(new Error('SPI unreachable'));
+    this.sent.push(payment);
+    return Promise.resolve();
+  }
+}
+
+/** Clara, at the made-up Banco Aurora, with an e-mail key. */
+export const AURORA_EMAIL = 'clara.aurora@example.com';
+export const AURORA_KEY: DictKey = {
+  keyType: 'EMAIL',
+  bank: { ispb: '99900001', name: 'Banco Aurora' },
+  owner: { name: 'Clara Aurora Teixeira', documentMasked: '***.407.256-**' },
+};
+
+/** The messages each transaction wrote, in order. */
+export class FakeOutbox implements Outbox {
+  readonly messages: OutboxMessage[] = [];
+  enqueue(_tx: Transaction, message: OutboxMessage): Promise<void> {
+    this.messages.push(message);
+    return Promise.resolve();
   }
 }
 

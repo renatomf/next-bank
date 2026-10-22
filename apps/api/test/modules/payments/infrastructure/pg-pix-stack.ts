@@ -10,6 +10,9 @@ import { createLedgerModule } from '../../../../src/modules/ledger/index.ts';
 import { AuthorizePixTransfer } from '../../../../src/modules/payments/application/authorize-pix-transfer.ts';
 import { CreatePixTransfer } from '../../../../src/modules/payments/application/create-pix-transfer.ts';
 import type { PixTransferView } from '../../../../src/modules/payments/application/pix-transfer-view.ts';
+import type { SpiPort } from '../../../../src/modules/payments/application/ports.ts';
+import type { PixKeyType } from '../../../../src/modules/payments/domain/pix-key.ts';
+import type { Outbox } from '../../../../src/shared/application/outbox.ts';
 import { AesGcmPixKeyProtector } from '../../../../src/modules/payments/infrastructure/aes-gcm-pix-key-protector.ts';
 import { CryptoEndToEndIds } from '../../../../src/modules/payments/infrastructure/crypto-end-to-end-ids.ts';
 import { HmacRequestFingerprint } from '../../../../src/shared/infrastructure/hmac-request-fingerprint.ts';
@@ -41,7 +44,12 @@ export interface Customer {
  * lock and the real ledger with ordered locks. Only the PIN hash is fast and the
  * lookup quota is open, so tests can send a Pix as many times as they need.
  */
-export function pgPixStack(pool: pg.Pool, clock: Clock) {
+export function pgPixStack(
+  pool: pg.Pool,
+  clock: Clock,
+  // The Pix to other banks (v1.2.0 plan, task 3): off unless given.
+  external: { spi: SpiPort; outbox: Outbox } | null = null,
+) {
   const ids = new UuidV7Generator();
   const unitOfWork = new PgUnitOfWork(pool);
   const ledger = createLedgerModule({ clock, ids });
@@ -73,6 +81,7 @@ export function pgPixStack(pool: pg.Pool, clock: Clock) {
   const ledgerPort = {
     availableBalance: ledger.customerAccounts.availableBalance.bind(ledger.customerAccounts),
     postPixTransfer: ledger.customerAccounts.transferPix.bind(ledger.customerAccounts),
+    postExternalPix: ledger.customerAccounts.sendPixExternal.bind(ledger.customerAccounts),
   };
   const create = new CreatePixTransfer({
     unitOfWork,
@@ -85,6 +94,7 @@ export function pgPixStack(pool: pg.Pool, clock: Clock) {
     quota: { tryTake: () => true, charge: () => undefined },
     clock,
     ids,
+    spi: external?.spi ?? null,
   });
   const authorize = new AuthorizePixTransfer({
     unitOfWork,
@@ -94,6 +104,10 @@ export function pgPixStack(pool: pg.Pool, clock: Clock) {
     identity,
     ledger: ledgerPort,
     endToEndIds: new CryptoEndToEndIds(),
+    // Without the Pix to other banks, no Pix writes a message.
+    outbox: external?.outbox ?? {
+      enqueue: () => Promise.reject(new Error('internal Pix writes no message')),
+    },
     clock,
     ids,
   });
@@ -114,6 +128,24 @@ export function pgPixStack(pool: pg.Pool, clock: Clock) {
       return { userId, cpf };
     },
 
+    /** Creates a Pix to any key, here or at another bank, and returns its id. */
+    async createToKey(
+      from: Customer,
+      key: { type: PixKeyType; value: string },
+      cents: number,
+    ): Promise<string> {
+      const { body } = await create.execute({
+        userId: from.userId,
+        sessionId: 'session-test',
+        idempotencyKey: randomUUID(),
+        key,
+        amountCents: cents,
+        description: null,
+        requestId: null,
+      });
+      return body.id;
+    },
+
     /** Creates a Pix awaiting the PIN and returns its id. */
     async create(from: Customer, to: Customer, cents: number): Promise<string> {
       const { body } = await create.execute({
@@ -128,12 +160,16 @@ export function pgPixStack(pool: pg.Pool, clock: Clock) {
       return body.id;
     },
 
-    authorize(from: Customer, transferId: string): Promise<PixTransferView> {
+    authorize(
+      from: Customer,
+      transferId: string,
+      idempotencyKey: string = randomUUID(),
+    ): Promise<PixTransferView> {
       return authorize.execute({
         userId: from.userId,
         sessionId: 'session-test',
         transferId,
-        idempotencyKey: randomUUID(),
+        idempotencyKey,
         pin: PIN,
         requestId: null,
       });

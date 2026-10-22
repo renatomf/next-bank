@@ -222,4 +222,103 @@ describe('loadConfig', () => {
   it('keeps local development free to use a plain connection', () => {
     expect(() => loadConfig({ ...valid, NODE_ENV: 'development' })).not.toThrow();
   });
+
+  // The Pix to other banks and the simulator mounted in the service (v1.2.0
+  // plan, task 3, P1 and P2).
+  describe('external Pix and simulator', () => {
+    const participantKey = randomBytes(32).toString('base64');
+    const externalPix = {
+      EXTERNAL_PIX_ENABLED: 'true',
+      SIMULATOR_URL: 'http://127.0.0.1:3000/simulator',
+      SIMULATOR_PARTICIPANT_KEY: participantKey,
+    };
+    const simulator = {
+      SIMULATOR_DATABASE_URL: 'postgres://nextbank_simulator:s3cr3t-value@127.0.0.1:5432/nextbank',
+      SIMULATOR_PARTICIPANT_KEY: participantKey,
+    };
+
+    it('keeps the Pix to other banks off and mounts no simulator by default (P1)', () => {
+      const config = loadConfig(valid);
+
+      expect(config.externalPix).toBeUndefined();
+      expect(config.simulator).toBeUndefined();
+    });
+
+    it('turns the Pix to other banks on with where the SPI is and the key', () => {
+      expect(loadConfig({ ...valid, ...externalPix }).externalPix).toEqual({
+        simulatorUrl: 'http://127.0.0.1:3000/simulator',
+        participantKey,
+      });
+      expect(
+        loadConfig({ ...valid, ...externalPix, EXTERNAL_PIX_ENABLED: 'false' }).externalPix,
+      ).toBeUndefined();
+    });
+
+    it.each(['SIMULATOR_URL', 'SIMULATOR_PARTICIPANT_KEY'])(
+      'refuses the Pix to other banks without %s',
+      (name) => {
+        expect(withEnv({ ...externalPix, [name]: undefined })).toThrow(new RegExp(name));
+      },
+    );
+
+    // EXT-09: the participant's key never travels in clear off this machine.
+    it('calls the SPI only on this machine or over HTTPS', () => {
+      expect(
+        withEnv({ ...externalPix, SIMULATOR_URL: 'http://spi.example.com/simulator' }),
+      ).toThrow(/SIMULATOR_URL/);
+      expect(() =>
+        loadConfig({ ...valid, ...externalPix, SIMULATOR_URL: 'https://spi.example.com' }),
+      ).not.toThrow();
+      expect(() =>
+        loadConfig({ ...valid, ...externalPix, SIMULATOR_URL: 'http://localhost:3000/simulator' }),
+      ).not.toThrow();
+    });
+
+    it('refuses a short participant key', () => {
+      expect(withEnv({ ...externalPix, SIMULATOR_PARTICIPANT_KEY: 'short' })).toThrow(
+        /SIMULATOR_PARTICIPANT_KEY/,
+      );
+    });
+
+    it('mounts the simulator with its own database role, key and faults', () => {
+      expect(
+        loadConfig({ ...valid, ...simulator, SIMULATOR_FAULTS: '{"latencyMs":50}' }).simulator,
+      ).toEqual({
+        databaseUrl: simulator.SIMULATOR_DATABASE_URL,
+        participantKey,
+        faults: '{"latencyMs":50}',
+      });
+      expect(withEnv({ ...simulator, SIMULATOR_PARTICIPANT_KEY: undefined })).toThrow(
+        /SIMULATOR_PARTICIPANT_KEY/,
+      );
+    });
+
+    it('refuses to mount the simulator with the API or the migrator role', () => {
+      for (const role of ['nextbank_app', 'nextbank_migrator']) {
+        expect(
+          withEnv({
+            ...simulator,
+            SIMULATOR_DATABASE_URL: `postgres://${role}:s3cr3t-value@127.0.0.1:5432/nextbank`,
+          }),
+        ).toThrow(/SIMULATOR_DATABASE_URL/);
+      }
+    });
+
+    it('refuses the simulator database without sslmode=verify-full in production', () => {
+      const production = {
+        ...simulator,
+        NODE_ENV: 'production',
+        DATABASE_URL: `${valid.DATABASE_URL}?sslmode=verify-full`,
+      };
+
+      expect(withEnv(production)).toThrow(/SIMULATOR_DATABASE_URL/);
+      expect(() =>
+        loadConfig({
+          ...valid,
+          ...production,
+          SIMULATOR_DATABASE_URL: `${simulator.SIMULATOR_DATABASE_URL}?sslmode=verify-full`,
+        }),
+      ).not.toThrow();
+    });
+  });
 });

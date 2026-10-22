@@ -237,3 +237,77 @@ describe('PixTransfer state machine', () => {
     expect(PixTransfer.restore(state).state).toEqual(state);
   });
 });
+
+// The Pix to another bank (v1.2.0 plan, task 3, P3): the payee is a key of
+// another (made-up) bank, never a next bank account; its end-to-end id is
+// drawn at authorization and goes with every attempt to the SPI (EXT-03).
+describe('PixTransfer to another bank', () => {
+  const EXTERNAL_PAYEE = {
+    accountId: null,
+    bank: { ispb: '99900001', name: 'Banco Aurora' },
+    name: 'Clara Aurora Teixeira',
+    documentMasked: '***.407.256-**',
+    keyType: 'EMAIL' as const,
+    keyMasked: 'cl***@example.com',
+  };
+
+  function external(): PixTransfer {
+    return PixTransfer.create(input({ payee: EXTERNAL_PAYEE }));
+  }
+
+  it('is born awaiting authorization with the bank in the payee snapshot', () => {
+    const transfer = external();
+
+    expect(transfer.state).toMatchObject({ status: 'AWAITING_AUTH', payee: EXTERNAL_PAYEE });
+    expect(transfer.goesToAnotherBank).toBe(true);
+    expect(PixTransfer.create(input()).goesToAnotherBank).toBe(false);
+  });
+
+  it.each([
+    ['both a next bank account and another bank', { ...EXTERNAL_PAYEE, accountId: 'account-b' }],
+    ['neither', { ...PAYEE, accountId: null }],
+  ])('refuses a payee with %s', (_case, payee) => {
+    expect(() => PixTransfer.create(input({ payee }))).toThrow(/account or to another bank/);
+  });
+
+  it('waits for the SPI while processing, with the end-to-end id drawn at authorization', () => {
+    const transfer = external();
+    transfer.startProcessing(LATER);
+
+    transfer.awaitSettlement(E2E);
+
+    expect(transfer.state).toMatchObject({
+      status: 'PROCESSING',
+      endToEndId: E2E,
+      completedAt: null,
+      version: 1,
+    });
+  });
+
+  it('draws its end-to-end id once', () => {
+    const transfer = external();
+    transfer.startProcessing(LATER);
+    transfer.awaitSettlement(E2E);
+
+    expect(() => {
+      transfer.awaitSettlement('E00000000202610071501zzzzzzzzzzz');
+    }).toThrow(InvalidTransferState);
+  });
+
+  it('waits for the SPI only while processing, and only when it goes to another bank', () => {
+    const internal = processing();
+
+    expect(() => {
+      external().awaitSettlement(E2E);
+    }).toThrow(InvalidTransferState);
+    expect(() => {
+      internal.awaitSettlement(E2E);
+    }).toThrow(/another bank/);
+  });
+
+  it('restores the payee at another bank as it was', () => {
+    const { state } = external();
+
+    expect(PixTransfer.restore(state).state).toEqual(state);
+  });
+});

@@ -29,7 +29,8 @@ export const REDACT_PATHS = SENSITIVE_KEYS.flatMap((key) => [key, `*.${key}`, `*
 /**
  * The request as logged, with the fields of Fastify's default serializer
  * but the path without its query string, which can carry a searched name
- * or a statement cursor (READ-06).
+ * or a statement cursor (READ-06), and without the Pix key a DICT lookup of
+ * the mounted simulator carries in its path (API-04).
  */
 export function requestForLog(request: FastifyRequest): {
   method: string;
@@ -39,7 +40,10 @@ export function requestForLog(request: FastifyRequest): {
 } {
   return {
     method: request.method,
-    url: request.url.split('?', 1)[0] ?? '',
+    url: (request.url.split('?', 1)[0] ?? '').replace(
+      /^\/simulator\/dict\/keys\/[^/]+/,
+      '/simulator/dict/keys/[REDACTED]',
+    ),
     hostname: request.hostname,
     remoteAddress: request.ip,
   };

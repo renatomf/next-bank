@@ -382,6 +382,9 @@
           },
           "payeeDocumentMasked": {
             "type": "string"
+          },
+          "bank": {
+            "$ref": "#/components/schemas/PixPayeeBank"
           }
         },
         "required": [
@@ -436,6 +439,9 @@
           },
           "keyMasked": {
             "type": "string"
+          },
+          "bank": {
+            "$ref": "#/components/schemas/PixPayeeBank"
           }
         },
         "required": [
@@ -443,6 +449,22 @@
           "documentMasked",
           "keyType",
           "keyMasked"
+        ],
+        "additionalProperties": false
+      },
+      "PixPayeeBank": {
+        "type": "object",
+        "properties": {
+          "ispb": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ispb",
+          "name"
         ],
         "additionalProperties": false
       },

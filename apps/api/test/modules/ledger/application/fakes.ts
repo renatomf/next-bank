@@ -13,6 +13,8 @@ export const FUNDING_ID = 'ledger-funding';
 /** The operators' system accounts (v1.1.0 plan, task 5), one per operator. */
 export const TOP_UP_OPERATOR_IDS = ['onda-movel', 'pulso-celular', 'rede-nova'] as const;
 export const topUpLedgerIdOf = (operatorId: string): string => `ledger-top-up-${operatorId}`;
+/** Where an external Pix waits for the SPI (v1.2.0 plan, task 3). */
+export const PIX_CLEARING_ID = 'ledger-pix-clearing';
 
 /** The transaction the use cases receive; the fake ledger ignores it. */
 export const tx: Transaction = { kind: 'transaction' };
@@ -30,6 +32,15 @@ export class InMemoryLedger implements LedgerRepositoryFactory {
     this.accounts.set(FUNDING_ID, {
       id: FUNDING_ID,
       code: 'system:funding',
+      kind: 'SYSTEM',
+      postedBalance: Money.zero(),
+      availableBalance: Money.zero(),
+      version: 0,
+      createdAt: new Date('2026-10-07T00:00:00.000Z'),
+    });
+    this.accounts.set(PIX_CLEARING_ID, {
+      id: PIX_CLEARING_ID,
+      code: 'system:pix_clearing',
       kind: 'SYSTEM',
       postedBalance: Money.zero(),
       availableBalance: Money.zero(),

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { PROBLEM_CONTENT_TYPE, ProblemSchema } from '../../../shared/http/problem.ts';
 import { callerOf } from '../../identity/index.ts';
 import type { LookupPixKey } from '../application/lookup-pix-key.ts';
+import { PixPayeeBankSchema } from './transfer-routes.ts';
 
 const KEY_TYPES = ['CPF', 'EMAIL', 'PHONE', 'RANDOM'] as const;
 
@@ -19,6 +20,8 @@ const PixKeyLookupSchema = z
     keyMasked: z.string(),
     payeeName: z.string(),
     payeeDocumentMasked: z.string(),
+    // Only for a payee at another bank (v1.2.0 plan, task 3), named by the DICT.
+    bank: PixPayeeBankSchema.optional(),
   })
   .meta({ id: 'PixKeyLookup' });
 

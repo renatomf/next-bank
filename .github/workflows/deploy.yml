@@ -48,6 +48,12 @@ jobs:
         env:
           MIGRATION_DATABASE_URL: ${{ secrets.MIGRATION_DATABASE_URL }}
         run: pnpm --filter @nextbank/api db:migrate
+      # The simulator mounted in the API's service (v1.2.0 plan, D2): its own
+      # schema and migrations table, applied by the same migration role.
+      - name: Apply the simulator migrations
+        env:
+          SIMULATOR_MIGRATION_DATABASE_URL: ${{ secrets.MIGRATION_DATABASE_URL }}
+        run: pnpm --filter @nextbank/simulator db:migrate
       - name: Deploy on Render
         env:
           RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}

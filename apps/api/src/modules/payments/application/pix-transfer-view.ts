@@ -15,7 +15,14 @@ export interface PixTransferView {
   status: PixTransferStatus;
   amount: { amount: number; currency: 'BRL' };
   description: string | null;
-  payee: { name: string; documentMasked: string; keyType: PixKeyType; keyMasked: string };
+  payee: {
+    name: string;
+    documentMasked: string;
+    keyType: PixKeyType;
+    keyMasked: string;
+    /** Only for a payee at another bank. */
+    bank?: { ispb: string; name: string };
+  };
   endToEndId: string | null;
   failureReason: PixFailureReason | null;
   createdAt: string;
@@ -34,6 +41,7 @@ export function viewOf(state: Readonly<PixTransferState>): PixTransferView {
       documentMasked: state.payee.documentMasked,
       keyType: state.payee.keyType,
       keyMasked: state.payee.keyMasked,
+      ...(state.payee.bank ? { bank: { ...state.payee.bank } } : {}),
     },
     endToEndId: state.endToEndId,
     failureReason: state.failureReason,

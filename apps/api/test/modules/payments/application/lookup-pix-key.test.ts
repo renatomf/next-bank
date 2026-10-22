@@ -7,10 +7,13 @@ import {
 import { InMemoryKeyLookupQuota } from '../../../../src/modules/payments/infrastructure/in-memory-key-lookup-quota.ts';
 import { FixedClock } from '../../identity/application/fakes.ts';
 import {
+  AURORA_EMAIL,
+  AURORA_KEY,
   FakeAccounts,
   FakeIdentity,
   FakeKeyProtector,
   FakePaymentsRepositories,
+  FakeSpi,
   FakeUnitOfWork,
 } from './fakes.ts';
 
@@ -20,7 +23,7 @@ import {
 const NOW = new Date('2026-10-07T12:00:00.000Z');
 const PAYEE_CPF = '12345678909';
 
-function setup() {
+function setup(options: { externalPix?: boolean } = {}) {
   const repositories = new FakePaymentsRepositories();
   repositories.addKey('CPF', PAYEE_CPF, { accountId: 'account-b', masked: '***.456.789-**' });
   const accounts = new FakeAccounts();
@@ -28,6 +31,9 @@ function setup() {
   const identity = new FakeIdentity();
   identity.people.set('user-b', { name: 'Marina Costa', documentMasked: '***.456.789-**' });
   const clock = new FixedClock(NOW);
+  const spi = new FakeSpi();
+  spi.keys.set(AURORA_EMAIL, AURORA_KEY);
+  spi.keys.set('31840725680', { ...AURORA_KEY, keyType: 'CPF' });
   const lookup = new LookupPixKey({
     unitOfWork: new FakeUnitOfWork(),
     repositories,
@@ -36,8 +42,10 @@ function setup() {
     identity,
     quota: new InMemoryKeyLookupQuota(),
     clock,
+    // Off in production until task 4 (P1): then no lookup reaches the DICT.
+    spi: options.externalPix === false ? null : spi,
   });
-  return { repositories, clock, lookup };
+  return { repositories, clock, spi, lookup };
 }
 
 const byCpf = (value: string, customerId = 'user-a') => ({
@@ -105,5 +113,88 @@ describe('LookupPixKey', () => {
     );
 
     expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(30);
+  });
+
+  // Keys of other banks (v1.2.0 plan, task 3): asked of the DICT when next
+  // bank does not hold them, with the same quota (PIX-07).
+  describe('at another bank', () => {
+    const byEmail = (value: string) => ({ customerId: 'user-a', type: 'EMAIL' as const, value });
+
+    it('shows the payee found in the DICT, with the bank and the key masked', async () => {
+      const { spi, lookup } = setup();
+
+      await expect(lookup.execute(byEmail(' Clara.Aurora@Example.com '))).resolves.toEqual({
+        keyType: 'EMAIL',
+        keyMasked: 'cl***@example.com',
+        payeeName: 'Clara Aurora Teixeira',
+        payeeDocumentMasked: '***.407.256-**',
+        bank: { ispb: '99900001', name: 'Banco Aurora' },
+      });
+      expect(spi.lookups).toEqual([AURORA_EMAIL]);
+    });
+
+    it('never asks the DICT for a key next bank holds', async () => {
+      const { spi, lookup } = setup();
+
+      await lookup.execute(byCpf(PAYEE_CPF));
+
+      expect(spi.lookups).toEqual([]);
+    });
+
+    it('asks the DICT for a CPF next bank does not hold', async () => {
+      const { lookup } = setup();
+
+      await expect(lookup.execute(byCpf('318.407.256-80'))).resolves.toMatchObject({
+        keyMasked: '***.407.256-**',
+        bank: { name: 'Banco Aurora' },
+      });
+    });
+
+    it('finds nothing when the DICT holds the value under another type', async () => {
+      const { spi, lookup } = setup();
+      spi.keys.set('+5511900009001', AURORA_KEY);
+
+      await expect(
+        lookup.execute({ customerId: 'user-a', type: 'PHONE', value: '11 90000-9001' }),
+      ).rejects.toThrow(PixKeyNotFound);
+    });
+
+    it('never asks the DICT for a value no key can have', async () => {
+      const { spi, lookup } = setup();
+
+      await expect(lookup.execute(byEmail('clara@'))).rejects.toThrow(PixKeyNotFound);
+      expect(spi.lookups).toEqual([]);
+    });
+
+    it('never asks the DICT while the Pix to other banks is off (P1)', async () => {
+      const { spi, lookup } = setup({ externalPix: false });
+
+      await expect(lookup.execute(byEmail(AURORA_EMAIL))).rejects.toThrow(PixKeyNotFound);
+      expect(spi.lookups).toEqual([]);
+    });
+
+    it('spends the same quota, and a key no bank holds costs twice', async () => {
+      const { lookup } = setup();
+      for (let i = 0; i < 10; i++) await lookup.execute(byEmail(AURORA_EMAIL));
+      for (let i = 0; i < 10; i++) {
+        await expect(lookup.execute(byEmail('ninguem@example.com'))).rejects.toThrow(
+          PixKeyNotFound,
+        );
+      }
+
+      await expect(lookup.execute(byEmail(AURORA_EMAIL))).rejects.toThrow(TooManyKeyLookups);
+    });
+
+    // A partner that does not answer is not a missing key: nothing is charged twice.
+    it('fails when the DICT does not answer, without counting a miss', async () => {
+      const { spi, lookup } = setup();
+      spi.down = true;
+      for (let i = 0; i < 15; i++) {
+        await expect(lookup.execute(byEmail(AURORA_EMAIL))).rejects.toThrow(/unreachable/);
+      }
+      spi.down = false;
+
+      await expect(lookup.execute(byEmail(AURORA_EMAIL))).resolves.toBeDefined();
+    });
   });
 });

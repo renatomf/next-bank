@@ -4,7 +4,7 @@ import { CustomerLedgerAccounts } from '../../../../src/modules/ledger/applicati
 import { PostJournalEntry } from '../../../../src/modules/ledger/application/post-journal-entry.ts';
 import { InsufficientFunds } from '../../../../src/modules/ledger/domain/errors.ts';
 import { FixedClock, SequentialIds } from '../../identity/application/fakes.ts';
-import { FUNDING_ID, InMemoryLedger, topUpLedgerIdOf, tx } from './fakes.ts';
+import { FUNDING_ID, InMemoryLedger, PIX_CLEARING_ID, topUpLedgerIdOf, tx } from './fakes.ts';
 
 // What the other contexts ask of the ledger about a customer account
 // (domain-model.md, sections 5, 6 and 8): open it, fund it, read its balance.
@@ -209,6 +209,51 @@ describe('CustomerLedgerAccounts', () => {
 
     await expect(accounts.topUp(tx, { ...TOP_UP, operatorId: 'vivo' })).rejects.toThrow(/vivo/);
     expect(ledger.entries.filter((entry) => entry.kind === 'TOP_UP')).toEqual([]);
+  });
+
+  // v1.2.0 plan, task 3: an external Pix leaves for system:pix_clearing,
+  // where it waits for the SPI (domain-model.md, section 5); only the
+  // customer's posting keeps the payee, for the statement.
+  const EXTERNAL = {
+    transferId: 'pix-ext-1',
+    payerAccountId: 'account-a',
+    amount: Money.of(5_000n),
+    payee: { name: 'Clara Aurora Teixeira', documentMasked: '***.407.256-**' },
+  };
+
+  it('posts an external Pix from the customer to the clearing account', async () => {
+    const { ledger, accounts } = setup();
+    await accounts.open(tx, 'account-a');
+    await accounts.fund(tx, { accountId: 'account-a', amount: Money.of(10_000n) });
+
+    await accounts.sendPixExternal(tx, EXTERNAL);
+
+    expect(ledger.balanceOf('id-1')).toBe(5_000n);
+    const entry = ledger.entries.find((e) => e.kind === 'PIX_EXTERNAL');
+    expect(entry).toMatchObject({ referenceType: 'PIX_TRANSFER', referenceId: 'pix-ext-1' });
+    expect(entry?.postings).toEqual([
+      expect.objectContaining({
+        ledgerAccountId: 'id-1',
+        direction: 'DEBIT',
+        counterpartyName: 'Clara Aurora Teixeira',
+        counterpartyDocumentMasked: '***.407.256-**',
+      }),
+      expect.objectContaining({
+        ledgerAccountId: PIX_CLEARING_ID,
+        direction: 'CREDIT',
+        counterpartyName: null,
+        counterpartyDocumentMasked: null,
+      }),
+    ]);
+  });
+
+  it('refuses an external Pix above the available balance and writes nothing', async () => {
+    const { ledger, accounts } = setup();
+    await accounts.open(tx, 'account-a');
+    await accounts.fund(tx, { accountId: 'account-a', amount: Money.of(1_000n) });
+
+    await expect(accounts.sendPixExternal(tx, EXTERNAL)).rejects.toThrow(InsufficientFunds);
+    expect(ledger.entries.filter((e) => e.kind === 'PIX_EXTERNAL')).toEqual([]);
   });
 
   it('fails to fund an account that was never opened, a bug in the caller', async () => {

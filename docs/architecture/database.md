@@ -151,6 +151,10 @@ erDiagram
         text end_to_end_id UK
         uuid payer_account_id
         uuid payee_account_id
+        char payee_ispb
+        text payee_bank_name
+        bytea payee_key_ciphertext
+        smallint payee_key_version
         text payee_key_type
         text payee_key_masked
         text payee_name
@@ -236,7 +240,7 @@ erDiagram
 - **Contas `SYSTEM` não têm saldo materializado**, garantido por **`CHECK (kind = 'CUSTOMER' OR (posted_balance = 0 AND available_balance = 0))`** (as colunas ficam em zero e não são atualizadas). O saldo delas é calculado pela soma dos lançamentos, no job de reconciliação ou sob demanda. Motivo: contas como `system:funding` e `system:pix_clearing` participam de **todas** as operações do seu tipo. Se cada operação travasse e atualizasse essa linha, ela viraria um gargalo único (*hot account*) e todas as operações fariam fila nela. Contas de cliente continuam materializadas, porque o saldo disponível precisa ser verificado com lock antes de cada débito.
 
 **`journal_entries`** (append-only)
-- `kind`: `CHECK (kind IN ('FUNDING','PIX_INTERNAL'))` na V1 (ampliado por migration nas fases seguintes)
+- `kind`: `CHECK (kind IN ('FUNDING','PIX_INTERNAL'))` na V1, ampliado por migration: `TOP_UP` (v1.1.0) e `PIX_EXTERNAL` (v1.2.0, tarefa 3), o Pix para outro banco, que debita o cliente e credita `system:pix_clearing` (UUID fixo, criada pela migration) até o SPI responder
 - **`UNIQUE (reference_type, reference_id, kind)`** — um mesmo Pix nunca gera dois lançamentos do mesmo tipo. É uma segunda camada de idempotência, independente da chave enviada pelo cliente
 
 **`postings`** (append-only)
@@ -271,6 +275,10 @@ erDiagram
 - `end_to_end_id`: `UNIQUE`
 - `GRANT`: `SELECT, INSERT` e `UPDATE` só nas colunas de estado: o que foi pedido (pagador, recebedor, valor, descrição) nunca muda
 - Índices `(payer_account_id, created_at DESC)` e `(expires_at) WHERE status = 'AWAITING_AUTH'`: entram com a lista de Pix e com o job de expiração (semana 8). Na semana 5 toda consulta é pela PK, sempre com o filtro do pagador
+- **Recebedor em outro banco** (v1.2.0, tarefa 3, P3): `payee_account_id` passa a aceitar nulo, e o Pix ganha `payee_ispb` (8 dígitos), `payee_bank_name` e a chave do recebedor cifrada (`payee_key_ciphertext`, `payee_key_version`, com o mesmo protetor das chaves Pix), porque ela vai para o SPI
+  - `CHECK ((payee_account_id IS NULL) <> (payee_ispb IS NULL))`: exatamente um lado, conta do next bank ou outro banco; as quatro colunas do outro banco vêm juntas ou não vêm
+  - `end_to_end_id` no Pix externo: existe em `PROCESSING` e `COMPLETED` (nasce na autorização e vai em toda tentativa, EXT-03) e nunca em `AWAITING_AUTH` ou `CANCELLED`; em `FAILED` pode existir ou não, porque um Pix que falha na autorização nunca chegou ao SPI (migration de correção `20261022190000`)
+  - O worker lê o Pix e a chave cifrada pela PK (`EXPLAIN ANALYZE`: `Index Scan using pix_transfers_pkey`, 0,03 ms), sem o filtro do pagador: só o worker faz essa leitura, nunca uma requisição de cliente
 
 **`platform.idempotency_records`** (desde a v1.1.0, ADR 0015: num schema comum, para o Pix e a recarga usarem a mesma tabela sem um módulo escrever no schema do outro)
 - PK `(user_id, key)` — escopo por usuário; uma requisição concorrente com a mesma chave espera no `INSERT … ON CONFLICT DO NOTHING` até a primeira terminar
@@ -369,7 +377,7 @@ LIMIT 21;                                      -- 20 itens + 1 para saber se há
 - **Índice:** `postings (ledger_account_id, created_at DESC, id DESC)` — a consulta lê só as linhas da página, independentemente do tamanho do histórico. Verificado com `EXPLAIN ANALYZE` na semana 6 (#81, migration `add_statement_index`): `Bitmap Index Scan on postings_statement_idx`, 0,73 ms numa conta com 217 partidas.
 - **Cursor:** `(created_at, id)` codificado em base64url, com o `created_at` como texto do Postgres em microssegundos, nunca um `Date` do JavaScript arredondado em milissegundos. Não precisa ser assinado: o filtro por conta é feito no servidor, então um cursor adulterado só navega no próprio extrato. O formato é validado, e o horário precisa ser um instante real (F-20); um cursor inválido retorna 422.
 - **Paginação estável:** um Pix novo durante a navegação não duplica nem pula itens (diferente de `OFFSET`).
-- **Filtro e busca (v1.1.0, tarefa 4.1):** duas condições opcionais na mesma consulta, refeitas em cada página: o tipo (`IN`/`OUT` pela direção da partida, `PIX` só os `PIX_INTERNAL` desde a tarefa 5, para uma recarga não aparecer como Pix; `RECEIPT` os Pix enviados e as recargas) e `counterparty_name ILIKE` com o termo entre `%`, escapando `\`, `%` e `_` do cliente (`ESCAPE`). Sem migration: o mesmo índice escolhe as partidas da conta e o filtro descarta as demais (`EXPLAIN ANALYZE`: `Bitmap Index Scan on postings_statement_idx`, 0,41 ms com filtro e busca). Busca sem acento (`unaccent`) e índice de trigramas ficam fora (X4).
+- **Filtro e busca (v1.1.0, tarefa 4.1):** duas condições opcionais na mesma consulta, refeitas em cada página: o tipo (`IN`/`OUT` pela direção da partida, `PIX` só os `PIX_INTERNAL` desde a tarefa 5, para uma recarga não aparecer como Pix, e também os `PIX_EXTERNAL` desde a v1.2.0 (`EXPLAIN ANALYZE`: `Index Scan using postings_statement_idx` e `journal_entries_pkey`, 1,1 ms); `RECEIPT` os Pix enviados e as recargas) e `counterparty_name ILIKE` com o termo entre `%`, escapando `\`, `%` e `_` do cliente (`ESCAPE`). Sem migration: o mesmo índice escolhe as partidas da conta e o filtro descarta as demais (`EXPLAIN ANALYZE`: `Bitmap Index Scan on postings_statement_idx`, 0,41 ms com filtro e busca). Busca sem acento (`unaccent`) e índice de trigramas ficam fora (X4).
 
 ## 9. Migrations
 

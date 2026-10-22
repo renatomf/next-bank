@@ -79,7 +79,10 @@ export function pgRegisterCustomer(pool: pg.Pool, clock: Clock): RegisterCustome
       ledger: {
         availableBalance: () => Promise.resolve(null),
         postPixTransfer: () => Promise.resolve(),
+        postExternalPix: () => Promise.resolve(),
       },
+      spi: null,
+      outbox: { enqueue: () => Promise.reject(new Error('registration writes no message')) },
     }).createCpfKey,
   });
 }

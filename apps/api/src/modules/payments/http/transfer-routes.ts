@@ -28,12 +28,19 @@ const CreatePixTransferRequestSchema = z
   })
   .meta({ id: 'CreatePixTransferRequest' });
 
+/** The other bank of a payee outside next bank, as the DICT names it (v1.2.0 plan, task 3). */
+export const PixPayeeBankSchema = z
+  .strictObject({ ispb: z.string(), name: z.string() })
+  .meta({ id: 'PixPayeeBank' });
+
 const PixPayeeSchema = z
   .strictObject({
     name: z.string(),
     documentMasked: z.string(),
     keyType: z.enum(KEY_TYPES),
     keyMasked: z.string(),
+    // Only for a payee at another bank.
+    bank: PixPayeeBankSchema.optional(),
   })
   .meta({ id: 'PixPayee' });
 

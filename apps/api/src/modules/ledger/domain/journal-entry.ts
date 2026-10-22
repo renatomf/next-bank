@@ -1,7 +1,7 @@
 import { Money } from '../../../shared/domain/money.ts';
 import type { Direction } from './ledger-account.ts';
 
-export type JournalEntryKind = 'FUNDING' | 'PIX_INTERNAL' | 'TOP_UP';
+export type JournalEntryKind = 'FUNDING' | 'PIX_INTERNAL' | 'TOP_UP' | 'PIX_EXTERNAL';
 
 export interface PostingInput {
   id: string;

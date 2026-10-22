@@ -25,7 +25,9 @@ const CLAIM_MS = 30_000;
  * known types are claimed in one short transaction (SKIP LOCKED, so two
  * workers never claim the same one), handled with no transaction open, and
  * their outcome recorded in another. A claim left by a worker that died runs
- * out after [CLAIM_MS]. A message that keeps failing is given up after the
+ * out after [CLAIM_MS], and an outcome is recorded only while the claim
+ * still holds, so a slow worker never writes over the one that took the
+ * message again. A message that keeps failing is given up after the
  * last attempt and reported, without its payload, for a person to decide
  * (EXT-08).
  */
@@ -50,12 +52,13 @@ export class OutboxWorker {
   /** Delivers the messages available now, at most [limit]; returns how many it claimed. */
   async runOnce(limit = 10): Promise<number> {
     const now = this.#clock();
-    const claimed = await this.#claim(now, limit);
-    for (const row of claimed) await this.#deliver(row, now);
+    const claimedUntil = new Date(now.getTime() + CLAIM_MS);
+    const claimed = await this.#claim(now, claimedUntil, limit);
+    for (const row of claimed) await this.#deliver(row, now, claimedUntil);
     return claimed.length;
   }
 
-  async #claim(now: Date, limit: number): Promise<ClaimedRow[]> {
+  async #claim(now: Date, claimedUntil: Date, limit: number): Promise<ClaimedRow[]> {
     return withTransaction(this.#pool, async (client) => {
       // Served by outbox_messages_available_idx.
       const { rows } = await client.query<ClaimedRow>(
@@ -72,14 +75,14 @@ export class OutboxWorker {
       if (rows.length > 0) {
         await client.query(
           'UPDATE platform.outbox_messages SET locked_until = $2 WHERE id = ANY($1)',
-          [rows.map((row) => row.id), new Date(now.getTime() + CLAIM_MS)],
+          [rows.map((row) => row.id), claimedUntil],
         );
       }
       return rows;
     });
   }
 
-  async #deliver(row: ClaimedRow, now: Date): Promise<void> {
+  async #deliver(row: ClaimedRow, now: Date, claimedUntil: Date): Promise<void> {
     const handler = this.#handlers.get(row.type);
     const message: DeliveredMessage = {
       id: row.id,
@@ -91,35 +94,37 @@ export class OutboxWorker {
       if (!handler) throw new Error(`no handler for ${row.type}`);
       await handler(message);
     } catch (error) {
-      await this.#failed(row, error, now);
+      await this.#failed(row, error, now, claimedUntil);
       return;
     }
     await this.#pool.query(
       `UPDATE platform.outbox_messages
        SET status = 'DONE', attempts = $2, processed_at = $3, locked_until = NULL
-       WHERE id = $1`,
-      [row.id, row.attempts + 1, now],
+       WHERE id = $1 AND locked_until = $4`,
+      [row.id, row.attempts + 1, now, claimedUntil],
     );
   }
 
-  async #failed(row: ClaimedRow, error: unknown, now: Date): Promise<void> {
+  async #failed(row: ClaimedRow, error: unknown, now: Date, claimedUntil: Date): Promise<void> {
     const attempts = row.attempts + 1;
     const next = nextDelivery(attempts, now);
     // Only the error's name: its message may carry anything (API-04).
     const lastError = (error instanceof Error ? error.name : 'Error').slice(0, 80);
-    await this.#pool.query(
+    const { rowCount } = await this.#pool.query(
       `UPDATE platform.outbox_messages
        SET status = $2, attempts = $3, available_at = $4, last_error = $5, locked_until = NULL
-       WHERE id = $1`,
+       WHERE id = $1 AND locked_until = $6`,
       [
         row.id,
         next.status,
         attempts,
         next.status === 'PENDING' ? next.availableAt : now,
         lastError,
+        claimedUntil,
       ],
     );
-    if (next.status === 'DEAD') {
+    // The claim ran out and another worker took the message: its outcome stands.
+    if (rowCount === 1 && next.status === 'DEAD') {
       this.#errorReporter.report(error, {
         requestId: row.request_id ?? row.id,
         method: 'OUTBOX',

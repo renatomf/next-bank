@@ -1,5 +1,5 @@
 // A fictitious ISPB: next bank is not a participant of the Bacen's Pix.
-const ISPB = '00000000';
+export const NEXT_BANK_ISPB = '00000000';
 const RANDOM_PART = /^[A-Za-z0-9]{11}$/;
 
 /**
@@ -12,5 +12,5 @@ export function endToEndId(completedAt: Date, random: string): string {
     throw new Error('The random part of an end-to-end id is 11 letters or digits');
   }
   const minute = completedAt.toISOString().slice(0, 16).replace(/\D/g, '');
-  return `E${ISPB}${minute}${random}`;
+  return `E${NEXT_BANK_ISPB}${minute}${random}`;
 }

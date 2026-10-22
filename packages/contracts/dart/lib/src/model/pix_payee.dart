@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:nextbank_api/src/model/pix_payee_bank.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -27,6 +28,8 @@ class PixPayee {
     required  this.keyType,
 
     required  this.keyMasked,
+
+     this.bank,
   });
 
   @JsonKey(
@@ -77,6 +80,18 @@ class PixPayee {
 
 
 
+  @JsonKey(
+    
+    name: r'bank',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final PixPayeeBank? bank;
+
+
+
 
 
     @override
@@ -84,14 +99,16 @@ class PixPayee {
       other.name == name &&
       other.documentMasked == documentMasked &&
       other.keyType == keyType &&
-      other.keyMasked == keyMasked;
+      other.keyMasked == keyMasked &&
+      other.bank == bank;
 
     @override
     int get hashCode =>
         name.hashCode +
         documentMasked.hashCode +
         keyType.hashCode +
-        keyMasked.hashCode;
+        keyMasked.hashCode +
+        bank.hashCode;
 
   factory PixPayee.fromJson(Map<String, dynamic> json) => _$PixPayeeFromJson(json);
 

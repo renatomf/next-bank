@@ -15,6 +15,8 @@ abstract class _$PixPayeeCWProxy {
 
   PixPayee keyMasked(String keyMasked);
 
+  PixPayee bank(PixPayeeBank? bank);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `PixPayee(...).copyWith.fieldName(value)`.
@@ -28,6 +30,7 @@ abstract class _$PixPayeeCWProxy {
     String documentMasked,
     PixPayeeKeyTypeEnum keyType,
     String keyMasked,
+    PixPayeeBank? bank,
   });
 }
 
@@ -51,6 +54,9 @@ class _$PixPayeeCWProxyImpl implements _$PixPayeeCWProxy {
   @override
   PixPayee keyMasked(String keyMasked) => call(keyMasked: keyMasked);
 
+  @override
+  PixPayee bank(PixPayeeBank? bank) => call(bank: bank);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `PixPayee(...).copyWith.fieldName(value)`.
@@ -65,6 +71,7 @@ class _$PixPayeeCWProxyImpl implements _$PixPayeeCWProxy {
     Object? documentMasked = const $CopyWithPlaceholder(),
     Object? keyType = const $CopyWithPlaceholder(),
     Object? keyMasked = const $CopyWithPlaceholder(),
+    Object? bank = const $CopyWithPlaceholder(),
   }) {
     return PixPayee(
       name: name == const $CopyWithPlaceholder() || name == null
@@ -85,6 +92,10 @@ class _$PixPayeeCWProxyImpl implements _$PixPayeeCWProxy {
           ? _value.keyMasked
           // ignore: cast_nullable_to_non_nullable
           : keyMasked as String,
+      bank: bank == const $CopyWithPlaceholder()
+          ? _value.bank
+          // ignore: cast_nullable_to_non_nullable
+          : bank as PixPayeeBank?,
     );
   }
 }
@@ -100,29 +111,38 @@ extension $PixPayeeCopyWith on PixPayee {
 // JsonSerializableGenerator
 // **************************************************************************
 
-PixPayee _$PixPayeeFromJson(Map<String, dynamic> json) =>
-    $checkedCreate('PixPayee', json, ($checkedConvert) {
-      $checkKeys(
-        json,
-        requiredKeys: const ['name', 'documentMasked', 'keyType', 'keyMasked'],
-      );
-      final val = PixPayee(
-        name: $checkedConvert('name', (v) => v as String),
-        documentMasked: $checkedConvert('documentMasked', (v) => v as String),
-        keyType: $checkedConvert(
-          'keyType',
-          (v) => $enumDecode(_$PixPayeeKeyTypeEnumEnumMap, v),
-        ),
-        keyMasked: $checkedConvert('keyMasked', (v) => v as String),
-      );
-      return val;
-    });
+PixPayee _$PixPayeeFromJson(Map<String, dynamic> json) => $checkedCreate(
+  'PixPayee',
+  json,
+  ($checkedConvert) {
+    $checkKeys(
+      json,
+      requiredKeys: const ['name', 'documentMasked', 'keyType', 'keyMasked'],
+    );
+    final val = PixPayee(
+      name: $checkedConvert('name', (v) => v as String),
+      documentMasked: $checkedConvert('documentMasked', (v) => v as String),
+      keyType: $checkedConvert(
+        'keyType',
+        (v) => $enumDecode(_$PixPayeeKeyTypeEnumEnumMap, v),
+      ),
+      keyMasked: $checkedConvert('keyMasked', (v) => v as String),
+      bank: $checkedConvert(
+        'bank',
+        (v) =>
+            v == null ? null : PixPayeeBank.fromJson(v as Map<String, dynamic>),
+      ),
+    );
+    return val;
+  },
+);
 
 Map<String, dynamic> _$PixPayeeToJson(PixPayee instance) => <String, dynamic>{
   'name': instance.name,
   'documentMasked': instance.documentMasked,
   'keyType': _$PixPayeeKeyTypeEnumEnumMap[instance.keyType]!,
   'keyMasked': instance.keyMasked,
+  'bank': ?instance.bank?.toJson(),
 };
 
 const _$PixPayeeKeyTypeEnumEnumMap = {

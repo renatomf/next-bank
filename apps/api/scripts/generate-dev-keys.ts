@@ -17,6 +17,7 @@ process.stdout.write(
     'PII_KEY_VERSION=1',
     `PIN_PEPPER=${randomBytes(32).toString('base64')}`,
     `TOP_UP_PHONE_KEY=${randomBytes(32).toString('base64')}`,
+    `SIMULATOR_PARTICIPANT_KEY=${randomBytes(32).toString('base64')}`,
     '',
   ].join('\n'),
 );

@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:nextbank_api/src/model/pix_payee_bank.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -27,6 +28,8 @@ class PixKeyLookup {
     required  this.payeeName,
 
     required  this.payeeDocumentMasked,
+
+     this.bank,
   });
 
   @JsonKey(
@@ -77,6 +80,18 @@ class PixKeyLookup {
 
 
 
+  @JsonKey(
+    
+    name: r'bank',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final PixPayeeBank? bank;
+
+
+
 
 
     @override
@@ -84,14 +99,16 @@ class PixKeyLookup {
       other.keyType == keyType &&
       other.keyMasked == keyMasked &&
       other.payeeName == payeeName &&
-      other.payeeDocumentMasked == payeeDocumentMasked;
+      other.payeeDocumentMasked == payeeDocumentMasked &&
+      other.bank == bank;
 
     @override
     int get hashCode =>
         keyType.hashCode +
         keyMasked.hashCode +
         payeeName.hashCode +
-        payeeDocumentMasked.hashCode;
+        payeeDocumentMasked.hashCode +
+        bank.hashCode;
 
   factory PixKeyLookup.fromJson(Map<String, dynamic> json) => _$PixKeyLookupFromJson(json);
 

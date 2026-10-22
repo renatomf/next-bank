@@ -130,6 +130,9 @@ flowchart LR
   - Pagador ≠ recebedor
   - Transições só pela máquina de estados (seção 4)
   - `AWAITING_AUTH` expira em 10 minutos
+  - **Recebedor em outro banco** (v1.2.0, tarefa 3): o recebedor é uma conta do next bank **ou** uma chave de outro banco, nunca os dois. O de outro banco não tem `payeeAccountId`; tem o banco (`ispb`, nome) que o DICT informou, e a chave fica guardada cifrada, porque vai para o SPI
+  - No Pix para outro banco, o `endToEndId` nasce na autorização e vai igual em toda tentativa de envio, para o SPI recebê-lo uma vez só (EXT-03)
+- **Chaves de outros bancos:** o next bank registra só CPF e aleatória. Uma chave que não está aqui (inclusive e-mail e telefone, normalizados como o DICT os guarda: e-mail em minúsculas, telefone `+55` com DDD) é procurada no DICT, com a mesma cota de consultas
 - Comandos: `Create`, `Authorize`, `Cancel`, `Expire`
 - Eventos: `PixTransferCreated`, `PixTransferAuthorized`, `PixTransferCompleted`, `PixTransferFailed`, `PixTransferCancelled`
 
@@ -143,7 +146,7 @@ flowchart LR
 **`AuditEvent`**
 - Atributos: `id`, `occurredAt`, `actorType` (`USER`, `SYSTEM`, `STAFF`), `actorId`, `action`, `subjectType`, `subjectId`, `requestId`, `metadata`
 - Invariantes: só inclusão; `metadata` **nunca** contém senha, PIN, token, CPF completo ou valor de chave Pix completo
-- Ações da V1: `USER_REGISTERED`, `LOGIN_SUCCEEDED`, `LOGIN_FAILED`, `SESSION_CREATED`, `SESSION_REVOKED`, `REFRESH_REUSE_DETECTED`, `PIN_CREATED`, `PIN_LOCKED`, `PIN_CHANGED`, `PASSWORD_CHANGED`, `ACCOUNT_OPENED`, `PIX_CREATED`, `PIX_COMPLETED`, `PIX_FAILED`, `PIX_CANCELLED`, `TOP_UP_COMPLETED` (v1.1.0: a operadora e o valor, nunca o número)
+- Ações da V1: `USER_REGISTERED`, `LOGIN_SUCCEEDED`, `LOGIN_FAILED`, `SESSION_CREATED`, `SESSION_REVOKED`, `REFRESH_REUSE_DETECTED`, `PIN_CREATED`, `PIN_LOCKED`, `PIN_CHANGED`, `PASSWORD_CHANGED`, `ACCOUNT_OPENED`, `PIX_CREATED`, `PIX_COMPLETED`, `PIX_SENT` (v1.2.0: Pix enviado a outro banco, com o id de ponta a ponta), `PIX_FAILED`, `PIX_CANCELLED`, `TOP_UP_COMPLETED` (v1.1.0: a operadora e o valor, nunca o número)
 
 ## 4. Máquina de estados do Pix
 
@@ -162,7 +165,7 @@ stateDiagram-v2
 
 - **Ajuste em relação à spec:** o estado `CREATED` deixa de existir como estado persistido. O agregado já nasce em `AWAITING_AUTH`, e "criado" vira só o evento `PixTransferCreated`. Isso evita um estado que ninguém observa.
 - **V1 (Pix interno):** `PROCESSING → COMPLETED/FAILED` acontece na mesma transação do `Authorize`. O estado `PROCESSING` existe no modelo, mas o cliente quase nunca o vê.
-- **Fase 2 (Pix externo):** `PROCESSING` passa a durar até a confirmação do Bacen simulado.
+- **Fase 2 (Pix externo, v1.2.0):** `PROCESSING` passa a durar até a confirmação do Bacen simulado. Desde a tarefa 3, o `Authorize` debita o cliente para `system:pix_clearing`, grava o `endToEndId` e a mensagem que envia o Pix ao SPI na mesma transação (ADR 0016) e deixa o Pix em `PROCESSING`; a falha na autorização (saldo, limite, conta bloqueada) vai para `FAILED` sem `endToEndId`, porque o Pix nunca saiu. A confirmação ou a recusa do SPI chegam na tarefa 4.
 - **Checagem dupla:** saldo e limite são verificados no `Create` (para avisar cedo) e de novo no `Authorize` (que é o que vale, porque o saldo e o horário podem ter mudado).
 
 ## 5. Plano de contas

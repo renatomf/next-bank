@@ -70,21 +70,67 @@ export class PixKey {
   }
 }
 
-/**
- * The normalized value to look a key up by. A value that no key can have (an
- * invalid CPF, a type V1 does not register) is simply not found.
- */
-export function pixKeyValue(type: PixKeyType, raw: string): string {
-  if (type === 'RANDOM') {
-    const value = randomValueOf(raw);
-    if (value === null) throw new PixKeyNotFound();
-    return value;
-  }
-  if (type !== 'CPF') throw new PixKeyNotFound();
+// The DICT's limits: an e-mail of at most 77 characters, a Brazilian phone
+// with its area code in the E.164 format.
+const EMAIL = /^[a-z0-9._%+-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)+$/;
+const MAX_EMAIL_LENGTH = 77;
+const PHONE = /^\+55[1-9][0-9][0-9]{8,9}$/;
+const PHONE_PUNCTUATION = /[\s().-]/g;
+
+function emailValueOf(raw: string): string | null {
+  const value = raw.trim().toLowerCase();
+  return value.length <= MAX_EMAIL_LENGTH && EMAIL.test(value) ? value : null;
+}
+
+/** Typed with or without +55 and the usual punctuation. */
+function phoneValueOf(raw: string): string | null {
+  const digits = raw.trim().replace(PHONE_PUNCTUATION, '');
+  const value = digits.startsWith('+') ? digits : `+55${digits}`;
+  return PHONE.test(value) ? value : null;
+}
+
+function cpfValueOf(raw: string): string | null {
   try {
     return Cpf.parse(raw).digits;
   } catch {
     // Cpf.parse throws only InvalidCpf.
-    throw new PixKeyNotFound();
+    return null;
+  }
+}
+
+/**
+ * The normalized value to look a key up by, here or in the DICT. A value that
+ * no key can have (an invalid CPF, a malformed e-mail) is simply not found.
+ */
+export function pixKeyValue(type: PixKeyType, raw: string): string {
+  const value = {
+    CPF: cpfValueOf,
+    EMAIL: emailValueOf,
+    PHONE: phoneValueOf,
+    RANDOM: randomValueOf,
+  }[type](raw);
+  if (value === null) throw new PixKeyNotFound();
+  return value;
+}
+
+/** next bank registers only the holder's CPF and the random key: the rest are elsewhere. */
+export function isRegisteredHere(type: PixKeyType): boolean {
+  return type === 'CPF' || type === 'RANDOM';
+}
+
+/** A normalized key as the payer sees it: enough to recognize, never all of it. */
+export function maskedKeyValue(type: PixKeyType, value: string): string {
+  switch (type) {
+    case 'CPF':
+      return Cpf.parse(value).masked;
+    case 'EMAIL': {
+      // Two letters of the name, or one when it is that short.
+      const at = value.indexOf('@');
+      return `${value.slice(0, at > 2 ? 2 : 1)}***${value.slice(at)}`;
+    }
+    case 'PHONE':
+      return `${value.slice(0, 5)}${'*'.repeat(value.length - 9)}${value.slice(-4)}`;
+    case 'RANDOM':
+      return maskRandom(value);
   }
 }

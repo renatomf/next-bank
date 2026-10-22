@@ -9,7 +9,7 @@ Este documento descreve como a V1 é publicada e mantida, com custo zero: Neon (
 | Peça | Onde | O que guarda |
 |---|---|---|
 | Banco | Neon, projeto `next-bank`, AWS `us-east-1`, Postgres 17 | Branch `clean` (raiz: papéis e banco vazio) e branch `demo` (filho: a demo de verdade) |
-| API | Render, serviço web `next-bank-api`, região Virginia, plano gratuito | Chaves da API e `DATABASE_URL`, só nas variáveis de ambiente do Render |
+| API | Render, serviço web `next-bank-api`, região Virginia, plano gratuito | Chaves da API e `DATABASE_URL`, só nas variáveis de ambiente do Render; desde a v1.2.0, também o simulador, sob `/simulator` (passo 10) |
 | Deploy | `.github/workflows/deploy.yml` | Migrations → deploy hook → espera o commit novo → smoke test |
 | Despertador | UptimeRobot, monitor `next bank API` | Chama o `/health` a cada 5 min e avisa por e-mail se a API cair |
 | Reset diário | `.github/workflows/demo-reset.yml` | `demo` volta a `clean` → migrations → seed → smoke test, às 06:00 UTC |
@@ -161,10 +161,42 @@ O plano gratuito do Render dorme depois de 15 min sem uso. O UptimeRobot chama o
 
 O monitor só conhece a URL pública do `/health`. Nenhum segredo vai para o UptimeRobot.
 
+## 10. Simulador montado no serviço (v1.2.0)
+
+Desde a tarefa 3 da v1.2.0, o simulador do Bacen e dos parceiros roda **dentro do serviço da API**, sob `/simulator` ([ADR 0017](adr/0017-simulador-no-servico-da-api.md)), com o seu próprio papel no banco. **Faça este passo antes do merge da tarefa 3**: o `deploy.yml` passa a aplicar as migrations do simulador, e elas dão permissões ao papel `nextbank_simulator`, que precisa existir.
+
+1. Gere a senha do papel e a chave do participante **direto em variáveis** e guarde as duas no gerenciador de senhas:
+   ```powershell
+   $sim = node -e "console.log(require('crypto').randomBytes(24).toString('base64url'))"
+   $participant = node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+   ```
+2. Crie o papel **por SQL**, primeiro no branch `clean` (para os próximos resets) e depois no `demo` (o de agora). Para cada branch, copie a URL do `neondb_owner` sem pooling no **Connect** do Neon, como no passo 1:
+   ```powershell
+   $owner = [regex]::Match(((Get-Clipboard) -join ''), "postgresql://[^'`"\s]+").Value.TrimEnd(':')
+   docker run --rm -i -v "${PWD}/infra/neon:/sql" postgres:17 psql $owner -v ON_ERROR_STOP=1 -v simulator_password=$sim -f /sql/add-simulator-role.sql
+   Remove-Variable owner; Set-Clipboard -Value " "
+   ```
+   A saída termina em `DO`, que confere se o papel conecta no `nextbank` e interrompe com erro se não (F-28).
+3. Monte a URL do simulador no branch `demo`, com o host com `-pooler` e `sslmode=verify-full`, e teste como no passo 2:
+   ```powershell
+   $simUrl = "postgresql://nextbank_simulator:$sim@<host-com-pooler>/nextbank?sslmode=verify-full"
+   ```
+4. Acrescente no Render:
+
+   | Variável | Valor |
+   |---|---|
+   | `SIMULATOR_DATABASE_URL` | `$simUrl` (monta o simulador; só aceita o papel `nextbank_simulator`) |
+   | `SIMULATOR_PARTICIPANT_KEY` | `$participant` (EXT-09) |
+   | `SIMULATOR_FAULTS` | `{"latencyMs":50,"webhookLossRate":0.01}` (perfil baixo, P4; ajustável sem deploy) |
+   | `EXTERNAL_PIX_ENABLED` | `false` até a tarefa 4 (P1); com `true`, exige também `SIMULATOR_URL=http://127.0.0.1:10000/simulator` (a porta do Render) |
+
+5. Limpe: `Remove-Variable sim, participant, simUrl; Set-Clipboard -Value " "`. Depois do merge, `<API_URL>/simulator/health` responde `{"status":"ok"}`, e qualquer outra rota do simulador sem a chave responde `401`.
+
 ## Rotina
 
 - **Deploy:** automático depois de cada merge na `main` com o CI verde, ou manual pelo workflow.
 - **Reset:** todo dia às 06:00 UTC, ou manual. As contas de visitantes somem, e Ana e Bruno voltam com o saldo de demonstração.
 - **Despertador:** a cada 5 min, pelo UptimeRobot. Se chegar o e-mail de que a API caiu, veja os logs do Render e o `/health`.
 - **Trocar uma chave da API:** gere de novo na sua máquina, atualize no Render e faça um deploy manual. Trocar `PII_*`, o `PIN_PEPPER` ou a `TOP_UP_PHONE_KEY` invalida os CPFs, os PINs e os números de recarga já gravados. Na demo, rode o reset logo em seguida.
+- **Trocar a chave do participante:** gere outra, troque `SIMULATOR_PARTICIPANT_KEY` no Render e faça um deploy manual; a API e o simulador leem a mesma variável.
 - **Segredo vazado:** troque-o na origem (Neon, Render ou GitHub) na hora. Apagar um commit não basta, porque o repositório é público.

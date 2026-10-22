@@ -12,9 +12,21 @@ export type PixTransferStatus =
 export type PixFailureReason =
   'INSUFFICIENT_FUNDS' | 'LIMIT_EXCEEDED' | 'PAYEE_UNAVAILABLE' | 'ACCOUNT_BLOCKED';
 
-/** Who receives, as it was when the Pix was created: the receipt shows this. */
+/** The other bank of a payee outside next bank, as the DICT names it. */
+export interface PayeeBank {
+  ispb: string;
+  name: string;
+}
+
+/**
+ * Who receives, as it was when the Pix was created: the receipt shows this.
+ * Either a next bank account or a key at another bank, never both (P3).
+ */
 export interface PixPayee {
-  accountId: string;
+  /** Null when the payee is at another bank. */
+  accountId: string | null;
+  /** Only for a payee at another bank. */
+  bank?: PayeeBank;
   name: string;
   /** Never the full CPF: the payer sees only the masked document. */
   documentMasked: string;
@@ -63,6 +75,9 @@ export class PixTransfer {
 
   /** Amount, accounts and limit are checked early here, and again at authorization. */
   static create(input: CreatePixTransferInput): PixTransfer {
+    if ((input.payee.accountId === null) === (input.payee.bank === undefined)) {
+      throw new Error('A Pix goes to a next bank account or to another bank, never both');
+    }
     if (!input.amount.isPositive()) throw new InvalidAmount();
     if (input.payee.accountId === input.payerAccountId) throw new SamePayerAndPayee();
     if (input.description !== null && input.description.length > MAX_DESCRIPTION_LENGTH) {
@@ -96,6 +111,10 @@ export class PixTransfer {
     return { ...this.#state, payee: { ...this.#state.payee } };
   }
 
+  get goesToAnotherBank(): boolean {
+    return this.#state.payee.accountId === null;
+  }
+
   isExpired(now: Date): boolean {
     return now >= this.#state.expiresAt;
   }
@@ -116,6 +135,18 @@ export class PixTransfer {
     if (this.isExpired(now)) throw new Error('An expired Pix cannot be authorized: cancel it');
     this.#move('PROCESSING', now);
     this.#state.authorizedAt = now;
+  }
+
+  /**
+   * Debited and on its way to the SPI: the end-to-end id is drawn now and goes
+   * with every attempt, so the SPI takes the Pix once (EXT-03). It stays
+   * processing until the SPI answers (task 4).
+   */
+  awaitSettlement(endToEndId: string): void {
+    if (!this.goesToAnotherBank) throw new Error('Only a Pix to another bank waits for the SPI');
+    this.#require('PROCESSING');
+    if (this.#state.endToEndId !== null) throw new InvalidTransferState();
+    this.#state.endToEndId = endToEndId;
   }
 
   complete(endToEndId: string, now: Date): void {

@@ -21,7 +21,10 @@ export type SealedKeyValue = Pick<ProtectedKeyValue, 'ciphertext' | 'keyVersion'
 export interface PixKeyValueProtector {
   protect(type: PixKeyType, value: string): ProtectedKeyValue;
   blindIndex(type: PixKeyType, value: string): Uint8Array;
-  /** Only for the owner's own random key, which the QR Code has to carry. */
+  /**
+   * Only for the owner's own random key, which the QR Code has to carry, and
+   * for the payee's key of a Pix to another bank, which the SPI has to get.
+   */
   reveal(type: PixKeyType, sealed: SealedKeyValue): string;
 }
 
@@ -46,11 +49,19 @@ export interface PixKeysRepository {
 
 /** A Pix is always looked up with its payer's account: anyone else finds nothing (PIX-01). */
 export interface PixTransfersRepository {
-  insert(transfer: PixTransferState): Promise<void>;
+  /** A Pix to another bank comes with its payee's key, sealed: it goes to the SPI (P3). */
+  insert(transfer: PixTransferState, payeeKey?: SealedKeyValue): Promise<void>;
   findForPayer(id: string, payerAccountId: string): Promise<PixTransferState | null>;
   /** Locks the Pix until the transaction ends: it changes state once (PIX-08). */
   lockForPayer(id: string, payerAccountId: string): Promise<PixTransferState | null>;
   update(transfer: PixTransferState): Promise<void>;
+  /**
+   * A Pix to another bank with its payee's sealed key, for the worker that
+   * sends it; no payer filter, so never called on a customer's request.
+   */
+  findExternalForSending(
+    id: string,
+  ): Promise<{ transfer: PixTransferState; payeeKey: SealedKeyValue } | null>;
 }
 
 export type AccountStatus = 'ACTIVE' | 'BLOCKED' | 'CLOSED';
@@ -115,6 +126,14 @@ export interface PixPosting {
   payee: PixParty;
 }
 
+/** A Pix to another bank as the ledger posts it: the payee is not one of its accounts. */
+export interface ExternalPixPosting {
+  transferId: string;
+  payerAccountId: string;
+  amount: Money;
+  payee: PixParty;
+}
+
 /** What Payments needs from the Ledger (context map, domain-model.md section 2). */
 export interface LedgerPort {
   availableBalance(tx: Transaction, accountId: string): Promise<Money | null>;
@@ -123,6 +142,41 @@ export interface LedgerPort {
    * InsufficientFunds before writing anything when the balance does not cover it.
    */
   postPixTransfer(tx: Transaction, posting: PixPosting): Promise<void>;
+  /**
+   * Debits the payer to system:pix_clearing until the SPI answers (ADR 0005);
+   * fails like postPixTransfer when the balance does not cover it.
+   */
+  postExternalPix(tx: Transaction, posting: ExternalPixPosting): Promise<void>;
+}
+
+/** A key of another bank, as the DICT knows it: its owner only masked. */
+export interface DictKey {
+  keyType: PixKeyType;
+  bank: { ispb: string; name: string };
+  owner: PixParty;
+}
+
+/** A Pix to another bank as the SPI takes it. */
+export interface SpiPayment {
+  /** The same in every attempt: the SPI takes it once (EXT-03). */
+  endToEndId: string;
+  amount: Money;
+  payer: PixParty & { ispb: string };
+  payeeKey: string;
+}
+
+/**
+ * The Bacen's DICT and SPI (v1.2.0 plan, task 3), a partner outside next
+ * bank: both may fail or answer late, so the caller must tolerate a throw.
+ */
+export interface SpiPort {
+  /** Null when no bank holds the key. */
+  findKey(key: string): Promise<DictKey | null>;
+  /**
+   * Resolves once the SPI took the payment; its outcome comes later. Throws
+   * when that is not known, and sending again is always safe.
+   */
+  send(payment: SpiPayment): Promise<void>;
 }
 
 /** The end-to-end id of a completed Pix (D10); random, so it comes from outside the domain. */

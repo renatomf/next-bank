@@ -13,7 +13,13 @@ import {
 } from '../domain/errors.ts';
 import { type PixKeyType, pixKeyValue } from '../domain/pix-key.ts';
 import { Idempotency, type RequestFingerprint } from '../../../shared/application/idempotency.ts';
-import { PixTransfer } from '../domain/pix-transfer.ts';
+import { type PixPayee, PixTransfer } from '../domain/pix-transfer.ts';
+import {
+  findPayeeElsewhere,
+  findPayeeHere,
+  type PayeeElsewhere,
+  type PayeeHere,
+} from './find-payee.ts';
 import type { PixTransferView } from './pix-transfer-view.ts';
 import { viewOf } from './pix-transfer-view.ts';
 import type {
@@ -24,6 +30,8 @@ import type {
   PaymentsRepositories,
   PaymentsRepositoriesFactory,
   PixKeyValueProtector,
+  SealedKeyValue,
+  SpiPort,
 } from './ports.ts';
 
 export interface CreatePixTransferInput {
@@ -49,6 +57,8 @@ export interface CreatePixTransferDependencies {
   quota: KeyLookupQuota;
   clock: Clock;
   ids: IdGenerator;
+  /** The DICT; null while the Pix to other banks is off (P1). */
+  spi: SpiPort | null;
 }
 
 /** A missing key costs one more lookup, as in the key lookup (PIX-07). */
@@ -95,38 +105,30 @@ export class CreatePixTransfer {
     input: CreatePixTransferInput,
     now: Date,
   ): Promise<{ status: number; body: PixTransferView }> {
-    const { accounts, identity, ledger, quota, protector, ids } = this.#deps;
+    const { accounts, ledger, quota, protector, ids } = this.#deps;
     const payer = await accounts.findByHolder(tx, input.userId);
     if (payer === null) throw new Error(`Customer ${input.userId} has no account`);
     if (payer.status !== 'ACTIVE') throw new AccountBlocked();
 
     const value = normalized(input.key.type, input.key.value);
-    const key =
-      value === null
-        ? null
-        : await repositories.pixKeys.findByIndex(
-            input.key.type,
-            protector.blindIndex(input.key.type, value),
-          );
-    if (key === null) {
+    const key = value === null ? null : { type: input.key.type, value };
+    // The DICT is asked here, after the idempotency claim, so a repeated
+    // request gets the stored answer without asking again (ADR 0007); the
+    // client's short deadline bounds how long the transaction waits for it.
+    const payee =
+      key &&
+      ((await findPayeeHere(this.#deps, tx, repositories, key)) ??
+        (await findPayeeElsewhere(this.#deps.spi, key)));
+    if (key === null || payee === null) {
       quota.charge(input.userId, MISS_PENALTY, now);
       throw new PixKeyNotFound();
     }
-    const payeeAccount = await accounts.findById(tx, key.accountId);
-    const payee = payeeAccount && (await identity.payeeOf(tx, payeeAccount.holderUserId));
-    if (!payeeAccount || !payee) throw new Error(`Pix key without a payee: ${key.accountId}`);
 
     const amount = Money.of(BigInt(input.amountCents));
     const transfer = PixTransfer.create({
       id: ids.next(),
       payerAccountId: payer.id,
-      payee: {
-        accountId: payeeAccount.id,
-        name: payee.name,
-        documentMasked: payee.documentMasked,
-        keyType: input.key.type,
-        keyMasked: key.masked,
-      },
+      payee: snapshotOf(payee, input.key.type),
       amount,
       description: input.description,
       now,
@@ -135,7 +137,10 @@ export class CreatePixTransfer {
     if (balance === null) throw new Error(`Account ${payer.id} has no ledger account`);
     if (balance.isLessThan(amount)) throw new InsufficientFunds();
 
-    await repositories.pixTransfers.insert(transfer.state);
+    await repositories.pixTransfers.insert(
+      transfer.state,
+      'bank' in payee ? sealed(protector.protect(key.type, key.value)) : undefined,
+    );
     await repositories.audit.record({
       id: ids.next(),
       occurredAt: now,
@@ -153,6 +158,19 @@ export class CreatePixTransfer {
     });
     return { status: 201, body: viewOf(transfer.state) };
   }
+}
+
+/** Who receives, as the Pix keeps it: a next bank account or another bank (P3). */
+function snapshotOf(payee: PayeeHere | PayeeElsewhere, keyType: PixKeyType): PixPayee {
+  const shown = { name: payee.name, documentMasked: payee.documentMasked, keyType };
+  return 'bank' in payee
+    ? { ...shown, accountId: null, bank: payee.bank, keyMasked: payee.keyMasked }
+    : { ...shown, accountId: payee.accountId, keyMasked: payee.keyMasked };
+}
+
+/** Only what decrypting needs: the blind index finds keys of next bank, not this one. */
+function sealed({ ciphertext, keyVersion }: SealedKeyValue): SealedKeyValue {
+  return { ciphertext, keyVersion };
 }
 
 /** The key as stored, or null when no key can have this value. */
