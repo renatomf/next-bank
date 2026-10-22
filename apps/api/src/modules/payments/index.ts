@@ -19,6 +19,7 @@ import { HmacRequestFingerprint } from '../../shared/infrastructure/hmac-request
 import { InMemoryKeyLookupQuota } from './infrastructure/in-memory-key-lookup-quota.ts';
 import { PgPaymentsRepositories } from './infrastructure/pg-payments-repositories.ts';
 
+export { HttpSpiClient } from './infrastructure/http-spi-client.ts';
 export { keyLookupRoutes } from './http/key-lookup-route.ts';
 export { receivingKeyRoutes } from './http/receiving-key-route.ts';
 export { transferRoutes } from './http/transfer-routes.ts';

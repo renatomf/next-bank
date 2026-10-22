@@ -8,7 +8,7 @@ export interface MountedSimulatorOptions {
   databaseUrl: string;
   participantKey: string;
   /** SIMULATOR_FAULTS, a JSON fault profile (D5, P4); none when unset. */
-  faults: string | undefined;
+  faults?: string;
 }
 
 /**

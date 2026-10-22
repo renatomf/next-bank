@@ -21,7 +21,7 @@ beforeAll(async () => {
   });
   const databaseUrl = process.env.TEST_SIMULATOR_DATABASE_URL;
   if (!databaseUrl) throw new Error('TEST_SIMULATOR_DATABASE_URL is not set (see .env.example)');
-  await mountSimulator(app, { databaseUrl, participantKey, faults: undefined });
+  await mountSimulator(app, { databaseUrl, participantKey });
 });
 
 afterAll(async () => {

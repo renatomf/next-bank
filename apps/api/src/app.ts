@@ -34,6 +34,7 @@ import { createLedgerModule } from './modules/ledger/index.ts';
 import {
   createPaymentsModule,
   createPaymentsOutboxHandlers,
+  HttpSpiClient,
   keyLookupRoutes,
   receivingKeyRoutes,
   transferRoutes,
@@ -43,11 +44,19 @@ import { healthRoutes } from './shared/http/health.ts';
 import { registerProblemHandlers } from './shared/http/problem.ts';
 import type { PiiKeys } from './shared/infrastructure/aes-gcm-pii-protector.ts';
 import { createOutbox } from './shared/infrastructure/outbox-factory.ts';
+import type { OutboxWorker } from './shared/infrastructure/outbox-worker.ts';
 import { PgUnitOfWork } from './shared/infrastructure/pg-unit-of-work.ts';
 import type { ErrorReporter } from './shared/application/ports.ts';
 import { NoopErrorReporter } from './shared/infrastructure/sentry-error-reporter.ts';
 import { SystemClock, UuidV7Generator } from './shared/infrastructure/system-ports.ts';
 import { REDACT_PATHS, requestForLog } from './shared/logging.ts';
+
+declare module 'fastify' {
+  interface FastifyInstance {
+    /** Delivers the outbox; the server runs it in a loop (v1.2.0 plan, D3), tests by hand. */
+    outboxWorker: OutboxWorker;
+  }
+}
 
 /** JSON log destination, one line per event. */
 export interface LogDestination {
@@ -72,7 +81,12 @@ export interface AppDependencies {
   release?: string;
   /** Where unexpected errors go; nowhere but the logs by default. */
   errorReporter?: ErrorReporter;
+  /** The Pix to other banks: off unless given (v1.2.0 plan, P1). */
+  externalPix?: { simulatorUrl: string; participantKey: string };
 }
+
+/** A partner that does not answer in this long is a failure, retried by the caller. */
+const SPI_TIMEOUT_MS = 2_000;
 
 // Per client IP (API-02). In memory: one instance in V1 (plan D3). Behind the
 // deploy proxy, trustProxy (config TRUST_PROXY) keeps one counter per client.
@@ -94,6 +108,7 @@ export function buildApp({
   trustProxy = 0,
   release,
   errorReporter = new NoopErrorReporter(),
+  externalPix,
 }: AppDependencies) {
   const app = Fastify({
     // The client is the hop before the trusted proxies: hop 0 is the socket peer,
@@ -179,9 +194,15 @@ export function buildApp({
     payeeOf: identity.payees.payeeOf.bind(identity.payees),
     verifyPin: identity.verifyPin.verify.bind(identity.verifyPin),
   };
-  const spi = null;
+  const spi = externalPix
+    ? new HttpSpiClient({
+        baseUrl: externalPix.simulatorUrl,
+        participantKey: externalPix.participantKey,
+        timeoutMs: SPI_TIMEOUT_MS,
+      })
+    : null;
   // The outbox takes only the types its worker delivers (ADR 0016).
-  const { outbox } = createOutbox({
+  const { outbox, worker } = createOutbox({
     pool,
     ids,
     clock: () => clock.now(),
@@ -194,6 +215,7 @@ export function buildApp({
       spi,
     }),
   });
+  app.decorate('outboxWorker', worker);
   // Payments reaches Accounts and Identity only through the ports it defines.
   const payments = createPaymentsModule({
     unitOfWork,

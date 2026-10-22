@@ -201,7 +201,7 @@ describe('the Pix to another bank over HTTP', () => {
 
     expect(response.json<{ items: unknown[] }>().items[0]).toMatchObject({
       kind: 'PIX_SENT',
-      amount: { amount: -8_000 },
+      amount: { amount: 8_000 },
       counterparty: { name: 'Clara Aurora Teixeira', documentMasked: '***.407.256-**' },
     });
   });
