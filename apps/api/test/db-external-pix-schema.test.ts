@@ -86,7 +86,9 @@ describe('external Pix schema', () => {
     };
 
     await expect(insertTransfer({ ...failed, end_to_end_id: null })).resolves.toBeTypeOf('string');
-    await expect(insertTransfer(failed)).resolves.toBeTypeOf('string');
+    await expect(
+      insertTransfer({ ...failed, end_to_end_id: 'E00099999202610221500f6G7h8I9j0K' }),
+    ).resolves.toBeTypeOf('string');
   });
 
   it('never gives an external Pix awaiting the PIN or cancelled an end-to-end id', async () => {
