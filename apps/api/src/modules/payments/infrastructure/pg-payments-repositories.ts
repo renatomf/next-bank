@@ -9,6 +9,7 @@ import type {
   PixKeysRepository,
   PixTransfersRepository,
   ProtectedKeyValue,
+  SealedKeyValue,
   StoredPixKey,
   StoredRandomKey,
 } from '../application/ports.ts';
@@ -106,13 +107,15 @@ export class PgPixTransfersRepository implements PixTransfersRepository {
     this.#client = client;
   }
 
-  async insert(transfer: PixTransferState): Promise<void> {
+  async insert(transfer: PixTransferState, payeeKey?: SealedKeyValue): Promise<void> {
     await this.#client.query(
       `INSERT INTO payments.pix_transfers
          (id, end_to_end_id, payer_account_id, payee_account_id, payee_key_type, payee_key_masked,
           payee_name, payee_document_masked, amount, currency, description, status, failure_reason,
-          version, created_at, expires_at, authorized_at, completed_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)`,
+          version, created_at, expires_at, authorized_at, completed_at, updated_at,
+          payee_ispb, payee_bank_name, payee_key_ciphertext, payee_key_version)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19,
+               $20, $21, $22, $23)`,
       [
         transfer.id,
         transfer.endToEndId,
@@ -133,6 +136,10 @@ export class PgPixTransfersRepository implements PixTransfersRepository {
         transfer.authorizedAt,
         transfer.completedAt,
         transfer.updatedAt,
+        transfer.payee.bank?.ispb ?? null,
+        transfer.payee.bank?.name ?? null,
+        payeeKey?.ciphertext ?? null,
+        payeeKey?.keyVersion ?? null,
       ],
     );
   }
@@ -177,14 +184,15 @@ export class PgPixTransfersRepository implements PixTransfersRepository {
 
 const SELECT_TRANSFER = `SELECT id, end_to_end_id, payer_account_id, payee_account_id, payee_key_type,
     payee_key_masked, payee_name, payee_document_masked, amount, currency, description, status,
-    failure_reason, version, created_at, expires_at, authorized_at, completed_at, updated_at
+    failure_reason, version, created_at, expires_at, authorized_at, completed_at, updated_at,
+    payee_ispb, payee_bank_name
   FROM payments.pix_transfers`;
 
 interface TransferRow {
   id: string;
   end_to_end_id: string | null;
   payer_account_id: string;
-  payee_account_id: string;
+  payee_account_id: string | null;
   payee_key_type: PixKeyType;
   payee_key_masked: string;
   payee_name: string;
@@ -201,6 +209,8 @@ interface TransferRow {
   authorized_at: Date | null;
   completed_at: Date | null;
   updated_at: Date;
+  payee_ispb: string | null;
+  payee_bank_name: string | null;
 }
 
 function stateOf(row: TransferRow | undefined): PixTransferState | null {
@@ -215,6 +225,10 @@ function stateOf(row: TransferRow | undefined): PixTransferState | null {
           documentMasked: row.payee_document_masked,
           keyType: row.payee_key_type,
           keyMasked: row.payee_key_masked,
+          // The CHECK keeps the bank's two columns null or set together (P3).
+          ...(row.payee_ispb !== null && row.payee_bank_name !== null
+            ? { bank: { ispb: row.payee_ispb, name: row.payee_bank_name } }
+            : {}),
         },
         amount: Money.of(BigInt(row.amount), row.currency),
         description: row.description,

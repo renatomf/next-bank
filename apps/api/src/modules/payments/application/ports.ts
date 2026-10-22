@@ -46,7 +46,8 @@ export interface PixKeysRepository {
 
 /** A Pix is always looked up with its payer's account: anyone else finds nothing (PIX-01). */
 export interface PixTransfersRepository {
-  insert(transfer: PixTransferState): Promise<void>;
+  /** A Pix to another bank comes with its payee's key, sealed: it goes to the SPI (P3). */
+  insert(transfer: PixTransferState, payeeKey?: SealedKeyValue): Promise<void>;
   findForPayer(id: string, payerAccountId: string): Promise<PixTransferState | null>;
   /** Locks the Pix until the transaction ends: it changes state once (PIX-08). */
   lockForPayer(id: string, payerAccountId: string): Promise<PixTransferState | null>;

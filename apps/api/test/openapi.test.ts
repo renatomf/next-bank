@@ -80,6 +80,8 @@ describe('OpenAPI document', () => {
       'PixKeyLookup',
       'PixKeyLookupRequestInput',
       'PixPayee',
+      // The bank of a payee at another bank (v1.2.0 plan, task 3).
+      'PixPayeeBank',
       'PixReceivingKey',
       'PixTransfer',
       'Problem',

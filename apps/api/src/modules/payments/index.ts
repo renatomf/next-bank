@@ -99,6 +99,7 @@ export function createPaymentsModule(settings: {
       quota,
       clock: settings.clock,
       ids: settings.ids,
+      spi: settings.spi,
     }),
     authorizePixTransfer: new AuthorizePixTransfer({
       unitOfWork: settings.unitOfWork,

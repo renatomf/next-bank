@@ -85,6 +85,7 @@ export function pgPixStack(pool: pg.Pool, clock: Clock) {
     quota: { tryTake: () => true, charge: () => undefined },
     clock,
     ids,
+    spi: null,
   });
   const authorize = new AuthorizePixTransfer({
     unitOfWork,
