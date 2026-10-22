@@ -16,7 +16,15 @@ import { IdempotencyKeyReused } from '../../../../src/shared/domain/idempotency-
 import { InMemoryKeyLookupQuota } from '../../../../src/modules/payments/infrastructure/in-memory-key-lookup-quota.ts';
 import { Money } from '../../../../src/shared/domain/money.ts';
 import { FixedClock, SequentialIds } from '../../identity/application/fakes.ts';
-import { FakeFingerprint, FakeKeyProtector, FakeUnitOfWork, twoCustomers } from './fakes.ts';
+import {
+  AURORA_EMAIL,
+  AURORA_KEY,
+  FakeFingerprint,
+  FakeKeyProtector,
+  FakeSpi,
+  FakeUnitOfWork,
+  twoCustomers,
+} from './fakes.ts';
 
 // Creating a Pix (domain-model.md 3.4, 4 and 7; ADR 0007; PIX-02, PIX-04):
 // it is born awaiting the PIN after the early checks, once per idempotency
@@ -24,10 +32,12 @@ import { FakeFingerprint, FakeKeyProtector, FakeUnitOfWork, twoCustomers } from 
 const NOW = new Date('2026-10-07T15:00:00.000Z');
 const IDEMPOTENCY_KEY = randomUUID();
 
-function setup() {
+function setup(options: { externalPix?: boolean } = {}) {
   const world = twoCustomers();
   const quota = new InMemoryKeyLookupQuota();
   const clock = new FixedClock(NOW);
+  const spi = new FakeSpi();
+  spi.keys.set(AURORA_EMAIL, AURORA_KEY);
   const create = new CreatePixTransfer({
     unitOfWork: new FakeUnitOfWork(),
     repositories: world.repositories,
@@ -39,8 +49,9 @@ function setup() {
     quota,
     clock,
     ids: new SequentialIds(),
+    spi: options.externalPix === false ? null : spi,
   });
-  return { ...world, clock, create };
+  return { ...world, clock, spi, create };
 }
 
 function input(overrides: Partial<CreatePixTransferInput> = {}): CreatePixTransferInput {
@@ -202,5 +213,80 @@ describe('CreatePixTransfer', () => {
     await expect(create.execute(input({ idempotencyKey: 'key-last' }))).rejects.toThrow(
       TooManyKeyLookups,
     );
+  });
+
+  // The Pix to another bank (v1.2.0 plan, task 3): the payee comes from the
+  // DICT, and the key is kept sealed, because it goes to the SPI (P3).
+  describe('to another bank', () => {
+    const toAurora = (overrides: Partial<CreatePixTransferInput> = {}) =>
+      input({ key: { type: 'EMAIL', value: ' Clara.Aurora@Example.com ' }, ...overrides });
+
+    it('creates the Pix with the bank in the payee and the key sealed', async () => {
+      const { repositories, spi, create } = setup();
+
+      const result = await create.execute(toAurora());
+
+      expect(result.status).toBe(201);
+      expect(result.body.payee).toEqual({
+        name: 'Clara Aurora Teixeira',
+        documentMasked: '***.407.256-**',
+        keyType: 'EMAIL',
+        keyMasked: 'cl***@example.com',
+        bank: { ispb: '99900001', name: 'Banco Aurora' },
+      });
+      expect(repositories.transfers[0]?.payee).toMatchObject({
+        accountId: null,
+        bank: { ispb: '99900001', name: 'Banco Aurora' },
+      });
+      expect(repositories.payeeKeys.get('id-1')).toEqual({
+        ciphertext: new FakeKeyProtector().protect('EMAIL', AURORA_EMAIL).ciphertext,
+        keyVersion: 1,
+      });
+      expect(spi.lookups).toEqual([AURORA_EMAIL]);
+    });
+
+    it('records PIX_CREATED without the key value', async () => {
+      const { repositories, create } = setup();
+
+      await create.execute(toAurora());
+
+      expect(repositories.auditEvents[0]?.metadata).toEqual({
+        sessionId: 'session-a',
+        amountCents: 8_000,
+        keyType: 'EMAIL',
+      });
+      expect(JSON.stringify(repositories.auditEvents)).not.toContain('clara');
+    });
+
+    it('answers a repeated request without asking the DICT again', async () => {
+      const { spi, create } = setup();
+      const first = await create.execute(toAurora());
+
+      await expect(create.execute(toAurora())).resolves.toEqual(first);
+      expect(spi.lookups).toHaveLength(1);
+    });
+
+    it('still refuses an amount above the available balance (InsufficientFunds)', async () => {
+      const { repositories, create } = setup();
+
+      await expect(create.execute(toAurora({ amountCents: 10_001 }))).rejects.toThrow(
+        InsufficientFunds,
+      );
+      expect(repositories.transfers).toEqual([]);
+    });
+
+    it('finds no key while the Pix to other banks is off (P1)', async () => {
+      const { create } = setup({ externalPix: false });
+
+      await expect(create.execute(toAurora())).rejects.toThrow(PixKeyNotFound);
+    });
+
+    it('creates nothing when the DICT does not answer', async () => {
+      const { repositories, spi, create } = setup();
+      spi.down = true;
+
+      await expect(create.execute(toAurora())).rejects.toThrow(/unreachable/);
+      expect(repositories.transfers).toEqual([]);
+    });
   });
 });

@@ -94,6 +94,8 @@ export class FakePaymentsRepositories implements PaymentsRepositoriesFactory {
   readonly randomKeys = new Map<string, StoredRandomKey>();
   /** Every random key offered for insertion, kept or not. */
   readonly offeredRandomKeys: PixKeyState[] = [];
+  /** The sealed key of each Pix to another bank, by the Pix id. */
+  readonly payeeKeys = new Map<string, SealedKeyValue>();
   lookups = 0;
 
   addKey(type: PixKeyType, value: string, key: StoredPixKey): void {
@@ -149,8 +151,9 @@ export class FakePaymentsRepositories implements PaymentsRepositoriesFactory {
         findRandomOf: (accountId) => Promise.resolve(this.randomKeys.get(accountId) ?? null),
       },
       pixTransfers: {
-        insert: (state) => {
+        insert: (state, payeeKey) => {
           this.transfers.push(state);
+          if (payeeKey) this.payeeKeys.set(state.id, payeeKey);
           return Promise.resolve();
         },
         findForPayer: (id, payerAccountId) => Promise.resolve(this.#transferOf(id, payerAccountId)),
