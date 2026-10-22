@@ -41,6 +41,13 @@ interface Customer {
   ip: string;
 }
 
+/** Every text value at the leaves of the log lines; numbers are left out. */
+function textValues(value: unknown): string[] {
+  if (typeof value === 'string') return [value];
+  if (value !== null && typeof value === 'object') return Object.values(value).flatMap(textValues);
+  return [];
+}
+
 const auth = (customer: Customer) => ({ authorization: `Bearer ${customer.accessToken}` });
 
 async function newCustomer(): Promise<Customer> {
@@ -202,7 +209,10 @@ describe('POST /v1/top-ups', () => {
     );
     expect(rows[0]?.phone_masked).toBe('(11) *****-0001');
     expect(rows[0]?.phone_ciphertext.toString('latin1')).not.toContain('11900000001');
-    expect(logs.raw()).not.toMatch(/90000-?0001/);
+    // In the text of every field, never in the raw line: the digits can turn
+    // up by chance in a duration ("responseTime": 2.5900000000001), which
+    // once failed this test in CI with a correct log.
+    expect(textValues(logs.lines()).filter((text) => /90000-?0001/.test(text))).toEqual([]);
   });
 
   it('audits the top-up without the number (PIX-09)', async () => {
