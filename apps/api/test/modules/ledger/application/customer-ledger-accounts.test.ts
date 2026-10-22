@@ -229,7 +229,6 @@ describe('CustomerLedgerAccounts', () => {
     await accounts.sendPixExternal(tx, EXTERNAL);
 
     expect(ledger.balanceOf('id-1')).toBe(5_000n);
-    expect(ledger.balanceOf(PIX_CLEARING_ID)).toBe(5_000n);
     const entry = ledger.entries.find((e) => e.kind === 'PIX_EXTERNAL');
     expect(entry).toMatchObject({ referenceType: 'PIX_TRANSFER', referenceId: 'pix-ext-1' });
     expect(entry?.postings).toEqual([

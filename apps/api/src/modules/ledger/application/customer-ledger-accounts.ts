@@ -35,6 +35,15 @@ export interface TopUpPosting {
   counterparty: { name: string; documentMasked: string };
 }
 
+/** A Pix to another bank leaving for the clearing account (v1.2.0 plan, task 3). */
+export interface ExternalPixPosting {
+  transferId: string;
+  payerAccountId: string;
+  amount: Money;
+  /** The payee at the other bank, as the statement shows it. */
+  payee: PixParty;
+}
+
 export type StatementItemKind = 'PIX_SENT' | 'PIX_RECEIVED' | 'DEMO_FUNDING' | 'TOP_UP';
 
 export interface StatementItem {
@@ -61,6 +70,8 @@ export interface StatementPage {
 const STATEMENT_PAGE_SIZE = 20;
 
 const FUNDING_CODE = 'system:funding';
+/** Where an external Pix waits for the SPI's answer (domain-model.md, section 5). */
+const PIX_CLEARING_CODE = 'system:pix_clearing';
 /** Who the customer sees on the other side of the demo funding. */
 const FUNDING_COUNTERPARTY = 'next bank';
 
@@ -170,6 +181,45 @@ export class CustomerLedgerAccounts {
   }
 
   /**
+   * A Pix to another bank (v1.2.0 plan, task 3): debit the payer, credit
+   * system:pix_clearing, where the money waits for the SPI; the answer
+   * settles or refunds it (task 4). Only the payer's posting keeps the payee,
+   * for the statement. The transfer is the reference, so it is posted at most
+   * once (T-DB-05); a debit above the balance fails with InsufficientFunds
+   * before any write.
+   */
+  async sendPixExternal(tx: Transaction, input: ExternalPixPosting): Promise<void> {
+    const repository = this.#repositories.for(tx);
+    const payer = await repository.findByCode(customerCodeOf(input.payerAccountId));
+    const clearing = await repository.findByCode(PIX_CLEARING_CODE);
+    if (!payer || !clearing) {
+      throw new Error(`Cannot post external Pix ${input.transferId}: ledger account missing`);
+    }
+
+    await this.#postJournalEntry.execute(tx, {
+      kind: 'PIX_EXTERNAL',
+      referenceType: 'PIX_TRANSFER',
+      referenceId: input.transferId,
+      postings: [
+        {
+          ledgerAccountId: payer.id,
+          direction: 'DEBIT',
+          amount: input.amount,
+          counterpartyName: input.payee.name,
+          counterpartyDocumentMasked: input.payee.documentMasked,
+        },
+        {
+          ledgerAccountId: clearing.id,
+          direction: 'CREDIT',
+          amount: input.amount,
+          counterpartyName: null,
+          counterpartyDocumentMasked: null,
+        },
+      ],
+    });
+  }
+
+  /**
    * Locks the customer's ledger account (FOR UPDATE) without posting: a
    * top-up takes it before reading the day's total, so two top-ups of one
    * customer run one at a time (v1.1.0 plan, task 5).
@@ -270,6 +320,9 @@ function kindOf(row: StatementRow): StatementItemKind {
       return 'TOP_UP';
     case 'PIX_INTERNAL':
       return row.direction === 'DEBIT' ? 'PIX_SENT' : 'PIX_RECEIVED';
+    // The customer only ever sends one; its refund comes in task 4.
+    case 'PIX_EXTERNAL':
+      return 'PIX_SENT';
   }
 }
 
