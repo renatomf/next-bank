@@ -33,6 +33,7 @@ Produtos do dia a dia: o visitante já tem o que usar na primeira abertura, semp
 
 ### Alterado
 - **Botões abaixo do saldo na Home:** "Extrato ›" e "Agendamentos ›" em pílulas de vidro como a do saldo, uma em cada ponta; "Agendamentos" é só layout por ora ("Em breve").
+- **Logo do login:** do tamanho do da abertura.
 - **Fronteiras de UI** (ADR 0014):
   - o design system passa a ter só tokens, tema, componentes e padrões, sem texto de interface;
   - os componentes do banco vão para `core/ui`;
