@@ -13,7 +13,13 @@ import { PixTransfer } from '../../../../src/modules/payments/domain/pix-transfe
 import { Money } from '../../../../src/shared/domain/money.ts';
 import { NotFound } from '../../../../src/shared/domain/not-found.ts';
 import { FixedClock, SequentialIds } from '../../identity/application/fakes.ts';
-import { FakeFingerprint, FakeUnitOfWork, FixedEndToEndIds, twoCustomers } from './fakes.ts';
+import {
+  FakeFingerprint,
+  FakeOutbox,
+  FakeUnitOfWork,
+  FixedEndToEndIds,
+  twoCustomers,
+} from './fakes.ts';
 
 // Authorizing a Pix with the PIN (domain-model.md 4 and 7; database.md 7;
 // ADR 0007; PIX-01, PIX-02, PIX-05, PIX-08, PIX-09, PIX-10). 15:00 UTC is
@@ -40,7 +46,26 @@ function setup(amountCents = 8_000n) {
       now: CREATED,
     }).state,
   );
+  // A Pix to Clara, at the made-up Banco Aurora (v1.2.0 plan, task 3).
+  world.repositories.transfers.push(
+    PixTransfer.create({
+      id: 'pix-2',
+      payerAccountId: 'account-a',
+      payee: {
+        accountId: null,
+        bank: { ispb: '99900001', name: 'Banco Aurora' },
+        name: 'Clara Aurora Teixeira',
+        documentMasked: '***.407.256-**',
+        keyType: 'EMAIL',
+        keyMasked: 'cl***@example.com',
+      },
+      amount: Money.of(amountCents),
+      description: null,
+      now: CREATED,
+    }).state,
+  );
   const clock = new FixedClock(NOW);
+  const outbox = new FakeOutbox();
   const authorize = new AuthorizePixTransfer({
     unitOfWork: new FakeUnitOfWork(),
     repositories: world.repositories,
@@ -49,10 +74,11 @@ function setup(amountCents = 8_000n) {
     identity: world.identity,
     ledger: world.ledger,
     endToEndIds: new FixedEndToEndIds(),
+    outbox,
     clock,
     ids: new SequentialIds(),
   });
-  return { ...world, clock, authorize };
+  return { ...world, clock, outbox, authorize };
 }
 
 function input(overrides: Partial<AuthorizePixTransferInput> = {}): AuthorizePixTransferInput {
@@ -267,5 +293,102 @@ describe('AuthorizePixTransfer', () => {
 
     await expect(authorize.execute(input({ userId: 'user-c' }))).rejects.toThrow(NotFound);
     expect(identity.pinsChecked).toEqual([]);
+  });
+
+  // The Pix to another bank (v1.2.0 plan, task 3; ADR 0016): the debit to
+  // system:pix_clearing, the Pix waiting for the SPI and the message that
+  // sends it are written in the same transaction.
+  describe('to another bank', () => {
+    const external = (overrides: Partial<AuthorizePixTransferInput> = {}) =>
+      input({ transferId: 'pix-2', ...overrides });
+
+    it('debits the payer to the clearing account and leaves the Pix waiting for the SPI', async () => {
+      const { repositories, ledger, outbox, authorize } = setup();
+
+      const result = await authorize.execute(external());
+
+      expect(result).toMatchObject({
+        status: 'PROCESSING',
+        endToEndId: E2E,
+        completedAt: null,
+        payee: { bank: { ispb: '99900001', name: 'Banco Aurora' } },
+      });
+      expect(ledger.postedExternal).toEqual([
+        {
+          transferId: 'pix-2',
+          payerAccountId: 'account-a',
+          amount: Money.of(8_000n),
+          payee: { name: 'Clara Aurora Teixeira', documentMasked: '***.407.256-**' },
+        },
+      ]);
+      expect(ledger.posted).toEqual([]);
+      expect(outbox.messages).toEqual([
+        { type: 'pix.send-external', payload: { transferId: 'pix-2' }, requestId: 'req-1' },
+      ]);
+      expect(repositories.transfers[1]).toMatchObject({ status: 'PROCESSING', endToEndId: E2E });
+    });
+
+    it('records PIX_SENT with the session, the request and the end-to-end id', async () => {
+      const { repositories, authorize } = setup();
+
+      await authorize.execute(external());
+
+      expect(repositories.auditEvents).toEqual([
+        expect.objectContaining({
+          action: 'PIX_SENT',
+          actorId: 'user-a',
+          subjectId: 'pix-2',
+          requestId: 'req-1',
+          metadata: { sessionId: 'session-a', amountCents: 8_000, endToEndId: E2E },
+        }),
+      ]);
+    });
+
+    it('locks only the payer account for share: the payee is not ours', async () => {
+      const { accounts, authorize } = setup();
+
+      await authorize.execute(external());
+
+      expect(accounts.sharedLocks).toEqual([['account-a']]);
+    });
+
+    it('fails without debiting or sending when the balance no longer covers it', async () => {
+      const { ledger, outbox, authorize } = setup(10_001n);
+
+      await expect(authorize.execute(external())).resolves.toMatchObject({
+        status: 'FAILED',
+        failureReason: 'INSUFFICIENT_FUNDS',
+        endToEndId: null,
+      });
+      expect(ledger.postedExternal).toEqual([]);
+      expect(outbox.messages).toEqual([]);
+    });
+
+    it('fails without debiting or sending when the payer account is blocked', async () => {
+      const { accounts, ledger, outbox, authorize } = setup();
+      accounts.accounts.set('account-a', {
+        id: 'account-a',
+        holderUserId: 'user-a',
+        status: 'BLOCKED',
+      });
+
+      await expect(authorize.execute(external())).resolves.toMatchObject({
+        status: 'FAILED',
+        failureReason: 'ACCOUNT_BLOCKED',
+      });
+      expect(ledger.postedExternal).toEqual([]);
+      expect(outbox.messages).toEqual([]);
+    });
+
+    // PIX-02: the same request again gets the same answer and one message only.
+    it('answers a repeated request with the stored response and one message', async () => {
+      const { ledger, outbox, authorize } = setup();
+      const request = external();
+      const first = await authorize.execute(request);
+
+      await expect(authorize.execute(request)).resolves.toEqual(first);
+      expect(ledger.postedExternal).toHaveLength(1);
+      expect(outbox.messages).toHaveLength(1);
+    });
   });
 });

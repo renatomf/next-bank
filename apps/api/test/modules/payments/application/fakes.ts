@@ -6,10 +6,12 @@ import type {
   StoredResponse,
 } from '../../../../src/shared/application/idempotency.ts';
 import { DomainError } from '../../../../src/shared/domain/domain-error.ts';
+import type { Outbox, OutboxMessage } from '../../../../src/shared/application/outbox.ts';
 import type {
   AccountsPort,
   DictKey,
   EndToEndIds,
+  ExternalPixPosting,
   PinCheck,
   PixPosting,
   IdentityPort,
@@ -224,6 +226,17 @@ class LedgerInsufficientFunds extends DomainError {
 export class FakeLedger implements LedgerPort {
   readonly balances = new Map<string, Money>();
   readonly posted: PixPosting[] = [];
+  /** Pix to other banks: debited from the payer to system:pix_clearing. */
+  readonly postedExternal: ExternalPixPosting[] = [];
+  postExternalPix(_tx: Transaction, posting: ExternalPixPosting): Promise<void> {
+    const balance = this.balances.get(posting.payerAccountId) ?? Money.zero();
+    if (balance.isLessThan(posting.amount)) {
+      return Promise.reject(new LedgerInsufficientFunds('Debit above the available balance'));
+    }
+    this.postedExternal.push(posting);
+    this.balances.set(posting.payerAccountId, balance.minus(posting.amount));
+    return Promise.resolve();
+  }
   postPixTransfer(_tx: Transaction, posting: PixPosting): Promise<void> {
     const balance = this.balances.get(posting.payerAccountId) ?? Money.zero();
     if (balance.isLessThan(posting.amount)) {
@@ -265,6 +278,15 @@ export const AURORA_KEY: DictKey = {
   bank: { ispb: '99900001', name: 'Banco Aurora' },
   owner: { name: 'Clara Aurora Teixeira', documentMasked: '***.407.256-**' },
 };
+
+/** The messages each transaction wrote, in order. */
+export class FakeOutbox implements Outbox {
+  readonly messages: OutboxMessage[] = [];
+  enqueue(_tx: Transaction, message: OutboxMessage): Promise<void> {
+    this.messages.push(message);
+    return Promise.resolve();
+  }
+}
 
 /** Always the same id, so tests can expect it. */
 export class FixedEndToEndIds implements EndToEndIds {
