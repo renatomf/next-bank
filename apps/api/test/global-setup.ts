@@ -13,6 +13,22 @@ export default async function setup(): Promise<void> {
   execFileSync(resolveBinary(), ['-e', 'TEST_MIGRATION_DATABASE_URL', '--no-dump-schema', 'up'], {
     stdio: ['ignore', 'ignore', 'inherit'],
   });
+  // The simulator's schema too: the API's tests call the simulator as it
+  // runs in production, mounted in the same service (v1.2.0 plan, D2).
+  execFileSync(
+    resolveBinary(),
+    [
+      '-e',
+      'TEST_MIGRATION_DATABASE_URL',
+      '--migrations-dir',
+      '../simulator/db/migrations',
+      '--migrations-table',
+      'simulator_migrations',
+      '--no-dump-schema',
+      'up',
+    ],
+    { stdio: ['ignore', 'ignore', 'inherit'] },
+  );
 }
 
 async function dropMigratedObjects(url: string): Promise<void> {
@@ -25,6 +41,7 @@ async function dropMigratedObjects(url: string): Promise<void> {
     );
     for (const { name } of rows) await client.query(`DROP SCHEMA ${name} CASCADE`);
     await client.query('DROP TABLE IF EXISTS public.schema_migrations');
+    await client.query('DROP TABLE IF EXISTS public.simulator_migrations');
   } finally {
     await client.end();
   }
