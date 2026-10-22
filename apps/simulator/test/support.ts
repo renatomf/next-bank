@@ -32,14 +32,10 @@ export function paymentRequest(changes: Record<string, unknown> = {}) {
   };
 }
 
-export function simulatorFor(
-  pool: pg.Pool,
-  options: { profile?: Partial<FaultProfile>; clock?: () => Date } = {},
-) {
+export function simulatorFor(pool: pg.Pool, options: { profile?: Partial<FaultProfile> } = {}) {
   return buildSimulator({
     pool,
     participantKey,
     faults: new Faults({ ...NO_FAULTS, ...options.profile }, seededRandom(1)),
-    ...(options.clock ? { clock: options.clock } : {}),
   });
 }

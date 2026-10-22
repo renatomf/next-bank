@@ -37,21 +37,24 @@ CREATE TABLE simulator.payments (
   status text NOT NULL CHECK (status IN ('PENDING', 'SETTLED', 'REJECTED')),
   reason text CHECK (reason IN ('PAYEE_KEY_NOT_FOUND', 'PAYEE_BANK_REJECTED')),
   created_at timestamptz NOT NULL DEFAULT now(),
+  -- When the SPI decided it, settled or rejected: the webhook's time.
+  decided_at timestamptz,
   settled_at timestamptz,
   -- Written as equalities, as in the API's Pix: no OR over nullable columns.
   CONSTRAINT payments_settled_at_status_check CHECK ((status = 'SETTLED') = (settled_at IS NOT NULL)),
-  CONSTRAINT payments_reason_status_check CHECK ((status = 'REJECTED') = (reason IS NOT NULL))
+  CONSTRAINT payments_reason_status_check CHECK ((status = 'REJECTED') = (reason IS NOT NULL)),
+  CONSTRAINT payments_decided_at_status_check CHECK ((status = 'PENDING') = (decided_at IS NULL))
 );
 -- The day's settlement file reads the payments settled in a day.
 CREATE INDEX payments_settled_at_idx ON simulator.payments (settled_at) WHERE status = 'SETTLED';
 
 -- The webhooks the SPI owes the participant, delivered by the dispatcher when
--- due. A duplicated delivery repeats the event id; a lost one is dropped.
+-- due. The body comes from the payment, so a retry sends the same event; a
+-- duplicated delivery repeats the event id; a lost one is dropped.
 CREATE TABLE simulator.webhook_deliveries (
   id uuid PRIMARY KEY,
   event_id uuid NOT NULL,
   end_to_end_id text NOT NULL REFERENCES simulator.payments (end_to_end_id),
-  payload jsonb NOT NULL,
   status text NOT NULL CHECK (status IN ('PENDING', 'DELIVERED', 'DROPPED')),
   due_at timestamptz NOT NULL,
   attempts integer NOT NULL DEFAULT 0 CHECK (attempts >= 0),
@@ -64,10 +67,10 @@ CREATE INDEX webhook_deliveries_due_idx ON simulator.webhook_deliveries (due_at)
   WHERE status = 'PENDING';
 
 -- Least privilege: the banks and keys are read only; a payment's request never
--- changes, only its outcome; a delivery's payload never changes.
+-- changes, only its outcome.
 GRANT SELECT ON simulator.banks, simulator.dict_keys TO nextbank_simulator;
 GRANT SELECT, INSERT ON simulator.payments TO nextbank_simulator;
-GRANT UPDATE (status, reason, settled_at) ON simulator.payments TO nextbank_simulator;
+GRANT UPDATE (status, reason, decided_at, settled_at) ON simulator.payments TO nextbank_simulator;
 GRANT SELECT, INSERT ON simulator.webhook_deliveries TO nextbank_simulator;
 GRANT UPDATE (status, due_at, attempts, delivered_at) ON simulator.webhook_deliveries
   TO nextbank_simulator;
