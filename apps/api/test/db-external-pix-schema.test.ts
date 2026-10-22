@@ -75,6 +75,28 @@ describe('external Pix schema', () => {
     ).rejects.toThrow(/end_to_end_id/);
   });
 
+  // A Pix that fails at authorization (no balance, a blocked account) never
+  // reached the SPI, so it has no end-to-end id; one the SPI rejects has (task 4).
+  it('lets an external Pix fail with or without its end-to-end id', async () => {
+    const failed = {
+      ...external,
+      ...authorized,
+      status: 'FAILED',
+      failure_reason: 'INSUFFICIENT_FUNDS',
+    };
+
+    await expect(insertTransfer({ ...failed, end_to_end_id: null })).resolves.toBeTypeOf('string');
+    await expect(insertTransfer(failed)).resolves.toBeTypeOf('string');
+  });
+
+  it('never gives an external Pix awaiting the PIN or cancelled an end-to-end id', async () => {
+    for (const status of ['AWAITING_AUTH', 'CANCELLED']) {
+      await expect(
+        insertTransfer({ ...external, status, end_to_end_id: authorized.end_to_end_id }),
+      ).rejects.toThrow(/end_to_end_id/);
+    }
+  });
+
   it('still gives an internal Pix its end-to-end id only when completed', async () => {
     await expect(insertTransfer(authorized)).rejects.toThrow(/end_to_end_id/);
   });
