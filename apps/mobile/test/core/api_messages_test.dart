@@ -68,6 +68,17 @@ void main() {
         ApiErrorCode.requestInProgress,
         'Ainda estamos processando. Tente de novo em instantes.',
       ),
+      // TOP-01: only the made-up range is taken.
+      (
+        ApiErrorCode.invalidPhoneNumber,
+        'Use um número fictício: (DD) 90000-XXXX.',
+      ),
+      (ApiErrorCode.unknownTopUpOperator, 'Escolha uma operadora da lista.'),
+      (ApiErrorCode.invalidTopUpAmount, 'Escolha um dos valores da lista.'),
+      (
+        ApiErrorCode.topUpLimitExceeded,
+        'Valor acima do limite de recargas do dia.',
+      ),
     ]) {
       test(code.wire, () {
         expect(messageFor(ApiRejected(code)), message);
@@ -96,6 +107,20 @@ void main() {
           const ApiRejected(ApiErrorCode.limitExceeded, limitCents: 100000),
         ),
         r'Valor acima do seu limite de R$ 1.000,00 por Pix.',
+      );
+    });
+
+    // D6: the server counts the day in São Paulo; the app only says it.
+    test("a top-up over the day's limit says the limit and what is left", () {
+      expect(
+        messageFor(
+          const ApiRejected(
+            ApiErrorCode.topUpLimitExceeded,
+            limitCents: 20000,
+            remainingCents: 1500,
+          ),
+        ),
+        r'Você pode recarregar até R$ 200,00 por dia. Restam R$ 15,00 hoje.',
       );
     });
 

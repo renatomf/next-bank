@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 final Random _secure = Random.secure();
 
 /// A new `Idempotency-Key`: a UUID version 4 whose 122 random bits come from
@@ -16,3 +18,9 @@ String newIdempotencyKey([Random? random]) {
   return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-'
       '${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20)}';
 }
+
+/// Draws the idempotency key of each new attempt (D11), for every command
+/// that moves money; tests override it to see when a key is drawn.
+final Provider<String Function()> idempotencyKeysProvider = Provider(
+  (ref) => newIdempotencyKey,
+);

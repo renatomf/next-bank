@@ -4,6 +4,7 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/account/account_providers.dart';
+import 'package:next_bank/core/idempotency_key.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/core/scan/qr_scanner.dart';
 import 'package:next_bank/core/session/app_lock.dart';
@@ -19,6 +20,7 @@ import 'package:next_bank/core/theme/theme_controller.dart';
 import 'package:next_bank/features/auth/presentation/auth_providers.dart';
 import 'package:next_bank/features/pix/presentation/pix_providers.dart';
 import 'package:next_bank/features/security/presentation/security_providers.dart';
+import 'package:next_bank/features/top_up/presentation/top_up_providers.dart';
 import 'package:next_bank/features/unlock/presentation/unlock_providers.dart';
 import 'package:next_bank/main.dart';
 
@@ -36,6 +38,7 @@ import 'fake_security_repository.dart';
 import 'fake_statement_repository.dart';
 import 'fake_theme_store.dart';
 import 'fake_token_store.dart';
+import 'fake_top_up_repository.dart';
 import 'fake_unlock_repository.dart';
 
 /// The whole app, as main.dart builds it, over fakes. By default the
@@ -49,6 +52,7 @@ Future<ProviderContainer> pumpApp(
   FakeAccountRepository? account,
   FakeUnlockRepository? unlock,
   FakePixRepository? pix,
+  FakeTopUpRepository? topUp,
   FakeStatementRepository? statement,
   FakeSecurityRepository? security,
   FakeMonotonicClock? clock,
@@ -78,6 +82,9 @@ Future<ProviderContainer> pumpApp(
           unlock ?? FakeUnlockRepository(),
         ),
         pixRepositoryProvider.overrideWithValue(pix ?? FakePixRepository()),
+        topUpRepositoryProvider.overrideWithValue(
+          topUp ?? FakeTopUpRepository(),
+        ),
         securityRepositoryProvider.overrideWithValue(
           security ?? FakeSecurityRepository(),
         ),

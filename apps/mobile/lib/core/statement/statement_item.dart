@@ -46,6 +46,7 @@ final class StatementItem {
     required this.amountCents,
     required this.counterparty,
     required this.transferId,
+    this.topUpId,
   });
 
   /// The posting's id.
@@ -68,6 +69,9 @@ final class StatementItem {
 
   /// The Pix behind a Pix sent, to open its receipt (D3); null otherwise.
   final String? transferId;
+
+  /// The top-up behind a top-up, to open its receipt; null otherwise.
+  final String? topUpId;
 }
 
 /// One page of the statement and the cursor of the next, null at the end.

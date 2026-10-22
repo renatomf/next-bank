@@ -43,6 +43,29 @@ void main() {
       expect(event.message?.formatted, 'lookup of [CPF] failed');
       expect(event.exceptions?.single.value, 'cpf [CPF] busy');
     });
+
+    // MOB-02, v1.1.0 plan task 5b: the number of a top-up never leaves.
+    test('masks anything shaped like a phone number', () {
+      final event = scrubEvent(
+        SentryEvent(
+          message: SentryMessage('top-up to (11) 90000-0001 failed'),
+          exceptions: [
+            SentryException(type: 'StateError', value: 'number 11 90000-0001'),
+          ],
+        ),
+      );
+
+      expect(event.message?.formatted, 'top-up to [PHONE] failed');
+      expect(event.exceptions?.single.value, 'number [PHONE]');
+    });
+  });
+
+  test('redacts a phone number kept under its key', () {
+    final crumb = scrubBreadcrumb(
+      Breadcrumb(data: {'phoneNumber': '11900000001', 'status': 201}),
+    );
+
+    expect(crumb.data, {'phoneNumber': '[REDACTED]', 'status': 201});
   });
 
   group('scrubBreadcrumb', () {

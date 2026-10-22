@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/api_config.dart';
+import 'package:next_bank/features/auth/presentation/login/login_screen.dart';
 
 // The demo accounts the seed creates (apps/api/scripts/seed-demo.ts):
 // fictitious people, data and passwords, public on purpose.
@@ -68,12 +69,19 @@ Future<void> signIn(
   );
   if (find.text('Entrar com outra conta').evaluate().isNotEmpty) {
     await tester.tap(find.text('Entrar com outra conta'));
-    await waitFor(tester, find.widgetWithText(FilledButton, 'Entrar'));
+    await waitFor(tester, find.byType(LoginScreen));
   }
-  // Login with the password goes straight to the Home (week 6 plan, D5).
   await tester.enterText(find.byType(TextField).at(0), email);
   await tester.enterText(find.byType(TextField).at(1), password);
-  await tester.tap(find.widgetWithText(FilledButton, 'Entrar'));
+  // The keyboard the fields open pushes "Entrar" out of a small screen, as
+  // on the CI emulator, where the list then does not even build it (PR
+  // #163): close it and scroll to the button. Login with the password goes
+  // straight to the Home (week 6 plan, D5).
+  await scrollAndTap(
+    tester,
+    LoginScreen,
+    find.widgetWithText(FilledButton, 'Entrar'),
+  );
   await waitFor(tester, find.bySemanticsLabel('Área Pix'));
 }
 

@@ -43,6 +43,10 @@ void main() {
       ('InvalidTransferState', ApiErrorCode.invalidTransferState),
       ('IdempotencyKeyReused', ApiErrorCode.idempotencyKeyReused),
       ('RequestInProgress', ApiErrorCode.requestInProgress),
+      ('InvalidPhoneNumber', ApiErrorCode.invalidPhoneNumber),
+      ('UnknownTopUpOperator', ApiErrorCode.unknownTopUpOperator),
+      ('InvalidTopUpAmount', ApiErrorCode.invalidTopUpAmount),
+      ('TopUpLimitExceeded', ApiErrorCode.topUpLimitExceeded),
     ]) {
       test('maps $wire to its catalog code', () async {
         final failure = await failureFor(ProblemReply(422, wire));
@@ -90,6 +94,29 @@ void main() {
       );
 
       expect((failure as ApiRejected).limitCents, 100000);
+    });
+
+    // The top-up screen tells the day's limit and what is left of it.
+    test('keeps the daily top-up limit and what is left, in cents', () async {
+      final failure = await failureFor(
+        const ProblemReply(422, 'TopUpLimitExceeded', {
+          'limit': {'amount': 20000, 'currency': 'BRL'},
+          'remaining': {'amount': 1500, 'currency': 'BRL'},
+        }),
+      );
+
+      expect((failure as ApiRejected).limitCents, 20000);
+      expect(failure.remainingCents, 1500);
+    });
+
+    test('ignores what is left when it is not money in reais', () async {
+      final failure = await failureFor(
+        const ProblemReply(422, 'TopUpLimitExceeded', {
+          'remaining': {'amount': 1500.5, 'currency': 'BRL'},
+        }),
+      );
+
+      expect((failure as ApiRejected).remainingCents, isNull);
     });
 
     // F-18: money from the API is whole cents in reais, never a fraction.

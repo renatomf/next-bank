@@ -89,7 +89,20 @@ enum ApiErrorCode {
   idempotencyKeyReused('IdempotencyKeyReused'),
 
   /// The same request is still running on the server.
-  requestInProgress('RequestInProgress');
+  requestInProgress('RequestInProgress'),
+
+  /// A top-up number outside the made-up range (DD) 90000-XXXX (TOP-01).
+  invalidPhoneNumber('InvalidPhoneNumber'),
+
+  /// No top-up operator with this id.
+  unknownTopUpOperator('UnknownTopUpOperator'),
+
+  /// A top-up amount the operator does not offer.
+  invalidTopUpAmount('InvalidTopUpAmount'),
+
+  /// The day's top-ups would pass the daily limit; the answer says what is
+  /// left.
+  topUpLimitExceeded('TopUpLimitExceeded');
 
   new(this.wire);
 
@@ -105,7 +118,12 @@ sealed class ApiFailure implements Exception {
 /// The API refused the request with a catalog error.
 final class ApiRejected extends ApiFailure {
   /// Creates a refusal with its catalog code.
-  const new(this.code, {this.remainingAttempts, this.limitCents});
+  const new(
+    this.code, {
+    this.remainingAttempts,
+    this.limitCents,
+    this.remainingCents,
+  });
 
   /// The catalog error the screen reacts to.
   final ApiErrorCode code;
@@ -115,6 +133,9 @@ final class ApiRejected extends ApiFailure {
 
   /// The limit an amount went over, in integer cents, when the API says.
   final int? limitCents;
+
+  /// What is left of the limit today, in integer cents, when the API says.
+  final int? remainingCents;
 
   @override
   String toString() => 'ApiRejected(${code.wire})';
@@ -151,6 +172,7 @@ ApiFailure apiFailureOf(DioException error) {
             code,
             remainingAttempts: remaining is int ? remaining : null,
             limitCents: body is Map ? _reaisCents(body['limit']) : null,
+            remainingCents: body is Map ? _reaisCents(body['remaining']) : null,
           );
         }
       }
