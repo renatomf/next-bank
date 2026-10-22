@@ -21,6 +21,7 @@ Cada ADR registra **uma** decisão de arquitetura: o contexto, as alternativas c
 | [0013](0013-rosto-so-para-abrir-o-app.md) | Rosto (biometria fraca) só para abrir o app | Aceito |
 | [0014](0014-fronteiras-de-ui.md) | Fronteiras de UI: design system, `core/ui` e features | Aceito |
 | [0015](0015-idempotencia-compartilhada.md) | Idempotência compartilhada entre os módulos | Aceito |
+| [0016](0016-outbox-e-inbox.md) | Outbox transacional e inbox | Aceito |
 
 ## Template
 

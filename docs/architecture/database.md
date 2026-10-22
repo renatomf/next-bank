@@ -280,6 +280,12 @@ erDiagram
 - `response_body` só contém dados já mascarados (é a resposta enviada ao cliente) ou a recusa gravada (PIN incorreto, bloqueado, Pix expirado)
 - Índice `(expires_at)`: entra com o job de limpeza (semana 8)
 
+**`platform.outbox_messages`** (v1.2.0, tarefa 2; ADR 0016): o que um comando ainda precisa avisar fora do banco, gravado na mesma transação dele e entregue pelo menos uma vez pelo worker da API
+- `payload`: objeto JSON de até 2 KB, só com ids e códigos (nada pessoal, API-04); `type` no formato `módulo.ação`; `status` `PENDING`, `DONE` ou `DEAD`, com `processed_at` exatamente quando entregue; `last_error` só com o nome do erro
+- O worker reserva com `FOR UPDATE SKIP LOCKED` e `locked_until`, roda o tratador sem transação aberta e registra o resultado em outra; depois de 10 tentativas (esperas que dobram a partir de 1 s), `DEAD` e relato no Sentry (EXT-08)
+- Índice parcial `(available_at) WHERE status = 'PENDING'` (`EXPLAIN ANALYZE`: `Index Scan using outbox_messages_available_idx`, 0,05 ms)
+- `GRANT`: `SELECT, INSERT` e `UPDATE` só das colunas de entrega para a API; sem `DELETE` (a limpeza das entregues é um job futuro)
+
 ### 5.4.1 `top_ups` (v1.1.0, tarefa 5)
 
 **`top_ups`** (só inclusão: toda recarga nasce concluída nesta versão, D5)
