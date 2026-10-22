@@ -10,7 +10,7 @@ import { CreatePixTransfer } from './application/create-pix-transfer.ts';
 import { GetPixTransfer } from './application/get-pix-transfer.ts';
 import { GetReceivingKey } from './application/get-receiving-key.ts';
 import { LookupPixKey } from './application/lookup-pix-key.ts';
-import type { AccountsPort, IdentityPort, LedgerPort } from './application/ports.ts';
+import type { AccountsPort, IdentityPort, LedgerPort, SpiPort } from './application/ports.ts';
 import { AesGcmPixKeyProtector } from './infrastructure/aes-gcm-pix-key-protector.ts';
 import { CryptoEndToEndIds } from './infrastructure/crypto-end-to-end-ids.ts';
 import { HmacRequestFingerprint } from '../../shared/infrastructure/hmac-request-fingerprint.ts';
@@ -27,7 +27,13 @@ export type { CreatePixTransfer } from './application/create-pix-transfer.ts';
 export type { GetPixTransfer } from './application/get-pix-transfer.ts';
 export type { GetReceivingKey } from './application/get-receiving-key.ts';
 export type { LookupPixKey } from './application/lookup-pix-key.ts';
-export type { AccountsPort, IdentityPort, LedgerPort, PinCheck } from './application/ports.ts';
+export type {
+  AccountsPort,
+  IdentityPort,
+  LedgerPort,
+  PinCheck,
+  SpiPort,
+} from './application/ports.ts';
 
 export interface PaymentsModule {
   createCpfKey: CreateCpfKey;
@@ -48,6 +54,8 @@ export function createPaymentsModule(settings: {
   accounts: AccountsPort;
   identity: IdentityPort;
   ledger: LedgerPort;
+  /** The DICT and the SPI; null while the Pix to other banks is off (P1). */
+  spi: SpiPort | null;
 }): PaymentsModule {
   const repositories = new PgPaymentsRepositories();
   const protector = new AesGcmPixKeyProtector(settings.piiKeys);
@@ -69,6 +77,7 @@ export function createPaymentsModule(settings: {
       identity: settings.identity,
       quota,
       clock: settings.clock,
+      spi: settings.spi,
     }),
     getReceivingKey: new GetReceivingKey({
       unitOfWork: settings.unitOfWork,

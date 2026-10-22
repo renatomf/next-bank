@@ -188,6 +188,7 @@ export function buildApp({
       availableBalance: (tx, accountId) => ledger.customerAccounts.availableBalance(tx, accountId),
       postPixTransfer: (tx, posting) => ledger.customerAccounts.transferPix(tx, posting),
     },
+    spi: null,
   });
   // Top-ups reach Accounts, Identity and the Ledger only through the ports they define.
   const topUps = createTopUpsModule({

@@ -80,6 +80,7 @@ export function pgRegisterCustomer(pool: pg.Pool, clock: Clock): RegisterCustome
         availableBalance: () => Promise.resolve(null),
         postPixTransfer: () => Promise.resolve(),
       },
+      spi: null,
     }).createCpfKey,
   });
 }

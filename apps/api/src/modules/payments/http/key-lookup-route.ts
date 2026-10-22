@@ -19,6 +19,8 @@ const PixKeyLookupSchema = z
     keyMasked: z.string(),
     payeeName: z.string(),
     payeeDocumentMasked: z.string(),
+    // Only for a payee at another bank (v1.2.0 plan, task 3), named by the DICT.
+    bank: z.strictObject({ ispb: z.string(), name: z.string() }).optional(),
   })
   .meta({ id: 'PixKeyLookup' });
 

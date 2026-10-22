@@ -1,12 +1,15 @@
 import type { Clock, UnitOfWork } from '../../../shared/application/ports.ts';
 import { PixKeyNotFound, TooManyKeyLookups } from '../domain/errors.ts';
 import { type PixKeyType, pixKeyValue } from '../domain/pix-key.ts';
+import type { PayeeBank } from '../domain/pix-transfer.ts';
+import { findPayeeElsewhere, findPayeeHere } from './find-payee.ts';
 import type {
   AccountsPort,
   IdentityPort,
   KeyLookupQuota,
   PaymentsRepositoriesFactory,
   PixKeyValueProtector,
+  SpiPort,
 } from './ports.ts';
 
 export interface LookupPixKeyInput {
@@ -22,6 +25,8 @@ export interface PixKeyLookup {
   keyMasked: string;
   payeeName: string;
   payeeDocumentMasked: string;
+  /** Only for a payee at another bank. */
+  bank?: PayeeBank;
 }
 
 export interface LookupPixKeyDependencies {
@@ -32,6 +37,8 @@ export interface LookupPixKeyDependencies {
   identity: IdentityPort;
   quota: KeyLookupQuota;
   clock: Clock;
+  /** The DICT; null while the Pix to other banks is off (P1). */
+  spi: SpiPort | null;
 }
 
 /** A missing key costs one more lookup: sweeping for names runs out twice as fast. */
@@ -67,22 +74,20 @@ export class LookupPixKey {
       // A value no key can have is a miss like any other.
       return null;
     }
-    const { unitOfWork, repositories, protector, accounts, identity } = this.#deps;
-    return unitOfWork.run(async (tx) => {
-      const key = await repositories
-        .for(tx)
-        .pixKeys.findByIndex(input.type, protector.blindIndex(input.type, value));
-      if (key === null) return null;
-      const account = await accounts.findById(tx, key.accountId);
-      const payee = account && (await identity.payeeOf(tx, account.holderUserId));
-      // A key always belongs to an account with a holder: anything else is a bug.
-      if (!payee) throw new Error(`Pix key without a payee for account ${key.accountId}`);
-      return {
-        keyType: input.type,
-        keyMasked: key.masked,
-        payeeName: payee.name,
-        payeeDocumentMasked: payee.documentMasked,
-      };
-    });
+    const key = { type: input.type, value };
+    const { unitOfWork, repositories } = this.#deps;
+    const here = await unitOfWork.run((tx) =>
+      findPayeeHere(this.#deps, tx, repositories.for(tx), key),
+    );
+    // Asked with no transaction open: the DICT is a partner that may be slow.
+    const payee = here ?? (await findPayeeElsewhere(this.#deps.spi, key));
+    if (payee === null) return null;
+    return {
+      keyType: input.type,
+      keyMasked: payee.keyMasked,
+      payeeName: payee.name,
+      payeeDocumentMasked: payee.documentMasked,
+      ...('bank' in payee ? { bank: payee.bank } : {}),
+    };
   }
 }
