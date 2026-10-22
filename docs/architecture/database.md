@@ -290,6 +290,15 @@ erDiagram
 - `GRANT`: só `SELECT, INSERT` para a API
 - No ledger: três contas de sistema `system:top-up-<operadora>` e o tipo `TOP_UP` em `journal_entries.kind`; o débito do cliente leva a operadora e o número mascarado como contraparte
 
+### 5.4.2 `simulator` (v1.2.0, tarefa 1)
+
+O schema do simulador do Bacen e dos outros parceiros (plano `v1.2.0-pix-assincrono.md`, D13). Só o papel `nextbank_simulator` o alcança, e ele não alcança nenhum schema da API: o simulador conversa com a API só por HTTP, como o Bacen conversaria. Migrations próprias (`apps/simulator/db/migrations`), com a tabela de controle `simulator_migrations`.
+
+- **`banks`** e **`dict_keys`:** os bancos fictícios e as chaves dos seus clientes fictícios, com o documento já mascarado; só leitura para o papel.
+- **`payments`:** PK `end_to_end_id` (formato do Bacen), que torna o envio idempotente (`INSERT … ON CONFLICT DO NOTHING`); `request_hash` distingue a repetição de um pedido diferente com o mesmo id; `CHECK`s de valor, moeda, status e de coerência entre status, `reason`, `decided_at` e `settled_at`. O papel nunca altera o que foi pedido, só o desfecho.
+- **`webhook_deliveries`:** o webhook devido a cada pagamento; sem corpo guardado, porque ele é montado do pagamento, e assim uma nova tentativa manda o mesmo evento.
+- **Índices** (`EXPLAIN ANALYZE` no banco de testes): o DICT pela PK (`dict_keys_pkey`, 0,05 ms); o arquivo de liquidação por `payments_settled_at_idx`, parcial em `SETTLED` (0,03 ms); o despachante por `webhook_deliveries_due_idx`, parcial em `PENDING`, com `FOR UPDATE … SKIP LOCKED` (0,02 ms).
+
 ### 5.5 `audit`
 
 **`audit_events`** (append-only)
@@ -303,11 +312,14 @@ erDiagram
 | Papel | Uso | Permissões |
 |---|---|---|
 | `nextbank_migrator` | Só no pipeline de migrations | Dono dos schemas; DDL |
+| `nextbank_simulator` | O simulador (v1.2.0) | Só o schema `simulator`: leitura dos bancos e das chaves, `SELECT, INSERT` e `UPDATE` só das colunas de desfecho nos pagamentos e nas entregas; nenhum schema da API, que também não alcança o dele; os mesmos tempos limite da API |
 | `nextbank_app` | API em execução | `SELECT, INSERT, UPDATE` nas tabelas mutáveis; **apenas `SELECT, INSERT`** em `ledger.journal_entries`, `ledger.postings` e `audit.audit_events`; `DELETE` só em `identity.refresh_tokens` e `platform.idempotency_records` (jobs de limpeza); sem DDL, sem `TRUNCATE` |
 
 **Defesa em profundidade:** além dos `GRANT`s, triggers `BEFORE UPDATE OR DELETE` em `journal_entries`, `postings` e `audit_events` lançam erro. Assim, nem um acesso com papel errado altera o histórico.
 
 Conexões sempre com TLS (`sslmode=verify-full` no ambiente publicado). O papel da aplicação tem `statement_timeout = 5s`, `lock_timeout = 3s` e `idle_in_transaction_session_timeout = 10s` (API-12), configurados na criação do papel, já que o migrator não pode alterar papéis.
+
+**Papel novo num Postgres local que já existe:** o bootstrap (`infra/postgres/init-roles.sh`) só roda quando o volume é criado. Para o `nextbank_simulator`, acrescente `NEXTBANK_SIMULATOR_PASSWORD` ao `infra/.env` e rode, como `postgres`, o `CREATE ROLE`, os três `ALTER ROLE` e o `GRANT CONNECT` do bootstrap; ou recrie o volume (`docker compose down -v`, que apaga os dados locais).
 
 **Criação dos papéis:** sempre via SQL, nunca pelo painel do provedor. No Neon, papéis criados pelo painel ou pela API entram no `neon_superuser`, que tem `pg_write_all_data` e ignora os `GRANT`s, anulando o menor privilégio (API-11, demonstrado no spike; ver ADR 0009).
 
