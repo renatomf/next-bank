@@ -160,12 +160,13 @@ describe('the Pix to another bank over HTTP', () => {
     const response = await authorize(payer, pixId);
 
     expect(response.statusCode).toBe(200);
-    expect(response.json()).toMatchObject({
+    const body = response.json<{ endToEndId: string }>();
+    expect(body).toMatchObject({
       status: 'PROCESSING',
-      endToEndId: expect.stringMatching(/^E00000000\d{12}[A-Za-z0-9]{11}$/),
       completedAt: null,
       payee: { keyMasked: 'cl***@example.com', bank: { name: 'Banco Aurora' } },
     });
+    expect(body.endToEndId).toMatch(/^E00000000\d{12}[A-Za-z0-9]{11}$/);
     expect(await balanceOf(payer)).toBe(1_000_000 - 8_000);
     expect(await messagesFor(pixId)).toEqual([
       { type: 'pix.send-external', payload: { transferId: pixId } },
