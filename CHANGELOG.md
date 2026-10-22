@@ -6,8 +6,52 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não publicado]
 
+## [1.1.0] — 2026-10-21
+
+Produtos do dia a dia: o visitante já tem o que usar na primeira abertura, sempre com dinheiro, pessoas e empresas fictícios e sem nenhum provedor real (plano `v1.1.0-produtos-do-dia-a-dia.md`).
+
+### Adicionado
+- **Comprovante compartilhado:** o comprovante do Pix concluído sai como imagem, com os mesmos dados mascarados da tela e o aviso de que o next bank é fictício (MOB-09, DEMO-05).
+- **Biometria:**
+  - a digital desbloqueia o app e confirma o Pix e a recarga, liberando o PIN guardado com uma chave do aparelho que exige biometria forte; o servidor continua conferindo o PIN (ADR 0004, ADR 0013);
+  - o rosto só destrava a tela, nunca move dinheiro;
+  - novo Desbloqueio, com só o primeiro nome do cliente (MOB-11, MOB-12, MOB-13).
+- **Pix por QR Code:**
+  - receber: cada conta ganha uma chave aleatória, e o QR Code nunca leva o CPF (PIX-12);
+  - pagar: pela câmera ou pelo "Copia e Cola". O código é conferido inteiro antes de qualquer tela, o nome do QR é descartado e o titular vem do servidor, e o valor fixo chega travado (PIX-11, PIX-13).
+- **Recarga de celular:**
+  - três operadoras fictícias (Onda Móvel, Pulso Celular e Rede Nova), valores de R$ 15, 20, 30 e 50 e limite de R$ 200 por dia;
+  - só números do intervalo fictício `(DD) 90000-XXXX`;
+  - PIN ou biometria, comprovante e a recarga no extrato;
+  - o número fica cifrado com chave própria e aparece sempre mascarado (TOP-01, TOP-02).
+- **Extrato redesenhado:** filtros de entradas, saídas, Pix e comprovantes, e busca pelo nome, feitos no servidor (READ-06).
+- **Novas telas:**
+  - Home com o box Pix, os atalhos e "Meus cartões";
+  - perfil redesenhado;
+  - nova barra de navegação.
+- **Telas só de layout:** Ajuda, Notificações, Pix Automático, Minhas chaves, Transferir, Assistente, Menu, Cartões e Investimentos. Os valores inventados levam a etiqueta "Exemplo" (F-37).
+
+### Alterado
+- **Botões abaixo do saldo na Home:** "Extrato ›" e "Agendamentos ›" em pílulas de vidro como a do saldo, uma em cada ponta; "Agendamentos" é só layout por ora ("Em breve").
+- **Logo do login:** do tamanho do da abertura.
+- **Fronteiras de UI** (ADR 0014):
+  - o design system passa a ter só tokens, tema, componentes e padrões, sem texto de interface;
+  - os componentes do banco vão para `core/ui`;
+  - as features só compõem.
+- **Idempotência compartilhada:** passa a ser de toda a API, num schema comum, para o Pix e a recarga usarem a mesma garantia (ADR 0015).
+- **Filtro "Pix" do extrato:** mostra só Pix; uma recarga aparece em "Comprovantes".
+
+### Segurança
+- **Print bloqueado no app de release:** a gravação de tela mostra o app preto, e a miniatura dos recentes não mostra o conteúdo (MOB-14).
+- **IP do cliente conferido a cada deploy:** o smoke test falha sozinho se o número de proxies na frente da API mudar (API-14).
+- **Sentry e logs:** o termo buscado no extrato e o número da recarga não chegam a eles (F-35, MOB-02).
+- **Recarga dupla:** uma recarga cuja resposta se perdeu nunca é feita duas vezes, nem saindo da tela e voltando (F-39).
+- **Dependências:** `vite` atualizado para 8.3.4 (GHSA-698v-4r3x-3vcv), além das atualizações do Dependabot.
+
 ### Corrigido
 - O ponto do logo "next." ficava acima do pé do "t" e colado nele; agora fica no mesmo nível (medido nos tamanhos do app) e um pouco afastado. O ícone do app não muda.
+- O detalhe do extrato chamava de "CPF" todo documento da outra parte; uma recarga mostra "Celular" (F-38).
+- O E2E falhava às vezes no login quando o teclado tirava o botão "Entrar" da tela pequena do emulador do CI.
 
 ## [1.0.1] — 2026-10-13
 

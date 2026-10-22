@@ -6,7 +6,7 @@
 
 Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat model) · ➖ não se aplica
 
-**Conferido item a item em 2026-10-13, antes da `v1.0.0`.** A evidência de cada item (teste, gate do CI ou verificação) está na matriz `controles-de-seguranca.md`.
+**Conferido item a item em 2026-10-21, antes da `v1.1.0`** (a conferência anterior, de 2026-10-13, foi antes da `v1.0.0`). A evidência de cada item (teste, gate do CI ou verificação) está na matriz `controles-de-seguranca.md`.
 
 ## OWASP ASVS — API (nível 2)
 
@@ -88,7 +88,8 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 | Fluxos em ordem e sem pular etapas (máquina de estados do Pix) (PIX-08) | ✅ | 5 |
 | Limites de negócio no servidor, com horário do servidor (PIX-10) | ✅ | 5 |
 | Proteção contra automação abusiva (rate limits) (AUTH-09, PIX-07) | ✅ | 3, 5 |
-| Operações idempotentes e resistentes a concorrência (PIX-02, PIX-03) | ✅ | 5 |
+| Operações idempotentes e resistentes a concorrência (PIX-02, PIX-03); a recarga com o saldo e o limite do dia sob requisições simultâneas (TOP-02) | ✅ | 5, v1.1.0 |
+| Limite diário da recarga somado no dia de São Paulo, com o relógio do servidor (TOP-02) | ✅ | v1.1.0 (tarefa 5) |
 
 ### API e serviços web
 | Item | Status | Sem. |
@@ -109,14 +110,17 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 | Categoria | Item | Status | Sem. |
 |---|---|---|---|
 | **STORAGE** | Tokens só em Keychain/Keystore (MOB-01) | ✅ | 3 |
-| | Nada sensível em logs, cache ou preferências (MOB-02) | ✅ | 2+ |
+| | Nada sensível em logs, cache ou preferências (MOB-02); o número da recarga nunca vai para log nem para o Sentry (TOP-01) | ✅ | 2+, v1.1.0 |
+| | Comprovante compartilhado com os mesmos dados mascarados da tela e o arquivo apagado logo depois (MOB-09) | ✅ | v1.1.0 (tarefa 1) |
 | **CRYPTO** | Nenhuma criptografia caseira; nenhuma chave embutida no app (MOB-04) | ✅ | 2+ |
 | **AUTH** | Autenticação e autorização decididas no servidor | ✅ | 3 |
-| | PIN validado no servidor; biometria só como conveniência local (PIX-06) | ✅ | 3, 6 (biometria: extra, D4) |
+| | PIN validado no servidor; biometria só como conveniência local que libera o PIN guardado com biometria forte, nunca o rosto (PIX-06, MOB-11, MOB-13) | ✅ | 3, 6; biometria na v1.1.0 (tarefa 2) |
+| | Antes do desbloqueio, nenhum dado da conta além do primeiro nome (MOB-12) | ✅ | v1.1.0 (tarefa 2) |
 | | Desbloqueio após tempo em segundo plano (D5) | ✅ | 5, 6 (F-16, F-21) |
 | **NETWORK** | Só HTTPS; tráfego em texto puro desabilitado (MOB-03) | ✅ | 2 |
 | | Certificate pinning | 🚫 | — |
-| **PLATFORM** | Sem deep links na V1: desligados no Android e no iOS (MOB-06) | ✅ | 3 |
+| **PLATFORM** | Sem deep links na V1: desligados no Android e no iOS (MOB-06); o QR Code lido só preenche o Pix, nunca abre uma tela (PIX-13) | ✅ | 3, v1.1.0 |
+| | Câmera pedida só ao abrir a leitura do QR Code; recusa leva ao "Copia e Cola" (MOB-10) | ✅ | v1.1.0 (tarefa 4) |
 | | Proteção de telas sensíveis contra captura: o app inteiro no release (MOB-14) | ✅ | v1.1.0 (tarefa 7) |
 | | Opção de ocultar saldo (MOB-05) | ✅ | 4 |
 | **CODE** | Dependências atualizadas e verificadas (API-09) | ✅ | 2 |
