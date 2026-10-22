@@ -85,6 +85,14 @@ module.exports = {
       to: { path: '^src/application/' },
     },
     {
+      name: 'simulator-only-at-the-edge',
+      severity: 'error',
+      comment:
+        'The simulator is mounted in the service (v1.2.0 plan, P2), never called in process: the API reaches it only over HTTP, like any partner.',
+      from: { pathNot: '^src/(server|mount-simulator)\\.ts$' },
+      to: { path: ['^@nextbank/simulator', '(^|/)simulator/src/'] },
+    },
+    {
       name: 'shared-does-not-know-modules',
       severity: 'error',
       comment: 'Cross-cutting code must not depend on a bounded context.',
