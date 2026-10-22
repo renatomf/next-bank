@@ -47,11 +47,27 @@ void main() {
       final caret = tester.widget<Icon>(find.byIcon(Icons.chevron_right));
       expect(word.style?.color, NbGlassColors.text);
       expect(caret.color, NbGlassColors.text);
-      // Justified apart: the word at the start, the caret at the end.
+      // S21 checkpoint of task 5b: the caret right after the word, both on a
+      // glass pill of their own, as the balance sits on its glass.
       expect(
-        tester.getTopLeft(find.text('Extrato')).dx,
-        lessThan(tester.getTopLeft(find.byIcon(Icons.chevron_right)).dx - 100),
+        tester.getTopLeft(find.byIcon(Icons.chevron_right)).dx -
+            tester.getTopRight(find.text('Extrato')).dx,
+        inInclusiveRange(0, NbSpace.sm),
       );
+      final pill = find.ancestor(
+        of: find.text('Extrato'),
+        matching: find.byType(GlassPanel),
+      );
+      expect(pill, findsOneWidget);
+      final balance = find.ancestor(
+        of: find.textContaining('Saldo disponível'),
+        matching: find.byType(GlassPanel),
+      );
+      expect(
+        tester.getSize(pill).width,
+        lessThan(tester.getSize(balance).width / 2),
+      );
+      expect(tester.getTopLeft(pill).dx, tester.getTopLeft(balance).dx);
       expect(
         tester.getTopLeft(find.text('Extrato')).dy,
         greaterThan(

@@ -135,8 +135,13 @@ class BalanceCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           panel,
-                          if (onStatement case final onStatement?)
-                            _StatementLink(onPressed: onStatement),
+                          if (onStatement case final onStatement?) ...[
+                            const SizedBox(height: NbSpace.sm),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: _StatementLink(onPressed: onStatement),
+                            ),
+                          ],
                           if (actions.isNotEmpty) ...[
                             const SizedBox(height: NbSpace.sm),
                             _Actions(actions: actions),
@@ -152,7 +157,8 @@ class BalanceCard extends StatelessWidget {
   }
 }
 
-/// "Extrato" and a caret, justified apart in white, read as "Ver extrato".
+/// "Extrato" and its caret side by side in white, on a glass pill like the
+/// balance's (S21 checkpoint of task 5b), read as "Ver extrato".
 class _StatementLink extends StatelessWidget {
   const new({required this.onPressed});
 
@@ -164,25 +170,33 @@ class _StatementLink extends StatelessWidget {
     button: true,
     label: 'Ver extrato',
     excludeSemantics: true,
-    child: InkWell(
-      onTap: onPressed,
-      borderRadius: BorderRadius.circular(NbRadius.boxInner),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          NbSpace.md,
-          NbSpace.md,
-          NbSpace.xs,
-          NbSpace.xs,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Extrato',
-              style: NbType.bodyText.copyWith(color: NbGlassColors.text),
+    child: GlassPanel(
+      expand: false,
+      padding: EdgeInsets.zero,
+      // Its own surface, so the touch ripple shows over the glass.
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onPressed,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              NbSpace.lg,
+              NbSpace.sm,
+              NbSpace.md,
+              NbSpace.sm,
             ),
-            const Icon(Icons.chevron_right, color: NbGlassColors.text),
-          ],
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              spacing: NbSpace.xs,
+              children: [
+                Text(
+                  'Extrato',
+                  style: NbType.bodyText.copyWith(color: NbGlassColors.text),
+                ),
+                const Icon(Icons.chevron_right, color: NbGlassColors.text),
+              ],
+            ),
+          ),
         ),
       ),
     ),

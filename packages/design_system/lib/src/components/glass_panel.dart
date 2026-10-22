@@ -11,6 +11,7 @@ class GlassPanel extends StatelessWidget {
   const new({
     required this.child,
     this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    this.expand = true,
     super.key,
   });
 
@@ -19,6 +20,10 @@ class GlassPanel extends StatelessWidget {
 
   /// Room between the glass's border and [child].
   final EdgeInsets padding;
+
+  /// Whether the glass takes the whole width; false fits it to [child], as
+  /// a pill.
+  final bool expand;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +34,7 @@ class GlassPanel extends StatelessWidget {
         // CSS blur(14px) is a standard deviation of 14 px.
         filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
         child: Container(
-          width: double.infinity,
+          width: expand ? double.infinity : null,
           padding: padding,
           decoration: BoxDecoration(
             color: NbGlassColors.glass,
