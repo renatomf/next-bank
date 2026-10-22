@@ -137,9 +137,26 @@ class BalanceCard extends StatelessWidget {
                           panel,
                           if (onStatement case final onStatement?) ...[
                             const SizedBox(height: NbSpace.sm),
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: _StatementLink(onPressed: onStatement),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                _GlassLink(
+                                  text: 'Extrato',
+                                  label: 'Ver extrato',
+                                  onPressed: onStatement,
+                                ),
+                                // Layout only for now, as the other screens
+                                // still to come: it says so when tapped.
+                                _GlassLink(
+                                  text: 'Agendamentos',
+                                  label: 'Agendamentos',
+                                  onPressed: () => showNbToast(
+                                    context,
+                                    'Em breve.',
+                                    icon: Icons.info_outline,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                           if (actions.isNotEmpty) ...[
@@ -157,18 +174,21 @@ class BalanceCard extends StatelessWidget {
   }
 }
 
-/// "Extrato" and its caret side by side in white, on a glass pill like the
-/// balance's (S21 checkpoint of task 5b), read as "Ver extrato".
-class _StatementLink extends StatelessWidget {
-  const new({required this.onPressed});
+/// A word and its caret side by side in white, on a glass pill like the
+/// balance's (S21 checkpoint of task 5b): "Extrato" and "Agendamentos"
+/// below the balance, read as [label].
+class _GlassLink extends StatelessWidget {
+  const new({required this.text, required this.label, required this.onPressed});
 
+  final String text;
+  final String label;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) => Semantics(
     container: true,
     button: true,
-    label: 'Ver extrato',
+    label: label,
     excludeSemantics: true,
     child: GlassPanel(
       expand: false,
@@ -190,7 +210,7 @@ class _StatementLink extends StatelessWidget {
               spacing: NbSpace.xs,
               children: [
                 Text(
-                  'Extrato',
+                  text,
                   style: NbType.bodyText.copyWith(color: NbGlassColors.text),
                 ),
                 const Icon(Icons.chevron_right, color: NbGlassColors.text),
