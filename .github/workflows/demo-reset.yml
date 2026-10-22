@@ -46,6 +46,12 @@ jobs:
         env:
           MIGRATION_DATABASE_URL: ${{ secrets.MIGRATION_DATABASE_URL }}
         run: pnpm --filter @nextbank/api db:migrate
+      # The branch came back from "clean" with an empty database: the mounted
+      # simulator needs its schema and seed again (v1.2.0 plan, D2).
+      - name: Apply the simulator migrations
+        env:
+          SIMULATOR_MIGRATION_DATABASE_URL: ${{ secrets.MIGRATION_DATABASE_URL }}
+        run: pnpm --filter @nextbank/simulator db:migrate
       # Through the published API: its keys never leave Render (task 3a).
       - name: Seed the demo accounts
         env:
