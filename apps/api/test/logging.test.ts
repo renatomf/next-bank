@@ -22,6 +22,14 @@ const SECRETS = {
   name: 'Fake Person Name',
 };
 
+/** Every value at the leaves of a log line, as text. */
+function leafValues(value: unknown): string[] {
+  if (value !== null && typeof value === 'object') {
+    return Object.values(value).flatMap(leafValues);
+  }
+  return [String(value)];
+}
+
 describe('logs', () => {
   let app: FastifyInstance;
   let logs: ReturnType<typeof captureLogs>;
@@ -51,12 +59,26 @@ describe('logs', () => {
       payload: {},
     });
 
-    const output = logs.raw();
-    expect(output).toMatch(/event with sensitive data/);
-    for (const value of [...Object.values(SECRETS), 'fake-header-token']) {
-      expect(output).not.toContain(value);
+    const event = logs.lines().find((line) => line.msg === 'event with sensitive data');
+    expect(event).toBeDefined();
+    // Field by field, at every depth: a 4-digit PIN can turn up by chance in
+    // the digits of a timestamp or a duration, so searching the raw text for
+    // it once failed a correct log.
+    const payload = event?.payload as Record<string, unknown> | undefined;
+    for (const key of Object.keys(SECRETS)) {
+      expect(event?.[key], key).toBe('[REDACTED]');
+      expect(payload?.[key], `payload.${key}`).toBe('[REDACTED]');
     }
-    expect(output).toContain('[REDACTED]');
+    const values = leafValues(event);
+    for (const secret of Object.values(SECRETS)) {
+      expect(values).not.toContain(secret);
+    }
+    // Text that cannot turn up by chance is also looked for in every line,
+    // the request's own included (its authorization header).
+    const output = logs.raw();
+    for (const secret of [...Object.values(SECRETS), 'fake-header-token']) {
+      if (!/^\d+$/.test(secret)) expect(output).not.toContain(secret);
+    }
   });
 
   it('keeps one JSON line per event even with a newline in a value (API-10)', async () => {
