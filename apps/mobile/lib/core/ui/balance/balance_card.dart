@@ -137,8 +137,12 @@ class BalanceCard extends StatelessWidget {
                           panel,
                           if (onStatement case final onStatement?) ...[
                             const SizedBox(height: NbSpace.sm),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            // At the two ends; when they do not fit, as on a
+                            // small phone at 1.3x text, the second goes below.
+                            Wrap(
+                              alignment: WrapAlignment.spaceBetween,
+                              spacing: NbSpace.sm,
+                              runSpacing: NbSpace.sm,
                               children: [
                                 _GlassLink(
                                   text: 'Extrato',
@@ -209,9 +213,19 @@ class _GlassLink extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               spacing: NbSpace.xs,
               children: [
-                Text(
-                  text,
-                  style: NbType.bodyText.copyWith(color: NbGlassColors.text),
+                // Shrinks only when a small phone at large text has no room:
+                // a word never breaks nor is cut.
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      text,
+                      maxLines: 1,
+                      style: NbType.bodyText.copyWith(
+                        color: NbGlassColors.text,
+                      ),
+                    ),
+                  ),
                 ),
                 const Icon(Icons.chevron_right, color: NbGlassColors.text),
               ],
