@@ -125,6 +125,36 @@ export interface LedgerPort {
   postPixTransfer(tx: Transaction, posting: PixPosting): Promise<void>;
 }
 
+/** A key of another bank, as the DICT knows it: its owner only masked. */
+export interface DictKey {
+  keyType: PixKeyType;
+  bank: { ispb: string; name: string };
+  owner: PixParty;
+}
+
+/** A Pix to another bank as the SPI takes it. */
+export interface SpiPayment {
+  /** The same in every attempt: the SPI takes it once (EXT-03). */
+  endToEndId: string;
+  amount: Money;
+  payer: PixParty & { ispb: string };
+  payeeKey: string;
+}
+
+/**
+ * The Bacen's DICT and SPI (v1.2.0 plan, task 3), a partner outside next
+ * bank: both may fail or answer late, so the caller must tolerate a throw.
+ */
+export interface SpiPort {
+  /** Null when no bank holds the key. */
+  findKey(key: string): Promise<DictKey | null>;
+  /**
+   * Resolves once the SPI took the payment; its outcome comes later. Throws
+   * when that is not known, and sending again is always safe.
+   */
+  send(payment: SpiPayment): Promise<void>;
+}
+
 /** The end-to-end id of a completed Pix (D10); random, so it comes from outside the domain. */
 export interface EndToEndIds {
   next(completedAt: Date): string;
