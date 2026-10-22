@@ -33,6 +33,8 @@ next bank é um banco fictício construído como **projeto de portfólio para va
 | **3. Backoffice** | Next.js: RBAC, dupla aprovação, fila de exceções da conciliação | ~2 semanas | `v1.3.0` |
 | **4. Produtos do app** | Minhas chaves Pix e QR Code dinâmico; recarga assíncrona, boleto e contas de consumo com provedor simulado; cartão de crédito e fatura | ~2 semanas por versão | `v1.4.0` → `v2.0.0` |
 
+> ✅ **Entregue:** `v1.1.0`, em 2026-10-21 ([Releases](https://github.com/renatomf/next-bank/releases/tag/v1.1.0)). O que entrou está no [CHANGELOG](../CHANGELOG.md), e o plano, em [v1.1.0-produtos-do-dia-a-dia.md](plans/v1.1.0-produtos-do-dia-a-dia.md).
+
 **Nova ordem (2026-10-14):** depois da `v1.0.0`, a `v1.1.0` antecipa a parte mais simples da Fase 4, que um visitante da demo usa na primeira abertura; as Fases 2 e 3 andam uma versão. Nenhuma versão usa provedor real: o dinheiro só se move entre contas do next bank.
 
 **Total:** ~12–13 semanas. Se tudo atrasar: V1 em 9–10 semanas e a Fase 3 passa para "Próximos passos" no README.
