@@ -9,7 +9,7 @@
 ## 1. Escopo
 
 Fase 1 (V1): app Flutter, API Fastify, PostgreSQL, Sentry, pipeline de CI/CD e repositório público.
-Fora do escopo desta versão: simulador do Bacen (Fase 2) e backoffice (Fase 3), que terão revisões próprias.
+Fora do escopo desta versão: simulador do Bacen (Fase 2) e backoffice (Fase 3), que terão revisões próprias. A da Fase 2 começou com o plano da `v1.2.0` (seção 5.8, ameaças propostas).
 
 ## 2. Ativos
 
@@ -34,6 +34,7 @@ Fora do escopo desta versão: simulador do Bacen (Fase 2) e backoffice (Fase 3),
 | **A4** App adulterado / malware no aparelho | Lê armazenamento inseguro, intercepta tráfego | Roubar tokens |
 | **A5** Quem obtém dump, backup ou logs | Acesso de leitura a dados em repouso | Ler CPF, hashes, tokens em log |
 | **A6** Cadeia de suprimentos | Dependência ou action comprometida | Pacote npm malicioso |
+| **A7** Quem alcança o webhook do SPI (v1.2.0) | A rota pública que recebe as notificações do simulador do Bacen | Forjar ou repetir uma confirmação ou uma falha de Pix externo |
 
 ## 4. Fluxo de dados e fronteiras de confiança
 
@@ -173,6 +174,21 @@ A recarga move dinheiro como o Pix: valem também PIX-04 (corpo estrito), PIX-05
 |---|---|---|---|---|---|---|
 | TOP-01 | Recarregar ou guardar o número de uma pessoa real | I | Visitante, A5 | Só o intervalo fictício `(DD) 90000-XXXX`, com DDD válido (`InvalidPhoneNumber` para o resto); o número é cifrado com AES-256-GCM sob uma chave só dele (`TOP_UP_PHONE_KEY`, decisão R6), preso à coluna pelo dado associado; respostas, extrato e auditoria só levam o número mascarado; logs e Sentry redigem a chave `phoneNumber` e o formato de celular | `phone-number.test.ts`; `top-up-routes.test.ts`: número real → 422, o cifrado no banco não contém os dígitos, o log não contém o número, a auditoria não o leva; `sentry-scrub.test.ts` e `error_reporting_test.dart`: número pela chave e pelo formato, na API e no app; `phone_number_test.dart` e `top_up_flow_test.dart` (app): número real recusado antes de qualquer chamada, com o aviso sempre visível; `http_top_up_repository_test.dart`: comprovante com número sem máscara → inesperado | v1.1.0 |
 | TOP-02 | Recarga duplicada, ou o mesmo saldo e o mesmo limite do dia gastos duas vezes por requisições simultâneas | T | A2, rede | `Idempotency-Key` (a idempotência compartilhada, ADR 0015); travas na ordem do `database.md`, seção 7: a conta do ledger do cliente em `FOR UPDATE` antes de ler o saldo e a soma do dia | `top-up-routes.test.ts`: mesma chave → mesma resposta e um só débito; chave reusada com outro pedido → 422; 2 × R$ 30 sobre R$ 40 e 2 × R$ 50 com R$ 150 gastos no dia → um 201 e um 422, contra o Postgres real; no app, `confirm_top_up_controller_test.dart`: toque duplo → uma recarga, resposta perdida → mesma chave, inclusive depois de sair e reabrir a mesma recarga (MOB-07, F-39) | v1.1.0 |
+
+### 5.8 Pix assíncrono (v1.2.0, propostas)
+
+O Pix passa a sair para outros bancos (fictícios) por um simulador do Bacen que falha de propósito, e um executor em segundo plano roda os Pix agendados e recorrentes (plano `v1.2.0-pix-assincrono.md`). Novo ator: **A7** (seção 3), quem alcança a rota pública do webhook e tenta forjar ou repetir uma notificação do SPI. As linhas abaixo são propostas: cada fatia confirma a mitigação no desenho e marca o teste quando ele existir.
+
+| ID | Ameaça | STRIDE | Ator | Mitigação | Teste | Sem. |
+|---|---|---|---|---|---|---|
+| EXT-01 | Webhook forjado confirma um Pix que não foi pago, ou falha um que foi | S, T | A7 | HMAC-SHA256 do corpo com segredo próprio, comparado em tempo constante, com carimbo de tempo e janela de 5 minutos | Assinatura errada, ausente, corpo alterado ou carimbo velho → 401, nada muda | v1.2.0 |
+| EXT-02 | Webhook repetido ou fora de ordem aplica duas vezes ou desfaz um estado final | T | A7, rede | Inbox com o id do evento único; Pix em estado final ignora eventos novos; eventos versionados | O mesmo webhook 10 vezes, em paralelo → um lançamento; "falhou" depois de "concluído" → ignorado e registrado | v1.2.0 |
+| EXT-03 | Timeout leva a reenviar e pagar duas vezes | T | rede | Depois do timeout, consulta de status pelo id de ponta a ponta; reenvio só se o SPI não conhece o pagamento | Simulador que aceita e não responde → um pagamento só, Pix concluído | v1.2.0 |
+| EXT-04 | Divergência com o arquivo de liquidação passa despercebida | R, T | rede, A5 | Conciliação diária; cada diferença vira uma `ReconciliationException` | Divergências injetadas → 100% viram exceção; dia sem divergência → nenhuma | v1.2.0 |
+| EXT-05 | Ocorrência de um agendamento paga duas vezes | T | — | `UNIQUE (schedule_id, occurrence_date)` e `FOR UPDATE SKIP LOCKED` | Dois workers no mesmo instante → uma ocorrência paga; reinício no meio → nada duplicado | v1.2.0 |
+| EXT-06 | Agendamento executado depois de cancelado, ou criado sem o dono | E, T | A2, A3 | PIN no servidor ao agendar; cancelamento trava o agendamento e a ocorrência; dono do recurso | Cancelar durante a ocorrência → não é paga; outro cliente → 404 | v1.2.0 |
+| EXT-07 | Trace ou log do worker vaza dados pessoais | I | A5 | Atributos do OpenTelemetry por lista de permitidos; nenhum corpo de requisição | O span não tem CPF, chave nem nome | v1.2.0 |
+| EXT-08 | Fila do outbox cresce sem fim com o SPI fora, ou um Pix é estornado sem confirmação | D, T | rede | Retry com backoff e limite; depois, consulta de status e exceção manual; estorno só com a falha confirmada (D6) | SPI fora por 1 hora → nenhum Pix duplicado nem estornado sem confirmação; a fila drena quando ele volta | v1.2.0 |
 
 ## 6. Decisões de segurança
 
