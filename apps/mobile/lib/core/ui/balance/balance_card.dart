@@ -135,8 +135,34 @@ class BalanceCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           panel,
-                          if (onStatement case final onStatement?)
-                            _StatementLink(onPressed: onStatement),
+                          if (onStatement case final onStatement?) ...[
+                            const SizedBox(height: NbSpace.sm),
+                            // At the two ends; when they do not fit, as on a
+                            // small phone at 1.3x text, the second goes below.
+                            Wrap(
+                              alignment: WrapAlignment.spaceBetween,
+                              spacing: NbSpace.sm,
+                              runSpacing: NbSpace.sm,
+                              children: [
+                                _GlassLink(
+                                  text: 'Extrato',
+                                  label: 'Ver extrato',
+                                  onPressed: onStatement,
+                                ),
+                                // Layout only for now, as the other screens
+                                // still to come: it says so when tapped.
+                                _GlassLink(
+                                  text: 'Agendamentos',
+                                  label: 'Agendamentos',
+                                  onPressed: () => showNbToast(
+                                    context,
+                                    'Em breve.',
+                                    icon: Icons.info_outline,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                           if (actions.isNotEmpty) ...[
                             const SizedBox(height: NbSpace.sm),
                             _Actions(actions: actions),
@@ -152,37 +178,59 @@ class BalanceCard extends StatelessWidget {
   }
 }
 
-/// "Extrato" and a caret, justified apart in white, read as "Ver extrato".
-class _StatementLink extends StatelessWidget {
-  const new({required this.onPressed});
+/// A word and its caret side by side in white, on a glass pill like the
+/// balance's (S21 checkpoint of task 5b): "Extrato" and "Agendamentos"
+/// below the balance, read as [label].
+class _GlassLink extends StatelessWidget {
+  const new({required this.text, required this.label, required this.onPressed});
 
+  final String text;
+  final String label;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) => Semantics(
     container: true,
     button: true,
-    label: 'Ver extrato',
+    label: label,
     excludeSemantics: true,
-    child: InkWell(
-      onTap: onPressed,
-      borderRadius: BorderRadius.circular(NbRadius.boxInner),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          NbSpace.md,
-          NbSpace.md,
-          NbSpace.xs,
-          NbSpace.xs,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Extrato',
-              style: NbType.bodyText.copyWith(color: NbGlassColors.text),
+    child: GlassPanel(
+      expand: false,
+      padding: EdgeInsets.zero,
+      // Its own surface, so the touch ripple shows over the glass.
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onPressed,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              NbSpace.lg,
+              NbSpace.sm,
+              NbSpace.md,
+              NbSpace.sm,
             ),
-            const Icon(Icons.chevron_right, color: NbGlassColors.text),
-          ],
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              spacing: NbSpace.xs,
+              children: [
+                // Shrinks only when a small phone at large text has no room:
+                // a word never breaks nor is cut.
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      text,
+                      maxLines: 1,
+                      style: NbType.bodyText.copyWith(
+                        color: NbGlassColors.text,
+                      ),
+                    ),
+                  ),
+                ),
+                const Icon(Icons.chevron_right, color: NbGlassColors.text),
+              ],
+            ),
+          ),
         ),
       ),
     ),

@@ -43,15 +43,35 @@ void main() {
         ),
       );
 
+      final caretFinder = find.descendant(
+        of: find.bySemanticsLabel('Ver extrato'),
+        matching: find.byIcon(Icons.chevron_right),
+      );
       final word = tester.widget<Text>(find.text('Extrato'));
-      final caret = tester.widget<Icon>(find.byIcon(Icons.chevron_right));
+      final caret = tester.widget<Icon>(caretFinder);
       expect(word.style?.color, NbGlassColors.text);
       expect(caret.color, NbGlassColors.text);
-      // Justified apart: the word at the start, the caret at the end.
+      // S21 checkpoint of task 5b: the caret right after the word, both on a
+      // glass pill of their own, as the balance sits on its glass.
       expect(
-        tester.getTopLeft(find.text('Extrato')).dx,
-        lessThan(tester.getTopLeft(find.byIcon(Icons.chevron_right)).dx - 100),
+        tester.getTopLeft(caretFinder).dx -
+            tester.getTopRight(find.text('Extrato')).dx,
+        inInclusiveRange(0, NbSpace.sm),
       );
+      final pill = find.ancestor(
+        of: find.text('Extrato'),
+        matching: find.byType(GlassPanel),
+      );
+      expect(pill, findsOneWidget);
+      final balance = find.ancestor(
+        of: find.textContaining('Saldo disponível'),
+        matching: find.byType(GlassPanel),
+      );
+      expect(
+        tester.getSize(pill).width,
+        lessThan(tester.getSize(balance).width / 2),
+      );
+      expect(tester.getTopLeft(pill).dx, tester.getTopLeft(balance).dx);
       expect(
         tester.getTopLeft(find.text('Extrato')).dy,
         greaterThan(
@@ -62,6 +82,44 @@ void main() {
       await tester.tap(find.bySemanticsLabel('Ver extrato'));
 
       expect(opened, 1);
+    });
+
+    // S21 checkpoint of task 5b: "Agendamentos" on the same glass, at the
+    // other end, so no gap is left beside "Extrato"; layout only for now.
+    testWidgets('puts the schedules on the other end, saying they come', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(
+          BalanceCard(
+            accountNumber: '100000-4',
+            balanceCents: 1000000,
+            hidden: false,
+            onToggleHidden: () {},
+            onStatement: () {},
+          ),
+        ),
+      );
+
+      Finder pillOf(String text) =>
+          find.ancestor(of: find.text(text), matching: find.byType(GlassPanel));
+      final balance = find.ancestor(
+        of: find.textContaining('Saldo disponível'),
+        matching: find.byType(GlassPanel),
+      );
+      expect(
+        tester.getTopRight(pillOf('Agendamentos')).dx,
+        tester.getTopRight(balance).dx,
+      );
+      expect(
+        tester.getTopLeft(pillOf('Agendamentos')).dy,
+        tester.getTopLeft(pillOf('Extrato')).dy,
+      );
+
+      await tester.tap(find.bySemanticsLabel('Agendamentos'));
+      await tester.pump();
+
+      expect(find.text('Em breve.'), findsOneWidget);
     });
 
     testWidgets('leaves the statement line out without where it goes', (
