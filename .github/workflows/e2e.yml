@@ -49,6 +49,7 @@ jobs:
       POSTGRES_DB: nextbank
       NEXTBANK_MIGRATOR_PASSWORD: ci-migrator
       NEXTBANK_APP_PASSWORD: ci-app
+      NEXTBANK_SIMULATOR_PASSWORD: ci-simulator
       MIGRATION_DATABASE_URL: postgres://nextbank_migrator:ci-migrator@localhost:5432/nextbank?sslmode=disable
       DATABASE_URL: postgres://nextbank_app:ci-app@localhost:5432/nextbank?sslmode=disable
     steps:
