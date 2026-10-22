@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { scrubEvent } from '../../../src/shared/infrastructure/sentry-error-reporter.ts';
+import {
+  scrubBreadcrumb,
+  scrubEvent,
+} from '../../../src/shared/infrastructure/sentry-error-reporter.ts';
 
 // What leaves for Sentry carries no personal data nor secrets (CLAUDE.md,
 // LGPD; API-04; week 8 plan, PR c): the same keys the logs redact, the whole
@@ -97,5 +100,43 @@ describe('scrubEvent', () => {
     expect(event.extra).toEqual({
       input: { phoneNumber: '[REDACTED]', operatorId: 'pulso-celular' },
     });
+  });
+
+  // Security review of v1.2.0 task 3: the DICT carries the Pix key in its
+  // path (D2, API-04), and an e-mail or a %2B-encoded phone has no shape the
+  // masks above know. A second layer: any DICT path leaves without its key.
+  it.each([
+    ['an e-mail', 'http://127.0.0.1:3000/simulator/dict/keys/clara.aurora%40example.com'],
+    ['a phone', 'http://127.0.0.1:3000/simulator/dict/keys/%2B5511900009001'],
+  ])('redacts %s in the path of a DICT lookup', (_case, url) => {
+    const event = scrubEvent({
+      request: { url, method: 'GET' },
+      breadcrumbs: [{ category: 'http', data: { url, status_code: 500 } }],
+    });
+
+    expect(event.request?.url).toBe('http://127.0.0.1:3000/simulator/dict/keys/[REDACTED]');
+    expect(event.breadcrumbs?.[0]?.data?.url).toBe(
+      'http://127.0.0.1:3000/simulator/dict/keys/[REDACTED]',
+    );
+  });
+});
+
+describe('scrubBreadcrumb', () => {
+  // The first layer: a call the API makes to a partner (the DICT, the SPI)
+  // may carry personal data in its URL, so none is kept as a breadcrumb.
+  it('keeps no breadcrumb of an outgoing HTTP call', () => {
+    expect(
+      scrubBreadcrumb({
+        category: 'http',
+        type: 'http',
+        data: { url: 'http://127.0.0.1:3000/simulator/dict/keys/clara.aurora%40example.com' },
+      }),
+    ).toBeNull();
+  });
+
+  it('keeps any other breadcrumb, scrubbed', () => {
+    expect(
+      scrubBreadcrumb({ category: 'console', message: 'lookup of 529.982.247-25 failed' }),
+    ).toEqual({ category: 'console', message: 'lookup of [CPF] failed' });
   });
 });
