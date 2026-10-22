@@ -1,6 +1,6 @@
 # next bank — Matriz de controles de segurança (V1)
 
-- **Atualizado em:** 2026-10-13 (conferência item a item antes da `v1.0.0`)
+- **Atualizado em:** 2026-10-21 (conferência item a item antes da `v1.1.0`; a anterior, de 2026-10-13, antes da `v1.0.0`)
 - **Objetivo:** mostrar, para cada controle de segurança esperado de um banco digital, o que **já está implementado** (com a evidência), o que **será implementado** (e em que semana) e o que foi **descartado ou adiado** (e por quê).
 - **Fontes:** `threat-model.md` (ameaças e riscos aceitos), `checklist-asvs-masvs.md` (OWASP ASVS L2 e MASVS), ADRs 0004, 0007 e 0009, `docs/roadmap.md` (semanas e escopo congelado).
 - **Regra:** um controle só é marcado como ✅ quando existe código **e** um teste ou verificação automática que o comprove.
@@ -97,7 +97,8 @@
 | Integridade do app (Play Integrity / App Attest) | 🔭 | Risco aceito: exige contas de loja e configuração de backend. | — |
 | Desbloqueio após tempo em segundo plano | ✅ | O app abre travado com sessão guardada e trava de novo depois de 5 min em segundo plano, medidos pelo relógio monotônico e pela data do aparelho, que continua correndo com ele dormindo; data que volta também trava (F-16, F-21). O PIN é conferido no servidor, no mesmo contador do Pix (PIX-05, PIX-06); travado, toda rota de cliente vai para o Desbloqueio e o PIN de uma tentativa pendente é descartado (`app_lock_test.dart`, `redirect_test.dart`, `app_test.dart`, `review_pix_controller_test.dart`). | 6 |
 | Deep links seguros | ✅ | Não há deep links na V1, e o padrão do Flutter (ligado) foi desligado no Android e no iOS; o app sempre abre pela Splash e o redirect decide a tela pela sessão (MOB-06, `deep_links_test.dart`). | 3 |
-| Biometria integrada corretamente | 🔭 | Foi para "Próximos passos" (plano da semana 6, D4). Quando vier: só uma conveniência local que libera o PIN guardado no secure storage; o servidor nunca confia na biometria (ADR 0004). | — |
+| Biometria integrada corretamente | ✅ | Só conveniência local (ADR 0004, ADR 0013): a digital libera o PIN guardado com uma chave do Keystore que exige biometria forte e é invalidada por digital nova; o servidor confere o PIN em todo Pix e toda recarga; o rosto só destrava a tela, nunca libera o PIN. Sair, trocar o PIN, PIN bloqueado ou recusado apagam o PIN guardado; antes do desbloqueio, só o primeiro nome aparece (MOB-11, MOB-12, MOB-13; testes dos controllers da revisão do Pix, da confirmação da recarga e do desbloqueio; checkpoint no S21 com uma digital nova). | v1.1.0 |
+| Comprovante compartilhado | ✅ | Imagem montada dos mesmos campos mascarados da tela, enviada sem texto, com o aviso de demonstração no rodapé; o arquivo gerado é apagado logo depois da cópia do `share_plus`; só Pix concluído é compartilhado (MOB-09, DEMO-05; `shareable_receipt_test.dart`, `pix_flow_test.dart`). | v1.1.0 |
 | Comunicação só via TLS | ✅ | Texto puro desligado no release; no debug, liberado só para hosts locais (MOB-03, build do APK no CI valida o manifesto). | 2 |
 
 ## 6. Infraestrutura e cloud
@@ -109,7 +110,7 @@
 | WAF | 🔭 | Na V1, o rate limit da aplicação e a proteção básica do provedor bastam. Evolução: WAF na frente da API. | — |
 | Gerenciador de segredos | ✅ | Segredos do CI nos secrets do GitHub, os de deploy e de release em ambientes protegidos (`production`, e `release` só para tags `v*`); os da API nas variáveis de ambiente do Render. Nenhum segredo no git (gitleaks no CI e no pre-commit). KMS/HSM: 🔭. | 8 |
 | Logs centralizados | ✅ | Logs JSON do Pino com `requestId`, no stream de logs do Render (usados na verificação do IP do cliente, F-29). SIEM: 🔭. | 8 |
-| Monitoramento | ✅ | Health check com o release publicado (`health.test.ts`), smoke test depois de cada deploy e reset, e erros inesperados no Sentry com release e ambiente (F-07). | 8 |
+| Monitoramento | ✅ | Health check com o release publicado (`health.test.ts`), smoke test depois de cada deploy e reset, e erros inesperados no Sentry com release e ambiente (F-07). Desde a `v1.1.0`, o smoke test também confere o IP do cliente que a API enxerga, com uma requisição normal e outra com `X-Forwarded-For` forjado: o deploy falha sozinho se o número de proxies mudar (API-14, F-29). | 8, v1.1.0 |
 | Alertas de segurança | ✅ | Alertas do Dependabot e de secret scanning (✅). Alerta para eventos como reuso de refresh token: 🔭. | — |
 | Varredura de vulnerabilidades | ✅ | Dependências: osv-scanner bloqueia o merge (✅). Imagem de container: ➖, o Render roda o Node nativo, sem imagem própria. | 2, 8 |
 | Containers sem privilégios | ➖ | Não há Dockerfile próprio: o Render roda a API no runtime Node nativo dele. Volta a valer se a hospedagem mudar para imagem própria. | — |
@@ -162,6 +163,7 @@
 | Chave aleatória para receber por QR Code | ✅ | Uma chave `RANDOM` por conta, UUID v4 de `crypto.randomUUID()` (nunca o gerador de ids, que é v7 e traz o horário), cifrada com índice cego como a CPF; índice único parcial `pix_keys_one_random_per_account` como único árbitro do `ON CONFLICT`: 10 chamadas simultâneas gravam uma chave só; a conta vem do token e um corpo enviado é ignorado (PIX-01, PIX-12, `receiving-key-route.test.ts`, `get-receiving-key.test.ts`). | v1.1.0 |
 | Filtro e busca do extrato | ✅ | No servidor, na mesma consulta da conta do token, refeitos em cada página; busca de 2 a 60 caracteres com curingas escapados; o log das requisições sem query string (READ-01, READ-03, READ-04, READ-06; `statement-route.test.ts`, `logging.test.ts`). | v1.1.0 |
 | Pagar por QR Code | ✅ | O app confere o BR Code inteiro (CRC primeiro) antes de qualquer tela, descarta o nome do QR e mostra o do servidor, trava o valor fixo e nunca abre o que leu; a câmera só liga na tela de leitura (PIX-11, PIX-13, MOB-06, MOB-10; `br_code_test.dart`, `send_pix_controller_test.dart`, `scan_pix_flow_test.dart`, E2E `pay_qr_flow_test.dart`). | v1.1.0 |
+| Recarga de celular | ✅ | Só números do intervalo fictício `(DD) 90000-XXXX`, conferidos no app e no servidor; o número cifrado com chave própria (`TOP_UP_PHONE_KEY`) e só mascarado nas respostas, no extrato, na auditoria, nos logs e no Sentry (TOP-01). Idempotente e com as travas da `database.md` §7: a soma do dia é lida depois da trava da conta, e o limite de R$ 200 por dia e o saldo valem sob requisições simultâneas; uma resposta perdida no app guarda a tentativa até a resposta, mesmo fora da tela (TOP-02, F-39). Comprovante só do dono (READ-01) | v1.1.0 |
 | Controle de estado das transações | ✅ | Máquina de estados no domínio (`pix-transfer.test.ts`) e `CHECK`s de coerência entre status, datas, motivo de falha e ID E2E no banco (T-DB-10, `db-payments-schema.test.ts`); Pix resolvido recusado antes do PIN, expirado cancelado (PIX-08). | 5 |
 
 ## 9. Frameworks de referência
@@ -201,18 +203,23 @@ O CLAUDE.md exige testes de autorização (IDOR), idempotência, concorrência, 
 | | Extrato: nunca mostra item de outro cliente | `modules/accounts/http/statement-route.test.ts` |
 | | Sessões: nunca lista nem encontra a sessão de outro cliente (404) | `modules/identity/http/me-sessions-routes.test.ts` |
 | | Pix: autorizar, ver o comprovante ou cancelar o Pix de outro → o mesmo 404 de um Pix inexistente (PIX-01) | `modules/payments/http/authorize-route.test.ts`, `receipt-cancel-routes.test.ts` |
+| | Recarga: o comprovante de outro cliente → o mesmo 404 de uma recarga inexistente, sem o número (READ-01, v1.1.0) | `modules/top-ups/http/top-up-routes.test.ts` |
+| | Chave para receber por QR Code: a conta vem do token, e um corpo enviado é ignorado (PIX-12, v1.1.0) | `modules/payments/http/receiving-key-route.test.ts` |
 | **Idempotência** | 10 requisições simultâneas com a mesma `Idempotency-Key` criam um Pix só; a mesma chave com outro pedido → `IdempotencyKeyReused` | `modules/payments/http/create-transfer-route.test.ts` |
 | | Autorização repetida recebe a mesma resposta e gera um lançamento só | `modules/payments/http/authorize-route.test.ts` |
 | | Logout idempotente | `modules/identity/http/session-routes.test.ts` |
+| | Recarga: a mesma chave recebe a mesma resposta e debita uma vez; a mesma chave com outro pedido → `IdempotencyKeyReused`; um PIN errado repetido com a mesma chave não ganha tentativa (TOP-02, v1.1.0) | `modules/top-ups/http/top-up-routes.test.ts` |
 | **Concorrência (saldo)** | Dois Pix de R$ 80,00 sobre R$ 100,00 autorizados ao mesmo tempo: o saldo é gasto uma vez (T-DB-08) | `modules/payments/infrastructure/pg-pix-concurrency.test.ts` |
 | | 50 Pix A→B e 50 B→A ao mesmo tempo sem deadlock (T-DB-09); 1.000 Pix aleatórios e todo saldo bate com o ledger (T-DB-14) | `modules/payments/infrastructure/pg-pix-concurrency.test.ts` |
 | | Duas autorizações simultâneas do mesmo Pix: uma passa, a outra recebe 409 | `modules/payments/http/authorize-route.test.ts` |
+| | Recarga: 2 × R$ 30 ao mesmo tempo sobre R$ 40, e 2 × R$ 50 ao mesmo tempo com R$ 150 gastos no dia → um 201 e um 422 cada (TOP-02, v1.1.0) | `modules/top-ups/http/top-up-routes.test.ts` |
+| | Chave aleatória: 10 chamadas simultâneas gravam uma chave só (PIX-12, v1.1.0) | `modules/payments/http/receiving-key-route.test.ts` |
 | **Rate limit** | Login: 6ª tentativa errada numa conta em 1 min, de qualquer IP, e 11ª de um IP → 429 (AUTH-01); rajada simultânea de muitos IPs respeita o limite (F-11) | `modules/identity/http/login-route.test.ts` |
 | | Cadastro: 3 por IP por hora (AUTH-09) | `application/onboarding/register-route.test.ts` |
 | | Consulta de chave Pix: 30 por hora por cliente (PIX-07) | `modules/payments/http/key-lookup-route.test.ts` |
 | | Senha errada na troca de PIN e de senha conta no limite do login | `modules/identity/http/pin-change-route.test.ts`, `password-change-route.test.ts` |
 | **Reuso de refresh token** | Um token já trocado que volta depois de 10 s revoga a sessão inteira (AUTH-03); dois refresh simultâneos deixam um token ativo só | `modules/identity/http/session-routes.test.ts` |
-| **Bloqueio de PIN** | Bloqueia no 5º PIN errado, contado junto no Desbloqueio e no Pix, e recusa até o certo (PIX-05); 10 palpites paralelos contam uma vez cada | `modules/identity/http/pin-verify-route.test.ts`, `modules/payments/http/authorize-route.test.ts` |
+| **Bloqueio de PIN** | Bloqueia no 5º PIN errado, contado junto no Desbloqueio, no Pix e na recarga, e recusa até o certo (PIX-05); 10 palpites paralelos contam uma vez cada | `modules/identity/http/pin-verify-route.test.ts`, `modules/payments/http/authorize-route.test.ts`, `modules/top-ups/http/top-up-routes.test.ts` |
 | **Sessão encerrada (AUTH-04)** | Access token ainda válido de uma sessão encerrada é recusado nas operações sensíveis | `authorize-route.test.ts`, `pin-verify-route.test.ts`, `receipt-cancel-routes.test.ts`, `me-sessions-routes.test.ts` |
 | **Contas de demonstração (DEMO-03)** | Não trocam senha nem PIN, nem encerram sessões (403), sem gastar tentativas | `modules/identity/http/demo-accounts-route.test.ts` |
 
