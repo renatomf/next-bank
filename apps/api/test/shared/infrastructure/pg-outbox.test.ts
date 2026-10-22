@@ -229,6 +229,28 @@ describe('OutboxWorker', () => {
     expect(lockedDuringHandler).toBe(false);
   });
 
+  // Review of task 2: a worker whose handler outlived its claim must not
+  // write over the outcome of the worker that took the message again.
+  it('writes no outcome once its claim was taken by another worker', async () => {
+    const type = newType();
+    await enqueue(type);
+    const now = Date.now();
+    const second = workerFor(type, () => Promise.resolve(), {
+      now: () => new Date(now + 31_000),
+    });
+
+    await workerFor(
+      type,
+      async () => {
+        await second.runOnce();
+        throw new Error('the slow first worker fails at last');
+      },
+      { now: () => new Date(now) },
+    ).runOnce();
+
+    expect(await messagesOf(type)).toMatchObject([{ status: 'DONE', attempts: 1 }]);
+  });
+
   // At least once: a worker that dies leaves its claim behind, which runs out.
   it("takes a dead worker's message again once its claim runs out", async () => {
     const type = newType();
