@@ -8,6 +8,7 @@ import type {
 import { DomainError } from '../../../../src/shared/domain/domain-error.ts';
 import type {
   AccountsPort,
+  DictKey,
   EndToEndIds,
   PinCheck,
   PixPosting,
@@ -19,6 +20,8 @@ import type {
   PixKeyValueProtector,
   ProtectedKeyValue,
   SealedKeyValue,
+  SpiPayment,
+  SpiPort,
   StoredPixKey,
   StoredRandomKey,
 } from '../../../../src/modules/payments/application/ports.ts';
@@ -231,6 +234,34 @@ export class FakeLedger implements LedgerPort {
     return Promise.resolve(this.balances.get(accountId) ?? null);
   }
 }
+
+/** The DICT and the SPI of other (made-up) banks, in memory. */
+export class FakeSpi implements SpiPort {
+  readonly keys = new Map<string, DictKey>();
+  readonly lookups: string[] = [];
+  readonly sent: SpiPayment[] = [];
+  /** Unreachable: every call throws, as a timeout would. */
+  down = false;
+
+  findKey(key: string): Promise<DictKey | null> {
+    if (this.down) return Promise.reject(new Error('DICT unreachable'));
+    this.lookups.push(key);
+    return Promise.resolve(this.keys.get(key) ?? null);
+  }
+  send(payment: SpiPayment): Promise<void> {
+    if (this.down) return Promise.reject(new Error('SPI unreachable'));
+    this.sent.push(payment);
+    return Promise.resolve();
+  }
+}
+
+/** Clara, at the made-up Banco Aurora, with an e-mail key. */
+export const AURORA_EMAIL = 'clara.aurora@example.com';
+export const AURORA_KEY: DictKey = {
+  keyType: 'EMAIL',
+  bank: { ispb: '99900001', name: 'Banco Aurora' },
+  owner: { name: 'Clara Aurora Teixeira', documentMasked: '***.407.256-**' },
+};
 
 /** Always the same id, so tests can expect it. */
 export class FixedEndToEndIds implements EndToEndIds {
