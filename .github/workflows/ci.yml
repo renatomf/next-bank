@@ -43,8 +43,11 @@ jobs:
       POSTGRES_DB: nextbank
       NEXTBANK_MIGRATOR_PASSWORD: ci-migrator
       NEXTBANK_APP_PASSWORD: ci-app
+      NEXTBANK_SIMULATOR_PASSWORD: ci-simulator
       TEST_DATABASE_URL: postgres://nextbank_app:ci-app@localhost:5432/nextbank_test?sslmode=disable
       TEST_MIGRATION_DATABASE_URL: postgres://nextbank_migrator:ci-migrator@localhost:5432/nextbank_test?sslmode=disable
+      TEST_SIMULATOR_DATABASE_URL: postgres://nextbank_simulator:ci-simulator@localhost:5432/nextbank_test?sslmode=disable
+      TEST_SIMULATOR_MIGRATION_DATABASE_URL: postgres://nextbank_migrator:ci-migrator@localhost:5432/nextbank_test?sslmode=disable
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -64,6 +67,12 @@ jobs:
       - run: pnpm --filter @nextbank/api test:coverage
       # The deploy's client IP check, against a fake curl (API-14).
       - run: sh infra/scripts/check-client-ip_test.sh
+      # The simulator of the Bacen and the other partners (v1.2.0 plan, S2):
+      # in this job, on the same Postgres, so the required checks stay the same.
+      - run: pnpm --filter @nextbank/simulator format:check
+      - run: pnpm --filter @nextbank/simulator lint
+      - run: pnpm --filter @nextbank/simulator typecheck
+      - run: pnpm --filter @nextbank/simulator test:coverage
 
   mobile:
     name: Mobile
