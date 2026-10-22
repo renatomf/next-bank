@@ -25,7 +25,11 @@ afterAll(async () => {
 const newType = () => `test.t${randomUUID().slice(0, 8)}`;
 
 function outboxFor(...types: string[]) {
-  return new PgOutbox({ ids: new UuidV7Generator(), types: new Set(types) });
+  return new PgOutbox({
+    ids: new UuidV7Generator(),
+    clock: () => new Date(),
+    types: new Set(types),
+  });
 }
 
 class RecordingReporter implements ErrorReporter {
@@ -87,6 +91,23 @@ describe('PgOutbox', () => {
     ).rejects.toThrow('the command failed');
 
     expect(await messagesOf(type)).toEqual([]);
+  });
+
+  // Found in CI: the database's clock ran ahead of the worker's, so a message
+  // stamped with the database's now() was not yet available to a worker
+  // running right after. Both read the application's clock.
+  it("makes the message available at the time of the application's clock", async () => {
+    const type = newType();
+    const at = new Date('2026-10-22T12:00:00.000Z');
+
+    await unitOfWork.run((tx) =>
+      new PgOutbox({ ids: new UuidV7Generator(), clock: () => at, types: new Set([type]) }).enqueue(
+        tx,
+        { type, payload: { id: 'a' }, requestId: null },
+      ),
+    );
+
+    expect((await messagesOf(type))[0]?.available_at).toEqual(at);
   });
 
   it('refuses a type it does not know', async () => {
