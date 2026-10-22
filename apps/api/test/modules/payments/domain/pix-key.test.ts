@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { PixKeyNotFound } from '../../../../src/modules/payments/domain/errors.ts';
-import { PixKey, pixKeyValue } from '../../../../src/modules/payments/domain/pix-key.ts';
+import {
+  isRegisteredHere,
+  maskedKeyValue,
+  PixKey,
+  pixKeyValue,
+} from '../../../../src/modules/payments/domain/pix-key.ts';
 import { Cpf } from '../../../../src/shared/domain/cpf.ts';
 
 // Pix key (domain-model.md 3.4). Every customer has the CPF of the account
@@ -80,14 +85,56 @@ describe('pixKeyValue', () => {
     expect(pixKeyValue('RANDOM', ` ${RANDOM_VALUE.toUpperCase()} `)).toBe(RANDOM_VALUE);
   });
 
+  // Keys of other banks (v1.2.0 plan, task 3): looked up in the DICT as the
+  // Bacen keeps them.
+  it('normalizes an e-mail to lowercase, without blanks around it', () => {
+    expect(pixKeyValue('EMAIL', ' Clara.Aurora@Example.com ')).toBe('clara.aurora@example.com');
+  });
+
+  it('normalizes a phone to +55 with the area code, without punctuation', () => {
+    expect(pixKeyValue('PHONE', '+55 (11) 90000-9001')).toBe('+5511900009001');
+    expect(pixKeyValue('PHONE', '(11) 90000-9001')).toBe('+5511900009001');
+    expect(pixKeyValue('PHONE', '1133334444')).toBe('+551133334444');
+  });
+
   // No key can exist for these, so the lookup answers as for any unknown key.
   it.each([
     ['a CPF with a wrong check digit', 'CPF', '123.456.789-00'],
     ['text that is not a CPF', 'CPF', 'ana@example.test'],
-    ['a key type V1 does not register', 'EMAIL', 'ana@example.test'],
+    ['an e-mail without a domain', 'EMAIL', 'ana@'],
+    ['an e-mail with blanks inside', 'EMAIL', 'ana souza@example.test'],
+    ['an e-mail longer than 77 characters', 'EMAIL', `${'a'.repeat(70)}@example.test`],
+    ['a phone without the area code', 'PHONE', '90000-9001'],
+    ['a phone of another country', 'PHONE', '+1 212 555 0100'],
+    ['a phone with letters', 'PHONE', '11 9000O-9001'],
     ['a random key that is not a UUID v4', 'RANDOM', '019a0b6e-7c3d-7f00-8a1b-2c3d4e5f6a7b'],
     ['a random key with a CPF', 'RANDOM', '12345678909'],
   ])('finds no key for %s (PixKeyNotFound)', (_case, type, raw) => {
     expect(() => pixKeyValue(type as 'CPF', raw)).toThrow(PixKeyNotFound);
+  });
+});
+
+describe('isRegisteredHere', () => {
+  // next bank registers only the CPF and the random key: the others live at other banks.
+  it.each([
+    ['CPF', true],
+    ['RANDOM', true],
+    ['EMAIL', false],
+    ['PHONE', false],
+  ] as const)('says whether a %s key can be of next bank', (type, expected) => {
+    expect(isRegisteredHere(type)).toBe(expected);
+  });
+});
+
+describe('maskedKeyValue', () => {
+  // Enough for the payer to recognize the key, never all of it (READ-02).
+  it.each([
+    ['CPF', '31840725680', '***.407.256-**'],
+    ['EMAIL', 'clara.aurora@example.com', 'cl***@example.com'],
+    ['EMAIL', 'a@example.com', 'a***@example.com'],
+    ['PHONE', '+5511900009001', '+5511*****9001'],
+    ['RANDOM', RANDOM_VALUE, '1b2c****-****-****-****-********9f0a'],
+  ] as const)('masks a %s key', (type, value, masked) => {
+    expect(maskedKeyValue(type, value)).toBe(masked);
   });
 });
