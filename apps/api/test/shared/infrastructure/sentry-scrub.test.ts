@@ -114,8 +114,8 @@ describe('scrubEvent', () => {
       breadcrumbs: [{ category: 'http', data: { url, status_code: 500 } }],
     });
 
-    expect(event.request?.url).toBe('http://127.0.0.1:3000/simulator/dict/keys/[REDACTED]');
-    expect(event.breadcrumbs?.[0]?.data?.url).toBe(
+    expect(event.request.url).toBe('http://127.0.0.1:3000/simulator/dict/keys/[REDACTED]');
+    expect(event.breadcrumbs[0]?.data.url).toBe(
       'http://127.0.0.1:3000/simulator/dict/keys/[REDACTED]',
     );
   });

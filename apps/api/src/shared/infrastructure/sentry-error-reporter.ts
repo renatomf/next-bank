@@ -75,9 +75,25 @@ function scrubCrumbData(data: Record<string, unknown>): Record<string, unknown> 
     : redacted;
 }
 
-/** The URL up to its query string or fragment. */
+/**
+ * The URL up to its query string or fragment, and without the Pix key a DICT
+ * lookup carries in its path (D2, API-04): an e-mail or a %2B-encoded phone
+ * has no shape the number masks know.
+ */
 function withoutQuery(url: string): string {
-  return url.split(/[?#]/, 1)[0] ?? url;
+  const path = url.split(/[?#]/, 1)[0] ?? url;
+  return path.replace(/\/dict\/keys\/[^/]+/, '/dict/keys/[REDACTED]');
+}
+
+/**
+ * A breadcrumb as Sentry may keep it, or null. A call the API makes to a
+ * partner (the DICT, the SPI) may carry personal data in its URL, so none is
+ * kept: the logs already say what was called (security review of v1.2.0,
+ * task 3). Any other breadcrumb is scrubbed like the event.
+ */
+export function scrubBreadcrumb(crumb: Sentry.Breadcrumb): Sentry.Breadcrumb | null {
+  if (crumb.category === 'http') return null;
+  return scrubEvent({ breadcrumbs: [crumb] }).breadcrumbs[0] ?? null;
 }
 
 function maskPersonalNumbers(text: string): string {
@@ -94,7 +110,7 @@ export class SentryErrorReporter implements ErrorReporter {
       sendDefaultPii: false,
       tracesSampleRate: 0,
       beforeSend: (event) => scrubEvent(event),
-      beforeBreadcrumb: (crumb) => scrubEvent({ breadcrumbs: [crumb] }).breadcrumbs[0] ?? null,
+      beforeBreadcrumb: scrubBreadcrumb,
     });
   }
 
