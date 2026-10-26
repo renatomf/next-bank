@@ -227,14 +227,18 @@ describe('loadConfig', () => {
   // plan, task 3, P1 and P2).
   describe('external Pix and simulator', () => {
     const participantKey = randomBytes(32).toString('base64');
+    // The SPI's webhooks are signed with it (task 4, EXT-01).
+    const webhookSecret = randomBytes(32);
     const externalPix = {
       EXTERNAL_PIX_ENABLED: 'true',
       SIMULATOR_URL: 'http://127.0.0.1:3000/simulator',
       SIMULATOR_PARTICIPANT_KEY: participantKey,
+      SIMULATOR_WEBHOOK_SECRET: webhookSecret.toString('base64'),
     };
     const simulator = {
       SIMULATOR_DATABASE_URL: 'postgres://nextbank_simulator:s3cr3t-value@127.0.0.1:5432/nextbank',
       SIMULATOR_PARTICIPANT_KEY: participantKey,
+      SIMULATOR_WEBHOOK_SECRET: webhookSecret.toString('base64'),
     };
 
     it('keeps the Pix to other banks off and mounts no simulator by default (P1)', () => {
@@ -248,13 +252,14 @@ describe('loadConfig', () => {
       expect(loadConfig({ ...valid, ...externalPix }).externalPix).toEqual({
         simulatorUrl: 'http://127.0.0.1:3000/simulator',
         participantKey,
+        webhookSecret,
       });
       expect(
         loadConfig({ ...valid, ...externalPix, EXTERNAL_PIX_ENABLED: 'false' }).externalPix,
       ).toBeUndefined();
     });
 
-    it.each(['SIMULATOR_URL', 'SIMULATOR_PARTICIPANT_KEY'])(
+    it.each(['SIMULATOR_URL', 'SIMULATOR_PARTICIPANT_KEY', 'SIMULATOR_WEBHOOK_SECRET'])(
       'refuses the Pix to other banks without %s',
       (name) => {
         expect(withEnv({ ...externalPix, [name]: undefined })).toThrow(new RegExp(name));
@@ -274,6 +279,15 @@ describe('loadConfig', () => {
       ).not.toThrow();
     });
 
+    it('refuses a webhook secret that is not 32 bytes, or that is the participant key', () => {
+      expect(withEnv({ ...externalPix, SIMULATOR_WEBHOOK_SECRET: 'c2hvcnQ=' })).toThrow(
+        /SIMULATOR_WEBHOOK_SECRET/,
+      );
+      expect(withEnv({ ...externalPix, SIMULATOR_WEBHOOK_SECRET: participantKey })).toThrow(
+        /SIMULATOR_WEBHOOK_SECRET/,
+      );
+    });
+
     it('refuses a short participant key', () => {
       expect(withEnv({ ...externalPix, SIMULATOR_PARTICIPANT_KEY: 'short' })).toThrow(
         /SIMULATOR_PARTICIPANT_KEY/,
@@ -286,10 +300,14 @@ describe('loadConfig', () => {
       ).toEqual({
         databaseUrl: simulator.SIMULATOR_DATABASE_URL,
         participantKey,
+        webhookSecret,
         faults: '{"latencyMs":50}',
       });
       expect(withEnv({ ...simulator, SIMULATOR_PARTICIPANT_KEY: undefined })).toThrow(
         /SIMULATOR_PARTICIPANT_KEY/,
+      );
+      expect(withEnv({ ...simulator, SIMULATOR_WEBHOOK_SECRET: undefined })).toThrow(
+        /SIMULATOR_WEBHOOK_SECRET/,
       );
     });
 
