@@ -187,7 +187,14 @@ export interface SpiPort {
    * when that is not known, and sending again is always safe.
    */
   send(payment: SpiPayment): Promise<void>;
+  /**
+   * What the SPI decided of a payment (EXT-03); null when it never took it.
+   * Throws when that is not known: nothing may be decided on a guess (D6).
+   */
+  status(endToEndId: string): Promise<SpiPaymentStatus | null>;
 }
+
+export type SpiPaymentStatus = 'PENDING' | 'SETTLED' | 'REJECTED';
 
 /** The end-to-end id of a completed Pix (D10); random, so it comes from outside the domain. */
 export interface EndToEndIds {

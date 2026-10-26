@@ -23,6 +23,7 @@ import type {
   ProtectedKeyValue,
   SealedKeyValue,
   SpiPayment,
+  SpiPaymentStatus,
   SpiPort,
   StoredPixKey,
   StoredRandomKey,
@@ -302,6 +303,14 @@ export class FakeSpi implements SpiPort {
     if (this.down) return Promise.reject(new Error('SPI unreachable'));
     this.sent.push(payment);
     return Promise.resolve();
+  }
+  /** What the SPI decided of each payment, by end-to-end id; unknown ids are null. */
+  readonly statuses = new Map<string, SpiPaymentStatus>();
+  readonly asked: string[] = [];
+  status(endToEndId: string): Promise<SpiPaymentStatus | null> {
+    if (this.down) return Promise.reject(new Error('SPI unreachable'));
+    this.asked.push(endToEndId);
+    return Promise.resolve(this.statuses.get(endToEndId) ?? null);
   }
 }
 
