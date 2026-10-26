@@ -56,6 +56,12 @@ export interface PixTransfersRepository {
   lockForPayer(id: string, payerAccountId: string): Promise<PixTransferState | null>;
   update(transfer: PixTransferState): Promise<void>;
   /**
+   * Locks the Pix the SPI knows by this id until the transaction ends, for
+   * its answer (v1.2.0 plan, task 4); no payer filter, so never called on a
+   * customer's request.
+   */
+  lockByEndToEndId(endToEndId: string): Promise<PixTransferState | null>;
+  /**
    * A Pix to another bank with its payee's sealed key, for the worker that
    * sends it; no payer filter, so never called on a customer's request.
    */
@@ -147,6 +153,10 @@ export interface LedgerPort {
    * fails like postPixTransfer when the balance does not cover it.
    */
   postExternalPix(tx: Transaction, posting: ExternalPixPosting): Promise<void>;
+  /** The SPI settled it: from system:pix_clearing to system:bacen_settlement. */
+  settleExternalPix(tx: Transaction, input: { transferId: string; amount: Money }): Promise<void>;
+  /** The SPI refused it: from system:pix_clearing back to the payer (D6). */
+  refundExternalPix(tx: Transaction, posting: ExternalPixPosting): Promise<void>;
 }
 
 /** A key of another bank, as the DICT knows it: its owner only masked. */
@@ -195,10 +205,25 @@ export interface KeyLookupQuota {
   charge(customerId: string, cost: number, now: Date): void;
 }
 
+/**
+ * The partners' events taken (ADR 0016, EXT-02), in the transaction that
+ * applies them. Only the id and what was done: never the body.
+ */
+export interface InboxRepository {
+  /** False when the event was already taken: it must change nothing. */
+  record(event: {
+    eventId: string;
+    source: 'spi';
+    outcome: 'APPLIED' | 'IGNORED';
+    receivedAt: Date;
+  }): Promise<boolean>;
+}
+
 export interface PaymentsRepositories {
   pixKeys: PixKeysRepository;
   pixTransfers: PixTransfersRepository;
   idempotency: IdempotencyRepository;
+  inbox: InboxRepository;
   audit: AuditTrail;
 }
 

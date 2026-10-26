@@ -228,6 +228,8 @@ export function buildApp({
       availableBalance: (tx, accountId) => ledger.customerAccounts.availableBalance(tx, accountId),
       postPixTransfer: (tx, posting) => ledger.customerAccounts.transferPix(tx, posting),
       postExternalPix: (tx, posting) => ledger.customerAccounts.sendPixExternal(tx, posting),
+      settleExternalPix: (tx, input) => ledger.customerAccounts.settlePixExternal(tx, input),
+      refundExternalPix: (tx, posting) => ledger.customerAccounts.refundPixExternal(tx, posting),
     },
     spi,
     outbox,

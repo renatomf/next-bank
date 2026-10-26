@@ -4,6 +4,7 @@ import { pgClientOf } from '../../../shared/infrastructure/pg-unit-of-work.ts';
 import { PgIdempotencyRepository } from '../../../shared/infrastructure/pg-idempotency-repository.ts';
 import { PgAuditTrail } from '../../audit/index.ts';
 import type {
+  InboxRepository,
   PaymentsRepositories,
   PaymentsRepositoriesFactory,
   PixKeysRepository,
@@ -161,6 +162,15 @@ export class PgPixTransfersRepository implements PixTransfersRepository {
     return stateOf(rows[0]);
   }
 
+  /** Served by the pix_transfers_end_to_end_id_key unique index. */
+  async lockByEndToEndId(endToEndId: string): Promise<PixTransferState | null> {
+    const { rows } = await this.#client.query<TransferRow>(
+      `${SELECT_TRANSFER} WHERE end_to_end_id = $1 FOR UPDATE`,
+      [endToEndId],
+    );
+    return stateOf(rows[0]);
+  }
+
   /** Served by the primary key; only a Pix to another bank has a sealed key. */
   async findExternalForSending(
     id: string,
@@ -267,6 +277,30 @@ function stateOf(row: TransferRow | undefined): PixTransferState | null {
     : null;
 }
 
+/** The inbox (ADR 0016): the event id is the primary key, so a repeat inserts nothing. */
+export class PgInboxRepository implements InboxRepository {
+  readonly #client: pg.ClientBase;
+
+  constructor(client: pg.ClientBase) {
+    this.#client = client;
+  }
+
+  async record(event: {
+    eventId: string;
+    source: 'spi';
+    outcome: 'APPLIED' | 'IGNORED';
+    receivedAt: Date;
+  }): Promise<boolean> {
+    const { rowCount } = await this.#client.query(
+      `INSERT INTO platform.inbox_events (event_id, source, outcome, received_at)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (event_id) DO NOTHING`,
+      [event.eventId, event.source, event.outcome, event.receivedAt],
+    );
+    return rowCount === 1;
+  }
+}
+
 /** The payments repositories and the audit trail on the connection of the shared transaction. */
 export class PgPaymentsRepositories implements PaymentsRepositoriesFactory {
   for(tx: Transaction): PaymentsRepositories {
@@ -275,6 +309,7 @@ export class PgPaymentsRepositories implements PaymentsRepositoriesFactory {
       pixKeys: new PgPixKeysRepository(client),
       pixTransfers: new PgPixTransfersRepository(client),
       idempotency: new PgIdempotencyRepository(client),
+      inbox: new PgInboxRepository(client),
       audit: new PgAuditTrail(client),
     };
   }

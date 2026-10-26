@@ -120,6 +120,15 @@ export class PixTransfer {
     return this.#state.payee.accountId === null;
   }
 
+  /** Sent to another bank and still waiting for the SPI's answer. */
+  get waitsForSpi(): boolean {
+    return (
+      this.goesToAnotherBank &&
+      this.#state.status === 'PROCESSING' &&
+      this.#state.endToEndId !== null
+    );
+  }
+
   isExpired(now: Date): boolean {
     return now >= this.#state.expiresAt;
   }

@@ -82,6 +82,8 @@ export function pgPixStack(
     availableBalance: ledger.customerAccounts.availableBalance.bind(ledger.customerAccounts),
     postPixTransfer: ledger.customerAccounts.transferPix.bind(ledger.customerAccounts),
     postExternalPix: ledger.customerAccounts.sendPixExternal.bind(ledger.customerAccounts),
+    settleExternalPix: ledger.customerAccounts.settlePixExternal.bind(ledger.customerAccounts),
+    refundExternalPix: ledger.customerAccounts.refundPixExternal.bind(ledger.customerAccounts),
   };
   const create = new CreatePixTransfer({
     unitOfWork,

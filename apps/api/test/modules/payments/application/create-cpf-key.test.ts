@@ -53,7 +53,9 @@ class FakeRepositories implements PaymentsRepositoriesFactory {
         lockForPayer: () => Promise.resolve(null),
         update: () => Promise.resolve(),
         findExternalForSending: () => Promise.resolve(null),
+        lockByEndToEndId: () => Promise.resolve(null),
       },
+      inbox: { record: () => Promise.resolve(true) },
       idempotency: {
         claim: () => Promise.resolve({ claimed: true }),
         complete: () => Promise.resolve(),
