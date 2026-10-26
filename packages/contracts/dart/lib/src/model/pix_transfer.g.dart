@@ -242,4 +242,5 @@ const _$PixTransferFailureReasonEnumEnumMap = {
   PixTransferFailureReasonEnum.LIMIT_EXCEEDED: 'LIMIT_EXCEEDED',
   PixTransferFailureReasonEnum.PAYEE_UNAVAILABLE: 'PAYEE_UNAVAILABLE',
   PixTransferFailureReasonEnum.ACCOUNT_BLOCKED: 'ACCOUNT_BLOCKED',
+  PixTransferFailureReasonEnum.PAYEE_BANK_REJECTED: 'PAYEE_BANK_REJECTED',
 };

@@ -175,6 +175,8 @@ enum StatementItemKindEnum {
 PIX_SENT(r'PIX_SENT'),
 @JsonValue(r'PIX_RECEIVED')
 PIX_RECEIVED(r'PIX_RECEIVED'),
+@JsonValue(r'PIX_REFUNDED')
+PIX_REFUNDED(r'PIX_REFUNDED'),
 @JsonValue(r'DEMO_FUNDING')
 DEMO_FUNDING(r'DEMO_FUNDING'),
 @JsonValue(r'TOP_UP')

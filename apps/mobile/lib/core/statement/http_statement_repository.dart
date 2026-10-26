@@ -50,6 +50,8 @@ class HttpStatementRepository implements StatementRepository {
       api.StatementItemKindEnum.PIX_RECEIVED => StatementKind.pixReceived,
       api.StatementItemKindEnum.DEMO_FUNDING => StatementKind.demoFunding,
       api.StatementItemKindEnum.TOP_UP => StatementKind.topUp,
+      // Shown from v1.2.0 task 5; until then no refund reaches a customer (W4).
+      api.StatementItemKindEnum.PIX_REFUNDED => throw const ApiUnexpected(),
     };
     final direction = switch (item.direction) {
       api.StatementItemDirectionEnum.IN => MoneyDirection.incoming,

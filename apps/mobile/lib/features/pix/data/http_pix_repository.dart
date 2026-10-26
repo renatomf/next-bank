@@ -136,6 +136,10 @@ class HttpPixRepository implements PixRepository {
         PixFailureReason.payeeUnavailable,
       api.PixTransferFailureReasonEnum.ACCOUNT_BLOCKED =>
         PixFailureReason.accountBlocked,
+      // Shown from v1.2.0 task 5; until then no Pix to another bank reaches a
+      // customer (W4).
+      api.PixTransferFailureReasonEnum.PAYEE_BANK_REJECTED =>
+        throw const ApiUnexpected(),
     };
     // A failed Pix always says why, and only a failed one does.
     if ((status == PixStatus.failed) != (reason != null)) {
