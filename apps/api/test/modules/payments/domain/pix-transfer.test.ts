@@ -305,6 +305,92 @@ describe('PixTransfer to another bank', () => {
     }).toThrow(/another bank/);
   });
 
+  // v1.2.0 plan, task 4: the SPI's answer ends the Pix to another bank.
+  function waiting(): PixTransfer {
+    const transfer = external();
+    transfer.startProcessing(LATER);
+    transfer.awaitSettlement(E2E);
+    return transfer;
+  }
+  const ANSWERED = new Date('2026-10-07T15:03:00.000Z');
+
+  it('completes when the SPI settles it, keeping its end-to-end id', () => {
+    const transfer = waiting();
+
+    transfer.settle(ANSWERED);
+
+    expect(transfer.state).toMatchObject({
+      status: 'COMPLETED',
+      endToEndId: E2E,
+      completedAt: ANSWERED,
+      updatedAt: ANSWERED,
+      version: 2,
+    });
+  });
+
+  it('fails as refused by the payee bank, keeping its end-to-end id (W1)', () => {
+    const transfer = waiting();
+
+    transfer.rejectBySpi(ANSWERED);
+
+    expect(transfer.state).toMatchObject({
+      status: 'FAILED',
+      failureReason: 'PAYEE_BANK_REJECTED',
+      endToEndId: E2E,
+      completedAt: null,
+      version: 2,
+    });
+  });
+
+  // EXT-02: a final state never changes, whatever the SPI says afterwards.
+  it.each([
+    [
+      'settled',
+      (t: PixTransfer) => {
+        t.settle(ANSWERED);
+      },
+    ],
+    [
+      'refused',
+      (t: PixTransfer) => {
+        t.rejectBySpi(ANSWERED);
+      },
+    ],
+  ])('takes no answer once %s', (_case, answer) => {
+    const transfer = waiting();
+    answer(transfer);
+
+    expect(() => {
+      transfer.settle(ANSWERED);
+    }).toThrow(InvalidTransferState);
+    expect(() => {
+      transfer.rejectBySpi(ANSWERED);
+    }).toThrow(InvalidTransferState);
+  });
+
+  it('tells whether it waits for the SPI', () => {
+    const settled = waiting();
+    settled.settle(ANSWERED);
+
+    expect(waiting().waitsForSpi).toBe(true);
+    expect(settled.waitsForSpi).toBe(false);
+    expect(external().waitsForSpi).toBe(false);
+    expect(processing().waitsForSpi).toBe(false);
+  });
+
+  it('takes the answer only of a Pix sent to another bank', () => {
+    const internal = processing();
+    const notSent = external();
+    notSent.startProcessing(LATER);
+
+    expect(() => {
+      internal.settle(ANSWERED);
+    }).toThrow(/another bank/);
+    expect(() => {
+      notSent.rejectBySpi(ANSWERED);
+    }).toThrow(/end-to-end id/);
+  });
+
   it('restores the payee at another bank as it was', () => {
     const { state } = external();
 

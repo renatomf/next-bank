@@ -30,6 +30,7 @@ const dict: SpiPort = {
         : null,
     ),
   send: () => Promise.resolve(),
+  status: () => Promise.resolve(null),
 };
 
 const { outbox } = createOutbox({

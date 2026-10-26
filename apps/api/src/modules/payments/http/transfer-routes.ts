@@ -54,7 +54,13 @@ export const PixTransferSchema = z
     payee: PixPayeeSchema,
     endToEndId: z.string().nullable(),
     failureReason: z
-      .enum(['INSUFFICIENT_FUNDS', 'LIMIT_EXCEEDED', 'PAYEE_UNAVAILABLE', 'ACCOUNT_BLOCKED'])
+      .enum([
+        'INSUFFICIENT_FUNDS',
+        'LIMIT_EXCEEDED',
+        'PAYEE_UNAVAILABLE',
+        'ACCOUNT_BLOCKED',
+        'PAYEE_BANK_REJECTED',
+      ])
       .nullable(),
     createdAt: z.iso.datetime(),
     expiresAt: z.iso.datetime(),

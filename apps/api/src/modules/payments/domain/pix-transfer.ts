@@ -10,7 +10,12 @@ export type PixTransferStatus =
   'AWAITING_AUTH' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
 
 export type PixFailureReason =
-  'INSUFFICIENT_FUNDS' | 'LIMIT_EXCEEDED' | 'PAYEE_UNAVAILABLE' | 'ACCOUNT_BLOCKED';
+  | 'INSUFFICIENT_FUNDS'
+  | 'LIMIT_EXCEEDED'
+  | 'PAYEE_UNAVAILABLE'
+  | 'ACCOUNT_BLOCKED'
+  // The SPI refused a Pix to another bank, whatever its cause (v1.2.0 plan, W1).
+  | 'PAYEE_BANK_REJECTED';
 
 /** The other bank of a payee outside next bank, as the DICT names it. */
 export interface PayeeBank {
@@ -115,6 +120,15 @@ export class PixTransfer {
     return this.#state.payee.accountId === null;
   }
 
+  /** Sent to another bank and still waiting for the SPI's answer. */
+  get waitsForSpi(): boolean {
+    return (
+      this.goesToAnotherBank &&
+      this.#state.status === 'PROCESSING' &&
+      this.#state.endToEndId !== null
+    );
+  }
+
   isExpired(now: Date): boolean {
     return now >= this.#state.expiresAt;
   }
@@ -147,6 +161,32 @@ export class PixTransfer {
     this.#require('PROCESSING');
     if (this.#state.endToEndId !== null) throw new InvalidTransferState();
     this.#state.endToEndId = endToEndId;
+  }
+
+  /** The SPI settled it (v1.2.0 plan, task 4): completed with the id it was sent with. */
+  settle(now: Date): void {
+    this.#requireSent();
+    this.#move('COMPLETED', now);
+    this.#state.completedAt = now;
+  }
+
+  /**
+   * The SPI refused it (v1.2.0 plan, task 4, W1): failed, keeping the id it
+   * was sent with, so the refusal can be traced to the SPI's record.
+   */
+  rejectBySpi(now: Date): void {
+    this.#requireSent();
+    this.#move('FAILED', now);
+    this.#state.failureReason = 'PAYEE_BANK_REJECTED';
+  }
+
+  /** Waiting for the SPI: sent to another bank, processing, with its id. */
+  #requireSent(): void {
+    if (!this.goesToAnotherBank) throw new Error('Only a Pix to another bank has an SPI answer');
+    this.#require('PROCESSING');
+    if (this.#state.endToEndId === null) {
+      throw new Error('A Pix the SPI never got has no end-to-end id to answer');
+    }
   }
 
   complete(endToEndId: string, now: Date): void {

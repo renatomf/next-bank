@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../../../../src/app.ts';
@@ -32,7 +32,7 @@ beforeAll(async () => {
     pool,
     logStream: captureLogs().stream,
     security,
-    externalPix: { simulatorUrl: simulator.url, participantKey },
+    externalPix: { simulatorUrl: simulator.url, participantKey, webhookSecret: randomBytes(32) },
   });
 });
 

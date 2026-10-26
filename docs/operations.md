@@ -188,7 +188,10 @@ Desde a tarefa 3 da v1.2.0, o simulador do Bacen e dos parceiros roda **dentro d
    | `SIMULATOR_DATABASE_URL` | `$simUrl` (monta o simulador; só aceita o papel `nextbank_simulator`) |
    | `SIMULATOR_PARTICIPANT_KEY` | `$participant` (EXT-09) |
    | `SIMULATOR_FAULTS` | `{"latencyMs":50,"webhookLossRate":0.01}` (perfil baixo, P4; ajustável sem deploy) |
-   | `EXTERNAL_PIX_ENABLED` | `false` até a tarefa 4 (P1); com `true`, exige também `SIMULATOR_URL=http://127.0.0.1:10000/simulator` (a porta do Render) |
+   | `SIMULATOR_WEBHOOK_SECRET` | desde a v1.2.0, tarefa 4: 32 bytes em base64, diferente da chave do participante (EXT-01). O simulador montado assina os webhooks com ele, e a API os confere. **Sem ele, a API não sobe com o simulador montado** |
+   | `EXTERNAL_PIX_ENABLED` | `false` até a tarefa 5 (W4), como chave de emergência; com `true`, exige também `SIMULATOR_URL=http://127.0.0.1:10000/simulator` (a porta do Render) |
+
+   O segredo do webhook é gerado como a chave do participante: `$webhook = node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`; depois `Set-Clipboard -Value $webhook`, cole no Render e no gerenciador de senhas, e `Remove-Variable webhook`. **Acrescente-o antes do merge da tarefa 4.**
 
 5. Limpe: `Remove-Variable sim, participant, simUrl; Set-Clipboard -Value " "`. Depois do merge, `<API_URL>/simulator/health` responde `{"status":"ok"}`, e qualquer outra rota do simulador sem a chave responde `401`.
 
@@ -198,5 +201,5 @@ Desde a tarefa 3 da v1.2.0, o simulador do Bacen e dos parceiros roda **dentro d
 - **Reset:** todo dia às 06:00 UTC, ou manual. As contas de visitantes somem, e Ana e Bruno voltam com o saldo de demonstração.
 - **Despertador:** a cada 5 min, pelo UptimeRobot. Se chegar o e-mail de que a API caiu, veja os logs do Render e o `/health`.
 - **Trocar uma chave da API:** gere de novo na sua máquina, atualize no Render e faça um deploy manual. Trocar `PII_*`, o `PIN_PEPPER` ou a `TOP_UP_PHONE_KEY` invalida os CPFs, os PINs e os números de recarga já gravados. Na demo, rode o reset logo em seguida.
-- **Trocar a chave do participante:** gere outra, troque `SIMULATOR_PARTICIPANT_KEY` no Render e faça um deploy manual; a API e o simulador leem a mesma variável.
+- **Trocar a chave do participante ou o segredo do webhook:** gere outro, troque `SIMULATOR_PARTICIPANT_KEY` ou `SIMULATOR_WEBHOOK_SECRET` no Render e faça um deploy manual; a API e o simulador montado leem a mesma variável.
 - **Segredo vazado:** troque-o na origem (Neon, Render ou GitHub) na hora. Apagar um commit não basta, porque o repositório é público.

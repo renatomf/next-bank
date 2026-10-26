@@ -4,8 +4,10 @@ import type { Outbox, OutboxHandler } from '../../shared/application/outbox.ts';
 import type { Clock, IdGenerator, UnitOfWork } from '../../shared/application/ports.ts';
 import type { PiiKeys } from '../../shared/infrastructure/aes-gcm-pii-protector.ts';
 import { RandomUuidGenerator } from '../../shared/infrastructure/system-ports.ts';
+import { ApplySpiOutcome } from './application/apply-spi-outcome.ts';
 import { AuthorizePixTransfer, SEND_EXTERNAL_PIX } from './application/authorize-pix-transfer.ts';
 import { CancelPixTransfer } from './application/cancel-pix-transfer.ts';
+import { CheckPendingPix } from './application/check-pending-pix.ts';
 import { CreateCpfKey } from './application/create-cpf-key.ts';
 import { CreatePixTransfer } from './application/create-pix-transfer.ts';
 import { GetPixTransfer } from './application/get-pix-transfer.ts';
@@ -21,6 +23,7 @@ import { PgPaymentsRepositories } from './infrastructure/pg-payments-repositorie
 
 export { HttpSpiClient } from './infrastructure/http-spi-client.ts';
 export { keyLookupRoutes } from './http/key-lookup-route.ts';
+export { spiWebhookRoutes } from './http/spi-webhook-route.ts';
 export { receivingKeyRoutes } from './http/receiving-key-route.ts';
 export { transferRoutes } from './http/transfer-routes.ts';
 export type { CreateCpfKey } from './application/create-cpf-key.ts';
@@ -38,7 +41,12 @@ export type {
   SpiPort,
 } from './application/ports.ts';
 
+export type { ApplySpiOutcome } from './application/apply-spi-outcome.ts';
+
 export interface PaymentsModule {
+  applySpiOutcome: ApplySpiOutcome;
+  /** The status check of the Pix left without the SPI's answer; none while it is off. */
+  checkPendingPix: CheckPendingPix | null;
   createCpfKey: CreateCpfKey;
   lookupPixKey: LookupPixKey;
   getReceivingKey: GetReceivingKey;
@@ -91,7 +99,25 @@ export function createPaymentsModule(settings: {
   // One quota for lookups and creations: both name the payee (PIX-07).
   const quota = new InMemoryKeyLookupQuota();
   const fingerprint = new HmacRequestFingerprint(settings.piiKeys);
+  const applySpiOutcome = new ApplySpiOutcome({
+    unitOfWork: settings.unitOfWork,
+    repositories,
+    ledger: settings.ledger,
+    clock: settings.clock,
+    ids: settings.ids,
+  });
   return {
+    applySpiOutcome,
+    checkPendingPix:
+      settings.spi &&
+      new CheckPendingPix({
+        unitOfWork: settings.unitOfWork,
+        repositories,
+        spi: settings.spi,
+        outbox: settings.outbox,
+        applySpiOutcome,
+        clock: settings.clock,
+      }),
     createCpfKey: new CreateCpfKey({
       repositories,
       protector,

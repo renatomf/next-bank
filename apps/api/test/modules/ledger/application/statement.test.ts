@@ -185,4 +185,28 @@ describe('CustomerLedgerAccounts.statement', () => {
       topUpId: null,
     });
   });
+
+  // v1.2.0 plan, task 4 (W5): the money of a Pix the SPI refused comes back
+  // as a refund, from the payee it never reached, linking to the Pix.
+  it('shows the refund of an external Pix, with the payee and the Pix', async () => {
+    const { accounts } = await setup();
+    const external = {
+      transferId: 'pix-ext-1',
+      payerAccountId: 'account-a',
+      amount: Money.of(5_000n),
+      payee: { name: 'Clara Aurora Teixeira', documentMasked: '***.407.256-**' },
+    };
+    await accounts.sendPixExternal(tx, external);
+    await accounts.refundPixExternal(tx, external);
+
+    const { items } = await accounts.statement(tx, 'account-a', null);
+
+    expect(items.find((item) => item.kind === 'PIX_REFUNDED')).toMatchObject({
+      direction: 'IN',
+      amount: Money.of(5_000n),
+      counterparty: { name: 'Clara Aurora Teixeira', documentMasked: '***.407.256-**' },
+      transferId: 'pix-ext-1',
+      topUpId: null,
+    });
+  });
 });

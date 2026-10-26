@@ -23,6 +23,7 @@ import type {
   ProtectedKeyValue,
   SealedKeyValue,
   SpiPayment,
+  SpiPaymentStatus,
   SpiPort,
   StoredPixKey,
   StoredRandomKey,
@@ -96,6 +97,8 @@ export class FakePaymentsRepositories implements PaymentsRepositoriesFactory {
   readonly randomKeys = new Map<string, StoredRandomKey>();
   /** Every random key offered for insertion, kept or not. */
   readonly offeredRandomKeys: PixKeyState[] = [];
+  /** The SPI's events taken, by id, with what was done with them (EXT-02). */
+  readonly inbox = new Map<string, 'APPLIED' | 'IGNORED'>();
   /** The sealed key of each Pix to another bank, by the Pix id. */
   readonly payeeKeys = new Map<string, SealedKeyValue>();
   lookups = 0;
@@ -159,6 +162,25 @@ export class FakePaymentsRepositories implements PaymentsRepositoriesFactory {
           return Promise.resolve();
         },
         findForPayer: (id, payerAccountId) => Promise.resolve(this.#transferOf(id, payerAccountId)),
+        findWaitingForSpi: (authorizedBefore, limit) =>
+          Promise.resolve(
+            this.transfers
+              .filter(
+                (t) =>
+                  t.payee.accountId === null &&
+                  t.status === 'PROCESSING' &&
+                  t.endToEndId !== null &&
+                  t.authorizedAt !== null &&
+                  t.authorizedAt <= authorizedBefore,
+              )
+              .sort((a, b) => (a.authorizedAt?.getTime() ?? 0) - (b.authorizedAt?.getTime() ?? 0))
+              .slice(0, limit)
+              .map((t) => ({ id: t.id, endToEndId: t.endToEndId ?? '' })),
+          ),
+        lockByEndToEndId: (endToEndId) => {
+          const found = this.transfers.find((t) => t.endToEndId === endToEndId);
+          return Promise.resolve(found ? copyOf(found) : null);
+        },
         findExternalForSending: (id) => {
           const transfer = this.transfers.find((t) => t.id === id && t.payee.accountId === null);
           const payeeKey = this.payeeKeys.get(id);
@@ -174,6 +196,14 @@ export class FakePaymentsRepositories implements PaymentsRepositoriesFactory {
         },
       },
       idempotency,
+      // Like ON CONFLICT DO NOTHING on the event id: false when already taken.
+      inbox: {
+        record: (event) => {
+          if (this.inbox.has(event.eventId)) return Promise.resolve(false);
+          this.inbox.set(event.eventId, event.outcome);
+          return Promise.resolve(true);
+        },
+      },
       audit: {
         record: (event) => {
           this.auditEvents.push(event);
@@ -235,6 +265,19 @@ export class FakeLedger implements LedgerPort {
   readonly posted: PixPosting[] = [];
   /** Pix to other banks: debited from the payer to system:pix_clearing. */
   readonly postedExternal: ExternalPixPosting[] = [];
+  /** The SPI's answers: moved to system:bacen_settlement, or back to the payer. */
+  readonly settled: { transferId: string; amount: Money }[] = [];
+  readonly refunded: ExternalPixPosting[] = [];
+  settleExternalPix(_tx: Transaction, input: { transferId: string; amount: Money }) {
+    this.settled.push(input);
+    return Promise.resolve();
+  }
+  refundExternalPix(_tx: Transaction, posting: ExternalPixPosting): Promise<void> {
+    this.refunded.push(posting);
+    const balance = this.balances.get(posting.payerAccountId) ?? Money.zero();
+    this.balances.set(posting.payerAccountId, balance.plus(posting.amount));
+    return Promise.resolve();
+  }
   postExternalPix(_tx: Transaction, posting: ExternalPixPosting): Promise<void> {
     const balance = this.balances.get(posting.payerAccountId) ?? Money.zero();
     if (balance.isLessThan(posting.amount)) {
@@ -275,6 +318,14 @@ export class FakeSpi implements SpiPort {
     if (this.down) return Promise.reject(new Error('SPI unreachable'));
     this.sent.push(payment);
     return Promise.resolve();
+  }
+  /** What the SPI decided of each payment, by end-to-end id; unknown ids are null. */
+  readonly statuses = new Map<string, SpiPaymentStatus>();
+  readonly asked: string[] = [];
+  status(endToEndId: string): Promise<SpiPaymentStatus | null> {
+    if (this.down) return Promise.reject(new Error('SPI unreachable'));
+    this.asked.push(endToEndId);
+    return Promise.resolve(this.statuses.get(endToEndId) ?? null);
   }
 }
 

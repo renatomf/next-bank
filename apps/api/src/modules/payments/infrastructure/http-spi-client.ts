@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { DictKey, SpiPayment, SpiPort } from '../application/ports.ts';
+import type { DictKey, SpiPayment, SpiPaymentStatus, SpiPort } from '../application/ports.ts';
 
 /** The header the simulator reads the participant's key from (EXT-09). */
 const PARTICIPANT_KEY_HEADER = 'x-participant-key';
@@ -10,6 +10,8 @@ const DictKeySchema = z.object({
   bank: z.object({ ispb: z.string().regex(/^[0-9]{8}$/), name: z.string().min(1).max(80) }),
   owner: z.object({ name: z.string().min(1).max(80), documentMasked: z.string().min(1).max(20) }),
 });
+
+const PaymentStatusSchema = z.object({ status: z.enum(['PENDING', 'SETTLED', 'REJECTED']) });
 
 export interface HttpSpiClientOptions {
   /** SIMULATOR_URL: in production, the simulator on 127.0.0.1 (D2). */
@@ -53,6 +55,13 @@ export class HttpSpiClient implements SpiPort {
     // Drained so the connection is reused; the 202's body adds nothing.
     await response.body?.cancel();
     if (response.status !== 202) throw new Error(`SPI answered ${String(response.status)}`);
+  }
+
+  async status(endToEndId: string): Promise<SpiPaymentStatus | null> {
+    const response = await this.#call('GET', `/spi/payments/${encodeURIComponent(endToEndId)}`);
+    if (response.status === 404) return null;
+    if (response.status !== 200) throw new Error(`SPI answered ${String(response.status)}`);
+    return PaymentStatusSchema.parse(await response.json()).status;
   }
 
   #call(method: 'GET' | 'POST', path: string, json?: string): Promise<Response> {

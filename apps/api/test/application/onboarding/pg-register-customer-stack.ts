@@ -80,6 +80,8 @@ export function pgRegisterCustomer(pool: pg.Pool, clock: Clock): RegisterCustome
         availableBalance: () => Promise.resolve(null),
         postPixTransfer: () => Promise.resolve(),
         postExternalPix: () => Promise.resolve(),
+        settleExternalPix: () => Promise.resolve(),
+        refundExternalPix: () => Promise.resolve(),
       },
       spi: null,
       outbox: { enqueue: () => Promise.reject(new Error('registration writes no message')) },

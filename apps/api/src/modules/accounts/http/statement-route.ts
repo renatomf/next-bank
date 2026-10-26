@@ -91,7 +91,7 @@ const StatementItemSchema = z
   .strictObject({
     id: z.uuid(),
     occurredAt: z.iso.datetime(),
-    kind: z.enum(['PIX_SENT', 'PIX_RECEIVED', 'DEMO_FUNDING', 'TOP_UP']),
+    kind: z.enum(['PIX_SENT', 'PIX_RECEIVED', 'PIX_REFUNDED', 'DEMO_FUNDING', 'TOP_UP']),
     direction: z.enum(['IN', 'OUT']),
     amount: MoneySchema,
     counterparty: StatementCounterpartySchema.nullable(),

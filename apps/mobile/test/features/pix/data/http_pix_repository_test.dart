@@ -348,6 +348,12 @@ void main() {
         {'status': 'FAILED', 'failureReason': 'SOMETHING_NEW'},
       ),
       ('a failed Pix without a reason', {'status': 'FAILED'}),
+      // The app shows another bank's refusal from v1.2.0 task 5; until then it
+      // never reaches a customer, as the Pix to other banks stays off (W4).
+      (
+        'a refusal by the payee bank, before the app shows it',
+        {'status': 'FAILED', 'failureReason': 'PAYEE_BANK_REJECTED'},
+      ),
       (
         'a zero amount',
         {

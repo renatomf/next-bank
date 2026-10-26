@@ -530,7 +530,8 @@
                   "INSUFFICIENT_FUNDS",
                   "LIMIT_EXCEEDED",
                   "PAYEE_UNAVAILABLE",
-                  "ACCOUNT_BLOCKED"
+                  "ACCOUNT_BLOCKED",
+                  "PAYEE_BANK_REJECTED"
                 ]
               },
               {
@@ -739,6 +740,7 @@
             "enum": [
               "PIX_SENT",
               "PIX_RECEIVED",
+              "PIX_REFUNDED",
               "DEMO_FUNDING",
               "TOP_UP"
             ]

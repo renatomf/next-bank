@@ -44,7 +44,8 @@ export interface ExternalPixPosting {
   payee: PixParty;
 }
 
-export type StatementItemKind = 'PIX_SENT' | 'PIX_RECEIVED' | 'DEMO_FUNDING' | 'TOP_UP';
+export type StatementItemKind =
+  'PIX_SENT' | 'PIX_RECEIVED' | 'PIX_REFUNDED' | 'DEMO_FUNDING' | 'TOP_UP';
 
 export interface StatementItem {
   /** The posting's id. */
@@ -72,6 +73,8 @@ const STATEMENT_PAGE_SIZE = 20;
 const FUNDING_CODE = 'system:funding';
 /** Where an external Pix waits for the SPI's answer (domain-model.md, section 5). */
 const PIX_CLEARING_CODE = 'system:pix_clearing';
+/** Where the money of a settled external Pix ends (domain-model.md, section 6). */
+const BACEN_SETTLEMENT_CODE = 'system:bacen_settlement';
 /** Who the customer sees on the other side of the demo funding. */
 const FUNDING_COUNTERPARTY = 'next bank';
 
@@ -220,6 +223,63 @@ export class CustomerLedgerAccounts {
   }
 
   /**
+   * The SPI settled an external Pix (v1.2.0 plan, task 4): the money moves
+   * from system:pix_clearing to system:bacen_settlement. Only system
+   * accounts, which are never locked nor projected; the customer's balance
+   * moved at the authorization. Posted at most once per Pix (T-DB-05).
+   */
+  async settlePixExternal(
+    tx: Transaction,
+    input: { transferId: string; amount: Money },
+  ): Promise<void> {
+    const repository = this.#repositories.for(tx);
+    const clearing = await repository.findByCode(PIX_CLEARING_CODE);
+    const settlement = await repository.findByCode(BACEN_SETTLEMENT_CODE);
+    if (!clearing || !settlement) {
+      throw new Error(`Cannot settle external Pix ${input.transferId}: ledger account missing`);
+    }
+    await this.#postJournalEntry.execute(tx, {
+      kind: 'PIX_EXTERNAL_SETTLEMENT',
+      referenceType: 'PIX_TRANSFER',
+      referenceId: input.transferId,
+      postings: [
+        { ...systemSide(clearing.id, 'DEBIT'), amount: input.amount },
+        { ...systemSide(settlement.id, 'CREDIT'), amount: input.amount },
+      ],
+    });
+  }
+
+  /**
+   * The SPI refused an external Pix (v1.2.0 plan, task 4; D6): the money
+   * comes back from system:pix_clearing to the payer, whose posting keeps
+   * the payee it never reached, for the statement. Posted at most once per
+   * Pix (T-DB-05).
+   */
+  async refundPixExternal(tx: Transaction, input: ExternalPixPosting): Promise<void> {
+    const repository = this.#repositories.for(tx);
+    const clearing = await repository.findByCode(PIX_CLEARING_CODE);
+    const payer = await repository.findByCode(customerCodeOf(input.payerAccountId));
+    if (!clearing || !payer) {
+      throw new Error(`Cannot refund external Pix ${input.transferId}: ledger account missing`);
+    }
+    await this.#postJournalEntry.execute(tx, {
+      kind: 'PIX_EXTERNAL_REFUND',
+      referenceType: 'PIX_TRANSFER',
+      referenceId: input.transferId,
+      postings: [
+        { ...systemSide(clearing.id, 'DEBIT'), amount: input.amount },
+        {
+          ledgerAccountId: payer.id,
+          direction: 'CREDIT',
+          amount: input.amount,
+          counterpartyName: input.payee.name,
+          counterpartyDocumentMasked: input.payee.documentMasked,
+        },
+      ],
+    });
+  }
+
+  /**
    * Locks the customer's ledger account (FOR UPDATE) without posting: a
    * top-up takes it before reading the day's total, so two top-ups of one
    * customer run one at a time (v1.1.0 plan, task 5).
@@ -307,6 +367,11 @@ export class CustomerLedgerAccounts {
   }
 }
 
+/** A system account's side of an entry: no one to show on the other side. */
+function systemSide(ledgerAccountId: string, direction: 'DEBIT' | 'CREDIT') {
+  return { ledgerAccountId, direction, counterpartyName: null, counterpartyDocumentMasked: null };
+}
+
 /** The system account of a top-up operator: system:top-up-<id>. */
 function topUpCodeOf(operatorId: string): string {
   return `system:top-up-${operatorId}`;
@@ -320,9 +385,14 @@ function kindOf(row: StatementRow): StatementItemKind {
       return 'TOP_UP';
     case 'PIX_INTERNAL':
       return row.direction === 'DEBIT' ? 'PIX_SENT' : 'PIX_RECEIVED';
-    // The customer only ever sends one; its refund comes in task 4.
+    // The customer only ever sends one, and gets it back when the SPI refuses it.
     case 'PIX_EXTERNAL':
       return 'PIX_SENT';
+    case 'PIX_EXTERNAL_REFUND':
+      return 'PIX_REFUNDED';
+    // Only system accounts: it never reaches a customer's statement.
+    case 'PIX_EXTERNAL_SETTLEMENT':
+      throw new Error('A settlement has no customer posting');
   }
 }
 
@@ -339,7 +409,7 @@ function statementItemOf(row: StatementRow): StatementItem {
       row.counterpartyName === null
         ? null
         : { name: row.counterpartyName, documentMasked: row.counterpartyDocumentMasked },
-    transferId: kind === 'PIX_SENT' ? row.referenceId : null,
+    transferId: kind === 'PIX_SENT' || kind === 'PIX_REFUNDED' ? row.referenceId : null,
     topUpId: kind === 'TOP_UP' ? row.referenceId : null,
   };
 }
