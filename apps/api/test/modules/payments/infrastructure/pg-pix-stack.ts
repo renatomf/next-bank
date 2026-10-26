@@ -7,7 +7,10 @@ import type { SecretHasher } from '../../../../src/modules/identity/application/
 import { VerifyPin } from '../../../../src/modules/identity/application/verify-pin.ts';
 import { PgIdentityRepositories } from '../../../../src/modules/identity/infrastructure/pg-identity-repositories.ts';
 import { createLedgerModule } from '../../../../src/modules/ledger/index.ts';
-import { ApplySpiOutcome } from '../../../../src/modules/payments/application/apply-spi-outcome.ts';
+import {
+  ApplySpiOutcome,
+  type SpiOutcome,
+} from '../../../../src/modules/payments/application/apply-spi-outcome.ts';
 import {
   AuthorizePixTransfer,
   SEND_EXTERNAL_PIX,
@@ -123,6 +126,13 @@ export function pgPixStack(
     realOutbox?.outbox ?? {
       enqueue: () => Promise.reject(new Error('internal Pix writes no message')),
     };
+  const applySpiOutcome = new ApplySpiOutcome({
+    unitOfWork,
+    repositories,
+    ledger: ledgerPort,
+    clock,
+    ids,
+  });
   const checkPending =
     external &&
     new CheckPendingPix({
@@ -130,13 +140,7 @@ export function pgPixStack(
       repositories,
       spi: external.spi,
       outbox,
-      applySpiOutcome: new ApplySpiOutcome({
-        unitOfWork,
-        repositories,
-        ledger: ledgerPort,
-        clock,
-        ids,
-      }),
+      applySpiOutcome,
       clock,
     });
   const create = new CreatePixTransfer({
@@ -168,6 +172,8 @@ export function pgPixStack(
   return {
     /** Delivers the outbox, as the API's loop does; only with the real outbox. */
     deliverOutbox: () => realOutbox?.worker.runOnce(100) ?? Promise.resolve(0),
+    /** The SPI's answer, as the webhook or the status check bring it (task 4). */
+    applySpiOutcome: (outcome: SpiOutcome) => applySpiOutcome.execute(outcome),
     /** One round of the status check (v1.2.0 plan, task 4). */
     checkPending: () => checkPending?.execute() ?? Promise.resolve(0),
 

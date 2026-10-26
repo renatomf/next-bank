@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HttpSpiClient } from '../../../../src/modules/payments/infrastructure/http-spi-client.ts';
 import { createPool } from '../../../../src/shared/db.ts';
@@ -91,5 +92,46 @@ describe('the status check on Postgres and the simulator', () => {
 
     expect(await paymentsAtSpi(endToEndId)).toBe(1);
     expect((await stateOf(pixId)).status).toBe('PROCESSING');
+  });
+
+  async function waitingPix(): Promise<{ pixId: string; endToEndId: string }> {
+    const payer = await pix.newCustomer();
+    const pixId = await pix.createToKey(payer, AURORA, 5_000);
+    await pix.authorize(payer, pixId);
+    return { pixId, endToEndId: (await stateOf(pixId)).end_to_end_id };
+  }
+
+  async function entries(pixId: string): Promise<string[]> {
+    const { rows } = await pool.query<{ kind: string }>(
+      `SELECT kind FROM ledger.journal_entries
+       WHERE reference_type = 'PIX_TRANSFER' AND reference_id = $1 ORDER BY kind`,
+      [pixId],
+    );
+    return rows.map((row) => row.kind);
+  }
+
+  // database.md 7: the Pix is locked first, so the second answer finds it final.
+  it('applies the webhook and the status check of one Pix, arriving at once, once', async () => {
+    const { pixId, endToEndId } = await waitingPix();
+
+    await Promise.all([
+      pix.applySpiOutcome({ eventId: randomUUID(), endToEndId, status: 'SETTLED' }),
+      pix.applySpiOutcome({ eventId: null, endToEndId, status: 'SETTLED' }),
+    ]);
+
+    expect(await entries(pixId)).toEqual(['PIX_EXTERNAL', 'PIX_EXTERNAL_SETTLEMENT']);
+  });
+
+  it('takes one of a settlement and a refusal arriving at once, never both', async () => {
+    const { pixId, endToEndId } = await waitingPix();
+
+    await Promise.all([
+      pix.applySpiOutcome({ eventId: randomUUID(), endToEndId, status: 'SETTLED' }),
+      pix.applySpiOutcome({ eventId: randomUUID(), endToEndId, status: 'REJECTED' }),
+    ]);
+
+    const kinds = await entries(pixId);
+    expect(kinds).toHaveLength(2);
+    expect(['COMPLETED', 'FAILED']).toContain((await stateOf(pixId)).status);
   });
 });
