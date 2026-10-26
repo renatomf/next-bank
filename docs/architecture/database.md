@@ -240,7 +240,7 @@ erDiagram
 - **Contas `SYSTEM` não têm saldo materializado**, garantido por **`CHECK (kind = 'CUSTOMER' OR (posted_balance = 0 AND available_balance = 0))`** (as colunas ficam em zero e não são atualizadas). O saldo delas é calculado pela soma dos lançamentos, no job de reconciliação ou sob demanda. Motivo: contas como `system:funding` e `system:pix_clearing` participam de **todas** as operações do seu tipo. Se cada operação travasse e atualizasse essa linha, ela viraria um gargalo único (*hot account*) e todas as operações fariam fila nela. Contas de cliente continuam materializadas, porque o saldo disponível precisa ser verificado com lock antes de cada débito.
 
 **`journal_entries`** (append-only)
-- `kind`: `CHECK (kind IN ('FUNDING','PIX_INTERNAL'))` na V1, ampliado por migration: `TOP_UP` (v1.1.0) e `PIX_EXTERNAL` (v1.2.0, tarefa 3), o Pix para outro banco, que debita o cliente e credita `system:pix_clearing` (UUID fixo, criada pela migration) até o SPI responder
+- `kind`: `CHECK (kind IN ('FUNDING','PIX_INTERNAL'))` na V1, ampliado por migration: `TOP_UP` (v1.1.0) e `PIX_EXTERNAL` (v1.2.0, tarefa 3), o Pix para outro banco, que debita o cliente e credita `system:pix_clearing` (UUID fixo, criada pela migration) até o SPI responder; depois, `PIX_EXTERNAL_SETTLEMENT` (de `pix_clearing` para `system:bacen_settlement`, só contas de sistema) ou `PIX_EXTERNAL_REFUND` (de `pix_clearing` de volta ao cliente), na tarefa 4
 - **`UNIQUE (reference_type, reference_id, kind)`** — um mesmo Pix nunca gera dois lançamentos do mesmo tipo. É uma segunda camada de idempotência, independente da chave enviada pelo cliente
 
 **`postings`** (append-only)
@@ -287,6 +287,11 @@ erDiagram
 - `status`: `CHECK (status IN ('IN_PROGRESS','COMPLETED'))`; resposta presente exatamente quando concluída; validade de até 24 h (`CHECK`)
 - `response_body` só contém dados já mascarados (é a resposta enviada ao cliente) ou a recusa gravada (PIN incorreto, bloqueado, Pix expirado)
 - Índice `(expires_at)`: entra com o job de limpeza (semana 8)
+
+**`platform.inbox_events`** (v1.2.0, tarefa 4; ADR 0016, EXT-02): cada evento de webhook recebido, gravado na transação que o aplica
+- PK `event_id`: um evento repetido acha a linha (`ON CONFLICT DO NOTHING`) e não muda nada; `source` (`spi`) e `outcome` (`APPLIED` ou `IGNORED`) com `CHECK`; nunca o corpo, que identifica o Pix
+- `GRANT`: só `SELECT, INSERT` para a API; o que foi recebido não muda nem some (`EXPLAIN ANALYZE` da inclusão: árbitro `inbox_events_pkey`, 0,97 ms)
+- Consultas da tarefa 4 em `pix_transfers`: a trava pelo id de ponta a ponta usa `pix_transfers_end_to_end_id_key` (0,08 ms); a consulta de status usa o índice parcial `pix_transfers_external_processing_idx (authorized_at) WHERE status = 'PROCESSING' AND payee_ispb IS NOT NULL` (0,04 ms); `failure_reason` ganha `PAYEE_BANK_REJECTED`
 
 **`platform.outbox_messages`** (v1.2.0, tarefa 2; ADR 0016): o que um comando ainda precisa avisar fora do banco, gravado na mesma transação dele e entregue pelo menos uma vez pelo worker da API
 - `payload`: objeto JSON de até 2 KB, só com ids e códigos (nada pessoal, API-04); `type` no formato `módulo.ação`; `status` `PENDING`, `DONE` ou `DEAD`, com `processed_at` exatamente quando entregue; `last_error` só com o nome do erro
