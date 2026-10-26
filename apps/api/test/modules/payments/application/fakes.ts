@@ -162,6 +162,21 @@ export class FakePaymentsRepositories implements PaymentsRepositoriesFactory {
           return Promise.resolve();
         },
         findForPayer: (id, payerAccountId) => Promise.resolve(this.#transferOf(id, payerAccountId)),
+        findWaitingForSpi: (authorizedBefore, limit) =>
+          Promise.resolve(
+            this.transfers
+              .filter(
+                (t) =>
+                  t.payee.accountId === null &&
+                  t.status === 'PROCESSING' &&
+                  t.endToEndId !== null &&
+                  t.authorizedAt !== null &&
+                  t.authorizedAt <= authorizedBefore,
+              )
+              .sort((a, b) => (a.authorizedAt?.getTime() ?? 0) - (b.authorizedAt?.getTime() ?? 0))
+              .slice(0, limit)
+              .map((t) => ({ id: t.id, endToEndId: t.endToEndId ?? '' })),
+          ),
         lockByEndToEndId: (endToEndId) => {
           const found = this.transfers.find((t) => t.endToEndId === endToEndId);
           return Promise.resolve(found ? copyOf(found) : null);
