@@ -7,7 +7,14 @@ import type { SecretHasher } from '../../../../src/modules/identity/application/
 import { VerifyPin } from '../../../../src/modules/identity/application/verify-pin.ts';
 import { PgIdentityRepositories } from '../../../../src/modules/identity/infrastructure/pg-identity-repositories.ts';
 import { createLedgerModule } from '../../../../src/modules/ledger/index.ts';
-import { AuthorizePixTransfer } from '../../../../src/modules/payments/application/authorize-pix-transfer.ts';
+import { ApplySpiOutcome } from '../../../../src/modules/payments/application/apply-spi-outcome.ts';
+import {
+  AuthorizePixTransfer,
+  SEND_EXTERNAL_PIX,
+} from '../../../../src/modules/payments/application/authorize-pix-transfer.ts';
+import { CheckPendingPix } from '../../../../src/modules/payments/application/check-pending-pix.ts';
+import { SendExternalPix } from '../../../../src/modules/payments/application/send-external-pix.ts';
+import { createOutbox } from '../../../../src/shared/infrastructure/outbox-factory.ts';
 import { CreatePixTransfer } from '../../../../src/modules/payments/application/create-pix-transfer.ts';
 import type { PixTransferView } from '../../../../src/modules/payments/application/pix-transfer-view.ts';
 import type { SpiPort } from '../../../../src/modules/payments/application/ports.ts';
@@ -47,8 +54,10 @@ export interface Customer {
 export function pgPixStack(
   pool: pg.Pool,
   clock: Clock,
-  // The Pix to other banks (v1.2.0 plan, task 3): off unless given.
-  external: { spi: SpiPort; outbox: Outbox } | null = null,
+  // The Pix to other banks (v1.2.0 plan, tasks 3 and 4): off unless given.
+  // Without an outbox, the stack writes to the real one and its worker sends
+  // the Pix to the SPI.
+  external: { spi: SpiPort; outbox?: Outbox } | null = null,
 ) {
   const ids = new UuidV7Generator();
   const unitOfWork = new PgUnitOfWork(pool);
@@ -85,10 +94,55 @@ export function pgPixStack(
     settleExternalPix: ledger.customerAccounts.settlePixExternal.bind(ledger.customerAccounts),
     refundExternalPix: ledger.customerAccounts.refundPixExternal.bind(ledger.customerAccounts),
   };
+  const protector = new AesGcmPixKeyProtector(PII_KEYS);
+  const realOutbox =
+    external && !external.outbox
+      ? createOutbox({
+          pool,
+          ids,
+          clock: () => clock.now(),
+          errorReporter: { report: () => undefined },
+          handlers: new Map([
+            [
+              SEND_EXTERNAL_PIX,
+              (message) =>
+                new SendExternalPix({
+                  unitOfWork,
+                  repositories,
+                  protector,
+                  accounts: accounts.directory,
+                  identity,
+                  spi: external.spi,
+                }).handle(message),
+            ],
+          ]),
+        })
+      : null;
+  // Without the Pix to other banks, no Pix writes a message.
+  const outbox: Outbox = external?.outbox ??
+    realOutbox?.outbox ?? {
+      enqueue: () => Promise.reject(new Error('internal Pix writes no message')),
+    };
+  const checkPending =
+    external &&
+    new CheckPendingPix({
+      unitOfWork,
+      repositories,
+      spi: external.spi,
+      outbox,
+      applySpiOutcome: new ApplySpiOutcome({
+        unitOfWork,
+        repositories,
+        ledger: ledgerPort,
+        clock,
+        ids,
+      }),
+      clock,
+    });
   const create = new CreatePixTransfer({
     unitOfWork,
     repositories,
-    protector: new AesGcmPixKeyProtector(PII_KEYS),
+    protector,
     fingerprint,
     accounts: accounts.directory,
     identity,
@@ -106,15 +160,17 @@ export function pgPixStack(
     identity,
     ledger: ledgerPort,
     endToEndIds: new CryptoEndToEndIds(),
-    // Without the Pix to other banks, no Pix writes a message.
-    outbox: external?.outbox ?? {
-      enqueue: () => Promise.reject(new Error('internal Pix writes no message')),
-    },
+    outbox,
     clock,
     ids,
   });
 
   return {
+    /** Delivers the outbox, as the API's loop does; only with the real outbox. */
+    deliverOutbox: () => realOutbox?.worker.runOnce(100) ?? Promise.resolve(0),
+    /** One round of the status check (v1.2.0 plan, task 4). */
+    checkPending: () => checkPending?.execute() ?? Promise.resolve(0),
+
     /** A registered customer with R$ 10.000,00, the CPF key and the PIN. */
     async newCustomer(): Promise<Customer> {
       const cpf = fictitiousCpf();
