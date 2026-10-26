@@ -228,6 +228,11 @@ void main() {
         {'kind': 'PIX_RECEIVED', 'direction': 'IN'},
       ),
       ('a top-up coming in', {'kind': 'TOP_UP', 'direction': 'IN'}),
+      // Shown from v1.2.0 task 5; until then no refund reaches a customer (W4).
+      (
+        'a refund, before the app shows it',
+        {'kind': 'PIX_REFUNDED', 'direction': 'IN'},
+      ),
       ('a Pix receipt link on a top-up', {'kind': 'TOP_UP'}),
       (
         'a top-up receipt link on a Pix',
