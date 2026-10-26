@@ -4,7 +4,14 @@ import { CustomerLedgerAccounts } from '../../../../src/modules/ledger/applicati
 import { PostJournalEntry } from '../../../../src/modules/ledger/application/post-journal-entry.ts';
 import { InsufficientFunds } from '../../../../src/modules/ledger/domain/errors.ts';
 import { FixedClock, SequentialIds } from '../../identity/application/fakes.ts';
-import { FUNDING_ID, InMemoryLedger, PIX_CLEARING_ID, topUpLedgerIdOf, tx } from './fakes.ts';
+import {
+  BACEN_SETTLEMENT_ID,
+  FUNDING_ID,
+  InMemoryLedger,
+  PIX_CLEARING_ID,
+  topUpLedgerIdOf,
+  tx,
+} from './fakes.ts';
 
 // What the other contexts ask of the ledger about a customer account
 // (domain-model.md, sections 5, 6 and 8): open it, fund it, read its balance.
@@ -254,6 +261,63 @@ describe('CustomerLedgerAccounts', () => {
 
     await expect(accounts.sendPixExternal(tx, EXTERNAL)).rejects.toThrow(InsufficientFunds);
     expect(ledger.entries.filter((e) => e.kind === 'PIX_EXTERNAL')).toEqual([]);
+  });
+
+  // v1.2.0 plan, task 4 (domain-model.md, section 6): the SPI's answer moves
+  // the money out of system:pix_clearing, once per Pix.
+  async function sent() {
+    const world = setup();
+    await world.accounts.open(tx, 'account-a');
+    await world.accounts.fund(tx, { accountId: 'account-a', amount: Money.of(10_000n) });
+    await world.accounts.sendPixExternal(tx, EXTERNAL);
+    return world;
+  }
+
+  it('settles an external Pix from the clearing account to the settlement account', async () => {
+    const { ledger, accounts } = await sent();
+
+    await accounts.settlePixExternal(tx, { transferId: 'pix-ext-1', amount: Money.of(5_000n) });
+
+    const entry = ledger.entries.find((e) => e.kind === 'PIX_EXTERNAL_SETTLEMENT');
+    expect(entry).toMatchObject({ referenceType: 'PIX_TRANSFER', referenceId: 'pix-ext-1' });
+    expect(entry?.postings).toEqual([
+      expect.objectContaining({ ledgerAccountId: PIX_CLEARING_ID, direction: 'DEBIT' }),
+      expect.objectContaining({ ledgerAccountId: BACEN_SETTLEMENT_ID, direction: 'CREDIT' }),
+    ]);
+    // The customer's balance does not move again: the money left at the authorization.
+    expect(ledger.balanceOf('id-1')).toBe(5_000n);
+  });
+
+  it('refunds an external Pix from the clearing account to the customer', async () => {
+    const { ledger, accounts } = await sent();
+
+    await accounts.refundPixExternal(tx, EXTERNAL);
+
+    expect(ledger.balanceOf('id-1')).toBe(10_000n);
+    const entry = ledger.entries.find((e) => e.kind === 'PIX_EXTERNAL_REFUND');
+    expect(entry).toMatchObject({ referenceType: 'PIX_TRANSFER', referenceId: 'pix-ext-1' });
+    expect(entry?.postings).toEqual([
+      expect.objectContaining({
+        ledgerAccountId: PIX_CLEARING_ID,
+        direction: 'DEBIT',
+        counterpartyName: null,
+      }),
+      expect.objectContaining({
+        ledgerAccountId: 'id-1',
+        direction: 'CREDIT',
+        counterpartyName: 'Clara Aurora Teixeira',
+        counterpartyDocumentMasked: '***.407.256-**',
+      }),
+    ]);
+    expect(ledger.locks.at(-1)).toEqual(['id-1']);
+  });
+
+  it('fails to settle or refund for an account that was never opened, a bug', async () => {
+    const { accounts } = await sent();
+
+    await expect(
+      accounts.refundPixExternal(tx, { ...EXTERNAL, payerAccountId: 'account-unknown' }),
+    ).rejects.toThrow(/pix-ext-1/);
   });
 
   it('fails to fund an account that was never opened, a bug in the caller', async () => {
