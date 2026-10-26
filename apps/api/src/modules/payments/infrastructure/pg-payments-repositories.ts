@@ -162,6 +162,21 @@ export class PgPixTransfersRepository implements PixTransfersRepository {
     return stateOf(rows[0]);
   }
 
+  /** Served by the pix_transfers_external_processing_idx partial index. */
+  async findWaitingForSpi(
+    authorizedBefore: Date,
+    limit: number,
+  ): Promise<{ id: string; endToEndId: string }[]> {
+    const { rows } = await this.#client.query<{ id: string; end_to_end_id: string }>(
+      `SELECT id, end_to_end_id FROM payments.pix_transfers
+       WHERE status = 'PROCESSING' AND payee_ispb IS NOT NULL AND authorized_at <= $1
+       ORDER BY authorized_at
+       LIMIT $2`,
+      [authorizedBefore, limit],
+    );
+    return rows.map((row) => ({ id: row.id, endToEndId: row.end_to_end_id }));
+  }
+
   /** Served by the pix_transfers_end_to_end_id_key unique index. */
   async lockByEndToEndId(endToEndId: string): Promise<PixTransferState | null> {
     const { rows } = await this.#client.query<TransferRow>(

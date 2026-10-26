@@ -62,6 +62,14 @@ export interface PixTransfersRepository {
    */
   lockByEndToEndId(endToEndId: string): Promise<PixTransferState | null>;
   /**
+   * The Pix to another bank still waiting for the SPI, authorized before the
+   * given time, the oldest first, for the status check (v1.2.0 plan, W2).
+   */
+  findWaitingForSpi(
+    authorizedBefore: Date,
+    limit: number,
+  ): Promise<{ id: string; endToEndId: string }[]>;
+  /**
    * A Pix to another bank with its payee's sealed key, for the worker that
    * sends it; no payer filter, so never called on a customer's request.
    */
