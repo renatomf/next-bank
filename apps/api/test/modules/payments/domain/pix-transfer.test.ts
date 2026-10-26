@@ -368,6 +368,16 @@ describe('PixTransfer to another bank', () => {
     }).toThrow(InvalidTransferState);
   });
 
+  it('tells whether it waits for the SPI', () => {
+    const settled = waiting();
+    settled.settle(ANSWERED);
+
+    expect(waiting().waitsForSpi).toBe(true);
+    expect(settled.waitsForSpi).toBe(false);
+    expect(external().waitsForSpi).toBe(false);
+    expect(processing().waitsForSpi).toBe(false);
+  });
+
   it('takes the answer only of a Pix sent to another bank', () => {
     const internal = processing();
     const notSent = external();
