@@ -118,7 +118,11 @@ AuthTokens _$AuthTokensFromJson(Map<String, dynamic> json) =>
       final val = AuthTokens(
         tokenType: $checkedConvert(
           'tokenType',
-          (v) => $enumDecode(_$AuthTokensTokenTypeEnumEnumMap, v),
+          (v) => $enumDecode(
+            _$AuthTokensTokenTypeEnumEnumMap,
+            v,
+            unknownValue: AuthTokensTokenTypeEnum.unknownDefaultOpenApi,
+          ),
         ),
         accessToken: $checkedConvert('accessToken', (v) => v as String),
         accessTokenExpiresAt: $checkedConvert(
@@ -140,4 +144,5 @@ Map<String, dynamic> _$AuthTokensToJson(AuthTokens instance) =>
 
 const _$AuthTokensTokenTypeEnumEnumMap = {
   AuthTokensTokenTypeEnum.bearer: 'Bearer',
+  AuthTokensTokenTypeEnum.unknownDefaultOpenApi: 'unknown_default_open_api',
 };

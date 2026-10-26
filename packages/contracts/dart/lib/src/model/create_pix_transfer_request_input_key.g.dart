@@ -90,8 +90,12 @@ CreatePixTransferRequestInputKey _$CreatePixTransferRequestInputKeyFromJson(
       final val = CreatePixTransferRequestInputKey(
         type: $checkedConvert(
           'type',
-          (v) =>
-              $enumDecode(_$CreatePixTransferRequestInputKeyTypeEnumEnumMap, v),
+          (v) => $enumDecode(
+            _$CreatePixTransferRequestInputKeyTypeEnumEnumMap,
+            v,
+            unknownValue:
+                CreatePixTransferRequestInputKeyTypeEnum.unknownDefaultOpenApi,
+          ),
         ),
         value: $checkedConvert('value', (v) => v as String),
       );
@@ -110,4 +114,6 @@ const _$CreatePixTransferRequestInputKeyTypeEnumEnumMap = {
   CreatePixTransferRequestInputKeyTypeEnum.EMAIL: 'EMAIL',
   CreatePixTransferRequestInputKeyTypeEnum.PHONE: 'PHONE',
   CreatePixTransferRequestInputKeyTypeEnum.RANDOM: 'RANDOM',
+  CreatePixTransferRequestInputKeyTypeEnum.unknownDefaultOpenApi:
+      'unknown_default_open_api',
 };

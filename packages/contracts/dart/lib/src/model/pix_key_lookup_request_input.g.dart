@@ -85,7 +85,11 @@ PixKeyLookupRequestInput _$PixKeyLookupRequestInputFromJson(
   final val = PixKeyLookupRequestInput(
     type: $checkedConvert(
       'type',
-      (v) => $enumDecode(_$PixKeyLookupRequestInputTypeEnumEnumMap, v),
+      (v) => $enumDecode(
+        _$PixKeyLookupRequestInputTypeEnumEnumMap,
+        v,
+        unknownValue: PixKeyLookupRequestInputTypeEnum.unknownDefaultOpenApi,
+      ),
     ),
     value: $checkedConvert('value', (v) => v as String),
   );
@@ -104,4 +108,6 @@ const _$PixKeyLookupRequestInputTypeEnumEnumMap = {
   PixKeyLookupRequestInputTypeEnum.EMAIL: 'EMAIL',
   PixKeyLookupRequestInputTypeEnum.PHONE: 'PHONE',
   PixKeyLookupRequestInputTypeEnum.RANDOM: 'RANDOM',
+  PixKeyLookupRequestInputTypeEnum.unknownDefaultOpenApi:
+      'unknown_default_open_api',
 };

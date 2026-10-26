@@ -80,7 +80,11 @@ MoneyInput _$MoneyInputFromJson(Map<String, dynamic> json) =>
         amount: $checkedConvert('amount', (v) => (v as num).toInt()),
         currency: $checkedConvert(
           'currency',
-          (v) => $enumDecode(_$MoneyInputCurrencyEnumEnumMap, v),
+          (v) => $enumDecode(
+            _$MoneyInputCurrencyEnumEnumMap,
+            v,
+            unknownValue: MoneyInputCurrencyEnum.unknownDefaultOpenApi,
+          ),
         ),
       );
       return val;
@@ -92,4 +96,7 @@ Map<String, dynamic> _$MoneyInputToJson(MoneyInput instance) =>
       'currency': _$MoneyInputCurrencyEnumEnumMap[instance.currency]!,
     };
 
-const _$MoneyInputCurrencyEnumEnumMap = {MoneyInputCurrencyEnum.BRL: 'BRL'};
+const _$MoneyInputCurrencyEnumEnumMap = {
+  MoneyInputCurrencyEnum.BRL: 'BRL',
+  MoneyInputCurrencyEnum.unknownDefaultOpenApi: 'unknown_default_open_api',
+};

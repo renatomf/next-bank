@@ -34,6 +34,7 @@ class AuthTokens {
     name: r'tokenType',
     required: true,
     includeIfNull: false,
+  unknownEnumValue: AuthTokensTokenTypeEnum.unknownDefaultOpenApi,
   )
 
 
@@ -106,7 +107,9 @@ class AuthTokens {
 
 enum AuthTokensTokenTypeEnum {
 @JsonValue(r'Bearer')
-bearer(r'Bearer');
+bearer(r'Bearer'),
+@JsonValue(r'unknown_default_open_api')
+unknownDefaultOpenApi(r'unknown_default_open_api');
 
 const AuthTokensTokenTypeEnum(this.value);
 

@@ -111,7 +111,11 @@ MyAccount _$MyAccountFromJson(Map<String, dynamic> json) =>
         number: $checkedConvert('number', (v) => v as String),
         status: $checkedConvert(
           'status',
-          (v) => $enumDecode(_$MyAccountStatusEnumEnumMap, v),
+          (v) => $enumDecode(
+            _$MyAccountStatusEnumEnumMap,
+            v,
+            unknownValue: MyAccountStatusEnum.unknownDefaultOpenApi,
+          ),
         ),
         availableBalance: $checkedConvert(
           'availableBalance',
@@ -132,4 +136,5 @@ const _$MyAccountStatusEnumEnumMap = {
   MyAccountStatusEnum.ACTIVE: 'ACTIVE',
   MyAccountStatusEnum.BLOCKED: 'BLOCKED',
   MyAccountStatusEnum.CLOSED: 'CLOSED',
+  MyAccountStatusEnum.unknownDefaultOpenApi: 'unknown_default_open_api',
 };

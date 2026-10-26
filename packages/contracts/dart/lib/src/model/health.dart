@@ -30,6 +30,7 @@ class Health {
     name: r'status',
     required: true,
     includeIfNull: false,
+  unknownEnumValue: HealthStatusEnum.unknownDefaultOpenApi,
   )
 
 
@@ -75,7 +76,9 @@ class Health {
 
 enum HealthStatusEnum {
 @JsonValue(r'ok')
-ok(r'ok');
+ok(r'ok'),
+@JsonValue(r'unknown_default_open_api')
+unknownDefaultOpenApi(r'unknown_default_open_api');
 
 const HealthStatusEnum(this.value);
 

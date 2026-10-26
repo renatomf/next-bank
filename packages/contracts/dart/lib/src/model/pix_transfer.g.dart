@@ -188,7 +188,11 @@ PixTransfer _$PixTransferFromJson(
     id: $checkedConvert('id', (v) => v as String),
     status: $checkedConvert(
       'status',
-      (v) => $enumDecode(_$PixTransferStatusEnumEnumMap, v),
+      (v) => $enumDecode(
+        _$PixTransferStatusEnumEnumMap,
+        v,
+        unknownValue: PixTransferStatusEnum.unknownDefaultOpenApi,
+      ),
     ),
     amount: $checkedConvert(
       'amount',
@@ -202,7 +206,11 @@ PixTransfer _$PixTransferFromJson(
     endToEndId: $checkedConvert('endToEndId', (v) => v as String?),
     failureReason: $checkedConvert(
       'failureReason',
-      (v) => $enumDecodeNullable(_$PixTransferFailureReasonEnumEnumMap, v),
+      (v) => $enumDecodeNullable(
+        _$PixTransferFailureReasonEnumEnumMap,
+        v,
+        unknownValue: PixTransferFailureReasonEnum.unknownDefaultOpenApi,
+      ),
     ),
     createdAt: $checkedConvert('createdAt', (v) => DateTime.parse(v as String)),
     expiresAt: $checkedConvert('expiresAt', (v) => DateTime.parse(v as String)),
@@ -235,6 +243,7 @@ const _$PixTransferStatusEnumEnumMap = {
   PixTransferStatusEnum.COMPLETED: 'COMPLETED',
   PixTransferStatusEnum.FAILED: 'FAILED',
   PixTransferStatusEnum.CANCELLED: 'CANCELLED',
+  PixTransferStatusEnum.unknownDefaultOpenApi: 'unknown_default_open_api',
 };
 
 const _$PixTransferFailureReasonEnumEnumMap = {
@@ -243,4 +252,6 @@ const _$PixTransferFailureReasonEnumEnumMap = {
   PixTransferFailureReasonEnum.PAYEE_UNAVAILABLE: 'PAYEE_UNAVAILABLE',
   PixTransferFailureReasonEnum.ACCOUNT_BLOCKED: 'ACCOUNT_BLOCKED',
   PixTransferFailureReasonEnum.PAYEE_BANK_REJECTED: 'PAYEE_BANK_REJECTED',
+  PixTransferFailureReasonEnum.unknownDefaultOpenApi:
+      'unknown_default_open_api',
 };
