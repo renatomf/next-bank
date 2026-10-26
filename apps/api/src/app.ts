@@ -56,6 +56,8 @@ declare module 'fastify' {
   interface FastifyInstance {
     /** Delivers the outbox; the server runs it in a loop (v1.2.0 plan, D3), tests by hand. */
     outboxWorker: OutboxWorker;
+    /** One round of the SPI status check (v1.2.0 plan, task 4); null while it is off. */
+    spiStatusCheck: (() => Promise<number>) | null;
   }
 }
 
@@ -235,6 +237,8 @@ export function buildApp({
     spi,
     outbox,
   });
+  const { checkPendingPix } = payments;
+  app.decorate('spiStatusCheck', checkPendingPix ? () => checkPendingPix.execute() : null);
   // Top-ups reach Accounts, Identity and the Ledger only through the ports they define.
   const topUps = createTopUpsModule({
     unitOfWork,

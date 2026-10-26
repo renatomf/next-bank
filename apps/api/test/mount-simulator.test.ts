@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.ts';
@@ -21,7 +22,12 @@ beforeAll(async () => {
   });
   const databaseUrl = process.env.TEST_SIMULATOR_DATABASE_URL;
   if (!databaseUrl) throw new Error('TEST_SIMULATOR_DATABASE_URL is not set (see .env.example)');
-  await mountSimulator(app, { databaseUrl, participantKey });
+  await mountSimulator(app, {
+    databaseUrl,
+    participantKey,
+    webhookSecret: randomBytes(32),
+    webhookUrl: 'http://127.0.0.1:9/v1/spi/webhooks',
+  });
 });
 
 afterAll(async () => {
