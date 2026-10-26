@@ -101,6 +101,42 @@ void main() {
       expect(payee.keyType, PixKeyType.random);
     });
 
+    // v1.2.0 plan, task 5 (D12): a key of another (made-up) bank.
+    test('reads the bank of a payee at another bank', () async {
+      final server = ScriptedServer({
+        '/v1/pix/key-lookups': (_) async => const JsonReply(200, {
+          'keyType': 'EMAIL',
+          'keyMasked': 'cl***@example.com',
+          'payeeName': 'Clara Aurora Teixeira',
+          'payeeDocumentMasked': '***.407.256-**',
+          'bank': {'ispb': '99900001', 'name': 'Banco Aurora'},
+        }),
+      });
+
+      final payee = await repositoryFor(server)
+          .lookup((type: PixKeyType.email, value: 'clara.aurora@example.com'));
+
+      expect(jsonOf(server.received.single.body), {
+        'type': 'EMAIL',
+        'value': 'clara.aurora@example.com',
+      });
+      expect(payee.keyType, PixKeyType.email);
+      expect(payee.bankName, 'Banco Aurora');
+    });
+
+    test('reads no bank for a payee at next bank', () async {
+      final server = ScriptedServer({
+        '/v1/pix/key-lookups': (_) async => const JsonReply(200, {
+          'keyType': 'CPF',
+          'keyMasked': '***.456.789-**',
+          'payeeName': 'Mariana Costa',
+          'payeeDocumentMasked': '***.456.789-**',
+        }),
+      });
+
+      expect((await repositoryFor(server).lookup(_cpfKey)).bankName, isNull);
+    });
+
     test('reports a key that does not exist', () async {
       final server = ScriptedServer({
         '/v1/pix/key-lookups': (_) async =>
@@ -339,21 +375,66 @@ void main() {
     });
   });
 
+  // v1.2.0 plan, task 5: the end of a Pix to another bank.
+  group('a Pix to another bank', () {
+    final toAurora = {
+      'name': 'Clara Aurora Teixeira',
+      'documentMasked': '***.407.256-**',
+      'keyType': 'EMAIL',
+      'keyMasked': 'cl***@example.com',
+      'bank': {'ispb': '99900001', 'name': 'Banco Aurora'},
+    };
+
+    test('reads the bank of its payee', () async {
+      final server = ScriptedServer({
+        _transferPath: (_) async =>
+            JsonReply(200, pixTransfer({'payee': toAurora})),
+      });
+
+      final transfer = await repositoryFor(server).fetch(_transferId);
+
+      expect(transfer.payee.bankName, 'Banco Aurora');
+    });
+
+    test('reads a refusal by the payee bank (W1)', () async {
+      final server = ScriptedServer({
+        _transferPath: (_) async => JsonReply(
+          200,
+          pixTransfer({
+            'payee': toAurora,
+            'status': 'FAILED',
+            'failureReason': 'PAYEE_BANK_REJECTED',
+            'endToEndId': 'E00000000202610261501a1B2c3D4e5F',
+          }),
+        ),
+      });
+
+      final transfer = await repositoryFor(server).fetch(_transferId);
+
+      expect(transfer.status, PixStatus.failed);
+      expect(transfer.failureReason, PixFailureReason.payeeBankRejected);
+    });
+
+    // A4: a reason a later version of the API adds is shown, never an error.
+    test('reads a failure reason it does not know as unknown', () async {
+      final server = ScriptedServer({
+        _transferPath: (_) async => JsonReply(
+          200,
+          pixTransfer({'status': 'FAILED', 'failureReason': 'SOMETHING_NEW'}),
+        ),
+      });
+
+      final transfer = await repositoryFor(server).fetch(_transferId);
+
+      expect(transfer.failureReason, PixFailureReason.unknown);
+    });
+  });
+
   // MASVS, code: what the API sends is checked before it is shown (F-18).
   group('an answer the app cannot trust', () {
     for (final (name, changes) in <(String, Map<String, Object?>)>[
       ('an unknown status', {'status': 'REVERSED'}),
-      (
-        'an unknown failure reason',
-        {'status': 'FAILED', 'failureReason': 'SOMETHING_NEW'},
-      ),
       ('a failed Pix without a reason', {'status': 'FAILED'}),
-      // The app shows another bank's refusal from v1.2.0 task 5; until then it
-      // never reaches a customer, as the Pix to other banks stays off (W4).
-      (
-        'a refusal by the payee bank, before the app shows it',
-        {'status': 'FAILED', 'failureReason': 'PAYEE_BANK_REJECTED'},
-      ),
       (
         'a zero amount',
         {
