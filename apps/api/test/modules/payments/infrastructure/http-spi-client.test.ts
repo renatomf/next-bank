@@ -121,4 +121,33 @@ describe('HttpSpiClient', () => {
 
     await expect(spi.findKey(AURORA_KEY)).rejects.not.toThrow(/clara/);
   });
+
+  // v1.2.0 plan, task 4 (EXT-03): the state of a payment can always be asked.
+  it('tells the state of a payment the SPI took, and null for one it does not know', async () => {
+    const spi = await clientFor();
+    const sent = payment();
+    await spi.send(sent);
+
+    await expect(spi.status(sent.endToEndId)).resolves.toBe('PENDING');
+    await expect(spi.status(payment().endToEndId)).resolves.toBeNull();
+  });
+
+  it('tells a payment the SPI decided', async () => {
+    const spi = await clientFor();
+    const sent = payment();
+    await spi.send(sent);
+    if (!simulator) throw new Error('no simulator running');
+    await simulator.pool.query(
+      "UPDATE simulator.payments SET status = 'REJECTED', reason = 'PAYEE_BANK_REJECTED', decided_at = now() WHERE end_to_end_id = $1",
+      [sent.endToEndId],
+    );
+
+    await expect(spi.status(sent.endToEndId)).resolves.toBe('REJECTED');
+  });
+
+  it('fails when the status cannot be known, so nothing is decided', async () => {
+    const spi = await clientFor({ latencyMs: 1_000 });
+
+    await expect(spi.status(payment().endToEndId)).rejects.toThrow(/timeout|aborted/i);
+  });
 });
