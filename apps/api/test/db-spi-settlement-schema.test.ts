@@ -34,14 +34,14 @@ describe('SPI settlement schema', () => {
   });
 
   it.each([
-    ['an unknown outcome', { outcome: 'MAYBE' }],
-    ['an unknown source', { source: 'bank' }],
+    ['an unknown outcome', { source: 'spi', outcome: 'MAYBE' }],
+    ['an unknown source', { source: 'bank', outcome: 'APPLIED' }],
   ])('refuses an event with %s', async (_case, change) => {
     await expect(
       app.query(
         `INSERT INTO platform.inbox_events (event_id, source, outcome, received_at)
          VALUES ($1, $2, $3, now())`,
-        [randomUUID(), change.source ?? 'spi', change.outcome ?? 'APPLIED'],
+        [randomUUID(), change.source, change.outcome],
       ),
     ).rejects.toThrow(/check/);
   });

@@ -62,7 +62,7 @@ export interface StatementPosition {
 export interface StatementItem {
   id: string;
   occurredAt: Date;
-  kind: 'PIX_SENT' | 'PIX_RECEIVED' | 'DEMO_FUNDING' | 'TOP_UP';
+  kind: 'PIX_SENT' | 'PIX_RECEIVED' | 'PIX_REFUNDED' | 'DEMO_FUNDING' | 'TOP_UP';
   direction: 'IN' | 'OUT';
   amount: Money;
   counterparty: { name: string; documentMasked: string | null } | null;

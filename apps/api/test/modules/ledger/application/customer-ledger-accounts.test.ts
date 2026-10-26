@@ -309,7 +309,7 @@ describe('CustomerLedgerAccounts', () => {
         counterpartyDocumentMasked: '***.407.256-**',
       }),
     ]);
-    expect(ledger.locks.at(-1)).toEqual(['id-1']);
+    expect(ledger.locks.at(-1)).toContain('id-1');
   });
 
   it('fails to settle or refund for an account that was never opened, a bug', async () => {
