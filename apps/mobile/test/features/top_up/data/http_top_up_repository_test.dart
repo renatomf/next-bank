@@ -202,6 +202,12 @@ void main() {
       ('a number without its mask', {'phoneMasked': '11900000001'}),
       ('a zero amount', {'amount': money(0)}),
       (
+        'another currency',
+        {
+          'amount': {'amount': 35000, 'currency': 'USD'},
+        },
+      ),
+      (
         'a fractional amount',
         {
           'amount': {'amount': 30.5, 'currency': 'BRL'},

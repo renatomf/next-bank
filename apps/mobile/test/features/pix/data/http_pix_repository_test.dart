@@ -436,6 +436,12 @@ void main() {
       ('an unknown status', {'status': 'REVERSED'}),
       ('a failed Pix without a reason', {'status': 'FAILED'}),
       (
+        'another currency',
+        {
+          'amount': {'amount': 35000, 'currency': 'USD'},
+        },
+      ),
+      (
         'a zero amount',
         {
           'amount': {'amount': 0, 'currency': 'BRL'},

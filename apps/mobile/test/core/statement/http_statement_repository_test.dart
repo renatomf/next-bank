@@ -246,7 +246,12 @@ void main() {
   // shown; one item the app cannot trust spoils the page.
   group('an item the app cannot trust', () {
     for (final (name, changes) in <(String, Map<String, Object?>)>[
-      ('an unknown kind', {'kind': 'REFUND'}),
+      (
+        'another currency',
+        {
+          'amount': {'amount': 35000, 'currency': 'USD'},
+        },
+      ),
       (
         'a zero amount',
         {
