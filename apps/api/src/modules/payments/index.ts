@@ -4,6 +4,7 @@ import type { Outbox, OutboxHandler } from '../../shared/application/outbox.ts';
 import type { Clock, IdGenerator, UnitOfWork } from '../../shared/application/ports.ts';
 import type { PiiKeys } from '../../shared/infrastructure/aes-gcm-pii-protector.ts';
 import { RandomUuidGenerator } from '../../shared/infrastructure/system-ports.ts';
+import { ApplySpiOutcome } from './application/apply-spi-outcome.ts';
 import { AuthorizePixTransfer, SEND_EXTERNAL_PIX } from './application/authorize-pix-transfer.ts';
 import { CancelPixTransfer } from './application/cancel-pix-transfer.ts';
 import { CreateCpfKey } from './application/create-cpf-key.ts';
@@ -21,6 +22,7 @@ import { PgPaymentsRepositories } from './infrastructure/pg-payments-repositorie
 
 export { HttpSpiClient } from './infrastructure/http-spi-client.ts';
 export { keyLookupRoutes } from './http/key-lookup-route.ts';
+export { spiWebhookRoutes } from './http/spi-webhook-route.ts';
 export { receivingKeyRoutes } from './http/receiving-key-route.ts';
 export { transferRoutes } from './http/transfer-routes.ts';
 export type { CreateCpfKey } from './application/create-cpf-key.ts';
@@ -38,7 +40,10 @@ export type {
   SpiPort,
 } from './application/ports.ts';
 
+export type { ApplySpiOutcome } from './application/apply-spi-outcome.ts';
+
 export interface PaymentsModule {
+  applySpiOutcome: ApplySpiOutcome;
   createCpfKey: CreateCpfKey;
   lookupPixKey: LookupPixKey;
   getReceivingKey: GetReceivingKey;
@@ -92,6 +97,13 @@ export function createPaymentsModule(settings: {
   const quota = new InMemoryKeyLookupQuota();
   const fingerprint = new HmacRequestFingerprint(settings.piiKeys);
   return {
+    applySpiOutcome: new ApplySpiOutcome({
+      unitOfWork: settings.unitOfWork,
+      repositories,
+      ledger: settings.ledger,
+      clock: settings.clock,
+      ids: settings.ids,
+    }),
     createCpfKey: new CreateCpfKey({
       repositories,
       protector,

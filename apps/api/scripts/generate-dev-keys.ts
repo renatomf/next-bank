@@ -18,6 +18,7 @@ process.stdout.write(
     `PIN_PEPPER=${randomBytes(32).toString('base64')}`,
     `TOP_UP_PHONE_KEY=${randomBytes(32).toString('base64')}`,
     `SIMULATOR_PARTICIPANT_KEY=${randomBytes(32).toString('base64')}`,
+    `SIMULATOR_WEBHOOK_SECRET=${randomBytes(32).toString('base64')}`,
     '',
   ].join('\n'),
 );

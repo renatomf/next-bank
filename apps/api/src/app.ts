@@ -37,6 +37,7 @@ import {
   HttpSpiClient,
   keyLookupRoutes,
   receivingKeyRoutes,
+  spiWebhookRoutes,
   transferRoutes,
 } from './modules/payments/index.ts';
 import { createTopUpsModule, topUpRoutes } from './modules/top-ups/index.ts';
@@ -82,7 +83,7 @@ export interface AppDependencies {
   /** Where unexpected errors go; nowhere but the logs by default. */
   errorReporter?: ErrorReporter;
   /** The Pix to other banks: off unless given (v1.2.0 plan, P1). */
-  externalPix?: { simulatorUrl: string; participantKey: string };
+  externalPix?: { simulatorUrl: string; participantKey: string; webhookSecret: Uint8Array };
 }
 
 /** A partner that does not answer in this long is a failure, retried by the caller. */
@@ -282,6 +283,14 @@ export function buildApp({
   });
   void app.register(keyLookupRoutes, { lookupPixKey: payments.lookupPixKey });
   void app.register(receivingKeyRoutes, { getReceivingKey: payments.getReceivingKey });
+  // The SPI's answer (v1.2.0 plan, task 4): only where the Pix to other banks is on.
+  if (externalPix) {
+    void app.register(spiWebhookRoutes, {
+      applySpiOutcome: payments.applySpiOutcome,
+      webhookSecret: externalPix.webhookSecret,
+      clock,
+    });
+  }
   void app.register(transferRoutes, {
     createPixTransfer: payments.createPixTransfer,
     authorizePixTransfer: payments.authorizePixTransfer,

@@ -80,6 +80,9 @@ const schema = z
       .optional(),
     // The key the API presents to the simulator, and the simulator asks (EXT-09).
     SIMULATOR_PARTICIPANT_KEY: z.string().min(32).optional(),
+    // The secret the SPI's webhooks are signed with (task 4, EXT-01): the API
+    // checks them, the mounted simulator signs them.
+    SIMULATOR_WEBHOOK_SECRET: key32.optional(),
     // Set where the simulator is mounted in the API's service (D2), with its own role.
     SIMULATOR_DATABASE_URL: postgresUrl
       .refine((url) => URL.parse(url)?.username === 'nextbank_simulator', {
@@ -112,19 +115,31 @@ const schema = z
   .refine(
     (env) =>
       env.EXTERNAL_PIX_ENABLED === 'false' ||
-      (env.SIMULATOR_URL !== undefined && env.SIMULATOR_PARTICIPANT_KEY !== undefined),
+      (env.SIMULATOR_URL !== undefined &&
+        env.SIMULATOR_PARTICIPANT_KEY !== undefined &&
+        env.SIMULATOR_WEBHOOK_SECRET !== undefined),
     {
-      message: 'SIMULATOR_URL and SIMULATOR_PARTICIPANT_KEY are required with EXTERNAL_PIX_ENABLED',
+      message:
+        'SIMULATOR_URL, SIMULATOR_PARTICIPANT_KEY and SIMULATOR_WEBHOOK_SECRET are required with EXTERNAL_PIX_ENABLED',
       path: ['EXTERNAL_PIX_ENABLED'],
     },
   )
   .refine(
     (env) =>
-      env.SIMULATOR_DATABASE_URL === undefined || env.SIMULATOR_PARTICIPANT_KEY !== undefined,
+      env.SIMULATOR_DATABASE_URL === undefined ||
+      (env.SIMULATOR_PARTICIPANT_KEY !== undefined && env.SIMULATOR_WEBHOOK_SECRET !== undefined),
     {
-      message: 'SIMULATOR_PARTICIPANT_KEY is required with SIMULATOR_DATABASE_URL',
-      path: ['SIMULATOR_PARTICIPANT_KEY'],
+      message:
+        'SIMULATOR_PARTICIPANT_KEY and SIMULATOR_WEBHOOK_SECRET are required with SIMULATOR_DATABASE_URL',
+      path: ['SIMULATOR_DATABASE_URL'],
     },
+  )
+  // One secret for two purposes would let a leak of one forge the other.
+  .refine(
+    (env) =>
+      env.SIMULATOR_WEBHOOK_SECRET === undefined ||
+      env.SIMULATOR_WEBHOOK_SECRET !== env.SIMULATOR_PARTICIPANT_KEY,
+    { message: 'must differ from SIMULATOR_PARTICIPANT_KEY', path: ['SIMULATOR_WEBHOOK_SECRET'] },
   )
   .refine(
     (env) =>
@@ -156,9 +171,14 @@ export interface Config {
   /** Encrypts the top-up phone numbers (TOP-01, decision R6). */
   topUpPhoneKey: Buffer;
   /** The Pix to other banks, when on (P1). */
-  externalPix?: { simulatorUrl: string; participantKey: string };
+  externalPix?: { simulatorUrl: string; participantKey: string; webhookSecret: Buffer };
   /** The simulator mounted in the service (D2), when its database is set. */
-  simulator?: { databaseUrl: string; participantKey: string; faults?: string };
+  simulator?: {
+    databaseUrl: string;
+    participantKey: string;
+    webhookSecret: Buffer;
+    faults?: string;
+  };
 }
 
 /** Validates the environment at boot. Error messages never include the received values. */
@@ -202,6 +222,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
           externalPix: {
             simulatorUrl: required(data.SIMULATOR_URL ?? null),
             participantKey: required(data.SIMULATOR_PARTICIPANT_KEY ?? null),
+            webhookSecret: required(decodeBase64(data.SIMULATOR_WEBHOOK_SECRET ?? '')),
           },
         }
       : {}),
@@ -210,6 +231,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
           simulator: {
             databaseUrl: data.SIMULATOR_DATABASE_URL,
             participantKey: required(data.SIMULATOR_PARTICIPANT_KEY ?? null),
+            webhookSecret: required(decodeBase64(data.SIMULATOR_WEBHOOK_SECRET ?? '')),
             ...(data.SIMULATOR_FAULTS ? { faults: data.SIMULATOR_FAULTS } : {}),
           },
         }
