@@ -68,7 +68,12 @@ Future<void> fillInPix(WidgetTester tester) async {
   await tester.pumpAndSettle();
   await tester.enterText(field('Valor do Pix'), '35000');
   await typeInto(tester, labeled('Chave Pix'), _cpf);
-  await tester.ensureVisible(find.text('Buscar chave'));
+  // Above the key: on a small phone it may have scrolled out of the list.
+  await tester.scrollUntilVisible(
+    find.text('Buscar chave'),
+    -200,
+    scrollable: listOf(SendPixScreen),
+  );
   await tester.pumpAndSettle();
   await tester.tap(find.text('Buscar chave'));
   await tester.pumpAndSettle();

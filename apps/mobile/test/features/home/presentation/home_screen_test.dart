@@ -37,6 +37,7 @@ Future<void> pumpHome(
   VoidCallback? onPay,
   VoidCallback? onReceive,
   VoidCallback? onStatement,
+  VoidCallback? onSchedules,
   ValueChanged<String>? onPixWithKey,
   VoidCallback? onTransfer,
   VoidCallback? onAutomatic,
@@ -69,6 +70,7 @@ Future<void> pumpHome(
           onPay: onPay ?? () {},
           onReceive: onReceive ?? () {},
           onStatement: onStatement ?? () {},
+          onSchedules: onSchedules ?? () {},
           onPixWithKey: onPixWithKey ?? (_) {},
           onTransfer: onTransfer ?? () {},
           onAutomatic: onAutomatic ?? () {},
@@ -208,6 +210,22 @@ void main() {
 
     expect(paid, 1);
     expect(find.widgetWithText(NbToast, 'Em breve.'), findsNothing);
+  });
+
+  // v1.2.0 plan, task 7 (D11): the scheduled Pix open from the card too.
+  testWidgets('opens the scheduled Pix from the balance card', (tester) async {
+    var opened = 0;
+    await pumpHome(tester, onSchedules: () => opened++);
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(BalanceCard),
+        matching: find.bySemanticsLabel('Agendamentos'),
+      ),
+    );
+
+    expect(opened, 1);
   });
 
   // S21 checkpoint: the statement opens from the balance card, and the
