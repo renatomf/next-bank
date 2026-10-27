@@ -1,7 +1,7 @@
 import type { Outbox } from '../../../shared/application/outbox.ts';
 import type { Clock, UnitOfWork } from '../../../shared/application/ports.ts';
 import type { ApplySpiOutcome } from './apply-spi-outcome.ts';
-import { SEND_EXTERNAL_PIX } from './authorize-pix-transfer.ts';
+import { SEND_EXTERNAL_PIX } from './process-pix.ts';
 import type { PaymentsRepositoriesFactory, SpiPort } from './ports.ts';
 
 export interface CheckPendingPixDependencies {

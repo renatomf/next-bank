@@ -11,11 +11,9 @@ import {
   ApplySpiOutcome,
   type SpiOutcome,
 } from '../../../../src/modules/payments/application/apply-spi-outcome.ts';
-import {
-  AuthorizePixTransfer,
-  SEND_EXTERNAL_PIX,
-} from '../../../../src/modules/payments/application/authorize-pix-transfer.ts';
+import { AuthorizePixTransfer } from '../../../../src/modules/payments/application/authorize-pix-transfer.ts';
 import { CheckPendingPix } from '../../../../src/modules/payments/application/check-pending-pix.ts';
+import { SEND_EXTERNAL_PIX } from '../../../../src/modules/payments/application/process-pix.ts';
 import { SendExternalPix } from '../../../../src/modules/payments/application/send-external-pix.ts';
 import { createOutbox } from '../../../../src/shared/infrastructure/outbox-factory.ts';
 import { CreatePixTransfer } from '../../../../src/modules/payments/application/create-pix-transfer.ts';

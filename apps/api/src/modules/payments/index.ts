@@ -5,7 +5,8 @@ import type { Clock, IdGenerator, UnitOfWork } from '../../shared/application/po
 import type { PiiKeys } from '../../shared/infrastructure/aes-gcm-pii-protector.ts';
 import { RandomUuidGenerator } from '../../shared/infrastructure/system-ports.ts';
 import { ApplySpiOutcome } from './application/apply-spi-outcome.ts';
-import { AuthorizePixTransfer, SEND_EXTERNAL_PIX } from './application/authorize-pix-transfer.ts';
+import { AuthorizePixTransfer } from './application/authorize-pix-transfer.ts';
+import { SEND_EXTERNAL_PIX } from './application/process-pix.ts';
 import { CancelPixTransfer } from './application/cancel-pix-transfer.ts';
 import { CheckPendingPix } from './application/check-pending-pix.ts';
 import { CreateCpfKey } from './application/create-cpf-key.ts';
