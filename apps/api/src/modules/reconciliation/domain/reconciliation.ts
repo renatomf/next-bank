@@ -1,5 +1,38 @@
 import type { Money } from '../../../shared/domain/money.ts';
 
+// São Paulo is UTC−3, with no daylight saving since 2019, as the SPI's file.
+const SAO_PAULO_OFFSET_MS = 3 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+/** The day before is reconciled from this hour in São Paulo (R3). */
+const RECONCILE_FROM_HOUR = 3;
+
+/** A day of São Paulo (`YYYY-MM-DD`): when it starts and ends, and the day before. */
+export function saoPauloDay(date: string): { start: Date; end: Date; dayBefore: string } {
+  const start = new Date(`${date}T00:00:00-03:00`);
+  return {
+    start,
+    end: new Date(start.getTime() + DAY_MS),
+    dayBefore: dateOf(new Date(start.getTime() - DAY_MS)),
+  };
+}
+
+/**
+ * The day to reconcile at [now] (R3): yesterday in São Paulo once it is
+ * 03:00 there, so the last webhooks and status checks of the day are in;
+ * before that, the day before yesterday.
+ */
+export function dayToReconcile(now: Date): string {
+  // The clock moved to São Paulo: its UTC fields read as the local time there.
+  const local = now.getTime() - SAO_PAULO_OFFSET_MS;
+  const daysBack = new Date(local).getUTCHours() >= RECONCILE_FROM_HOUR ? 1 : 2;
+  return new Date(local - daysBack * DAY_MS).toISOString().slice(0, 10);
+}
+
+/** The calendar day in São Paulo of an instant. */
+function dateOf(instant: Date): string {
+  return new Date(instant.getTime() - SAO_PAULO_OFFSET_MS).toISOString().slice(0, 10);
+}
+
 /** A payment in the SPI's settlement file. */
 export interface SettledAtSpi {
   endToEndId: string;
