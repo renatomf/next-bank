@@ -83,5 +83,11 @@ CREATE TABLE payments.pix_schedule_occurrences (
 
 GRANT SELECT, INSERT ON payments.pix_schedule_occurrences TO nextbank_app;
 
+-- Scheduling is a financial command: once per idempotency key (ADR 0007).
+ALTER TABLE platform.idempotency_records
+  DROP CONSTRAINT idempotency_records_operation_check,
+  ADD CONSTRAINT idempotency_records_operation_check
+    CHECK (operation IN ('pix.create', 'pix.authorize', 'top-up.create', 'pix.schedule'));
+
 -- migrate:down
 -- Forward only (database.md, section 9): fix with a new migration instead.
