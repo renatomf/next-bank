@@ -1,7 +1,8 @@
 import { Money } from '../../../shared/domain/money.ts';
 import { LimitExceeded } from './errors.ts';
 
-const DAY_LIMIT = Money.of(500_000n);
+/** The limit of the daytime, when a scheduled Pix always runs (v1.2.0 plan, S3). */
+export const DAYTIME_LIMIT = Money.of(500_000n);
 const NIGHT_LIMIT = Money.of(100_000n);
 const DAY_STARTS_AT = 6;
 const NIGHT_STARTS_AT = 20;
@@ -13,10 +14,15 @@ const SAO_PAULO_HOUR = new Intl.DateTimeFormat('en-US', {
   hourCycle: 'h23',
 });
 
+/** From 6h to 20h in São Paulo. */
+export function isDaytime(now: Date): boolean {
+  const hour = Number(SAO_PAULO_HOUR.format(now));
+  return hour >= DAY_STARTS_AT && hour < NIGHT_STARTS_AT;
+}
+
 /** R$ 5.000,00 from 6h to 20h, R$ 1.000,00 from 20h to 6h (domain-model.md 7). */
 export function transferLimitAt(now: Date): Money {
-  const hour = Number(SAO_PAULO_HOUR.format(now));
-  return hour >= DAY_STARTS_AT && hour < NIGHT_STARTS_AT ? DAY_LIMIT : NIGHT_LIMIT;
+  return isDaytime(now) ? DAYTIME_LIMIT : NIGHT_LIMIT;
 }
 
 export function assertWithinLimit(amount: Money, now: Date): void {

@@ -95,3 +95,30 @@ export class InvalidTransferState extends DomainError {
     super('Pix transfer is not in a state that allows this');
   }
 }
+
+/** A schedule's first date is today or before: for today there is the Pix itself (S7). */
+export class ScheduleInPast extends DomainError {
+  readonly code = 'ScheduleInPast';
+
+  constructor() {
+    super('A Pix is scheduled from tomorrow on');
+  }
+}
+
+/** A first date over a year ahead, or a monthly Pix outside 2 to 24 times (S2, S7). */
+export class InvalidRecurrence extends DomainError {
+  readonly code = 'InvalidRecurrence';
+
+  constructor() {
+    super('A schedule starts within a year and repeats from 2 to 24 times');
+  }
+}
+
+/** The schedule is finished, or cancelled, and takes no more changes (S6). */
+export class ScheduleNotActive extends DomainError {
+  readonly code = 'ScheduleNotActive';
+
+  constructor() {
+    super('The Pix schedule is not active');
+  }
+}
