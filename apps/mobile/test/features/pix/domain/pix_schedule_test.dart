@@ -39,7 +39,11 @@ void main() {
 
     test('orders days', () {
       expect(
-        const CalendarDay(2026, 11, 5).compareTo(const CalendarDay(2026, 12, 1)),
+        const CalendarDay(
+          2026,
+          11,
+          5,
+        ).compareTo(const CalendarDay(2026, 12, 1)),
         isNegative,
       );
       expect(
