@@ -31,6 +31,7 @@ flowchart LR
     PA[Payments<br/>Pix, chaves, idempotência]
     AU[Audit<br/>trilha de auditoria]
     TU[TopUps<br/>recarga de celular, v1.1.0]
+    RE[Reconciliation<br/>conciliação diária, v1.2.0]
     OP[Operations<br/>Fase 3]
 
     TU -- "verifica PIN (porta)" --> ID
@@ -42,6 +43,8 @@ flowchart LR
     PA -- "consulta conta e status (porta)" --> AC
     PA -- "registra lançamento (porta, mesma transação)" --> LE
     AC -- "abre conta contábil e lê saldo (porta)" --> LE
+    RE -- "lê os Pix externos (porta, só leitura)" --> PA
+    RE -- "lê o saldo de pix_clearing (porta, só leitura)" --> LE
     ID -. eventos .-> AU
     AC -. eventos .-> AU
     PA -. eventos .-> AU
@@ -51,6 +54,7 @@ flowchart LR
 
 - **Portas:** o contexto que chama define a interface (ex.: `LedgerPort` dentro de Payments); o outro contexto expõe a implementação pelo seu `index.ts`.
 - **Na V1, tudo roda na mesma transação de banco** (Unit of Work). Na Fase 2, a comunicação com o mundo externo passa a usar Outbox.
+- **Reconciliation só lê** (v1.2.0, ADR 0018): compara o arquivo de liquidação do SPI com os Pix e o ledger e registra cada divergência como `ReconciliationException`; nunca move dinheiro nem muda um Pix.
 - **Audit é conformista:** recebe os eventos de domínio dos outros contextos e os grava na mesma transação.
 - **Falhas também são persistidas.** Um erro de negócio não significa rollback de tudo: PIN incorreto incrementa `failedAttempts`, login falho gera `LOGIN_FAILED`, Pix recusado grava o status `FAILED`. O caso de uso faz commit dessas mudanças e devolve o erro. Só falhas técnicas (exceptions) causam rollback. Sem essa regra, o contador de tentativas do PIN nunca subiria e o bloqueio não funcionaria.
 

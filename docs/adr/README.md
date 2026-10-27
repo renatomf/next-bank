@@ -23,6 +23,7 @@ Cada ADR registra **uma** decisão de arquitetura: o contexto, as alternativas c
 | [0015](0015-idempotencia-compartilhada.md) | Idempotência compartilhada entre os módulos | Aceito |
 | [0016](0016-outbox-e-inbox.md) | Outbox transacional e inbox | Aceito |
 | [0017](0017-simulador-no-servico-da-api.md) | Simulador montado no serviço da API | Aceito |
+| [0018](0018-pix-assincrono-e-conciliacao.md) | Pix assíncrono e conciliação diária | Aceito |
 
 ## Template
 
