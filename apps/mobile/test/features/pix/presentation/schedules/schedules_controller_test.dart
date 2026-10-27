@@ -1,13 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_bank/core/api_failure.dart';
+import 'package:next_bank/features/pix/domain/pix_schedule.dart';
 import 'package:next_bank/features/pix/presentation/pix_providers.dart';
 import 'package:next_bank/features/pix/presentation/schedules/schedules_controller.dart';
 
 import '../../../../support/fake_pix_schedule_repository.dart';
 
-(ProviderContainer, FakePixScheduleRepository) setUpList() {
+(ProviderContainer, FakePixScheduleRepository) setUpList({
+  Future<PixSchedulePage> Function(String? cursor)? listAnswer,
+}) {
   final repository = FakePixScheduleRepository();
+  if (listAnswer != null) repository.listAnswer = listAnswer;
   final container = ProviderContainer(
     overrides: [pixScheduleRepositoryProvider.overrideWithValue(repository)],
   );
@@ -30,10 +34,11 @@ void main() {
   });
 
   test('adds the next page from where the last ended', () async {
-    final (container, repository) = setUpList();
-    repository.listAnswer = (cursor) async => cursor == null
-        ? (items: [pixSchedule()], nextCursor: 'page-2')
-        : (items: [pixSchedule(id: 'schedule-2')], nextCursor: null);
+    final (container, repository) = setUpList(
+      listAnswer: (cursor) async => cursor == null
+          ? (items: [pixSchedule()], nextCursor: 'page-2')
+          : (items: [pixSchedule(id: 'schedule-2')], nextCursor: null),
+    );
     await container.read(schedulesProvider.future);
 
     await container.read(schedulesProvider.notifier).loadMore();
@@ -45,10 +50,11 @@ void main() {
   });
 
   test('keeps the page loaded and says why the next failed', () async {
-    final (container, repository) = setUpList();
-    repository.listAnswer = (cursor) async => cursor == null
-        ? (items: [pixSchedule()], nextCursor: 'page-2')
-        : throw const ApiUnreachable();
+    final (container, _) = setUpList(
+      listAnswer: (cursor) async => cursor == null
+          ? (items: [pixSchedule()], nextCursor: 'page-2')
+          : throw const ApiUnreachable(),
+    );
     await container.read(schedulesProvider.future);
 
     await container.read(schedulesProvider.notifier).loadMore();

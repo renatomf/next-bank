@@ -84,9 +84,9 @@ void main() {
 
   test('keeps the times from 2 to 24', () {
     final (container, _) = setUpSchedule();
-    final controller = controllerOf(container)..setMonthly(monthly: true);
-
-    controller.setTimes(1);
+    final controller = controllerOf(container)
+      ..setMonthly(monthly: true)
+      ..setTimes(1);
     expect(stateOf(container).times, 2);
     controller.setTimes(30);
     expect(stateOf(container).times, 24);

@@ -55,6 +55,7 @@ void main() {
       pixScheduleProvider('schedule-1').future,
     );
     expect(again.status, PixScheduleStatus.cancelled);
+    await container.read(schedulesProvider.future);
     expect(repository.callsOf('list'), hasLength(2));
   });
 
