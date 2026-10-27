@@ -77,6 +77,10 @@ String _catalogText(ApiErrorCode code) => switch (code) {
   ApiErrorCode.invalidTopUpAmount => 'Escolha um dos valores da lista.',
   ApiErrorCode.topUpLimitExceeded =>
     'Valor acima do limite de recargas do dia.',
+  ApiErrorCode.scheduleInPast => 'Escolha uma data a partir de amanhã.',
+  ApiErrorCode.invalidRecurrence =>
+    'Escolha uma data em até um ano e de 2 a 24 repetições.',
+  ApiErrorCode.scheduleNotActive => 'Este agendamento já terminou.',
 };
 
 String _attemptsLeft(int remaining) => remaining == 1
