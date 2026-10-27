@@ -27,7 +27,8 @@ export interface PixScheduleView {
     bank?: { ispb: string; name: string };
   };
   firstDate: string;
-  recurrence: ScheduleRecurrence;
+  /** Times is 1 for a Pix scheduled once. */
+  recurrence: { frequency: ScheduleRecurrence['frequency']; times: number };
   nextOccurrenceDate: string | null;
   /** The date of the last occurrence: the end the app shows (S2). */
   lastOccurrenceDate: string;
@@ -61,7 +62,7 @@ export function scheduleViewOf(state: Readonly<PixScheduleState>): PixScheduleVi
       ...(state.payee.bank ? { bank: { ...state.payee.bank } } : {}),
     },
     firstDate: state.firstDate,
-    recurrence: { ...state.recurrence },
+    recurrence: { frequency: state.recurrence.frequency, times: schedule.times },
     nextOccurrenceDate: state.nextOccurrenceDate,
     lastOccurrenceDate: schedule.occurrenceDate(schedule.times),
     createdAt: state.createdAt.toISOString(),

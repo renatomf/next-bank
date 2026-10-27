@@ -72,6 +72,9 @@ const CATALOG_STATUS: Readonly<Record<string, number>> = {
   UnknownTopUpOperator: 422,
   InvalidTopUpAmount: 422,
   TopUpLimitExceeded: 422,
+  ScheduleInPast: 422,
+  InvalidRecurrence: 422,
+  ScheduleNotActive: 409,
 };
 
 /** Generic RFC 9457 response: never carries stack, SQL or internal detail (API-03). */
