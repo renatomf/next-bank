@@ -378,22 +378,19 @@ void main() {
       expect(opened, 1);
     });
 
-    testWidgets('says an invalid CPF is invalid, going nowhere (PIX-07)', (
-      tester,
-    ) async {
+    // v1.2.0 plan, task 5 (A1): a key of any kind goes as typed; the Pix
+    // screen tells its kind and refuses a value that is no key (PIX-07).
+    testWidgets('opens the Pix with an e-mail key, as typed', (tester) async {
       final keys = <String>[];
-      var opened = 0;
-      await pumpHome(tester, onPixWithKey: keys.add, onPix: () => opened++);
+      await pumpHome(tester, onPixWithKey: keys.add);
       await tester.pumpAndSettle();
       await scrollToBox(tester);
 
-      await tester.enterText(keyField(), '12345678900');
+      await tester.enterText(keyField(), ' clara.aurora@example.com ');
       await tester.tap(find.bySemanticsLabel('Continuar com a chave'));
       await tester.pumpAndSettle();
 
-      expect(find.text('CPF inválido.'), findsOneWidget);
-      expect(keys, isEmpty);
-      expect(opened, 0);
+      expect(keys, ['clara.aurora@example.com']);
     });
 
     for (final (label, callback) in [

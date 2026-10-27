@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/account/account_providers.dart';
-import 'package:next_bank/core/cpf.dart';
-import 'package:next_bank/core/cpf_input_formatter.dart';
 import 'package:next_bank/core/ui/pix/amount_card.dart';
 import 'package:next_bank/core/ui/pix/contact_card.dart';
 import 'package:next_bank/features/pix/domain/pix_amount.dart';
@@ -15,23 +13,24 @@ import 'package:next_bank/features/pix/presentation/send/send_pix_controller.dar
 
 /// Sending a Pix (screen 7; pix-dark mockup, without the tabs, the recent
 /// contacts and the support button, decision D8): the amount, who receives
-/// by CPF key, an optional description, then the review with the PIN.
+/// by a key of any kind (v1.2.0 plan, task 5, A1), an optional description,
+/// then the review with the PIN.
 class SendPixScreen extends ConsumerStatefulWidget {
   /// Creates the screen; the router says where back and the review go.
   const new({
     required this.onBack,
     required this.onReceive,
     required this.onReview,
-    this.initialCpf,
+    this.initialKey,
     super.key,
   });
 
   /// Leaves the Pix.
   final VoidCallback onBack;
 
-  /// A CPF key, in digits, to open with, filled in and looked up: the one
-  /// typed in the Home's Pix box (v1.1.0 plan, task 4.2).
-  final String? initialCpf;
+  /// A key to open with, filled in and looked up: the one typed in the
+  /// Home's Pix box (v1.1.0 plan, task 4.2), as typed.
+  final String? initialKey;
 
   /// Opens "Receber", with the QR Code (v1.1.0 plan, task 3).
   final VoidCallback onReceive;
@@ -46,20 +45,18 @@ class SendPixScreen extends ConsumerStatefulWidget {
 class _SendPixScreenState extends ConsumerState<SendPixScreen> {
   final _amount = FocusNode();
   final _description = TextEditingController();
-  late final _cpf = TextEditingController(
-    text: widget.initialCpf == null ? null : formatCpf(widget.initialCpf!),
-  );
+  late final _key = TextEditingController(text: widget.initialKey);
 
   @override
   void initState() {
     super.initState();
-    final cpf = _cpf.text;
-    if (cpf.isNotEmpty) {
+    final key = _key.text;
+    if (key.isNotEmpty) {
       // After the first frame: a provider cannot change during a build.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         unawaited(
-          (ref.read(sendPixControllerProvider.notifier)..typeKey(cpf)).lookup(),
+          (ref.read(sendPixControllerProvider.notifier)..typeKey(key)).lookup(),
         );
       });
     }
@@ -69,7 +66,7 @@ class _SendPixScreenState extends ConsumerState<SendPixScreen> {
   void dispose() {
     _amount.dispose();
     _description.dispose();
-    _cpf.dispose();
+    _key.dispose();
     super.dispose();
   }
 
@@ -173,7 +170,7 @@ class _SendPixScreenState extends ConsumerState<SendPixScreen> {
                   else
                     TextButton(
                       onPressed: () => controller.typeKey(''),
-                      child: const Text('Usar chave CPF'),
+                      child: const Text('Digitar uma chave'),
                     ),
                 ],
               ),
@@ -186,13 +183,12 @@ class _SendPixScreenState extends ConsumerState<SendPixScreen> {
                 ],
               ] else
                 NbTextField(
-                  label: 'Chave CPF',
-                  controller: _cpf,
-                  keyboardType: TextInputType.number,
+                  label: 'Chave Pix',
+                  controller: _key,
+                  // CPF, e-mail, phone or random key, told by its shape (A1):
+                  // the e-mail keyboard has the "@" and the digits.
+                  keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.search,
-                  // Digits only; the mask shows as they are typed (v1.1.0
-                  // plan, task 1.1).
-                  inputFormatters: const [CpfInputFormatter()],
                   errorText: state.keyError,
                   onChanged: controller.typeKey,
                   onSubmitted: (_) => controller.lookup(),

@@ -199,15 +199,17 @@ void main() {
     expect(find.byType(ScanPixScreen), findsNothing);
   });
 
-  testWidgets('goes back to typing a CPF on "Usar chave CPF"', (tester) async {
+  testWidgets('goes back to typing a key on "Digitar uma chave"', (
+    tester,
+  ) async {
     final scanner = FakeQrScanner()..code = brunosCode(amountCents: 2500);
     await openScan(tester, FakePixRepository(), scanner);
     await readWithCamera(tester);
 
-    await tester.tap(find.text('Usar chave CPF'));
+    await tester.tap(find.text('Digitar uma chave'));
     await tester.pumpAndSettle();
 
-    expect(find.widgetWithText(NbTextField, 'Chave CPF'), findsOneWidget);
+    expect(find.widgetWithText(NbTextField, 'Chave Pix'), findsOneWidget);
     expect(find.bySemanticsLabel('Digitar o valor'), findsOneWidget);
   });
 }

@@ -76,7 +76,7 @@ void main() {
       isSemantics(label: 'Menu', isSelected: true, isButton: true),
     );
     await tapBar(tester, 'Início');
-    expect(find.text('Digite ou cole uma chave CPF'), findsOneWidget);
+    expect(find.text('Digite ou cole uma chave Pix'), findsOneWidget);
   });
 
   // Week 8 plan, V1 and V4: docked at the bottom, the bar never covers the

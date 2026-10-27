@@ -12,13 +12,14 @@ final RegExp _randomKey = RegExp(
 // Dots are a CPF's punctuation, never a phone's: 123.456.789-0 is a CPF typed
 // wrong, not a phone.
 final RegExp _phonePunctuation = RegExp(r'[\s()-]');
-final RegExp _nationalPhone = RegExp(r'^[1-9][0-9][0-9]{8,9}$');
+// A mobile number has a 9 after the area code; a landline starts with 2 to 5.
+final RegExp _nationalPhone = RegExp(r'^[1-9][0-9](9[0-9]{8}|[2-5][0-9]{7})$');
 
 /// The key a customer typed, told by its shape (v1.2.0 plan, task 5, A1),
 /// normalized as the API looks it up; null when no key can have this value,
 /// so it never reaches the API (PIX-07). An "@" is an e-mail; a UUID v4 is a
-/// random key; a valid CPF is a CPF; 10 or 11 digits with a valid area code,
-/// with or without +55, are a phone.
+/// random key; a valid CPF is a CPF; a mobile or landline number with its
+/// area code, with or without +55, is a phone.
 PixKeyRef? pixKeyOf(String typed) {
   final key = typed.trim();
   final lower = key.toLowerCase();
