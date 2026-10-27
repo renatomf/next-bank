@@ -12,6 +12,12 @@ import {
   type SpiOutcome,
 } from '../../../../src/modules/payments/application/apply-spi-outcome.ts';
 import { AuthorizePixTransfer } from '../../../../src/modules/payments/application/authorize-pix-transfer.ts';
+import { CancelPixSchedule } from '../../../../src/modules/payments/application/cancel-pix-schedule.ts';
+import { CreatePixSchedule } from '../../../../src/modules/payments/application/create-pix-schedule.ts';
+import { GetPixSchedules } from '../../../../src/modules/payments/application/get-pix-schedules.ts';
+import type { PixScheduleView } from '../../../../src/modules/payments/application/pix-schedule-view.ts';
+import { RunDueSchedules } from '../../../../src/modules/payments/application/run-due-schedules.ts';
+import type { ScheduleRecurrence } from '../../../../src/modules/payments/domain/pix-schedule.ts';
 import { CheckPendingPix } from '../../../../src/modules/payments/application/check-pending-pix.ts';
 import { SEND_EXTERNAL_PIX } from '../../../../src/modules/payments/application/process-pix.ts';
 import { SendExternalPix } from '../../../../src/modules/payments/application/send-external-pix.ts';
@@ -167,7 +173,66 @@ export function pgPixStack(
     ids,
   });
 
+  const scheduleDeps = {
+    unitOfWork,
+    repositories,
+    accounts: accounts.directory,
+    identity,
+    ledger: ledgerPort,
+    endToEndIds: new CryptoEndToEndIds(),
+    outbox,
+    clock,
+    ids,
+  };
+  const createSchedule = new CreatePixSchedule({
+    ...scheduleDeps,
+    protector,
+    fingerprint,
+    quota: { tryTake: () => true, charge: () => undefined },
+    spi: external?.spi ?? null,
+  });
+  const runDue = new RunDueSchedules(scheduleDeps);
+  const cancelSchedule = new CancelPixSchedule(scheduleDeps);
+  const schedules = new GetPixSchedules(scheduleDeps);
+
   return {
+    /** The scheduled Pix (v1.2.0 plan, task 7): reading them as their payer. */
+    schedules,
+    /** One round of the worker of the scheduled Pix, as the API's loop runs it. */
+    runDueSchedules: () => runDue.runOnce(),
+    cancelSchedule: (from: Customer, scheduleId: string) =>
+      cancelSchedule.execute({
+        userId: from.userId,
+        sessionId: 'session-test',
+        scheduleId,
+        requestId: null,
+      }),
+
+    /** Schedules a Pix to any key, with the PIN, from [firstDate] on. */
+    schedule(
+      from: Customer,
+      key: { type: PixKeyType; value: string },
+      cents: number,
+      options: {
+        firstDate: string;
+        recurrence?: ScheduleRecurrence;
+        idempotencyKey?: string;
+      },
+    ): Promise<PixScheduleView> {
+      return createSchedule.execute({
+        userId: from.userId,
+        sessionId: 'session-test',
+        idempotencyKey: options.idempotencyKey ?? randomUUID(),
+        key,
+        amountCents: cents,
+        description: null,
+        firstDate: options.firstDate,
+        recurrence: options.recurrence ?? { frequency: 'ONCE' },
+        pin: PIN,
+        requestId: null,
+      });
+    },
+
     /** Delivers the outbox, as the API's loop does; only with the real outbox. */
     deliverOutbox: () => realOutbox?.worker.runOnce(100) ?? Promise.resolve(0),
     /** The SPI's answer, as the webhook or the status check bring it (task 4). */
