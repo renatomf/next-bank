@@ -8,6 +8,7 @@ import 'package:next_bank/features/pix/presentation/new_schedule/new_schedule_sc
 import 'package:next_bank/features/pix/presentation/receipt/receipt_screen.dart';
 import 'package:next_bank/features/pix/presentation/review/review_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/schedule_detail/schedule_detail_screen.dart';
+import 'package:next_bank/features/pix/presentation/schedules/schedules_screen.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
 import 'package:next_bank/main.dart' as app;
 
@@ -138,10 +139,11 @@ void main() {
     );
     await tester.tap(find.text('Cancelar agendamento').last);
     await waitFor(tester, find.text('Cancelado'));
-    // Back over the list to the Home.
-    await tester.tap(find.bySemanticsLabel('Voltar').first);
-    await waitFor(tester, find.text('Agendamentos'));
-    await tester.tap(find.bySemanticsLabel('Voltar').first);
+    // Back over the list to the Home, with the system's back: the toast of
+    // the cancel may cover the header's arrow.
+    await tester.binding.handlePopRoute();
+    await waitFor(tester, find.byType(SchedulesScreen));
+    await tester.binding.handlePopRoute();
     await waitFor(tester, find.byType(BalanceCard));
 
     // The statement shows the Pix sent, and its detail opens the receipt.
