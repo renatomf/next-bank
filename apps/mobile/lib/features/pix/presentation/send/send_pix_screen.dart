@@ -8,6 +8,7 @@ import 'package:next_bank/core/account/account_providers.dart';
 import 'package:next_bank/core/ui/pix/amount_card.dart';
 import 'package:next_bank/core/ui/pix/contact_card.dart';
 import 'package:next_bank/features/pix/domain/pix_amount.dart';
+import 'package:next_bank/features/pix/presentation/new_schedule/new_schedule_controller.dart';
 import 'package:next_bank/features/pix/presentation/pix_formats.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_controller.dart';
 
@@ -21,6 +22,7 @@ class SendPixScreen extends ConsumerStatefulWidget {
     required this.onBack,
     required this.onReceive,
     required this.onReview,
+    required this.onSchedule,
     this.initialKey,
     super.key,
   });
@@ -37,6 +39,9 @@ class SendPixScreen extends ConsumerStatefulWidget {
 
   /// Opens the review of the Pix just created.
   final ValueChanged<String> onReview;
+
+  /// Schedules this Pix instead of sending it now (v1.2.0 plan, task 7).
+  final ValueChanged<ScheduleDraft> onSchedule;
 
   @override
   ConsumerState<SendPixScreen> createState() => _SendPixScreenState();
@@ -75,6 +80,11 @@ class _SendPixScreenState extends ConsumerState<SendPixScreen> {
         .read(sendPixControllerProvider.notifier)
         .submit();
     if (transferId != null && mounted) widget.onReview(transferId);
+  }
+
+  void _schedule() {
+    final draft = ref.read(sendPixControllerProvider.notifier).scheduleDraft();
+    if (draft != null) widget.onSchedule(draft);
   }
 
   @override
@@ -224,6 +234,11 @@ class _SendPixScreenState extends ConsumerState<SendPixScreen> {
                 label: 'Revisar Pix',
                 onPressed: state.canSubmit ? _submit : null,
                 loading: state.submitting,
+              ),
+              const SizedBox(height: NbSpace.md),
+              SecondaryButton(
+                label: 'Agendar',
+                onPressed: state.canSubmit ? _schedule : null,
               ),
               const SizedBox(height: NbSpace.lg),
               const SecureHint(

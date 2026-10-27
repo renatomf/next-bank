@@ -23,6 +23,7 @@ class HomeScreen extends ConsumerWidget {
     required this.onPay,
     required this.onReceive,
     required this.onStatement,
+    required this.onSchedules,
     required this.onPixWithKey,
     required this.onTransfer,
     required this.onAutomatic,
@@ -47,6 +48,9 @@ class HomeScreen extends ConsumerWidget {
 
   /// Opens the statement.
   final VoidCallback onStatement;
+
+  /// Opens the scheduled Pix (v1.2.0 plan, task 7).
+  final VoidCallback onSchedules;
 
   /// Opens the Pix with a CPF key typed in the Pix box, in digits.
   final ValueChanged<String> onPixWithKey;
@@ -109,7 +113,10 @@ class HomeScreen extends ConsumerWidget {
                   onRecharge: onRecharge,
                 ),
                 const SizedBox(height: 28),
-                BalanceSection(onStatement: onStatement),
+                BalanceSection(
+                  onStatement: onStatement,
+                  onSchedules: onSchedules,
+                ),
                 const SizedBox(height: 28),
                 PixBox(
                   cpfMasked: profile?.cpfMasked,

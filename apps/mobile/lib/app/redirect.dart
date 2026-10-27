@@ -51,6 +51,15 @@ abstract final class AppRoutes {
   /// The receipt of the Pix [transferId] (screen 10).
   static String pixReceipt(String transferId) => '$pix/receipt/$transferId';
 
+  /// The customer's scheduled Pix (v1.2.0 plan, task 7).
+  static const String pixSchedules = '$pix/schedules';
+
+  /// Scheduling the Pix the Pix screen holds.
+  static const String pixScheduleNew = '$pixSchedules/new';
+
+  /// The scheduled Pix [scheduleId].
+  static String pixSchedule(String scheduleId) => '$pixSchedules/$scheduleId';
+
   /// The statement (screen 11).
   static const String statement = '/statement';
 

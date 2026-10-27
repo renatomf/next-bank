@@ -8,11 +8,15 @@ import 'package:next_bank/core/ui/common_copy.dart';
 /// The balance card: loading, ready, or an error with "Tentar de novo". The
 /// eye hides the balance on every screen at once (MOB-05).
 class BalanceSection extends ConsumerWidget {
-  /// Creates the section; [onStatement] opens the statement from the card.
-  const new({required this.onStatement, super.key});
+  /// Creates the section; [onStatement] and [onSchedules] open the statement
+  /// and the scheduled Pix from the card.
+  const new({required this.onStatement, required this.onSchedules, super.key});
 
   /// Opens the statement.
   final VoidCallback onStatement;
+
+  /// Opens the scheduled Pix.
+  final VoidCallback onSchedules;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -42,6 +46,7 @@ class BalanceSection extends ConsumerWidget {
         hidden: hidden,
         onToggleHidden: toggleHidden,
         onStatement: onStatement,
+        onSchedules: onSchedules,
       ),
     );
   }
