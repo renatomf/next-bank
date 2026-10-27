@@ -422,6 +422,7 @@ Cada item recebe um parágrafo de design no README, sem implementação:
 - **Verificação automática do IP do cliente (API-14):** uma rota mínima que devolve o IP que a API enxergou do próprio chamador, e um passo no smoke test do deploy com uma requisição normal e outra com `X-Forwarded-For` forjado. Assim o deploy falha sozinho se o Render ou a Cloudflare mudarem o número de saltos de proxy, hoje 3 e conferido à mão (`operations.md`, passo 6; F-29).
 - **Recarga de celular, depois da `v1.1.0`:** "Recargas recentes" para repetir uma recarga (precisa de um atalho guardado pelo servidor, decisão R3), o comprovante da recarga como imagem compartilhada (decisão R8, com a imagem do Pix movida antes para `core/ui`) e uma operadora de verdade, com reserva, timeout e estorno (Fase 4, D5).
 - **Testes visuais de regressão (golden tests)** do `design_system` e das telas: hoje os testes conferem valores (cor, tamanho, contraste), não a aparência renderizada.
+- **Atualizações de versão maior, depois da `v1.2.0`:** `go_router` 17 → 18 e `sentry_flutter` 9 → 10, propostas pelo Dependabot em 2026-10-26 (PRs #180 e #179, fechados). Ficaram fora pelo escopo congelado. O `sentry_flutter` 10 quebrava os testes do app e o E2E, e cada uma entra como tarefa própria, com desenho: o que muda na API da biblioteca, os testes afetados e, no Sentry, a redação de dados pessoais (`beforeSend`) conferida de novo.
 
 ## 12. Fora do código (mesma prioridade)
 
