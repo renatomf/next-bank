@@ -8,7 +8,7 @@ import type { CancelPixSchedule } from '../application/cancel-pix-schedule.ts';
 import type { CreatePixSchedule } from '../application/create-pix-schedule.ts';
 import type { GetPixSchedules } from '../application/get-pix-schedules.ts';
 import type { SchedulePosition } from '../application/ports.ts';
-import { PixPayeeBankSchema } from './transfer-routes.ts';
+import { PixKeyRequestSchema, PixPayeeBankSchema } from './transfer-routes.ts';
 
 const KEY_TYPES = ['CPF', 'EMAIL', 'PHONE', 'RANDOM'] as const;
 
@@ -35,7 +35,7 @@ const ScheduleRecurrenceSchema = z
 // The payer never comes from the body (PIX-01); unknown fields are refused (PIX-04).
 const CreatePixScheduleRequestSchema = z
   .strictObject({
-    key: z.strictObject({ type: z.enum(KEY_TYPES), value: z.string().min(1).max(77) }),
+    key: PixKeyRequestSchema,
     amount: MoneySchema,
     description: z
       .string()
