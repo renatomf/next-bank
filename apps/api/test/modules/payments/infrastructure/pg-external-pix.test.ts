@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { afterAll, describe, expect, it } from 'vitest';
-import { SEND_EXTERNAL_PIX } from '../../../../src/modules/payments/application/authorize-pix-transfer.ts';
+import { SEND_EXTERNAL_PIX } from '../../../../src/modules/payments/application/process-pix.ts';
 import type { SpiPort } from '../../../../src/modules/payments/application/ports.ts';
 import { createPool } from '../../../../src/shared/db.ts';
 import { createOutbox } from '../../../../src/shared/infrastructure/outbox-factory.ts';

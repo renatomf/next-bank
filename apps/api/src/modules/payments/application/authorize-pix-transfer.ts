@@ -4,8 +4,6 @@ import type {
   Transaction,
   UnitOfWork,
 } from '../../../shared/application/ports.ts';
-import type { Outbox } from '../../../shared/application/outbox.ts';
-import { DomainError } from '../../../shared/domain/domain-error.ts';
 import { NotFound } from '../../../shared/domain/not-found.ts';
 import { type AuthorizationRefusal, PixAuthorizationRefused } from '../domain/errors.ts';
 import {
@@ -13,17 +11,10 @@ import {
   type RequestFingerprint,
   type StoredResponse,
 } from '../../../shared/application/idempotency.ts';
-import { type PixFailureReason, PixTransfer } from '../domain/pix-transfer.ts';
+import { PixTransfer } from '../domain/pix-transfer.ts';
 import { type PixTransferView, viewOf } from './pix-transfer-view.ts';
-import type {
-  AccountsPort,
-  EndToEndIds,
-  IdentityPort,
-  LedgerPort,
-  PaymentsRepositories,
-  PaymentsRepositoriesFactory,
-  PayeeAccount,
-} from './ports.ts';
+import type { PaymentsRepositories, PaymentsRepositoriesFactory } from './ports.ts';
+import { processPix, type ProcessPixDependencies } from './process-pix.ts';
 
 export interface AuthorizePixTransferInput {
   /** From the verified access token: the payer is never taken from the request (PIX-01). */
@@ -35,22 +26,13 @@ export interface AuthorizePixTransferInput {
   requestId: string | null;
 }
 
-export interface AuthorizePixTransferDependencies {
+export interface AuthorizePixTransferDependencies extends ProcessPixDependencies {
   unitOfWork: UnitOfWork;
   repositories: PaymentsRepositoriesFactory;
   fingerprint: RequestFingerprint;
-  accounts: AccountsPort;
-  identity: IdentityPort;
-  ledger: LedgerPort;
-  endToEndIds: EndToEndIds;
-  /** Where a Pix to another bank waits to be sent to the SPI (ADR 0016). */
-  outbox: Outbox;
   clock: Clock;
   ids: IdGenerator;
 }
-
-/** The message that sends a Pix to another bank to the SPI. */
-export const SEND_EXTERNAL_PIX = 'pix.send-external';
 
 /** Status of a stored refusal: what was recorded is answered as the catalog error. */
 const REFUSED = 0;
@@ -136,79 +118,10 @@ export class AuthorizePixTransfer {
         break;
     }
 
-    transfer.startProcessing(now);
-    const failure = await this.#process(tx, transfer, payer, now);
-    const endToEndId = this.#deps.endToEndIds.next(now);
-    if (failure !== null) {
-      transfer.fail(failure, now);
-    } else if (transfer.goesToAnotherBank) {
-      // Debited, the Pix waits for the SPI; the message that sends it commits
-      // with the debit or not at all (ADR 0016), and carries only the id.
-      transfer.awaitSettlement(endToEndId);
-      await this.#deps.outbox.enqueue(tx, {
-        type: SEND_EXTERNAL_PIX,
-        payload: { transferId: transfer.state.id },
-        requestId: input.requestId,
-      });
-    } else {
-      transfer.complete(endToEndId, now);
-    }
+    await processPix(this.#deps, tx, transfer, payer, now, input.requestId);
     await repositories.pixTransfers.update(transfer.state);
     await this.#record(repositories, transfer, input, now);
     return { status: 200, body: viewOf(transfer.state) };
-  }
-
-  /** Posts the Pix, or says why it fails; a failure writes nothing in the ledger. */
-  async #process(
-    tx: Transaction,
-    transfer: PixTransfer,
-    payer: PayeeAccount,
-    now: Date,
-  ): Promise<PixFailureReason | null> {
-    const { accounts, identity, ledger } = this.#deps;
-    const { state } = transfer;
-    // A payee at another bank has no account here to lock or check.
-    const payeeAccountId = state.payee.accountId;
-    const locked = await accounts.lockForShare(
-      tx,
-      payeeAccountId === null ? [payer.id] : [payer.id, payeeAccountId],
-    );
-    const statusOf = (id: string) => locked.find((account) => account.id === id)?.status;
-    if (statusOf(payer.id) !== 'ACTIVE') return 'ACCOUNT_BLOCKED';
-    if (payeeAccountId !== null && statusOf(payeeAccountId) !== 'ACTIVE') {
-      return 'PAYEE_UNAVAILABLE';
-    }
-    if (transfer.exceedsLimitAt(now)) return 'LIMIT_EXCEEDED';
-
-    const payee = { name: state.payee.name, documentMasked: state.payee.documentMasked };
-    try {
-      if (payeeAccountId === null) {
-        await ledger.postExternalPix(tx, {
-          transferId: state.id,
-          payerAccountId: payer.id,
-          amount: state.amount,
-          payee,
-        });
-      } else {
-        const payerParty = await identity.payeeOf(tx, payer.holderUserId);
-        if (!payerParty) throw new Error(`Customer ${payer.holderUserId} has no profile`);
-        await ledger.postPixTransfer(tx, {
-          transferId: state.id,
-          payerAccountId: payer.id,
-          payeeAccountId,
-          amount: state.amount,
-          payer: payerParty,
-          payee,
-        });
-      }
-    } catch (error) {
-      // The ledger refuses before writing: the transaction stays usable.
-      if (error instanceof DomainError && error.code === 'InsufficientFunds') {
-        return 'INSUFFICIENT_FUNDS';
-      }
-      throw error;
-    }
-    return null;
   }
 
   async #cancel(

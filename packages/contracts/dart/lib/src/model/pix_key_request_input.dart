@@ -6,7 +6,7 @@
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-part 'create_pix_transfer_request_input_key.g.dart';
+part 'pix_key_request_input.g.dart';
 
 
 @CopyWith()
@@ -16,9 +16,9 @@ part 'create_pix_transfer_request_input_key.g.dart';
   disallowUnrecognizedKeys: false,
   explicitToJson: true,
 )
-class CreatePixTransferRequestInputKey {
-  /// Returns a new [CreatePixTransferRequestInputKey] instance.
-  CreatePixTransferRequestInputKey({
+class PixKeyRequestInput {
+  /// Returns a new [PixKeyRequestInput] instance.
+  PixKeyRequestInput({
 
     required  this.type,
 
@@ -30,11 +30,11 @@ class CreatePixTransferRequestInputKey {
     name: r'type',
     required: true,
     includeIfNull: false,
-  unknownEnumValue: CreatePixTransferRequestInputKeyTypeEnum.unknownDefaultOpenApi,
+  unknownEnumValue: PixKeyRequestInputTypeEnum.unknownDefaultOpenApi,
   )
 
 
-  final CreatePixTransferRequestInputKeyTypeEnum type;
+  final PixKeyRequestInputTypeEnum type;
 
 
 
@@ -53,7 +53,7 @@ class CreatePixTransferRequestInputKey {
 
 
     @override
-    bool operator ==(Object other) => identical(this, other) || other is CreatePixTransferRequestInputKey &&
+    bool operator ==(Object other) => identical(this, other) || other is PixKeyRequestInput &&
       other.type == type &&
       other.value == value;
 
@@ -62,9 +62,9 @@ class CreatePixTransferRequestInputKey {
         type.hashCode +
         value.hashCode;
 
-  factory CreatePixTransferRequestInputKey.fromJson(Map<String, dynamic> json) => _$CreatePixTransferRequestInputKeyFromJson(json);
+  factory PixKeyRequestInput.fromJson(Map<String, dynamic> json) => _$PixKeyRequestInputFromJson(json);
 
-  Map<String, dynamic> toJson() => _$CreatePixTransferRequestInputKeyToJson(this);
+  Map<String, dynamic> toJson() => _$PixKeyRequestInputToJson(this);
 
   @override
   String toString() {
@@ -73,7 +73,7 @@ class CreatePixTransferRequestInputKey {
 
 }
 
-enum CreatePixTransferRequestInputKeyTypeEnum {
+enum PixKeyRequestInputTypeEnum {
 @JsonValue(r'CPF')
 CPF(r'CPF'),
 @JsonValue(r'EMAIL')
@@ -85,7 +85,7 @@ RANDOM(r'RANDOM'),
 @JsonValue(r'unknown_default_open_api')
 unknownDefaultOpenApi(r'unknown_default_open_api');
 
-const CreatePixTransferRequestInputKeyTypeEnum(this.value);
+const PixKeyRequestInputTypeEnum(this.value);
 
 final String value;
 

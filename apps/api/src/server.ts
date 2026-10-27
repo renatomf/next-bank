@@ -10,6 +10,8 @@ const OUTBOX_POLL_MS = 1_000;
 const WEBHOOK_DISPATCH_MS = 1_000;
 /** How often the Pix left without the SPI's answer are checked (v1.2.0 plan, W2). */
 const STATUS_CHECK_MS = 60_000;
+/** How often the scheduled Pix due are paid (v1.2.0 plan, task 7). */
+const SCHEDULES_POLL_MS = 60_000;
 /** How often the day due is reconciled, if not yet: a missed run is made up (R3). */
 const RECONCILIATION_CHECK_MS = 60 * 60_000;
 
@@ -76,6 +78,7 @@ if (config.simulator) {
 everyRound('outbox delivery', OUTBOX_POLL_MS, () => app.outboxWorker.runOnce());
 const statusCheck = app.spiStatusCheck;
 if (statusCheck) everyRound('SPI status check', STATUS_CHECK_MS, statusCheck);
+everyRound('scheduled Pix', SCHEDULES_POLL_MS, () => app.runDueSchedules());
 const reconcile = app.reconcileDueDay;
 if (reconcile) everyRound('reconciliation', RECONCILIATION_CHECK_MS, reconcile);
 

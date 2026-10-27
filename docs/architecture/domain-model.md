@@ -140,6 +140,19 @@ flowchart LR
 - Comandos: `Create`, `Authorize`, `Cancel`, `Expire`
 - Eventos: `PixTransferCreated`, `PixTransferAuthorized`, `PixTransferCompleted`, `PixTransferFailed`, `PixTransferCancelled`
 
+**`PixSchedule`** (v1.2.0, tarefa 7)
+- Atributos: `id`, `payerAccountId`, o recebedor guardado como no Pix (conta do next bank, ou banco e chave cifrada), `amount`, `description`, `firstDate` (dia de São Paulo), `recurrence` (`ONCE`, ou `MONTHLY` com `times`), `status` (`ACTIVE`, `FINISHED`, `CANCELLED`), `nextSequence`, `nextOccurrenceDate`, `createdAt`, `cancelledAt`
+- Autorização: o PIN conferido no servidor ao agendar autoriza todas as ocorrências; cada uma roda sem PIN, com o saldo, o limite e as contas do horário em que roda (D10)
+- Invariantes:
+  - A primeira data vai de amanhã a um ano (`ScheduleInPast`, `InvalidRecurrence`); `MONTHLY` de 2 a 24 vezes (`InvalidRecurrence`)
+  - O valor cabe no limite diurno, porque a ocorrência só roda entre 06:00 e 20:00 de São Paulo
+  - Todo mês no dia da primeira data, contado a partir dela, ou no último dia de um mês mais curto
+  - O recebedor nunca é procurado de novo: paga-se quem o cliente autorizou
+  - Cada ocorrência avança o agendamento uma vez, paga ou falha, e só a próxima; a última o termina (`FINISHED`)
+  - Cancelar um cancelado não muda nada; um terminado recusa (`ScheduleNotActive`)
+- **Ocorrência:** cria um `PixTransfer` com o recebedor guardado, que passa pelo mesmo processamento da autorização (débito, falha com motivo ou, para outro banco, o outbox); `UNIQUE (schedule_id, occurrence_date)` e `(schedule_id, sequence)` garantem uma ocorrência só (EXT-05)
+- Comandos: `Schedule`, `RunOccurrence`, `Cancel`
+
 **`IdempotencyRecord`** *(mecanismo de aplicação, não agregado de domínio)*
 - Atributos: `userId`, `key`, `requestHash`, `status` (`IN_PROGRESS`, `COMPLETED`), `responseStatus`, `responseBody`, `expiresAt` (24h)
 - Invariantes: (`userId`, `key`) único; mesma chave com payload diferente é rejeitada
@@ -150,7 +163,7 @@ flowchart LR
 **`AuditEvent`**
 - Atributos: `id`, `occurredAt`, `actorType` (`USER`, `SYSTEM`, `STAFF`), `actorId`, `action`, `subjectType`, `subjectId`, `requestId`, `metadata`
 - Invariantes: só inclusão; `metadata` **nunca** contém senha, PIN, token, CPF completo ou valor de chave Pix completo
-- Ações da V1: `USER_REGISTERED`, `LOGIN_SUCCEEDED`, `LOGIN_FAILED`, `SESSION_CREATED`, `SESSION_REVOKED`, `REFRESH_REUSE_DETECTED`, `PIN_CREATED`, `PIN_LOCKED`, `PIN_CHANGED`, `PASSWORD_CHANGED`, `ACCOUNT_OPENED`, `PIX_CREATED`, `PIX_COMPLETED`, `PIX_SENT` (v1.2.0: Pix enviado a outro banco, com o id de ponta a ponta), `PIX_FAILED`, `PIX_CANCELLED`, `TOP_UP_COMPLETED` (v1.1.0: a operadora e o valor, nunca o número)
+- Ações da V1: `USER_REGISTERED`, `LOGIN_SUCCEEDED`, `LOGIN_FAILED`, `SESSION_CREATED`, `SESSION_REVOKED`, `REFRESH_REUSE_DETECTED`, `PIN_CREATED`, `PIN_LOCKED`, `PIN_CHANGED`, `PASSWORD_CHANGED`, `ACCOUNT_OPENED`, `PIX_CREATED`, `PIX_COMPLETED`, `PIX_SENT` (v1.2.0: Pix enviado a outro banco, com o id de ponta a ponta), `PIX_FAILED`, `PIX_CANCELLED`, `TOP_UP_COMPLETED` (v1.1.0: a operadora e o valor, nunca o número), `PIX_SCHEDULE_CREATED` e `PIX_SCHEDULE_CANCELLED` (v1.2.0: ator `USER`; cada ocorrência grava o desfecho do Pix com ator `SYSTEM` e o id do agendamento)
 
 ## 4. Máquina de estados do Pix
 
@@ -236,6 +249,7 @@ Se o Pix falhar (saldo insuficiente, limite, conta indisponível), **nenhum lan�
 | Tentativas de PIN | 5, depois bloqueio de 30 min | `TransactionPin.Verify` |
 | Chaves por conta | até 5 | `PixKey` |
 | Consultas de chave | até 30 por hora por cliente; consultas a chaves inexistentes contam em dobro | Rate limit na consulta de chave (evita varredura de dados pessoais) |
+| Pix agendado (v1.2.0) | Primeira data de amanhã a um ano; uma vez ou todo mês de 2 a 24 vezes; valor até o limite diurno; cada ocorrência das 06:00 às 20:00 de São Paulo, na data ou depois dela se não rodou | `CreatePixSchedule` e `RunDueSchedules` |
 | Recarga de celular (v1.1.0) | R$ 15, 20, 30 ou 50; até R$ 200 por dia de `America/Sao_Paulo`; só números `(DD) 90000-XXXX` | `CreateTopUp`, com a soma do dia lida depois da trava da conta do ledger |
 
 O limite noturno é inspirado na regra do Bacen, simplificado para valor por transação. Limite acumulado por período fica como evolução.
@@ -303,6 +317,9 @@ O extrato não é um agregado: é uma consulta (lado de leitura do CQRS) que lê
 | `UnknownTopUpOperator` | 422 | Recarga | "Escolha uma operadora da lista." (o app só oferece as da API: indica cliente desatualizado ou adulterado) |
 | `InvalidTopUpAmount` | 422 | Recarga | "Escolha um dos valores da lista." (idem) |
 | `TopUpLimitExceeded` | 422 | Recarga | "Você pode recarregar até R$ X por dia. Restam R$ Y hoje." (`X` e `Y` vêm dos campos `limit` e `remaining` da resposta; o dia é o de `America/Sao_Paulo`) |
+| `ScheduleInPast` | 422 | Agendar Pix | "Escolha uma data a partir de amanhã." (v1.2.0) |
+| `InvalidRecurrence` | 422 | Agendar Pix | "Escolha uma data em até um ano e de 2 a 24 repetições." (v1.2.0) |
+| `ScheduleNotActive` | 409 | Agendamento | "Este agendamento já terminou." (v1.2.0) |
 | `PayeeUnavailable` | 422 | Revisar | "A conta de destino não pode receber Pix agora." |
 | `TransferExpired` | 409 | Revisar | "O tempo para confirmar acabou. Comece de novo." |
 | `InvalidTransferState` | 409 | Revisar | "Este Pix já foi processado." |
@@ -313,6 +330,8 @@ O extrato não é um agregado: é uma consulta (lado de leitura do CQRS) que lê
 Formato da resposta: RFC 7807, com `type`, `title`, `status`, `code` (o nome do erro) e campos extras quando úteis (ex.: `remainingAttempts`, `limit`, `remaining`).
 
 **Na recarga** (v1.1.0, tarefa 5), `PinIncorrect`, `PinLocked` e `PinResetRequired` também ficam gravados com a chave de idempotência, como na autorização do Pix: a tentativa contada continua contada, e a mesma requisição recebe a mesma recusa. `InsufficientFunds`, `TopUpLimitExceeded` e `AccountBlocked` são erros, porque nenhuma recarga nasce.
+
+**Ao agendar um Pix** (v1.2.0, tarefa 7), `PinIncorrect`, `PinLocked` e `PinResetRequired` ficam gravados com a chave de idempotência, como na recarga. O saldo não é conferido: vale o do dia de cada ocorrência, que falha com o motivo em `failureReason` e não interrompe o agendamento.
 
 **Na autorização do Pix** (tela 8 → 9), `InsufficientFunds`, `LimitExceeded`, `AccountBlocked` e `PayeeUnavailable` não são erros: o Pix foi processado e falhou, então a resposta é 200 com o Pix em `FAILED` e o motivo em `failureReason` (`INSUFFICIENT_FUNDS`, `LIMIT_EXCEEDED`, `ACCOUNT_BLOCKED`, `PAYEE_UNAVAILABLE`), o estado "falhou (com motivo)" da tela 9. Na criação (tela 7), os mesmos casos continuam erros, porque nenhum Pix nasce. `PinIncorrect`, `PinLocked`, `PinResetRequired` e `TransferExpired` continuam erros na autorização e ficam gravados com a chave de idempotência: a mesma requisição repetida recebe a mesma resposta sem conferir o PIN de novo (plano da semana 5, D5).
 
@@ -344,6 +363,12 @@ flowchart TD
     RP --> RCP[19. Comprovante da recarga]
     RCP --> H
     DT --> RCP
+
+    H --> AG[20. Agendamentos]
+    AG --> AD[21. Agendamento: ocorrências e cancelar]
+    AD --> CP
+    PX --> NA[22. Agendar + PIN]
+    NA --> AD
 
     H --> PF[13. Perfil]
     PF --> SG[14. Segurança]

@@ -2,7 +2,12 @@ import type { AuditTrail, Transaction } from '../../../shared/application/ports.
 import type { IdempotencyRepository } from '../../../shared/application/idempotency.ts';
 import type { Money } from '../../../shared/domain/money.ts';
 import type { PixKeyState, PixKeyType } from '../domain/pix-key.ts';
-import type { PixTransferState } from '../domain/pix-transfer.ts';
+import type { PixScheduleState } from '../domain/pix-schedule.ts';
+import type {
+  PixFailureReason,
+  PixTransferState,
+  PixTransferStatus,
+} from '../domain/pix-transfer.ts';
 
 /** How a key value is stored: never in clear (database.md, section 2). */
 export interface ProtectedKeyValue {
@@ -234,9 +239,63 @@ export interface InboxRepository {
   }): Promise<boolean>;
 }
 
+/** An occurrence as recorded, with the outcome of the Pix that paid it (its source of truth). */
+export interface ScheduleOccurrence {
+  sequence: number;
+  /** A day of São Paulo, YYYY-MM-DD. */
+  date: string;
+  transferId: string;
+  status: PixTransferStatus;
+  failureReason: PixFailureReason | null;
+  executedAt: Date;
+}
+
+/** Where a page of schedules ends, newest first. */
+export interface SchedulePosition {
+  createdAt: Date;
+  id: string;
+}
+
+/** A schedule is always looked up with its payer's account, except by the worker (READ-01). */
+export interface PixSchedulesRepository {
+  /** A schedule to another bank comes with its payee's key, sealed: it goes to the SPI (S1). */
+  insert(schedule: PixScheduleState, payeeKey?: SealedKeyValue): Promise<void>;
+  findForPayer(id: string, payerAccountId: string): Promise<PixScheduleState | null>;
+  /** Locks the schedule until the transaction ends, waiting for the worker (EXT-06). */
+  lockForPayer(id: string, payerAccountId: string): Promise<PixScheduleState | null>;
+  /**
+   * Locks one active schedule due by [today] until the transaction ends,
+   * passing over those another round holds and those in [skip] (EXT-05); no
+   * payer filter, so never called on a customer's request.
+   */
+  lockNextDue(
+    today: string,
+    skip: readonly string[],
+  ): Promise<{ schedule: PixScheduleState; payeeKey: SealedKeyValue | null } | null>;
+  update(schedule: PixScheduleState): Promise<void>;
+  /** Fails when the occurrence was already recorded (EXT-05): the transaction must undo. */
+  recordOccurrence(occurrence: {
+    id: string;
+    scheduleId: string;
+    sequence: number;
+    occurrenceDate: string;
+    transferId: string;
+    executedAt: Date;
+  }): Promise<void>;
+  /** The payer's schedules, newest first, after [after]. */
+  listForPayer(
+    payerAccountId: string,
+    after: SchedulePosition | null,
+    limit: number,
+  ): Promise<PixScheduleState[]>;
+  /** In the order they ran. */
+  occurrencesOf(scheduleId: string): Promise<ScheduleOccurrence[]>;
+}
+
 export interface PaymentsRepositories {
   pixKeys: PixKeysRepository;
   pixTransfers: PixTransfersRepository;
+  pixSchedules: PixSchedulesRepository;
   idempotency: IdempotencyRepository;
   inbox: InboxRepository;
   audit: AuditTrail;

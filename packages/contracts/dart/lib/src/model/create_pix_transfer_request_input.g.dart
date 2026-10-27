@@ -7,7 +7,7 @@ part of 'create_pix_transfer_request_input.dart';
 // **************************************************************************
 
 abstract class _$CreatePixTransferRequestInputCWProxy {
-  CreatePixTransferRequestInput key(CreatePixTransferRequestInputKey key);
+  CreatePixTransferRequestInput key(PixKeyRequestInput key);
 
   CreatePixTransferRequestInput amount(MoneyInput amount);
 
@@ -22,7 +22,7 @@ abstract class _$CreatePixTransferRequestInputCWProxy {
   /// CreatePixTransferRequestInput(...).copyWith(id: 12, name: "My name")
   /// ```
   CreatePixTransferRequestInput call({
-    CreatePixTransferRequestInputKey key,
+    PixKeyRequestInput key,
     MoneyInput amount,
     String? description,
   });
@@ -37,8 +37,7 @@ class _$CreatePixTransferRequestInputCWProxyImpl
   final CreatePixTransferRequestInput _value;
 
   @override
-  CreatePixTransferRequestInput key(CreatePixTransferRequestInputKey key) =>
-      call(key: key);
+  CreatePixTransferRequestInput key(PixKeyRequestInput key) => call(key: key);
 
   @override
   CreatePixTransferRequestInput amount(MoneyInput amount) =>
@@ -66,7 +65,7 @@ class _$CreatePixTransferRequestInputCWProxyImpl
       key: key == const $CopyWithPlaceholder() || key == null
           ? _value.key
           // ignore: cast_nullable_to_non_nullable
-          : key as CreatePixTransferRequestInputKey,
+          : key as PixKeyRequestInput,
       amount: amount == const $CopyWithPlaceholder() || amount == null
           ? _value.amount
           // ignore: cast_nullable_to_non_nullable
@@ -99,8 +98,7 @@ CreatePixTransferRequestInput _$CreatePixTransferRequestInputFromJson(
   final val = CreatePixTransferRequestInput(
     key: $checkedConvert(
       'key',
-      (v) =>
-          CreatePixTransferRequestInputKey.fromJson(v as Map<String, dynamic>),
+      (v) => PixKeyRequestInput.fromJson(v as Map<String, dynamic>),
     ),
     amount: $checkedConvert(
       'amount',

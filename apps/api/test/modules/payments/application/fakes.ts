@@ -20,6 +20,7 @@ import type {
   PaymentsRepositoriesFactory,
   PayeeAccount,
   PixKeyValueProtector,
+  ScheduleOccurrence,
   ProtectedKeyValue,
   SealedKeyValue,
   SpiPayment,
@@ -29,6 +30,7 @@ import type {
   StoredRandomKey,
 } from '../../../../src/modules/payments/application/ports.ts';
 import type { PixKeyState, PixKeyType } from '../../../../src/modules/payments/domain/pix-key.ts';
+import type { PixScheduleState } from '../../../../src/modules/payments/domain/pix-schedule.ts';
 import type { PixTransferState } from '../../../../src/modules/payments/domain/pix-transfer.ts';
 import type {
   AuditEvent,
@@ -101,6 +103,16 @@ export class FakePaymentsRepositories implements PaymentsRepositoriesFactory {
   readonly inbox = new Map<string, 'APPLIED' | 'IGNORED'>();
   /** The sealed key of each Pix to another bank, by the Pix id. */
   readonly payeeKeys = new Map<string, SealedKeyValue>();
+  readonly schedules: PixScheduleState[] = [];
+  /** The sealed key of each schedule to another bank, by the schedule id. */
+  readonly scheduleKeys = new Map<string, SealedKeyValue>();
+  readonly occurrences: (Omit<ScheduleOccurrence, 'status' | 'failureReason' | 'date'> & {
+    id: string;
+    scheduleId: string;
+    occurrenceDate: string;
+  })[] = [];
+  /** The schedules locked by the worker, in order. */
+  readonly lockedDue: string[] = [];
   lookups = 0;
 
   addKey(type: PixKeyType, value: string, key: StoredPixKey): void {
@@ -112,6 +124,13 @@ export class FakePaymentsRepositories implements PaymentsRepositoriesFactory {
       (transfer) => transfer.id === id && transfer.payerAccountId === payerAccountId,
     );
     return found ? copyOf(found) : null;
+  }
+
+  #scheduleOf(id: string, payerAccountId: string): PixScheduleState | null {
+    const found = this.schedules.find(
+      (schedule) => schedule.id === id && schedule.payerAccountId === payerAccountId,
+    );
+    return found ? scheduleCopyOf(found) : null;
   }
 
   for(): PaymentsRepositories {
@@ -195,6 +214,84 @@ export class FakePaymentsRepositories implements PaymentsRepositoriesFactory {
           return Promise.resolve();
         },
       },
+      pixSchedules: {
+        insert: (state, payeeKey) => {
+          this.schedules.push(scheduleCopyOf(state));
+          if (payeeKey) this.scheduleKeys.set(state.id, payeeKey);
+          return Promise.resolve();
+        },
+        findForPayer: (id, payerAccountId) => Promise.resolve(this.#scheduleOf(id, payerAccountId)),
+        lockForPayer: (id, payerAccountId) => Promise.resolve(this.#scheduleOf(id, payerAccountId)),
+        lockNextDue: (today, skip) => {
+          const due = this.schedules
+            .filter(
+              (s) =>
+                s.status === 'ACTIVE' &&
+                s.nextOccurrenceDate !== null &&
+                s.nextOccurrenceDate <= today &&
+                !skip.includes(s.id),
+            )
+            .sort((a, b) =>
+              (a.nextOccurrenceDate ?? '').localeCompare(b.nextOccurrenceDate ?? ''),
+            )[0];
+          if (!due) return Promise.resolve(null);
+          this.lockedDue.push(due.id);
+          return Promise.resolve({
+            schedule: scheduleCopyOf(due),
+            payeeKey: this.scheduleKeys.get(due.id) ?? null,
+          });
+        },
+        update: (state) => {
+          const index = this.schedules.findIndex((schedule) => schedule.id === state.id);
+          this.schedules[index] = scheduleCopyOf(state);
+          return Promise.resolve();
+        },
+        // Like the UNIQUE constraints: a second record of an occurrence fails.
+        recordOccurrence: (occurrence) => {
+          const taken = this.occurrences.some(
+            (o) =>
+              o.scheduleId === occurrence.scheduleId &&
+              (o.sequence === occurrence.sequence ||
+                o.occurrenceDate === occurrence.occurrenceDate),
+          );
+          if (taken) return Promise.reject(new Error('Occurrence already recorded'));
+          this.occurrences.push({ ...occurrence });
+          return Promise.resolve();
+        },
+        listForPayer: (payerAccountId, after, limit) =>
+          Promise.resolve(
+            this.schedules
+              .filter((s) => s.payerAccountId === payerAccountId)
+              .sort(
+                (a, b) => b.createdAt.getTime() - a.createdAt.getTime() || b.id.localeCompare(a.id),
+              )
+              .filter(
+                (s) =>
+                  after === null ||
+                  s.createdAt < after.createdAt ||
+                  (s.createdAt.getTime() === after.createdAt.getTime() && s.id < after.id),
+              )
+              .slice(0, limit)
+              .map(scheduleCopyOf),
+          ),
+        occurrencesOf: (scheduleId) =>
+          Promise.resolve(
+            this.occurrences
+              .filter((o) => o.scheduleId === scheduleId)
+              .sort((a, b) => a.sequence - b.sequence)
+              .map((o) => {
+                const transfer = this.transfers.find((t) => t.id === o.transferId);
+                return {
+                  sequence: o.sequence,
+                  date: o.occurrenceDate,
+                  transferId: o.transferId,
+                  status: transfer?.status ?? 'FAILED',
+                  failureReason: transfer?.failureReason ?? null,
+                  executedAt: o.executedAt,
+                };
+              }),
+          ),
+      },
       idempotency,
       // Like ON CONFLICT DO NOTHING on the event id: false when already taken.
       inbox: {
@@ -217,6 +314,10 @@ export class FakePaymentsRepositories implements PaymentsRepositoriesFactory {
 /** Only the payer's own Pix is ever found (PIX-01). */
 function copyOf(state: PixTransferState): PixTransferState {
   return { ...state, payee: { ...state.payee } };
+}
+
+function scheduleCopyOf(state: PixScheduleState): PixScheduleState {
+  return { ...state, payee: { ...state.payee }, recurrence: { ...state.recurrence } };
 }
 
 export class FakeAccounts implements AccountsPort {

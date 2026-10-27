@@ -47,6 +47,10 @@ void main() {
       ('UnknownTopUpOperator', ApiErrorCode.unknownTopUpOperator),
       ('InvalidTopUpAmount', ApiErrorCode.invalidTopUpAmount),
       ('TopUpLimitExceeded', ApiErrorCode.topUpLimitExceeded),
+      // The scheduled Pix (v1.2.0 plan, task 7).
+      ('ScheduleInPast', ApiErrorCode.scheduleInPast),
+      ('InvalidRecurrence', ApiErrorCode.invalidRecurrence),
+      ('ScheduleNotActive', ApiErrorCode.scheduleNotActive),
     ]) {
       test('maps $wire to its catalog code', () async {
         final failure = await failureFor(ProblemReply(422, wire));

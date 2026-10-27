@@ -4,8 +4,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:next_bank/core/ui/balance/balance_card.dart';
 import 'package:next_bank/features/home/presentation/home_screen.dart';
+import 'package:next_bank/features/pix/presentation/new_schedule/new_schedule_screen.dart';
 import 'package:next_bank/features/pix/presentation/receipt/receipt_screen.dart';
 import 'package:next_bank/features/pix/presentation/review/review_pix_screen.dart';
+import 'package:next_bank/features/pix/presentation/schedule_detail/schedule_detail_screen.dart';
+import 'package:next_bank/features/pix/presentation/schedules/schedules_screen.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
 import 'package:next_bank/main.dart' as app;
 
@@ -39,7 +42,7 @@ int balanceOnHome(WidgetTester tester) {
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('login → Pix → receipt → statement', (tester) async {
+  testWidgets('login → Pix → receipt → schedule → statement', (tester) async {
     final semantics = tester.ensureSemantics();
     await app.main();
 
@@ -96,6 +99,52 @@ void main() {
     }
     await waitFor(tester, find.bySemanticsLabel(RegExp(r'^R\$ ')));
     expect(balanceOnHome(tester), before - 100);
+
+    // A Pix to Bruno scheduled for the first day offered, then cancelled
+    // (v1.2.0 plan, task 7): nothing moves now, so the balance stays.
+    await tester.tap(find.bySemanticsLabel('Área Pix'));
+    await waitFor(tester, find.text('Buscar chave'));
+    await tester.enterText(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is TextField &&
+            widget.decoration?.labelText == 'Valor do Pix',
+      ),
+      '100',
+    );
+    await tester.enterText(keyField, brunoCpf);
+    await tester.pump();
+    await scrollAndTap(tester, SendPixScreen, find.text('Buscar chave'));
+    await waitFor(tester, find.text('Bruno Demo'));
+    await scrollAndTap(tester, SendPixScreen, find.text('Agendar'));
+    await waitFor(tester, find.byType(NewScheduleScreen));
+    await tester.tap(find.byType(FilterPill).first);
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byType(PinField),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byType(NewScheduleScreen),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.enterText(find.byType(PinField), anaPin);
+    await waitFor(tester, find.byType(ScheduleDetailScreen));
+    await scrollAndTap(
+      tester,
+      ScheduleDetailScreen,
+      find.text('Cancelar agendamento'),
+    );
+    await tester.tap(find.text('Cancelar agendamento').last);
+    await waitFor(tester, find.text('Cancelado'));
+    // Back over the list to the Home, with the system's back: the toast of
+    // the cancel may cover the header's arrow.
+    await tester.binding.handlePopRoute();
+    await waitFor(tester, find.byType(SchedulesScreen));
+    await tester.binding.handlePopRoute();
+    await waitFor(tester, find.byType(BalanceCard));
 
     // The statement shows the Pix sent, and its detail opens the receipt.
     await scrollAndTap(
