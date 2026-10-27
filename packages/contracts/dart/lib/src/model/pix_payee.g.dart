@@ -124,7 +124,11 @@ PixPayee _$PixPayeeFromJson(Map<String, dynamic> json) => $checkedCreate(
       documentMasked: $checkedConvert('documentMasked', (v) => v as String),
       keyType: $checkedConvert(
         'keyType',
-        (v) => $enumDecode(_$PixPayeeKeyTypeEnumEnumMap, v),
+        (v) => $enumDecode(
+          _$PixPayeeKeyTypeEnumEnumMap,
+          v,
+          unknownValue: PixPayeeKeyTypeEnum.unknownDefaultOpenApi,
+        ),
       ),
       keyMasked: $checkedConvert('keyMasked', (v) => v as String),
       bank: $checkedConvert(
@@ -150,4 +154,5 @@ const _$PixPayeeKeyTypeEnumEnumMap = {
   PixPayeeKeyTypeEnum.EMAIL: 'EMAIL',
   PixPayeeKeyTypeEnum.PHONE: 'PHONE',
   PixPayeeKeyTypeEnum.RANDOM: 'RANDOM',
+  PixPayeeKeyTypeEnum.unknownDefaultOpenApi: 'unknown_default_open_api',
 };

@@ -167,11 +167,19 @@ StatementItem _$StatementItemFromJson(Map<String, dynamic> json) =>
         ),
         kind: $checkedConvert(
           'kind',
-          (v) => $enumDecode(_$StatementItemKindEnumEnumMap, v),
+          (v) => $enumDecode(
+            _$StatementItemKindEnumEnumMap,
+            v,
+            unknownValue: StatementItemKindEnum.unknownDefaultOpenApi,
+          ),
         ),
         direction: $checkedConvert(
           'direction',
-          (v) => $enumDecode(_$StatementItemDirectionEnumEnumMap, v),
+          (v) => $enumDecode(
+            _$StatementItemDirectionEnumEnumMap,
+            v,
+            unknownValue: StatementItemDirectionEnum.unknownDefaultOpenApi,
+          ),
         ),
         amount: $checkedConvert(
           'amount',
@@ -207,9 +215,11 @@ const _$StatementItemKindEnumEnumMap = {
   StatementItemKindEnum.PIX_REFUNDED: 'PIX_REFUNDED',
   StatementItemKindEnum.DEMO_FUNDING: 'DEMO_FUNDING',
   StatementItemKindEnum.TOP_UP: 'TOP_UP',
+  StatementItemKindEnum.unknownDefaultOpenApi: 'unknown_default_open_api',
 };
 
 const _$StatementItemDirectionEnumEnumMap = {
   StatementItemDirectionEnum.IN: 'IN',
   StatementItemDirectionEnum.OUT: 'OUT',
+  StatementItemDirectionEnum.unknownDefaultOpenApi: 'unknown_default_open_api',
 };

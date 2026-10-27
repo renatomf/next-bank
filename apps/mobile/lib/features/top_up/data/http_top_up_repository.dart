@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:next_bank/core/api_failure.dart';
+import 'package:next_bank/core/api_money.dart';
 import 'package:next_bank/features/top_up/domain/top_up.dart';
 import 'package:next_bank/features/top_up/domain/top_up_repository.dart';
 import 'package:nextbank_api/nextbank_api.dart' as api;
@@ -84,6 +85,7 @@ class HttpTopUpRepository implements TopUpRepository {
 final RegExp _masked = RegExp(r'^\([0-9]{2}\) \*{5}-[0-9]{4}$');
 
 int _cents(api.Money money) {
-  if (money.amount <= 0) throw const ApiUnexpected();
-  return money.amount;
+  final cents = reaisCentsOf(money);
+  if (cents <= 0) throw const ApiUnexpected();
+  return cents;
 }

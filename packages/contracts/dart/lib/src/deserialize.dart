@@ -5,8 +5,8 @@ import 'package:nextbank_api/src/model/change_password_request_input.dart';
 import 'package:nextbank_api/src/model/change_pin_request_input.dart';
 import 'package:nextbank_api/src/model/client_ip.dart';
 import 'package:nextbank_api/src/model/create_pin_request_input.dart';
+import 'package:nextbank_api/src/model/create_pix_schedule_request_input.dart';
 import 'package:nextbank_api/src/model/create_pix_transfer_request_input.dart';
-import 'package:nextbank_api/src/model/create_pix_transfer_request_input_key.dart';
 import 'package:nextbank_api/src/model/create_top_up_request_input.dart';
 import 'package:nextbank_api/src/model/health.dart';
 import 'package:nextbank_api/src/model/login_request_input.dart';
@@ -16,13 +16,21 @@ import 'package:nextbank_api/src/model/money_input.dart';
 import 'package:nextbank_api/src/model/my_account.dart';
 import 'package:nextbank_api/src/model/pix_key_lookup.dart';
 import 'package:nextbank_api/src/model/pix_key_lookup_request_input.dart';
+import 'package:nextbank_api/src/model/pix_key_request_input.dart';
 import 'package:nextbank_api/src/model/pix_payee.dart';
 import 'package:nextbank_api/src/model/pix_payee_bank.dart';
 import 'package:nextbank_api/src/model/pix_receiving_key.dart';
+import 'package:nextbank_api/src/model/pix_schedule.dart';
+import 'package:nextbank_api/src/model/pix_schedule_detail.dart';
+import 'package:nextbank_api/src/model/pix_schedule_occurrence.dart';
+import 'package:nextbank_api/src/model/pix_schedule_page.dart';
+import 'package:nextbank_api/src/model/pix_schedule_payee.dart';
 import 'package:nextbank_api/src/model/pix_transfer.dart';
 import 'package:nextbank_api/src/model/problem.dart';
 import 'package:nextbank_api/src/model/refresh_request_input.dart';
 import 'package:nextbank_api/src/model/register_request_input.dart';
+import 'package:nextbank_api/src/model/schedule_recurrence.dart';
+import 'package:nextbank_api/src/model/schedule_recurrence_request_input.dart';
 import 'package:nextbank_api/src/model/session_list.dart';
 import 'package:nextbank_api/src/model/statement.dart';
 import 'package:nextbank_api/src/model/statement_counterparty.dart';
@@ -65,10 +73,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ClientIp.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreatePinRequestInput':
           return CreatePinRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreatePixScheduleRequestInput':
+          return CreatePixScheduleRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreatePixTransferRequestInput':
           return CreatePixTransferRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
-        case 'CreatePixTransferRequestInputKey':
-          return CreatePixTransferRequestInputKey.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateTopUpRequestInput':
           return CreateTopUpRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Health':
@@ -87,12 +95,24 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return PixKeyLookup.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PixKeyLookupRequestInput':
           return PixKeyLookupRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PixKeyRequestInput':
+          return PixKeyRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PixPayee':
           return PixPayee.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PixPayeeBank':
           return PixPayeeBank.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PixReceivingKey':
           return PixReceivingKey.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PixSchedule':
+          return PixSchedule.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PixScheduleDetail':
+          return PixScheduleDetail.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PixScheduleOccurrence':
+          return PixScheduleOccurrence.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PixSchedulePage':
+          return PixSchedulePage.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PixSchedulePayee':
+          return PixSchedulePayee.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PixTransfer':
           return PixTransfer.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Problem':
@@ -101,6 +121,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return RefreshRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RegisterRequestInput':
           return RegisterRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ScheduleRecurrence':
+          return ScheduleRecurrence.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ScheduleRecurrenceRequestInput':
+          return ScheduleRecurrenceRequestInput.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SessionList':
           return SessionList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Statement':

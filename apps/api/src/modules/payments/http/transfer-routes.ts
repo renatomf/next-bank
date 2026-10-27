@@ -13,11 +13,16 @@ const KEY_TYPES = ['CPF', 'EMAIL', 'PHONE', 'RANDOM'] as const;
 // Every financial command carries an Idempotency-Key (ADR 0007).
 const IdempotencyHeadersSchema = z.object({ 'idempotency-key': z.uuid() });
 
+/** The key a Pix or a schedule is sent to: named once, so every client has one type. */
+export const PixKeyRequestSchema = z
+  .strictObject({ type: z.enum(KEY_TYPES), value: z.string().min(1).max(77) })
+  .meta({ id: 'PixKeyRequest' });
+
 // The payer never comes from the body (PIX-01); unknown fields are refused (PIX-04).
 // The amount is a safe integer of cents; zero or less is the domain's InvalidAmount.
 const CreatePixTransferRequestSchema = z
   .strictObject({
-    key: z.strictObject({ type: z.enum(KEY_TYPES), value: z.string().min(1).max(77) }),
+    key: PixKeyRequestSchema,
     amount: MoneySchema,
     description: z
       .string()

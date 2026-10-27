@@ -137,7 +137,11 @@ Problem _$ProblemFromJson(Map<String, dynamic> json) =>
       final val = Problem(
         type: $checkedConvert(
           'type',
-          (v) => $enumDecode(_$ProblemTypeEnumEnumMap, v),
+          (v) => $enumDecode(
+            _$ProblemTypeEnumEnumMap,
+            v,
+            unknownValue: ProblemTypeEnum.unknownDefaultOpenApi,
+          ),
         ),
         title: $checkedConvert('title', (v) => v as String),
         status: $checkedConvert('status', (v) => (v as num).toInt()),
@@ -170,4 +174,5 @@ Map<String, dynamic> _$ProblemToJson(Problem instance) => <String, dynamic>{
 
 const _$ProblemTypeEnumEnumMap = {
   ProblemTypeEnum.aboutColonBlank: 'about:blank',
+  ProblemTypeEnum.unknownDefaultOpenApi: 'unknown_default_open_api',
 };

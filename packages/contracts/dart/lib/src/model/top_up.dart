@@ -88,6 +88,7 @@ class TopUp {
     name: r'status',
     required: true,
     includeIfNull: false,
+  unknownEnumValue: TopUpStatusEnum.unknownDefaultOpenApi,
   )
 
 
@@ -140,7 +141,9 @@ class TopUp {
 
 enum TopUpStatusEnum {
 @JsonValue(r'COMPLETED')
-COMPLETED(r'COMPLETED');
+COMPLETED(r'COMPLETED'),
+@JsonValue(r'unknown_default_open_api')
+unknownDefaultOpenApi(r'unknown_default_open_api');
 
 const TopUpStatusEnum(this.value);
 

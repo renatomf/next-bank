@@ -360,6 +360,18 @@ export class CustomerLedgerAccounts {
     };
   }
 
+  /**
+   * A system account's balance, by the sum of its postings: system accounts
+   * are never projected, so they never become a hot row (database.md 5.3).
+   * For the daily reconciliation (v1.2.0 plan, task 6).
+   */
+  async systemBalance(tx: Transaction, code: string): Promise<Money> {
+    const repository = this.#repositories.for(tx);
+    const account = await repository.findByCode(code);
+    if (account?.kind !== 'SYSTEM') throw new Error(`No system ledger account ${code}`);
+    return repository.postedSum(account.id);
+  }
+
   /** A plain read, without a lock: it never waits for a posting in progress. */
   async availableBalance(tx: Transaction, accountId: string): Promise<Money | null> {
     const account = await this.#repositories.for(tx).findByCode(customerCodeOf(accountId));

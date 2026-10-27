@@ -11,9 +11,13 @@ processingControllerProvider = AsyncNotifierProvider.autoDispose
       retry: (_, _) => null,
     );
 
-/// Follows one Pix until the money moves or fails (screen 9). In V1 that
-/// happens within the authorization (domain-model.md 4), so a Pix still
-/// processing after [maxReads] reads is shown as such, not waited forever.
+/// Follows one Pix until the money moves or fails (screen 9). A Pix between
+/// next bank customers ends within the authorization; one to another bank
+/// waits for the SPI, seconds by webhook or minutes by the status check
+/// (v1.2.0 plan, task 5, A3). So the Pix is read again, waiting 1, 2, 4 and
+/// then [longestWait], for up to [patience]; still processing then, it is
+/// shown as such and the statement tells the rest. It only reads: a Pix is
+/// never sent again from here (MOB-07).
 class ProcessingController extends AsyncNotifier<PixTransfer> {
   /// Creates the controller of the Pix [transferId].
   new(this.transferId);
@@ -21,20 +25,25 @@ class ProcessingController extends AsyncNotifier<PixTransfer> {
   /// The Pix being followed.
   final String transferId;
 
-  /// Most reads of one Pix, a second apart.
-  static const int maxReads = 10;
+  /// How long the Pix is followed before it is shown still processing.
+  static const Duration patience = Duration(minutes: 1);
+
+  /// The longest wait between two reads.
+  static const Duration longestWait = Duration(seconds: 8);
 
   @override
   Future<PixTransfer> build() async {
     final repository = ref.read(pixRepositoryProvider);
     var transfer = await repository.fetch(transferId);
-    for (
-      var reads = 1;
-      reads < maxReads && transfer.status == PixStatus.processing;
-      reads++
-    ) {
-      await ref.read(pixPollDelayProvider)();
+    var waited = Duration.zero;
+    var next = const Duration(seconds: 1);
+    while (transfer.status == PixStatus.processing && waited < patience) {
+      final left = patience - waited;
+      final wait = next < left ? next : left;
+      await ref.read(pixPollDelayProvider)(wait);
       if (!ref.mounted) return transfer;
+      waited += wait;
+      next = next * 2 < longestWait ? next * 2 : longestWait;
       transfer = await repository.fetch(transferId);
     }
     return transfer;
@@ -49,4 +58,8 @@ String failureText(PixFailureReason reason) => switch (reason) {
     'A conta de destino não pode receber Pix agora.',
   PixFailureReason.accountBlocked =>
     'Sua conta está bloqueada. Fale com o suporte.',
+  PixFailureReason.payeeBankRejected =>
+    'O banco do recebedor recusou o Pix. O valor voltou para sua conta.',
+  // A reason a later API adds (A4): no explanation is better than a wrong one.
+  PixFailureReason.unknown => '',
 };

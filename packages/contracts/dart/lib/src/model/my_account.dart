@@ -59,6 +59,7 @@ class MyAccount {
     name: r'status',
     required: true,
     includeIfNull: false,
+  unknownEnumValue: MyAccountStatusEnum.unknownDefaultOpenApi,
   )
 
 
@@ -111,7 +112,9 @@ ACTIVE(r'ACTIVE'),
 @JsonValue(r'BLOCKED')
 BLOCKED(r'BLOCKED'),
 @JsonValue(r'CLOSED')
-CLOSED(r'CLOSED');
+CLOSED(r'CLOSED'),
+@JsonValue(r'unknown_default_open_api')
+unknownDefaultOpenApi(r'unknown_default_open_api');
 
 const MyAccountStatusEnum(this.value);
 

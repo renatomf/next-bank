@@ -45,6 +45,7 @@ class MoneyInput {
     name: r'currency',
     required: true,
     includeIfNull: false,
+  unknownEnumValue: MoneyInputCurrencyEnum.unknownDefaultOpenApi,
   )
 
 
@@ -77,7 +78,9 @@ class MoneyInput {
 
 enum MoneyInputCurrencyEnum {
 @JsonValue(r'BRL')
-BRL(r'BRL');
+BRL(r'BRL'),
+@JsonValue(r'unknown_default_open_api')
+unknownDefaultOpenApi(r'unknown_default_open_api');
 
 const MoneyInputCurrencyEnum(this.value);
 

@@ -58,6 +58,9 @@ erDiagram
     ledger_ledger_accounts ||--o{ ledger_postings : "recebe"
     accounts_accounts ||..o{ payments_pix_keys : "chaves (por ID)"
     accounts_accounts ||..o{ payments_pix_transfers : "pagador/recebedor (por ID)"
+    accounts_accounts ||..o{ payments_pix_schedules : "pagador (por ID)"
+    payments_pix_schedules ||--o{ payments_pix_schedule_occurrences : "ocorrências"
+    payments_pix_transfers ||--o| payments_pix_schedule_occurrences : "paga"
     payments_pix_transfers ||..o| ledger_journal_entries : "gera (por referência)"
 
     identity_users {
@@ -282,7 +285,7 @@ erDiagram
 
 **`platform.idempotency_records`** (desde a v1.1.0, ADR 0015: num schema comum, para o Pix e a recarga usarem a mesma tabela sem um módulo escrever no schema do outro)
 - PK `(user_id, key)` — escopo por usuário; uma requisição concorrente com a mesma chave espera no `INSERT … ON CONFLICT DO NOTHING` até a primeira terminar
-- `operation`: o comando protegido (`pix.create`, `pix.authorize`, `top-up.create`); mesma chave em operação diferente é recusada
+- `operation`: o comando protegido (`pix.create`, `pix.authorize`, `top-up.create` e, desde a v1.2.0, `pix.schedule`); mesma chave em operação diferente é recusada
 - `request_hash`: HMAC-SHA256 da requisição com chave do servidor, nunca com o PIN (semana 5, D4)
 - `status`: `CHECK (status IN ('IN_PROGRESS','COMPLETED'))`; resposta presente exatamente quando concluída; validade de até 24 h (`CHECK`)
 - `response_body` só contém dados já mascarados (é a resposta enviada ao cliente) ou a recusa gravada (PIN incorreto, bloqueado, Pix expirado)
@@ -298,6 +301,28 @@ erDiagram
 - O worker reserva com `FOR UPDATE SKIP LOCKED` e `locked_until`, roda o tratador sem transação aberta e registra o resultado em outra; depois de 10 tentativas (esperas que dobram a partir de 1 s), `DEAD` e relato no Sentry (EXT-08)
 - Índice parcial `(available_at) WHERE status = 'PENDING'` (`EXPLAIN ANALYZE`: `Index Scan using outbox_messages_available_idx`, 0,05 ms)
 - `GRANT`: `SELECT, INSERT` e `UPDATE` só das colunas de entrega para a API; sem `DELETE` (a limpeza das entregues é um job futuro)
+
+**`pix_schedules`** (v1.2.0, tarefa 7): o Pix agendado (uma data) ou recorrente (todo mês), autorizado com o PIN ao agendar
+- O recebedor fica guardado como no Pix (S1): `payee_account_id` **ou** banco e chave cifrada, nunca os dois (`pix_schedules_one_payee_check` e `pix_schedules_external_payee_check`), com o snapshot do nome, do documento e da chave mascarados; pagador ≠ recebedor
+- `first_date`, `next_occurrence_date`: dias de São Paulo (`date`), lidos como texto pela API, para o dia não mudar com o fuso de quem lê
+- `frequency` e `times` com `CHECK`: `ONCE` é 1 vez, `MONTHLY` de 2 a 24 (S2)
+- `next_sequence` e `next_occurrence_date` existem exatamente enquanto `ACTIVE`, com `next_sequence` entre 1 e `times`; `cancelled_at` exatamente quando `CANCELLED`
+- `GRANT`: `SELECT, INSERT` e `UPDATE` só de `status`, `next_sequence`, `next_occurrence_date`, `cancelled_at`, `version` e `updated_at`; o que foi agendado nunca muda e nada é apagado
+- Índices: `pix_schedules_due_idx (next_occurrence_date) WHERE status = 'ACTIVE'` para a rodada do executor, e `pix_schedules_payer_idx (payer_account_id, created_at DESC, id DESC)` para a lista do cliente por cursor
+
+**`pix_schedule_occurrences`** (v1.2.0, tarefa 7; EXT-05): cada ocorrência paga, por um Pix só dela
+- `UNIQUE (schedule_id, occurrence_date)`, `UNIQUE (schedule_id, sequence)` e `UNIQUE (transfer_id)`; FKs para o agendamento e para o Pix (mesmo contexto)
+- Inclusão simples, depois do lançamento e na mesma transação: uma ocorrência repetida falha e desfaz o débito junto
+- O estado e o motivo da falha são os do Pix, a fonte da verdade
+- `GRANT`: só `SELECT, INSERT`
+
+**Consultas da tarefa 7** (`EXPLAIN ANALYZE` no banco de testes):
+
+| Consulta | Índice usado | Tempo |
+|---|---|---|
+| Próximo agendamento vencido, `FOR UPDATE SKIP LOCKED` | `pix_schedules_due_idx`, parcial | 0,09 ms |
+| Agendamentos do cliente por cursor | `pix_schedules_payer_idx` (Index Only Scan) | 0,02 ms |
+| Ocorrências de um agendamento com o estado do Pix | `pix_schedule_occurrences_schedule_id_sequence_key` e `pix_transfers_pkey` | 0,08 ms |
 
 ### 5.4.1 `top_ups` (v1.1.0, tarefa 5)
 
@@ -325,6 +350,35 @@ O schema do simulador do Bacen e dos outros parceiros (plano `v1.2.0-pix-assincr
 - `metadata`: `CHECK (pg_column_size(metadata) <= 4096)`; conteúdo validado na aplicação contra uma lista de campos permitidos (nunca CPF, token, PIN ou chave Pix completa)
 - Índices: `(subject_type, subject_id, occurred_at DESC)`, `(actor_id, occurred_at DESC)`
 - Retenção: sem exclusão na V1. Particionamento mensal fica como evolução quando o volume justificar
+
+### 5.6 `reconciliation` (v1.2.0, tarefa 6; ADR 0018)
+
+A conciliação diária, num contexto e num schema próprios. Ela só lê os outros schemas, pelos módulos deles.
+
+**`runs`** (PK `run_date`, dia de São Paulo)
+- Inserir o `run` reserva o dia (`ON CONFLICT DO NOTHING`). Um `run` deixado em `RUNNING` há mais de 30 min por uma instância que morreu é retomado pela mesma PK.
+- `CHECK` de `status` (`RUNNING` ou `DONE`), e `finished_at` e as contagens existem exatamente quando `DONE`.
+- `GRANT`: `SELECT, INSERT` e `UPDATE` só de `status`, `started_at`, `finished_at` e das contagens; nunca `DELETE`.
+
+**`exceptions`** (só inclusão, R5)
+- `kind` com `CHECK` dos seis tipos.
+- `end_to_end_id` no formato do Bacen, nulo só no `CLEARING_MISMATCH`.
+- `expected_cents` e `actual_cents` (o lado do SPI e o do next bank); nunca nome nem chave.
+- **`UNIQUE NULLS NOT DISTINCT (run_date, kind, end_to_end_id)`:** refazer um dia não duplica exceção, nem a do saldo de `pix_clearing`, que não tem Pix.
+- `GRANT`: só `SELECT, INSERT` para a API.
+
+**Consultas** (`EXPLAIN ANALYZE`):
+
+| Consulta | Índice usado | Tempo |
+|---|---|---|
+| Pix externos concluídos num dia | `pix_transfers_external_completed_idx`, parcial (nova) | 0,02 ms |
+| Pix em espera antes de uma data | `pix_transfers_external_processing_idx` | 0,01 ms |
+| Soma dos Pix em espera | `pix_transfers_external_processing_idx` | 0,03 ms |
+| Pix pelos ids do arquivo | `pix_transfers_end_to_end_id_key` | 0,11 ms |
+| Saldo de `pix_clearing` pela soma das partidas | `postings_statement_idx`, que começa pela conta | 0,02 ms |
+| Reserva do dia | árbitro `runs_pkey` | 0,18 ms |
+
+O saldo de `pix_clearing` e a soma dos Pix em espera são lidos na mesma transação `REPEATABLE READ`, para um Pix que termina no meio não acusar diferença falsa.
 
 ## 6. Permissões no banco (menor privilégio)
 
@@ -358,6 +412,8 @@ Conexões sempre com TLS (`sslmode=verify-full` no ambiente publicado). O papel 
 8. Atualiza o Pix para `COMPLETED` (ou `FAILED`, sem lançamentos)
 9. Insere eventos de auditoria; grava a resposta em `idempotency_records`
 10. `COMMIT` (aqui roda a verificação diferida de Σ débitos = Σ créditos)
+
+**`RunDueSchedules` (v1.2.0, tarefa 7)**, uma transação por ocorrência: `pix_schedules … FOR UPDATE SKIP LOCKED` (outro executor pula o agendamento travado, EXT-05; o cancelamento trava a mesma linha e espera, EXT-06); depois a ordem do `AuthorizePix` a partir do passo 4 (contas `FOR SHARE`, contas do ledger por id), sem PIN, porque a autorização foi dada ao agendar; o Pix, a ocorrência, o agendamento avançado e a auditoria; `COMMIT`. Uma falha técnica desfaz tudo, e a próxima rodada tenta de novo.
 
 **`CreateTopUp` (v1.1.0)** segue a mesma ordem, sem o passo 2 (não há recurso anterior a travar): idempotência; PIN `FOR UPDATE`; conta `FOR SHARE`; a conta do ledger do cliente `FOR UPDATE`; só então lê o saldo e a **soma das recargas do dia**, de modo que duas recargas simultâneas do mesmo cliente não passam juntas pelo saldo nem pelo limite diário; lançamento, recarga, auditoria e resposta.
 

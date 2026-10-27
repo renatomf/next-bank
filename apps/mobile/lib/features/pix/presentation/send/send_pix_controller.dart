@@ -1,11 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/api_messages.dart';
-import 'package:next_bank/core/cpf.dart';
 import 'package:next_bank/core/idempotency_key.dart';
 import 'package:next_bank/features/pix/domain/br_code.dart';
 import 'package:next_bank/features/pix/domain/pix_amount.dart';
+import 'package:next_bank/features/pix/domain/pix_key_input.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
+import 'package:next_bank/features/pix/presentation/new_schedule/new_schedule_controller.dart';
+import 'package:next_bank/features/pix/presentation/pix_formats.dart';
 import 'package:next_bank/features/pix/presentation/pix_providers.dart';
 
 /// Longest description a Pix takes (domain-model.md 3.4).
@@ -174,17 +176,18 @@ class SendPixController extends Notifier<SendPixState> {
     state = state._with(description: description, error: () => null);
   }
 
-  /// Looks up who holds the CPF key. An invalid CPF never reaches the API,
-  /// so it spends none of the hourly lookups (PIX-07).
+  /// Looks up who holds the key typed, of any kind (v1.2.0 plan, task 5,
+  /// A1), or read from a QR Code. A value no key can have never reaches the
+  /// API, so it spends none of the hourly lookups (PIX-07).
   Future<void> lookup() async {
     if (state.searching) return;
     final typed = state.key;
     final qrKey = state.qrKey;
-    if (qrKey == null && !isValidCpf(typed)) {
-      state = state._with(keyError: () => 'CPF inválido.');
+    final key = qrKey ?? pixKeyOf(typed);
+    if (key == null) {
+      state = state._with(keyError: () => 'Chave Pix inválida.');
       return;
     }
-    final key = qrKey ?? (type: PixKeyType.cpf, value: _digits(typed));
     // An answer for a key that was changed meanwhile is dropped.
     bool unchanged() => state.key == typed && state.qrKey == qrKey;
     state = state._with(searching: true, keyError: () => null);
@@ -204,13 +207,33 @@ class SendPixController extends Notifier<SendPixState> {
     }
   }
 
+  /// What "Agendar" takes (v1.2.0 plan, task 7): the key, the payee as
+  /// shown, the amount and the description; null until the Pix could be
+  /// sent.
+  ScheduleDraft? scheduleDraft() {
+    final payee = state.payee;
+    final key = state.qrKey ?? pixKeyOf(state.key);
+    if (!state.canSubmit || payee == null || key == null) return null;
+    final description = state.description.trim();
+    return (
+      key: key,
+      payeeName: payee.name,
+      payeeDetail: payeeDetail(payee),
+      amountCents: state.amountCents,
+      description: description.isEmpty ? null : description,
+    );
+  }
+
   /// Creates the Pix and returns its id for the review; null when it cannot
   /// be sent or was refused. Ignored while a creation runs.
   Future<String?> submit() async {
     if (!state.canSubmit) return null;
     final description = state.description.trim();
+    // A payee was found, so the key typed is one (canSubmit).
+    final typedKey = state.qrKey ?? pixKeyOf(state.key);
+    if (typedKey == null) return null;
     final draft = (
-      key: state.qrKey ?? (type: PixKeyType.cpf, value: _digits(state.key)),
+      key: typedKey,
       amountCents: state.amountCents,
       description: description.isEmpty ? null : description,
     );
@@ -249,5 +272,3 @@ bool _outcomeUnknown(ApiFailure failure) => switch (failure) {
   ApiRejected(code: ApiErrorCode.requestInProgress) => true,
   ApiRejected() => false,
 };
-
-String _digits(String cpf) => cpf.replaceAll(RegExp(r'\D'), '');

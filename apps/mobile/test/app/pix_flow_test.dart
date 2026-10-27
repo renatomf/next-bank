@@ -67,8 +67,13 @@ Future<void> fillInPix(WidgetTester tester) async {
   await tester.tap(find.bySemanticsLabel('Área Pix'));
   await tester.pumpAndSettle();
   await tester.enterText(field('Valor do Pix'), '35000');
-  await typeInto(tester, labeled('Chave CPF'), _cpf);
-  await tester.ensureVisible(find.text('Buscar chave'));
+  await typeInto(tester, labeled('Chave Pix'), _cpf);
+  // Above the key: on a small phone it may have scrolled out of the list.
+  await tester.scrollUntilVisible(
+    find.text('Buscar chave'),
+    -200,
+    scrollable: listOf(SendPixScreen),
+  );
   await tester.pumpAndSettle();
   await tester.tap(find.text('Buscar chave'));
   await tester.pumpAndSettle();
@@ -120,28 +125,29 @@ Future<PixTransfer> Function() completes(FakePixRepository pix) => () async {
 void main() {
   // v1.1.0 plan, task 1.1: the customer types digits and sees the CPF
   // masked; the API still gets the 11 digits.
-  testWidgets('masks the CPF key as it is typed', (tester) async {
+  // v1.2.0 plan, task 5 (A1): one field for every kind of key, shown as typed.
+  testWidgets('looks up an e-mail key typed in the Pix field', (tester) async {
     final pix = FakePixRepository();
     await openHome(tester, pix);
     await tester.tap(find.bySemanticsLabel('Área Pix'));
     await tester.pumpAndSettle();
 
-    await typeInto(tester, labeled('Chave CPF'), _cpf);
+    await typeInto(tester, labeled('Chave Pix'), 'Clara.Aurora@Example.com');
 
     final shown = tester.widget<EditableText>(
       find.descendant(
-        of: labeled('Chave CPF'),
+        of: labeled('Chave Pix'),
         matching: find.byType(EditableText),
       ),
     );
-    expect(shown.controller.text, '529.982.247-25');
+    expect(shown.controller.text, 'Clara.Aurora@Example.com');
     await tester.ensureVisible(find.text('Buscar chave'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Buscar chave'));
     await tester.pumpAndSettle();
     expect(pix.callsOf('lookup').single.key, (
-      type: PixKeyType.cpf,
-      value: _cpf,
+      type: PixKeyType.email,
+      value: 'clara.aurora@example.com',
     ));
   });
 

@@ -37,6 +37,7 @@ Future<void> pumpHome(
   VoidCallback? onPay,
   VoidCallback? onReceive,
   VoidCallback? onStatement,
+  VoidCallback? onSchedules,
   ValueChanged<String>? onPixWithKey,
   VoidCallback? onTransfer,
   VoidCallback? onAutomatic,
@@ -69,6 +70,7 @@ Future<void> pumpHome(
           onPay: onPay ?? () {},
           onReceive: onReceive ?? () {},
           onStatement: onStatement ?? () {},
+          onSchedules: onSchedules ?? () {},
           onPixWithKey: onPixWithKey ?? (_) {},
           onTransfer: onTransfer ?? () {},
           onAutomatic: onAutomatic ?? () {},
@@ -208,6 +210,22 @@ void main() {
 
     expect(paid, 1);
     expect(find.widgetWithText(NbToast, 'Em breve.'), findsNothing);
+  });
+
+  // v1.2.0 plan, task 7 (D11): the scheduled Pix open from the card too.
+  testWidgets('opens the scheduled Pix from the balance card', (tester) async {
+    var opened = 0;
+    await pumpHome(tester, onSchedules: () => opened++);
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(BalanceCard),
+        matching: find.bySemanticsLabel('Agendamentos'),
+      ),
+    );
+
+    expect(opened, 1);
   });
 
   // S21 checkpoint: the statement opens from the balance card, and the
@@ -378,22 +396,19 @@ void main() {
       expect(opened, 1);
     });
 
-    testWidgets('says an invalid CPF is invalid, going nowhere (PIX-07)', (
-      tester,
-    ) async {
+    // v1.2.0 plan, task 5 (A1): a key of any kind goes as typed; the Pix
+    // screen tells its kind and refuses a value that is no key (PIX-07).
+    testWidgets('opens the Pix with an e-mail key, as typed', (tester) async {
       final keys = <String>[];
-      var opened = 0;
-      await pumpHome(tester, onPixWithKey: keys.add, onPix: () => opened++);
+      await pumpHome(tester, onPixWithKey: keys.add);
       await tester.pumpAndSettle();
       await scrollToBox(tester);
 
-      await tester.enterText(keyField(), '12345678900');
+      await tester.enterText(keyField(), ' clara.aurora@example.com ');
       await tester.tap(find.bySemanticsLabel('Continuar com a chave'));
       await tester.pumpAndSettle();
 
-      expect(find.text('CPF inválido.'), findsOneWidget);
-      expect(keys, isEmpty);
-      expect(opened, 0);
+      expect(keys, ['clara.aurora@example.com']);
     });
 
     for (final (label, callback) in [

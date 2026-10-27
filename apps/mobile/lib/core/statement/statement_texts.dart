@@ -7,6 +7,8 @@ String statementTitle(StatementKind kind) => switch (kind) {
   StatementKind.pixReceived => 'Pix recebido',
   StatementKind.demoFunding => 'Depósito inicial',
   StatementKind.topUp => 'Recarga de celular',
+  StatementKind.pixRefunded => 'Pix devolvido',
+  StatementKind.other => 'Movimentação',
 };
 
 /// Who and when, as on the Home mockup: "Mariana Costa · Hoje, 09:12". Days

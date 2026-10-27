@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:next_bank/core/api_failure.dart';
+import 'package:next_bank/core/api_money.dart';
 import 'package:next_bank/core/statement/statement_item.dart';
 import 'package:next_bank/core/statement/statement_query.dart';
 import 'package:next_bank/core/statement/statement_repository.dart';
@@ -50,26 +51,33 @@ class HttpStatementRepository implements StatementRepository {
       api.StatementItemKindEnum.PIX_RECEIVED => StatementKind.pixReceived,
       api.StatementItemKindEnum.DEMO_FUNDING => StatementKind.demoFunding,
       api.StatementItemKindEnum.TOP_UP => StatementKind.topUp,
-      // Shown from v1.2.0 task 5; until then no refund reaches a customer (W4).
-      api.StatementItemKindEnum.PIX_REFUNDED => throw const ApiUnexpected(),
+      api.StatementItemKindEnum.PIX_REFUNDED => StatementKind.pixRefunded,
+      // A kind a later API adds (A4): shown, without a link it cannot follow.
+      api.StatementItemKindEnum.unknownDefaultOpenApi => StatementKind.other,
     };
     final direction = switch (item.direction) {
       api.StatementItemDirectionEnum.IN => MoneyDirection.incoming,
       api.StatementItemDirectionEnum.OUT => MoneyDirection.outgoing,
+      api.StatementItemDirectionEnum.unknownDefaultOpenApi =>
+        throw const ApiUnexpected(),
     };
+    final known = kind != StatementKind.other;
     final sent = kind == StatementKind.pixSent;
     final leaves = sent || kind == StatementKind.topUp;
-    // Only a Pix sent and a top-up go out, and only a Pix sent links to a
-    // Pix receipt.
-    if (leaves != (direction == MoneyDirection.outgoing)) {
+    // Only a Pix sent and a top-up go out; only a Pix sent or refunded links
+    // to its Pix.
+    final linksPix = sent || kind == StatementKind.pixRefunded;
+    if (known && leaves != (direction == MoneyDirection.outgoing)) {
       throw const ApiUnexpected();
     }
-    if (!sent && item.transferId != null) throw const ApiUnexpected();
+    if (known && !linksPix && item.transferId != null) {
+      throw const ApiUnexpected();
+    }
     // Only a top-up links to a top-up receipt.
-    if (kind != StatementKind.topUp && item.topUpId != null) {
+    if (known && kind != StatementKind.topUp && item.topUpId != null) {
       throw const ApiUnexpected();
     }
-    final cents = item.amount.amount;
+    final cents = reaisCentsOf(item.amount);
     if (cents <= 0) throw const ApiUnexpected();
     final counterparty = item.counterparty;
     return StatementItem(
@@ -84,8 +92,8 @@ class HttpStatementRepository implements StatementRepository {
               name: counterparty.name,
               documentMasked: counterparty.documentMasked,
             ),
-      transferId: item.transferId,
-      topUpId: item.topUpId,
+      transferId: known ? item.transferId : null,
+      topUpId: known ? item.topUpId : null,
     );
   }
 }

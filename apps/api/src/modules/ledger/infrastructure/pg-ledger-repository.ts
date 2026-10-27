@@ -71,6 +71,16 @@ export class PgLedgerRepository implements LedgerRepository {
     return [...customers.rows, ...systems.rows].map(toState);
   }
 
+  /** Served by postings_statement_idx, which starts with the account. */
+  async postedSum(ledgerAccountId: string): Promise<Money> {
+    const { rows } = await this.#client.query<{ sum: string }>(
+      `SELECT coalesce(sum(CASE direction WHEN 'C' THEN amount ELSE -amount END), 0)::text AS sum
+       FROM ledger.postings WHERE ledger_account_id = $1`,
+      [ledgerAccountId],
+    );
+    return Money.of(BigInt(rows[0]?.sum ?? '0'));
+  }
+
   async insertAccount(account: LedgerAccountState): Promise<void> {
     await this.#client.query(
       `INSERT INTO ledger.ledger_accounts

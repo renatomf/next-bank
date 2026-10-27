@@ -78,7 +78,11 @@ Health _$HealthFromJson(Map<String, dynamic> json) =>
       final val = Health(
         status: $checkedConvert(
           'status',
-          (v) => $enumDecode(_$HealthStatusEnumEnumMap, v),
+          (v) => $enumDecode(
+            _$HealthStatusEnumEnumMap,
+            v,
+            unknownValue: HealthStatusEnum.unknownDefaultOpenApi,
+          ),
         ),
         release: $checkedConvert('release', (v) => v as String?),
       );
@@ -90,4 +94,7 @@ Map<String, dynamic> _$HealthToJson(Health instance) => <String, dynamic>{
   'release': ?instance.release,
 };
 
-const _$HealthStatusEnumEnumMap = {HealthStatusEnum.ok: 'ok'};
+const _$HealthStatusEnumEnumMap = {
+  HealthStatusEnum.ok: 'ok',
+  HealthStatusEnum.unknownDefaultOpenApi: 'unknown_default_open_api',
+};

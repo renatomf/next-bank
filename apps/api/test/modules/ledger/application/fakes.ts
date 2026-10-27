@@ -92,6 +92,19 @@ export class InMemoryLedger implements LedgerRepositoryFactory {
     return {
       findByCode: (code) =>
         Promise.resolve([...this.accounts.values()].find((a) => a.code === code) ?? null),
+      postedSum: (ledgerAccountId) =>
+        Promise.resolve(
+          this.entries
+            .flatMap((entry) => entry.postings)
+            .filter((posting) => posting.ledgerAccountId === ledgerAccountId)
+            .reduce(
+              (sum, posting) =>
+                posting.direction === 'CREDIT'
+                  ? sum.plus(posting.amount)
+                  : sum.minus(posting.amount),
+              Money.zero(),
+            ),
+        ),
       lockForPosting: (ids) => {
         const found = ids.flatMap((id) => {
           const account = this.accounts.get(id);

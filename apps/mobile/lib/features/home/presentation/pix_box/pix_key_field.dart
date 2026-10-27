@@ -1,12 +1,11 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
-import 'package:next_bank/core/cpf.dart';
-import 'package:next_bank/core/cpf_input_formatter.dart';
 
-/// "Digite ou cole uma chave CPF" and its › button:
+/// "Digite ou cole uma chave Pix" and its › button:
 /// - empty, it opens the Pix area;
-/// - with a valid CPF, the Pix filled in with it;
-/// - with an invalid one, it says so, and no lookup is spent (PIX-07).
+/// - with a key of any kind, the Pix filled in with it, as typed. The Pix
+///   screen tells its kind and refuses a value that is no key before any
+///   lookup (v1.2.0 plan, task 5, A1; PIX-07).
 class PixKeyField extends StatefulWidget {
   /// Creates the field.
   const new({required this.onPix, required this.onPixWithKey, super.key});
@@ -14,7 +13,7 @@ class PixKeyField extends StatefulWidget {
   /// Opens the Pix area.
   final VoidCallback onPix;
 
-  /// Opens the Pix with a valid CPF key, in digits.
+  /// Opens the Pix with the key typed.
   final ValueChanged<String> onPixWithKey;
 
   @override
@@ -22,75 +21,43 @@ class PixKeyField extends StatefulWidget {
 }
 
 class _PixKeyFieldState extends State<PixKeyField> {
-  final _cpf = TextEditingController();
-  String? _error;
+  final _key = TextEditingController();
 
   @override
   void dispose() {
-    _cpf.dispose();
+    _key.dispose();
     super.dispose();
   }
 
   void _continue() {
-    final typed = _cpf.text.trim();
-
+    final typed = _key.text.trim();
     if (typed.isEmpty) {
       widget.onPix();
-      return;
+    } else {
+      widget.onPixWithKey(typed);
     }
-    if (!isValidCpf(typed)) {
-      setState(() => _error = 'CPF inválido.');
-      return;
-    }
-
-    setState(() => _error = null);
-    final digits = typed.replaceAll(RegExp(r'\D'), '');
-    widget.onPixWithKey(digits);
-  }
-
-  void _clearError(String _) {
-    if (_error != null) setState(() => _error = null);
   }
 
   @override
   Widget build(BuildContext context) {
-    final error = _error;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Row(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: _CpfInput(
-                controller: _cpf,
-                onChanged: _clearError,
-                onSubmitted: _continue,
-              ),
-            ),
-            const SizedBox(width: NbSpace.sm),
-            _ContinueButton(onPressed: _continue),
-          ],
+        Expanded(
+          child: _KeyInput(controller: _key, onSubmitted: _continue),
         ),
-        if (error != null) ...[
-          const SizedBox(height: NbSpace.sm),
-          FormErrorText(error),
-        ],
+        const SizedBox(width: NbSpace.sm),
+        _ContinueButton(onPressed: _continue),
       ],
     );
   }
 }
 
-/// The CPF field: digits only, masked as they are typed (task 1.1).
-class _CpfInput extends StatelessWidget {
-  const new({
-    required this.controller,
-    required this.onChanged,
-    required this.onSubmitted,
-  });
+/// The key field: CPF, e-mail, phone or random key, as typed (A1); the
+/// e-mail keyboard has the "@" and the digits.
+class _KeyInput extends StatelessWidget {
+  const new({required this.controller, required this.onSubmitted});
 
   final TextEditingController controller;
-  final ValueChanged<String> onChanged;
   final VoidCallback onSubmitted;
 
   @override
@@ -99,13 +66,11 @@ class _CpfInput extends StatelessWidget {
 
     return TextField(
       controller: controller,
-      keyboardType: TextInputType.number,
+      keyboardType: TextInputType.emailAddress,
       textInputAction: TextInputAction.go,
-      inputFormatters: const [CpfInputFormatter()],
-      onChanged: onChanged,
       onSubmitted: (_) => onSubmitted(),
       decoration: InputDecoration(
-        hintText: 'Digite ou cole uma chave CPF',
+        hintText: 'Digite ou cole uma chave Pix',
         // A smaller hint, so all of it fits the field.
         hintStyle: context.nbText.caption,
         filled: true,

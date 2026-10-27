@@ -146,7 +146,11 @@ TopUp _$TopUpFromJson(Map<String, dynamic> json) =>
         ),
         status: $checkedConvert(
           'status',
-          (v) => $enumDecode(_$TopUpStatusEnumEnumMap, v),
+          (v) => $enumDecode(
+            _$TopUpStatusEnumEnumMap,
+            v,
+            unknownValue: TopUpStatusEnum.unknownDefaultOpenApi,
+          ),
         ),
         createdAt: $checkedConvert(
           'createdAt',
@@ -165,4 +169,7 @@ Map<String, dynamic> _$TopUpToJson(TopUp instance) => <String, dynamic>{
   'createdAt': instance.createdAt.toIso8601String(),
 };
 
-const _$TopUpStatusEnumEnumMap = {TopUpStatusEnum.COMPLETED: 'COMPLETED'};
+const _$TopUpStatusEnumEnumMap = {
+  TopUpStatusEnum.COMPLETED: 'COMPLETED',
+  TopUpStatusEnum.unknownDefaultOpenApi: 'unknown_default_open_api',
+};

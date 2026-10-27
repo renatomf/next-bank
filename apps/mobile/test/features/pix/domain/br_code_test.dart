@@ -341,19 +341,40 @@ void parseBrCodeTests() {
       expect(() => parseBrCode(dynamicCode), throwsA(isA<InvalidQrCode>()));
     });
 
-    // The next bank registers only CPF and random keys.
-    for (final (name, key) in [
-      ('an e-mail', 'loja@example.test'),
-      ('a phone', '+5511999990000'),
-      ('a CNPJ', '11222333000181'),
+    // Keys of other banks (v1.2.0 plan, task 5, A2): e-mail and phone are
+    // read as the API looks them up.
+    for (final (name, key, expected) in [
+      (
+        'an e-mail',
+        'Loja@Example.test',
+        (type: PixKeyType.email, value: 'loja@example.test'),
+      ),
+      (
+        'a phone',
+        '+5511999990000',
+        (type: PixKeyType.phone, value: '+5511999990000'),
+      ),
     ]) {
-      test('says the next bank does not take $name key yet', () {
-        expect(
-          () => parseBrCode(_code(key: key)),
-          throwsA(isA<UnsupportedPixKey>()),
-        );
+      test('reads $name key', () {
+        final payment = parseBrCode(_code(key: key));
+
+        expect((type: payment.keyType, value: payment.key), expected);
       });
     }
+
+    test('says the next bank does not take a CNPJ key yet', () {
+      expect(
+        () => parseBrCode(_code(key: '11222333000181')),
+        throwsA(isA<UnsupportedPixKey>()),
+      );
+    });
+
+    test('refuses a phone key of another country as invalid', () {
+      expect(
+        () => parseBrCode(_code(key: '+12125550100')),
+        throwsA(isA<InvalidQrCode>()),
+      );
+    });
 
     test('never carries what it read in the error (MOB-02)', () {
       try {

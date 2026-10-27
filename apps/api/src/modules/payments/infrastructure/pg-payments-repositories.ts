@@ -21,6 +21,7 @@ import type {
   PixTransferStatus,
 } from '../domain/pix-transfer.ts';
 import { Money } from '../../../shared/domain/money.ts';
+import { PgPixSchedulesRepository } from './pg-pix-schedules-repository.ts';
 
 export class PgPixKeysRepository implements PixKeysRepository {
   readonly #client: pg.ClientBase;
@@ -323,6 +324,7 @@ export class PgPaymentsRepositories implements PaymentsRepositoriesFactory {
     return {
       pixKeys: new PgPixKeysRepository(client),
       pixTransfers: new PgPixTransfersRepository(client),
+      pixSchedules: new PgPixSchedulesRepository(client),
       idempotency: new PgIdempotencyRepository(client),
       inbox: new PgInboxRepository(client),
       audit: new PgAuditTrail(client),

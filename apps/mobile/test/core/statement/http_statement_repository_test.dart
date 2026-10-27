@@ -68,6 +68,47 @@ void main() {
     expect(item.transferId, _transferId);
   });
 
+  // v1.2.0 plan, task 5 (W5): the money of a Pix another bank refused.
+  test(
+    'reads the refund of a Pix to another bank, linking to the Pix',
+    () async {
+      final server = ScriptedServer({
+        _path: (_) async => JsonReply(
+          200,
+          page([
+            sentItem({'kind': 'PIX_REFUNDED', 'direction': 'IN'}),
+          ]),
+        ),
+      });
+
+      final item = (await repositoryFor(server).page()).items.single;
+
+      expect(item.kind, StatementKind.pixRefunded);
+      expect(item.direction, MoneyDirection.incoming);
+      expect(item.transferId, _transferId);
+    },
+  );
+
+  // A4: a kind a later version of the API adds is shown, never a broken page.
+  test('reads a kind it does not know as a movement without links', () async {
+    final server = ScriptedServer({
+      _path: (_) async => JsonReply(
+        200,
+        page([
+          sentItem({'kind': 'PIX_SCHEDULED'}),
+        ]),
+      ),
+    });
+
+    final item = (await repositoryFor(server).page()).items.single;
+
+    expect(item.kind, StatementKind.other);
+    expect(item.direction, MoneyDirection.outgoing);
+    expect(item.amountCents, 35000);
+    expect(item.transferId, isNull);
+    expect(item.topUpId, isNull);
+  });
+
   test('asks the next page with the cursor it was given', () async {
     final server = ScriptedServer({
       _path: (request) async {
@@ -205,7 +246,12 @@ void main() {
   // shown; one item the app cannot trust spoils the page.
   group('an item the app cannot trust', () {
     for (final (name, changes) in <(String, Map<String, Object?>)>[
-      ('an unknown kind', {'kind': 'REFUND'}),
+      (
+        'another currency',
+        {
+          'amount': {'amount': 35000, 'currency': 'USD'},
+        },
+      ),
       (
         'a zero amount',
         {
@@ -228,11 +274,7 @@ void main() {
         {'kind': 'PIX_RECEIVED', 'direction': 'IN'},
       ),
       ('a top-up coming in', {'kind': 'TOP_UP', 'direction': 'IN'}),
-      // Shown from v1.2.0 task 5; until then no refund reaches a customer (W4).
-      (
-        'a refund, before the app shows it',
-        {'kind': 'PIX_REFUNDED', 'direction': 'IN'},
-      ),
+      ('a refund going out', {'kind': 'PIX_REFUNDED'}),
       ('a Pix receipt link on a top-up', {'kind': 'TOP_UP'}),
       (
         'a top-up receipt link on a Pix',

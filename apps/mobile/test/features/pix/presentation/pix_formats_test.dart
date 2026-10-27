@@ -78,6 +78,19 @@ void main() {
     expect(payeeDetail(mariana), 'CPF ***.456.789-** · next bank');
   });
 
+  // v1.2.0 plan, task 5 (D12): the other bank, as the DICT named it.
+  test('payeeDetail names the bank of a payee at another bank', () {
+    const clara = PixPayee(
+      name: 'Clara Aurora Teixeira',
+      documentMasked: '***.407.256-**',
+      keyType: PixKeyType.email,
+      keyMasked: 'cl***@example.com',
+      bankName: 'Banco Aurora',
+    );
+
+    expect(payeeDetail(clara), 'CPF ***.407.256-** · Banco Aurora');
+  });
+
   group('pixType', () {
     for (final (type, text) in [
       (PixKeyType.cpf, 'Pix · Chave CPF'),

@@ -2,11 +2,12 @@ import 'package:dio/dio.dart';
 import 'package:next_bank/core/account/account_repository.dart';
 import 'package:next_bank/core/account/account_summary.dart';
 import 'package:next_bank/core/api_failure.dart';
+import 'package:next_bank/core/api_money.dart';
 import 'package:nextbank_api/nextbank_api.dart';
 
-/// [AccountRepository] over the generated API client (ADR 0008). The client
-/// already refuses a fractional amount or an unknown currency; a negative
-/// balance, which the server never sends, is refused here (MASVS, code).
+/// [AccountRepository] over the generated API client (ADR 0008). The
+/// interceptor refuses a fractional amount; another currency and a negative
+/// balance, which the server never sends, are refused here (MASVS, code).
 class HttpAccountRepository implements AccountRepository {
   /// Creates the repository on top of the generated client.
   new(this._api);
@@ -21,7 +22,7 @@ class HttpAccountRepository implements AccountRepository {
     } on DioException catch (error) {
       throw apiFailureOf(error);
     }
-    final cents = account.availableBalance.amount;
+    final cents = reaisCentsOf(account.availableBalance);
     if (cents < 0) throw const ApiUnexpected();
     return AccountSummary(
       branch: account.branch,

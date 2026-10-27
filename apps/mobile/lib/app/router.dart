@@ -27,11 +27,15 @@ import 'package:next_bank/features/notifications/presentation/settings/notificat
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/presentation/automatic/pix_automatic_screen.dart';
 import 'package:next_bank/features/pix/presentation/keys/pix_keys_screen.dart';
+import 'package:next_bank/features/pix/presentation/new_schedule/new_schedule_controller.dart';
+import 'package:next_bank/features/pix/presentation/new_schedule/new_schedule_screen.dart';
 import 'package:next_bank/features/pix/presentation/processing/processing_screen.dart';
 import 'package:next_bank/features/pix/presentation/receipt/receipt_screen.dart';
 import 'package:next_bank/features/pix/presentation/receive/receive_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/review/review_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/scan/scan_pix_screen.dart';
+import 'package:next_bank/features/pix/presentation/schedule_detail/schedule_detail_screen.dart';
+import 'package:next_bank/features/pix/presentation/schedules/schedules_screen.dart';
 import 'package:next_bank/features/pix/presentation/send/send_pix_screen.dart';
 import 'package:next_bank/features/pix/presentation/transfer/transfer_pix_screen.dart';
 import 'package:next_bank/features/profile/presentation/blank/profile_blank_screen.dart';
@@ -122,6 +126,7 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
               onAutomatic: () => context.push(AppRoutes.pixAutomatic),
               onKeys: () => context.push(AppRoutes.pixKeys),
               onStatement: () => context.go(AppRoutes.statement),
+              onSchedules: () => context.push(AppRoutes.pixSchedules),
               onProfile: () => context.go(AppRoutes.profile),
               onHelp: () => context.push(AppRoutes.help),
               onAssistant: () => context.push(AppRoutes.assistant),
@@ -207,11 +212,46 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
       GoRoute(
         path: AppRoutes.pix,
         builder: (context, state) => SendPixScreen(
-          // The CPF from the Home's Pix box rides as extra, never in the URL.
-          initialCpf: state.extra is String ? state.extra! as String : null,
+          // The key from the Home's Pix box rides as extra, never in the URL.
+          initialKey: state.extra is String ? state.extra! as String : null,
           onBack: () => _back(context),
           onReceive: () => context.push(AppRoutes.pixReceive),
           onReview: (id) => context.push(AppRoutes.pixReview(id)),
+          onSchedule: (draft) =>
+              context.push(AppRoutes.pixScheduleNew, extra: draft),
+        ),
+      ),
+      // The scheduled Pix (v1.2.0 plan, task 7): the list over the Home;
+      // "new" before the id, which would take it.
+      GoRoute(
+        path: AppRoutes.pixSchedules,
+        builder: (context, _) => SchedulesScreen(
+          onBack: () => _back(context),
+          onSchedule: (id) => context.push(AppRoutes.pixSchedule(id)),
+          onNew: () => context.push(AppRoutes.pix),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.pixScheduleNew,
+        builder: (context, state) => NewScheduleScreen(
+          draft: state.extra! as ScheduleDraft,
+          onBack: () => _back(context),
+          onHome: () => context.go(AppRoutes.home),
+          // The schedule replaces the flow: back never leads to the PIN.
+          onDone: (schedule) {
+            context.go(AppRoutes.home);
+            unawaited(context.push(AppRoutes.pixSchedules));
+            unawaited(context.push(AppRoutes.pixSchedule(schedule.id)));
+          },
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.pixSchedule(':scheduleId'),
+        builder: (context, state) => ScheduleDetailScreen(
+          scheduleId: state.pathParameters['scheduleId'] ?? '',
+          onBack: () => _back(context),
+          onReceipt: (transferId) =>
+              context.push(AppRoutes.pixReceipt(transferId)),
         ),
       ),
       GoRoute(

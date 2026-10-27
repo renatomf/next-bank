@@ -32,6 +32,7 @@ import 'fake_greeting_name_store.dart';
 import 'fake_image_sharer.dart';
 import 'fake_monotonic_clock.dart';
 import 'fake_pix_repository.dart';
+import 'fake_pix_schedule_repository.dart';
 import 'fake_profile_repository.dart';
 import 'fake_qr_scanner.dart';
 import 'fake_security_repository.dart';
@@ -52,6 +53,7 @@ Future<ProviderContainer> pumpApp(
   FakeAccountRepository? account,
   FakeUnlockRepository? unlock,
   FakePixRepository? pix,
+  FakePixScheduleRepository? schedules,
   FakeTopUpRepository? topUp,
   FakeStatementRepository? statement,
   FakeSecurityRepository? security,
@@ -82,6 +84,9 @@ Future<ProviderContainer> pumpApp(
           unlock ?? FakeUnlockRepository(),
         ),
         pixRepositoryProvider.overrideWithValue(pix ?? FakePixRepository()),
+        pixScheduleRepositoryProvider.overrideWithValue(
+          schedules ?? FakePixScheduleRepository(),
+        ),
         topUpRepositoryProvider.overrideWithValue(
           topUp ?? FakeTopUpRepository(),
         ),
@@ -92,7 +97,7 @@ Future<ProviderContainer> pumpApp(
           statement ?? FakeStatementRepository(),
         ),
         idempotencyKeysProvider.overrideWithValue(sequentialKeys()),
-        pixPollDelayProvider.overrideWithValue(() async {}),
+        pixPollDelayProvider.overrideWithValue((_) async {}),
         monotonicClockProvider.overrideWithValue(clock ?? FakeMonotonicClock()),
         randomProvider.overrideWithValue(Random(42)),
         themeStoreProvider.overrideWithValue(theme ?? FakeThemeStore()),

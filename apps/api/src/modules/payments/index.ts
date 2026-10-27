@@ -5,14 +5,19 @@ import type { Clock, IdGenerator, UnitOfWork } from '../../shared/application/po
 import type { PiiKeys } from '../../shared/infrastructure/aes-gcm-pii-protector.ts';
 import { RandomUuidGenerator } from '../../shared/infrastructure/system-ports.ts';
 import { ApplySpiOutcome } from './application/apply-spi-outcome.ts';
-import { AuthorizePixTransfer, SEND_EXTERNAL_PIX } from './application/authorize-pix-transfer.ts';
+import { AuthorizePixTransfer } from './application/authorize-pix-transfer.ts';
+import { SEND_EXTERNAL_PIX } from './application/process-pix.ts';
+import { CancelPixSchedule } from './application/cancel-pix-schedule.ts';
 import { CancelPixTransfer } from './application/cancel-pix-transfer.ts';
 import { CheckPendingPix } from './application/check-pending-pix.ts';
 import { CreateCpfKey } from './application/create-cpf-key.ts';
+import { CreatePixSchedule } from './application/create-pix-schedule.ts';
 import { CreatePixTransfer } from './application/create-pix-transfer.ts';
+import { GetPixSchedules } from './application/get-pix-schedules.ts';
 import { GetPixTransfer } from './application/get-pix-transfer.ts';
 import { GetReceivingKey } from './application/get-receiving-key.ts';
 import { LookupPixKey } from './application/lookup-pix-key.ts';
+import { RunDueSchedules } from './application/run-due-schedules.ts';
 import { SendExternalPix } from './application/send-external-pix.ts';
 import type { AccountsPort, IdentityPort, LedgerPort, SpiPort } from './application/ports.ts';
 import { AesGcmPixKeyProtector } from './infrastructure/aes-gcm-pix-key-protector.ts';
@@ -22,13 +27,19 @@ import { InMemoryKeyLookupQuota } from './infrastructure/in-memory-key-lookup-qu
 import { PgPaymentsRepositories } from './infrastructure/pg-payments-repositories.ts';
 
 export { HttpSpiClient } from './infrastructure/http-spi-client.ts';
+export { PgExternalPixReader } from './infrastructure/pg-external-pix-reader.ts';
 export { keyLookupRoutes } from './http/key-lookup-route.ts';
 export { spiWebhookRoutes } from './http/spi-webhook-route.ts';
 export { receivingKeyRoutes } from './http/receiving-key-route.ts';
+export { scheduleRoutes } from './http/schedule-routes.ts';
 export { transferRoutes } from './http/transfer-routes.ts';
 export type { CreateCpfKey } from './application/create-cpf-key.ts';
 export type { AuthorizePixTransfer } from './application/authorize-pix-transfer.ts';
+export type { CancelPixSchedule } from './application/cancel-pix-schedule.ts';
 export type { CancelPixTransfer } from './application/cancel-pix-transfer.ts';
+export type { CreatePixSchedule } from './application/create-pix-schedule.ts';
+export type { GetPixSchedules } from './application/get-pix-schedules.ts';
+export type { RunDueSchedules } from './application/run-due-schedules.ts';
 export type { CreatePixTransfer } from './application/create-pix-transfer.ts';
 export type { GetPixTransfer } from './application/get-pix-transfer.ts';
 export type { GetReceivingKey } from './application/get-receiving-key.ts';
@@ -54,6 +65,11 @@ export interface PaymentsModule {
   authorizePixTransfer: AuthorizePixTransfer;
   getPixTransfer: GetPixTransfer;
   cancelPixTransfer: CancelPixTransfer;
+  createPixSchedule: CreatePixSchedule;
+  getPixSchedules: GetPixSchedules;
+  cancelPixSchedule: CancelPixSchedule;
+  /** The worker of the scheduled Pix; the server runs it in a loop (D3). */
+  runDueSchedules: RunDueSchedules;
 }
 
 /**
@@ -96,9 +112,10 @@ export function createPaymentsModule(settings: {
 }): PaymentsModule {
   const repositories = new PgPaymentsRepositories();
   const protector = new AesGcmPixKeyProtector(settings.piiKeys);
-  // One quota for lookups and creations: both name the payee (PIX-07).
+  // One quota for lookups, creations and schedules: all name the payee (PIX-07).
   const quota = new InMemoryKeyLookupQuota();
   const fingerprint = new HmacRequestFingerprint(settings.piiKeys);
+  const endToEndIds = new CryptoEndToEndIds();
   const applySpiOutcome = new ApplySpiOutcome({
     unitOfWork: settings.unitOfWork,
     repositories,
@@ -163,7 +180,7 @@ export function createPaymentsModule(settings: {
       accounts: settings.accounts,
       identity: settings.identity,
       ledger: settings.ledger,
-      endToEndIds: new CryptoEndToEndIds(),
+      endToEndIds,
       outbox: settings.outbox,
       clock: settings.clock,
       ids: settings.ids,
@@ -177,6 +194,41 @@ export function createPaymentsModule(settings: {
       unitOfWork: settings.unitOfWork,
       repositories,
       accounts: settings.accounts,
+      clock: settings.clock,
+      ids: settings.ids,
+    }),
+    createPixSchedule: new CreatePixSchedule({
+      unitOfWork: settings.unitOfWork,
+      repositories,
+      protector,
+      fingerprint,
+      accounts: settings.accounts,
+      identity: settings.identity,
+      quota,
+      clock: settings.clock,
+      ids: settings.ids,
+      spi: settings.spi,
+    }),
+    getPixSchedules: new GetPixSchedules({
+      unitOfWork: settings.unitOfWork,
+      repositories,
+      accounts: settings.accounts,
+    }),
+    cancelPixSchedule: new CancelPixSchedule({
+      unitOfWork: settings.unitOfWork,
+      repositories,
+      accounts: settings.accounts,
+      clock: settings.clock,
+      ids: settings.ids,
+    }),
+    runDueSchedules: new RunDueSchedules({
+      unitOfWork: settings.unitOfWork,
+      repositories,
+      accounts: settings.accounts,
+      identity: settings.identity,
+      ledger: settings.ledger,
+      endToEndIds,
+      outbox: settings.outbox,
       clock: settings.clock,
       ids: settings.ids,
     }),

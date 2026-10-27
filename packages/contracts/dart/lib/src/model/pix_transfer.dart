@@ -60,6 +60,7 @@ class PixTransfer {
     name: r'status',
     required: true,
     includeIfNull: false,
+  unknownEnumValue: PixTransferStatusEnum.unknownDefaultOpenApi,
   )
 
 
@@ -120,6 +121,7 @@ class PixTransfer {
     name: r'failureReason',
     required: true,
     includeIfNull: true,
+  unknownEnumValue: PixTransferFailureReasonEnum.unknownDefaultOpenApi,
   )
 
 
@@ -212,7 +214,9 @@ COMPLETED(r'COMPLETED'),
 @JsonValue(r'FAILED')
 FAILED(r'FAILED'),
 @JsonValue(r'CANCELLED')
-CANCELLED(r'CANCELLED');
+CANCELLED(r'CANCELLED'),
+@JsonValue(r'unknown_default_open_api')
+unknownDefaultOpenApi(r'unknown_default_open_api');
 
 const PixTransferStatusEnum(this.value);
 
@@ -233,7 +237,9 @@ PAYEE_UNAVAILABLE(r'PAYEE_UNAVAILABLE'),
 @JsonValue(r'ACCOUNT_BLOCKED')
 ACCOUNT_BLOCKED(r'ACCOUNT_BLOCKED'),
 @JsonValue(r'PAYEE_BANK_REJECTED')
-PAYEE_BANK_REJECTED(r'PAYEE_BANK_REJECTED');
+PAYEE_BANK_REJECTED(r'PAYEE_BANK_REJECTED'),
+@JsonValue(r'unknown_default_open_api')
+unknownDefaultOpenApi(r'unknown_default_open_api');
 
 const PixTransferFailureReasonEnum(this.value);
 

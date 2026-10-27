@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { Money } from '../../../shared/domain/money.ts';
 import type { DictKey, SpiPayment, SpiPaymentStatus, SpiPort } from '../application/ports.ts';
 
 /** The header the simulator reads the participant's key from (EXT-09). */
@@ -12,6 +13,16 @@ const DictKeySchema = z.object({
 });
 
 const PaymentStatusSchema = z.object({ status: z.enum(['PENDING', 'SETTLED', 'REJECTED']) });
+
+// The settlement file is read, never trusted: whole positive cents in reais.
+const SettlementFileSchema = z.object({
+  payments: z.array(
+    z.object({
+      endToEndId: z.string().regex(/^E[0-9]{8}[0-9]{12}[A-Za-z0-9]{11}$/),
+      amount: z.object({ amount: z.int().positive(), currency: z.literal('BRL') }),
+    }),
+  ),
+});
 
 export interface HttpSpiClientOptions {
   /** SIMULATOR_URL: in production, the simulator on 127.0.0.1 (D2). */
@@ -62,6 +73,20 @@ export class HttpSpiClient implements SpiPort {
     if (response.status === 404) return null;
     if (response.status !== 200) throw new Error(`SPI answered ${String(response.status)}`);
     return PaymentStatusSchema.parse(await response.json()).status;
+  }
+
+  /**
+   * The payments the SPI settled on a day of São Paulo (`YYYY-MM-DD`), for
+   * the daily reconciliation (v1.2.0 plan, task 6).
+   */
+  async settlementFile(date: string): Promise<{ endToEndId: string; amount: Money }[]> {
+    const response = await this.#call('GET', `/settlements/${encodeURIComponent(date)}`);
+    if (response.status !== 200) throw new Error(`SPI answered ${String(response.status)}`);
+    const file = SettlementFileSchema.parse(await response.json());
+    return file.payments.map((payment) => ({
+      endToEndId: payment.endToEndId,
+      amount: Money.of(BigInt(payment.amount.amount)),
+    }));
   }
 
   #call(method: 'GET' | 'POST', path: string, json?: string): Promise<Response> {

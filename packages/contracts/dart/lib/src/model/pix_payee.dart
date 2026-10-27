@@ -61,6 +61,7 @@ class PixPayee {
     name: r'keyType',
     required: true,
     includeIfNull: false,
+  unknownEnumValue: PixPayeeKeyTypeEnum.unknownDefaultOpenApi,
   )
 
 
@@ -129,7 +130,9 @@ EMAIL(r'EMAIL'),
 @JsonValue(r'PHONE')
 PHONE(r'PHONE'),
 @JsonValue(r'RANDOM')
-RANDOM(r'RANDOM');
+RANDOM(r'RANDOM'),
+@JsonValue(r'unknown_default_open_api')
+unknownDefaultOpenApi(r'unknown_default_open_api');
 
 const PixPayeeKeyTypeEnum(this.value);
 

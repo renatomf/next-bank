@@ -126,7 +126,11 @@ PixKeyLookup _$PixKeyLookupFromJson(Map<String, dynamic> json) =>
       final val = PixKeyLookup(
         keyType: $checkedConvert(
           'keyType',
-          (v) => $enumDecode(_$PixKeyLookupKeyTypeEnumEnumMap, v),
+          (v) => $enumDecode(
+            _$PixKeyLookupKeyTypeEnumEnumMap,
+            v,
+            unknownValue: PixKeyLookupKeyTypeEnum.unknownDefaultOpenApi,
+          ),
         ),
         keyMasked: $checkedConvert('keyMasked', (v) => v as String),
         payeeName: $checkedConvert('payeeName', (v) => v as String),
@@ -158,4 +162,5 @@ const _$PixKeyLookupKeyTypeEnumEnumMap = {
   PixKeyLookupKeyTypeEnum.EMAIL: 'EMAIL',
   PixKeyLookupKeyTypeEnum.PHONE: 'PHONE',
   PixKeyLookupKeyTypeEnum.RANDOM: 'RANDOM',
+  PixKeyLookupKeyTypeEnum.unknownDefaultOpenApi: 'unknown_default_open_api',
 };

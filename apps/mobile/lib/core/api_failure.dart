@@ -102,7 +102,16 @@ enum ApiErrorCode {
 
   /// The day's top-ups would pass the daily limit; the answer says what is
   /// left.
-  topUpLimitExceeded('TopUpLimitExceeded');
+  topUpLimitExceeded('TopUpLimitExceeded'),
+
+  /// A schedule's first date is today or before (v1.2.0 plan, S7).
+  scheduleInPast('ScheduleInPast'),
+
+  /// A first date over a year ahead, or monthly outside 2 to 24 times.
+  invalidRecurrence('InvalidRecurrence'),
+
+  /// The schedule is finished and takes no more changes (S6).
+  scheduleNotActive('ScheduleNotActive');
 
   new(this.wire);
 

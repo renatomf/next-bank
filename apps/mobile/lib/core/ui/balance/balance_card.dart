@@ -23,6 +23,7 @@ class BalanceCard extends StatelessWidget {
     required this.hidden,
     required this.onToggleHidden,
     this.onStatement,
+    this.onSchedules,
     this.actions = const [],
     super.key,
   });
@@ -30,6 +31,10 @@ class BalanceCard extends StatelessWidget {
   /// Opens the statement from a line below the balance; null leaves the
   /// line out (S21 checkpoint of v1.1.0).
   final VoidCallback? onStatement;
+
+  /// Opens the scheduled Pix from the same line, at its other end (v1.2.0
+  /// plan, task 7); null leaves the link out.
+  final VoidCallback? onSchedules;
 
   /// Actions in a row below the balance, as on the statement (v1.1.0 plan,
   /// task 4.1); the Home passes none.
@@ -149,17 +154,12 @@ class BalanceCard extends StatelessWidget {
                                   label: 'Ver extrato',
                                   onPressed: onStatement,
                                 ),
-                                // Layout only for now, as the other screens
-                                // still to come: it says so when tapped.
-                                _GlassLink(
-                                  text: 'Agendamentos',
-                                  label: 'Agendamentos',
-                                  onPressed: () => showNbToast(
-                                    context,
-                                    'Em breve.',
-                                    icon: Icons.info_outline,
+                                if (onSchedules case final onSchedules?)
+                                  _GlassLink(
+                                    text: 'Agendamentos',
+                                    label: 'Agendamentos',
+                                    onPressed: onSchedules,
                                   ),
-                                ),
                               ],
                             ),
                           ],

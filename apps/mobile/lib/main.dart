@@ -34,6 +34,7 @@ import 'package:next_bank/core/theme/theme_controller.dart';
 import 'package:next_bank/features/auth/data/http_auth_repository.dart';
 import 'package:next_bank/features/auth/presentation/auth_providers.dart';
 import 'package:next_bank/features/pix/data/http_pix_repository.dart';
+import 'package:next_bank/features/pix/data/http_pix_schedule_repository.dart';
 import 'package:next_bank/features/pix/presentation/pix_providers.dart';
 import 'package:next_bank/features/security/data/http_security_repository.dart';
 import 'package:next_bank/features/security/presentation/security_providers.dart';
@@ -81,6 +82,11 @@ Future<void> main({QrScannerBuilder? scanner}) async {
           ),
           pixRepositoryProvider.overrideWith(
             (ref) => HttpPixRepository(ref.watch(apiProvider).getDefaultApi()),
+          ),
+          pixScheduleRepositoryProvider.overrideWith(
+            (ref) => HttpPixScheduleRepository(
+              ref.watch(apiProvider).getDefaultApi(),
+            ),
           ),
           topUpRepositoryProvider.overrideWith(
             (ref) =>

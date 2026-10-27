@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:next_bank/core/api_failure.dart';
+import 'package:next_bank/core/api_money.dart';
+import 'package:next_bank/features/pix/data/api_pix_key.dart';
 import 'package:next_bank/features/pix/domain/pix_repository.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/domain/receiving_key.dart';
@@ -38,8 +40,11 @@ class HttpPixRepository implements PixRepository {
         api.PixKeyLookupKeyTypeEnum.EMAIL => PixKeyType.email,
         api.PixKeyLookupKeyTypeEnum.PHONE => PixKeyType.phone,
         api.PixKeyLookupKeyTypeEnum.RANDOM => PixKeyType.random,
+        api.PixKeyLookupKeyTypeEnum.unknownDefaultOpenApi =>
+          throw const ApiUnexpected(),
       },
       keyMasked: found.keyMasked,
+      bankName: found.bank?.name,
     );
   }
 
@@ -54,19 +59,7 @@ class HttpPixRepository implements PixRepository {
       () => _api.createPixTransfer(
         idempotencyKey: idempotencyKey,
         createPixTransferRequestInput: api.CreatePixTransferRequestInput(
-          key: api.CreatePixTransferRequestInputKey(
-            type: switch (key.type) {
-              PixKeyType.cpf =>
-                api.CreatePixTransferRequestInputKeyTypeEnum.CPF,
-              PixKeyType.email =>
-                api.CreatePixTransferRequestInputKeyTypeEnum.EMAIL,
-              PixKeyType.phone =>
-                api.CreatePixTransferRequestInputKeyTypeEnum.PHONE,
-              PixKeyType.random =>
-                api.CreatePixTransferRequestInputKeyTypeEnum.RANDOM,
-            },
-            value: key.value,
-          ),
+          key: pixKeyRequestOf(key),
           amount: api.MoneyInput(
             amount: amountCents,
             currency: api.MoneyInputCurrencyEnum.BRL,
@@ -125,6 +118,8 @@ class HttpPixRepository implements PixRepository {
       api.PixTransferStatusEnum.COMPLETED => PixStatus.completed,
       api.PixTransferStatusEnum.FAILED => PixStatus.failed,
       api.PixTransferStatusEnum.CANCELLED => PixStatus.cancelled,
+      api.PixTransferStatusEnum.unknownDefaultOpenApi =>
+        throw const ApiUnexpected(),
     };
     final reason = switch (transfer.failureReason) {
       null => null,
@@ -136,16 +131,17 @@ class HttpPixRepository implements PixRepository {
         PixFailureReason.payeeUnavailable,
       api.PixTransferFailureReasonEnum.ACCOUNT_BLOCKED =>
         PixFailureReason.accountBlocked,
-      // Shown from v1.2.0 task 5; until then no Pix to another bank reaches a
-      // customer (W4).
       api.PixTransferFailureReasonEnum.PAYEE_BANK_REJECTED =>
-        throw const ApiUnexpected(),
+        PixFailureReason.payeeBankRejected,
+      // A reason a later API adds (A4): the Pix failed, unexplained.
+      api.PixTransferFailureReasonEnum.unknownDefaultOpenApi =>
+        PixFailureReason.unknown,
     };
     // A failed Pix always says why, and only a failed one does.
     if ((status == PixStatus.failed) != (reason != null)) {
       throw const ApiUnexpected();
     }
-    final cents = transfer.amount.amount;
+    final cents = reaisCentsOf(transfer.amount);
     if (cents <= 0) throw const ApiUnexpected();
     final payee = transfer.payee;
     return PixTransfer(
@@ -161,8 +157,11 @@ class HttpPixRepository implements PixRepository {
           api.PixPayeeKeyTypeEnum.EMAIL => PixKeyType.email,
           api.PixPayeeKeyTypeEnum.PHONE => PixKeyType.phone,
           api.PixPayeeKeyTypeEnum.RANDOM => PixKeyType.random,
+          api.PixPayeeKeyTypeEnum.unknownDefaultOpenApi =>
+            throw const ApiUnexpected(),
         },
         keyMasked: payee.keyMasked,
+        bankName: payee.bank?.name,
       ),
       endToEndId: transfer.endToEndId,
       failureReason: reason,
