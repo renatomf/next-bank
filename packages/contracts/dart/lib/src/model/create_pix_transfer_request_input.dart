@@ -3,7 +3,7 @@
 //
 
 // ignore_for_file: unused_element
-import 'package:nextbank_api/src/model/create_pix_transfer_request_input_key.dart';
+import 'package:nextbank_api/src/model/pix_key_request_input.dart';
 import 'package:nextbank_api/src/model/money_input.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -37,7 +37,7 @@ class CreatePixTransferRequestInput {
   )
 
 
-  final CreatePixTransferRequestInputKey key;
+  final PixKeyRequestInput key;
 
 
 
