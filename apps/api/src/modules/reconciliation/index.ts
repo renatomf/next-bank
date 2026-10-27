@@ -10,6 +10,8 @@ import type {
 import { ReconcileDay } from './application/reconcile-day.ts';
 import { PgReconciliationRepositories } from './infrastructure/pg-reconciliation-repository.ts';
 
+export { ErrorReporterAlarm } from './infrastructure/error-reporter-alarm.ts';
+
 export type { ReconcileDay } from './application/reconcile-day.ts';
 export type {
   ClearingBalance,

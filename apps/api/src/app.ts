@@ -36,10 +36,12 @@ import {
   createPaymentsOutboxHandlers,
   HttpSpiClient,
   keyLookupRoutes,
+  PgExternalPixReader,
   receivingKeyRoutes,
   spiWebhookRoutes,
   transferRoutes,
 } from './modules/payments/index.ts';
+import { createReconciliationModule, ErrorReporterAlarm } from './modules/reconciliation/index.ts';
 import { createTopUpsModule, topUpRoutes } from './modules/top-ups/index.ts';
 import { healthRoutes } from './shared/http/health.ts';
 import { registerProblemHandlers } from './shared/http/problem.ts';
@@ -58,6 +60,8 @@ declare module 'fastify' {
     outboxWorker: OutboxWorker;
     /** One round of the SPI status check (v1.2.0 plan, task 4); null while it is off. */
     spiStatusCheck: (() => Promise<number>) | null;
+    /** Reconciles the day due, if not yet (v1.2.0 plan, task 6, R3); null while it is off. */
+    reconcileDueDay: (() => Promise<unknown>) | null;
   }
 }
 
@@ -239,6 +243,24 @@ export function buildApp({
   });
   const { checkPendingPix } = payments;
   app.decorate('spiStatusCheck', checkPendingPix ? () => checkPendingPix.execute() : null);
+  // The daily reconciliation reads the SPI's settlement file: only where the
+  // Pix to other banks is on. It reaches Payments and the Ledger only through
+  // the ports it defines.
+  const reconciliation =
+    spi &&
+    createReconciliationModule({
+      unitOfWork,
+      clock,
+      ids,
+      files: { fileOf: (date) => spi.settlementFile(date) },
+      pix: new PgExternalPixReader(),
+      clearing: { of: (tx) => ledger.customerAccounts.systemBalance(tx, 'system:pix_clearing') },
+      alarm: new ErrorReporterAlarm(errorReporter),
+    });
+  app.decorate(
+    'reconcileDueDay',
+    reconciliation ? () => reconciliation.reconcileDay.reconcileDueDay() : null,
+  );
   // Top-ups reach Accounts, Identity and the Ledger only through the ports they define.
   const topUps = createTopUpsModule({
     unitOfWork,
