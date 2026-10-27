@@ -312,6 +312,23 @@ describe('CustomerLedgerAccounts', () => {
     expect(ledger.locks.at(-1)).toContain('id-1');
   });
 
+  // v1.2.0 plan, task 6: a system account's balance is the sum of its
+  // postings, never projected (database.md 5.3), for the reconciliation.
+  it('sums the postings of a system account into its balance', async () => {
+    const { accounts } = await sent();
+
+    expect(await accounts.systemBalance(tx, 'system:pix_clearing')).toEqual(Money.of(5_000n));
+    await accounts.settlePixExternal(tx, { transferId: 'pix-ext-1', amount: Money.of(5_000n) });
+    expect(await accounts.systemBalance(tx, 'system:pix_clearing')).toEqual(Money.zero());
+    expect(await accounts.systemBalance(tx, 'system:bacen_settlement')).toEqual(Money.of(5_000n));
+  });
+
+  it('has no balance for a system account that does not exist, a bug', async () => {
+    const { accounts } = setup();
+
+    await expect(accounts.systemBalance(tx, 'system:nowhere')).rejects.toThrow(/system:nowhere/);
+  });
+
   it('fails to settle or refund for an account that was never opened, a bug', async () => {
     const { accounts } = await sent();
 
