@@ -1,4 +1,5 @@
 import 'package:next_bank/core/cpf.dart';
+import 'package:next_bank/features/pix/domain/pix_key_input.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/domain/receiving_key.dart';
 
@@ -241,9 +242,16 @@ Map<String, String> _pixAccountOf(Map<String, String> fields) {
     if (!isValidCpf(key)) throw const InvalidQrCode();
     return (key, PixKeyType.cpf);
   }
-  if (key.contains('@') || _phone.hasMatch(key) || _cnpjDigits.hasMatch(key)) {
-    throw const UnsupportedPixKey();
+  // Keys of other banks (v1.2.0 plan, task 5, A2), read as the API looks
+  // them up; a phone must be Brazilian, as the DICT keeps it.
+  if (key.contains('@') || _phone.hasMatch(key)) {
+    final other = pixKeyOf(key);
+    if (other == null || other.type == PixKeyType.cpf) {
+      throw const InvalidQrCode();
+    }
+    return (other.value, other.type);
   }
+  if (_cnpjDigits.hasMatch(key)) throw const UnsupportedPixKey();
   throw const InvalidQrCode();
 }
 

@@ -434,7 +434,8 @@ void main() {
           field('00', '01'),
           field(
             '26',
-            field('00', 'br.gov.bcb.pix') + field('01', 'loja@example.test'),
+            // A CNPJ: e-mail and phone keys are taken since v1.2.0 (A2).
+            field('00', 'br.gov.bcb.pix') + field('01', '11222333000181'),
           ),
           field('52', '0000'),
           field('53', '986'),
