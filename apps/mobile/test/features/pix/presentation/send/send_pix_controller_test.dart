@@ -508,4 +508,39 @@ void main() {
       expect(repository.callsOf('lookup'), hasLength(1));
     });
   });
+
+  // v1.2.0 plan, task 7 (D11): "Agendar" takes what the Pix screen holds.
+  group('scheduling', () {
+    test('is nothing until the Pix could be sent', () {
+      final (container, _) = setUpSend();
+
+      expect(controllerOf(container).scheduleDraft(), isNull);
+    });
+
+    test(
+      'takes the key, the payee as shown, the amount and the description',
+      () async {
+        final (container, _) = setUpSend();
+        final controller = await readyDraft(container);
+
+        final draft = controller.scheduleDraft();
+
+        expect(draft, (
+          key: (type: PixKeyType.cpf, value: _cpf),
+          payeeName: 'Mariana Costa',
+          payeeDetail: 'CPF ***.456.789-** · next bank',
+          amountCents: 35000,
+          description: 'Aluguel de outubro',
+        ));
+      },
+    );
+
+    test('takes no description when none was written', () async {
+      final (container, _) = setUpSend();
+      final controller = await readyDraft(container);
+      controller.typeDescription('   ');
+
+      expect(controller.scheduleDraft()?.description, isNull);
+    });
+  });
 }
