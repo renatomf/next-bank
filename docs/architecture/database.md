@@ -326,6 +326,35 @@ O schema do simulador do Bacen e dos outros parceiros (plano `v1.2.0-pix-assincr
 - Índices: `(subject_type, subject_id, occurred_at DESC)`, `(actor_id, occurred_at DESC)`
 - Retenção: sem exclusão na V1. Particionamento mensal fica como evolução quando o volume justificar
 
+### 5.6 `reconciliation` (v1.2.0, tarefa 6; ADR 0018)
+
+A conciliação diária, num contexto e num schema próprios. Ela só lê os outros schemas, pelos módulos deles.
+
+**`runs`** (PK `run_date`, dia de São Paulo)
+- Inserir o `run` reserva o dia (`ON CONFLICT DO NOTHING`). Um `run` deixado em `RUNNING` há mais de 30 min por uma instância que morreu é retomado pela mesma PK.
+- `CHECK` de `status` (`RUNNING` ou `DONE`), e `finished_at` e as contagens existem exatamente quando `DONE`.
+- `GRANT`: `SELECT, INSERT` e `UPDATE` só de `status`, `started_at`, `finished_at` e das contagens; nunca `DELETE`.
+
+**`exceptions`** (só inclusão, R5)
+- `kind` com `CHECK` dos seis tipos.
+- `end_to_end_id` no formato do Bacen, nulo só no `CLEARING_MISMATCH`.
+- `expected_cents` e `actual_cents` (o lado do SPI e o do next bank); nunca nome nem chave.
+- **`UNIQUE NULLS NOT DISTINCT (run_date, kind, end_to_end_id)`:** refazer um dia não duplica exceção, nem a do saldo de `pix_clearing`, que não tem Pix.
+- `GRANT`: só `SELECT, INSERT` para a API.
+
+**Consultas** (`EXPLAIN ANALYZE`):
+
+| Consulta | Índice usado | Tempo |
+|---|---|---|
+| Pix externos concluídos num dia | `pix_transfers_external_completed_idx`, parcial (nova) | 0,02 ms |
+| Pix em espera antes de uma data | `pix_transfers_external_processing_idx` | 0,01 ms |
+| Soma dos Pix em espera | `pix_transfers_external_processing_idx` | 0,03 ms |
+| Pix pelos ids do arquivo | `pix_transfers_end_to_end_id_key` | 0,11 ms |
+| Saldo de `pix_clearing` pela soma das partidas | `postings_statement_idx`, que começa pela conta | 0,02 ms |
+| Reserva do dia | árbitro `runs_pkey` | 0,18 ms |
+
+O saldo de `pix_clearing` e a soma dos Pix em espera são lidos na mesma transação `REPEATABLE READ`, para um Pix que termina no meio não acusar diferença falsa.
+
 ## 6. Permissões no banco (menor privilégio)
 
 | Papel | Uso | Permissões |

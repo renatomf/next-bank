@@ -22,6 +22,7 @@ import { InMemoryKeyLookupQuota } from './infrastructure/in-memory-key-lookup-qu
 import { PgPaymentsRepositories } from './infrastructure/pg-payments-repositories.ts';
 
 export { HttpSpiClient } from './infrastructure/http-spi-client.ts';
+export { PgExternalPixReader } from './infrastructure/pg-external-pix-reader.ts';
 export { keyLookupRoutes } from './http/key-lookup-route.ts';
 export { spiWebhookRoutes } from './http/spi-webhook-route.ts';
 export { receivingKeyRoutes } from './http/receiving-key-route.ts';

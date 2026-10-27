@@ -150,4 +150,23 @@ describe('HttpSpiClient', () => {
 
     await expect(spi.status(payment().endToEndId)).rejects.toThrow(/timeout|aborted/i);
   });
+
+  // v1.2.0 plan, task 6: the day's settlement file, for the reconciliation.
+  it('reads the payments the SPI settled on a day of São Paulo', async () => {
+    const spi = await clientFor();
+    const sent = payment();
+    await spi.send(sent);
+    if (!simulator) throw new Error('no simulator running');
+    await simulator.pool.query(
+      "UPDATE simulator.payments SET status = 'SETTLED', decided_at = $2, settled_at = $2 WHERE end_to_end_id = $1",
+      [sent.endToEndId, new Date('2026-10-20T15:00:00.000Z')],
+    );
+
+    const settled = await spi.settlementFile('2026-10-20');
+
+    expect(settled).toContainEqual({ endToEndId: sent.endToEndId, amount: Money.of(5_000n) });
+    expect(await spi.settlementFile('2026-10-19')).not.toContainEqual(
+      expect.objectContaining({ endToEndId: sent.endToEndId }),
+    );
+  });
 });
