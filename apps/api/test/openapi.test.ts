@@ -81,6 +81,8 @@ describe('OpenAPI document', () => {
       'MyAccount',
       'PixKeyLookup',
       'PixKeyLookupRequestInput',
+      // The key a Pix or a schedule is sent to, named once for both (task 7).
+      'PixKeyRequestInput',
       'PixPayee',
       // The bank of a payee at another bank (v1.2.0 plan, task 3).
       'PixPayeeBank',
