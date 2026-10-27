@@ -77,15 +77,53 @@ void main() {
   });
 
   group('the key lookup', () {
-    // PIX-07: an invalid CPF never spends a lookup.
-    test('refuses an invalid CPF without asking the API', () async {
+    // PIX-07: a value no key can have never spends a lookup.
+    test('refuses a value that is no key without asking the API', () async {
       final (container, repository) = setUpSend();
       final controller = controllerOf(container)..typeKey('12345678900');
 
       await controller.lookup();
 
-      expect(stateOf(container).keyError, 'CPF inválido.');
+      expect(stateOf(container).keyError, 'Chave Pix inválida.');
       expect(repository.calls, isEmpty);
+    });
+
+    // v1.2.0 plan, task 5 (A1): keys of other banks, told by their shape.
+    for (final (name, typed, expected) in [
+      (
+        'an e-mail',
+        'Clara.Aurora@Example.com',
+        (type: PixKeyType.email, value: 'clara.aurora@example.com'),
+      ),
+      (
+        'a phone',
+        '(11) 90000-9001',
+        (type: PixKeyType.phone, value: '+5511900009001'),
+      ),
+    ]) {
+      test('looks up $name key as the API keeps it', () async {
+        final (container, repository) = setUpSend();
+        final controller = controllerOf(container)..typeKey(typed);
+
+        await controller.lookup();
+
+        expect(repository.callsOf('lookup').single.key, expected);
+      });
+    }
+
+    test('creates the Pix to the e-mail key it looked up', () async {
+      final (container, repository) = setUpSend();
+      final controller = controllerOf(container)
+        ..typeAmount('35000')
+        ..typeKey('clara.aurora@example.com');
+      await controller.lookup();
+
+      await controller.submit();
+
+      expect(repository.callsOf('create').single.key, (
+        type: PixKeyType.email,
+        value: 'clara.aurora@example.com',
+      ));
     });
 
     test('shows who holds a valid CPF key', () async {

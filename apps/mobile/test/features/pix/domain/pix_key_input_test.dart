@@ -63,6 +63,9 @@ void main() {
       ('an area code that does not exist', '(01) 90000-9001'),
       ('letters among the digits', '11 9000O-9001'),
       ('a UUID that is not v4', '019a0b6e-7c3d-7f00-8a1b-2c3d4e5f6a7b'),
+      // A mobile number has a 9 after the area code; a landline, 2 to 5.
+      ('a CPF typed wrong, which is no phone either', '12345678900'),
+      ('11 digits without the mobile 9', '11800009001'),
     ]) {
       test('refuses $name', () {
         expect(pixKeyOf(typed), isNull);
