@@ -108,7 +108,6 @@ function setup() {
   const balance: ClearingBalance = { of: () => Promise.resolve(clearing) };
   const alarms: [string, Partial<Record<string, number>>][] = [];
   const alarm: DivergenceAlarm = { raise: (date, counts) => alarms.push([date, counts]) };
-  let nextId = 0;
   const reconcile = new ReconcileDay({
     unitOfWork: new FakeUnitOfWork(),
     repositories: store,
@@ -117,7 +116,6 @@ function setup() {
     clearing: balance,
     alarm,
     clock: new FixedClock(NOW),
-    ids: { next: () => `id-${String(++nextId)}` },
   });
   return {
     store,
