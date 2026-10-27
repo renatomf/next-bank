@@ -1,6 +1,13 @@
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { DEMO_ACCOUNTS, inProcess, overHttp, seedDemoAccounts } from '../../scripts/seed-demo.ts';
+import {
+  type ApiCall,
+  DEMO_ACCOUNTS,
+  inProcess,
+  overHttp,
+  retryWhileUnavailable,
+  seedDemoAccounts,
+} from '../../scripts/seed-demo.ts';
 import { buildApp } from '../../src/app.ts';
 import { createPool } from '../../src/shared/db.ts';
 import {
@@ -115,5 +122,59 @@ describe('seedDemoAccounts', () => {
     const ana = DEMO_ACCOUNTS[0];
     if (ana === undefined) throw new Error('no demo account');
     expect((await login(ana.email, ana.password)).statusCode).toBe(200);
+  });
+});
+
+// The daily reset restores the demo branch, which drops the API's
+// connections: for a moment the host answers 502 to 504 or no answer at all,
+// and the seed must wait instead of failing the reset (2026-10-27).
+describe('retryWhileUnavailable', () => {
+  const noWait = () => Promise.resolve();
+  const request = { url: '/v1/auth/login' };
+
+  /** A call that answers [answers] in order, then 200. */
+  function scripted(answers: (number | Error)[]): { call: ApiCall; calls: () => number } {
+    let calls = 0;
+    const call: ApiCall = () => {
+      const answer = answers[calls++];
+      if (answer instanceof Error) return Promise.reject(answer);
+      return Promise.resolve({ status: answer ?? 200, body: null });
+    };
+    return { call, calls: () => calls };
+  }
+
+  it('asks again while the API is coming back, and answers what it then says', async () => {
+    const api = scripted([503, 502, new TypeError('fetch failed'), 504]);
+
+    const answer = await retryWhileUnavailable(api.call, { attempts: 10, wait: noWait })(request);
+
+    expect(answer.status).toBe(200);
+    expect(api.calls()).toBe(5);
+  });
+
+  it('passes any other answer through at once, a refusal included', async () => {
+    const api = scripted([401]);
+
+    const answer = await retryWhileUnavailable(api.call, { attempts: 10, wait: noWait })(request);
+
+    expect(answer.status).toBe(401);
+    expect(api.calls()).toBe(1);
+  });
+
+  it('gives up after the attempts, with the last answer', async () => {
+    const api = scripted([503, 503, 503]);
+
+    const answer = await retryWhileUnavailable(api.call, { attempts: 3, wait: noWait })(request);
+
+    expect(answer.status).toBe(503);
+    expect(api.calls()).toBe(3);
+  });
+
+  it('throws the last error when the API never answered', async () => {
+    const api = scripted([new TypeError('fetch failed'), new TypeError('fetch failed')]);
+
+    await expect(
+      retryWhileUnavailable(api.call, { attempts: 2, wait: noWait })(request),
+    ).rejects.toThrow('fetch failed');
   });
 });

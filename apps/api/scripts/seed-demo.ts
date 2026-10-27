@@ -81,6 +81,33 @@ export function overHttp(baseUrl: string): ApiCall {
   };
 }
 
+/** What the host answers while the API is restarting: worth asking again. */
+const UNAVAILABLE = new Set([502, 503, 504]);
+
+/**
+ * Asks again while the API is coming back: the daily reset restores the demo
+ * branch, which drops the API's connections, and for a moment the host
+ * answers 502 to 504 or nothing at all (2026-10-27). Any other answer passes
+ * through at once; after [attempts], the last answer or error stands.
+ */
+export function retryWhileUnavailable(
+  api: ApiCall,
+  options: { attempts: number; wait: () => Promise<void> },
+): ApiCall {
+  return async (request) => {
+    for (let attempt = 1; ; attempt += 1) {
+      const last = attempt === options.attempts;
+      try {
+        const answer = await api(request);
+        if (!UNAVAILABLE.has(answer.status) || last) return answer;
+      } catch (error) {
+        if (last) throw error;
+      }
+      await options.wait();
+    }
+  };
+}
+
 /** Creates or keeps each account, its PIN and its demo mark. */
 export async function seedDemoAccounts(
   api: ApiCall,
@@ -142,7 +169,12 @@ if (import.meta.main) {
   const publishedUrl = process.env.SEED_API_URL;
   try {
     if (publishedUrl) {
-      await seedDemoAccounts(overHttp(publishedUrl), migrator);
+      // Up to 3 minutes for the API to come back after the reset.
+      const api = retryWhileUnavailable(overHttp(publishedUrl), {
+        attempts: 36,
+        wait: () => new Promise((resolve) => setTimeout(resolve, 5_000)),
+      });
+      await seedDemoAccounts(api, migrator);
     } else {
       const config = loadConfig(process.env);
       const app = buildApp({
