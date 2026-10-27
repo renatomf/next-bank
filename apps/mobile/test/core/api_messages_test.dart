@@ -79,6 +79,13 @@ void main() {
         ApiErrorCode.topUpLimitExceeded,
         'Valor acima do limite de recargas do dia.',
       ),
+      // The scheduled Pix (v1.2.0 plan, task 7; S6, S7).
+      (ApiErrorCode.scheduleInPast, 'Escolha uma data a partir de amanhã.'),
+      (
+        ApiErrorCode.invalidRecurrence,
+        'Escolha uma data em até um ano e de 2 a 24 repetições.',
+      ),
+      (ApiErrorCode.scheduleNotActive, 'Este agendamento já terminou.'),
     ]) {
       test(code.wire, () {
         expect(messageFor(ApiRejected(code)), message);
