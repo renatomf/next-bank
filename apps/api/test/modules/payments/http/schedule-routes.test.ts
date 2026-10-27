@@ -218,12 +218,8 @@ describe('GET /v1/pix/schedules', () => {
     const theirs = await list(payee.accessToken);
 
     expect(mine.statusCode).toBe(200);
-    expect(mine.json()).toEqual({
-      items: [(await detail(payer.accessToken, created.id)).json()].map(
-        ({ occurrences: _, ...item }: { occurrences: unknown }) => item,
-      ),
-      nextCursor: null,
-    });
+    // As scheduled: the body of POST is the whole schedule.
+    expect(mine.json()).toEqual({ items: [created], nextCursor: null });
     expect(theirs.json()).toEqual({ items: [], nextCursor: null });
   });
 

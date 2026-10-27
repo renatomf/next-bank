@@ -46,6 +46,17 @@ spi.keys.set(AURORA_EMAIL, AURORA_KEY);
 const outbox = new FailingOnceOutbox();
 const pix = pgPixStack(pool, clock, { spi, outbox });
 
+/**
+ * Rounds of the worker until nothing due is left: other tests' schedules
+ * may fill a round of 20 before this test's is reached.
+ */
+async function runUntilDone(): Promise<void> {
+  for (let round = 0; round < 100; round += 1) {
+    if ((await pix.runDueSchedules()) === 0) return;
+  }
+  throw new Error('The worker never ran out of schedules due');
+}
+
 async function balanceOf(customer: Customer): Promise<bigint> {
   const { rows } = await pool.query<{ balance: string }>(
     `SELECT l.posted_balance AS balance FROM ledger.ledger_accounts l
@@ -83,7 +94,7 @@ describe('scheduled Pix on Postgres', () => {
     const before = await balanceOf(ana);
 
     clock.current = noonOf(FIRST_DATE);
-    await pix.runDueSchedules();
+    await runUntilDone();
 
     expect(await balanceOf(ana)).toBe(before - 15_000n);
     const detail = await pix.schedules.get({ userId: ana.userId, scheduleId: scheduled.id });
@@ -108,7 +119,7 @@ describe('scheduled Pix on Postgres', () => {
     });
 
     clock.current = noonOf(FIRST_DATE);
-    await pix.runDueSchedules();
+    await runUntilDone();
 
     const [occurrence] = await occurrencesOf(scheduled.id);
     const { rows } = await pool.query<{ status: string; payee_key_ciphertext: Buffer | null }>(
@@ -129,7 +140,7 @@ describe('scheduled Pix on Postgres', () => {
     const before = await balanceOf(ana);
 
     clock.current = noonOf(FIRST_DATE);
-    await Promise.all([pix.runDueSchedules(), pix.runDueSchedules(), pix.runDueSchedules()]);
+    await Promise.all([runUntilDone(), runUntilDone(), runUntilDone()]);
 
     expect(await occurrencesOf(scheduled.id)).toHaveLength(1);
     expect(await balanceOf(ana)).toBe(before - 3_000n);
@@ -145,11 +156,11 @@ describe('scheduled Pix on Postgres', () => {
     outbox.failNext = true;
 
     clock.current = noonOf(FIRST_DATE);
-    await expect(pix.runDueSchedules()).rejects.toThrow('Connection terminated');
+    await expect(runUntilDone()).rejects.toThrow('Connection terminated');
     expect(await occurrencesOf(scheduled.id)).toEqual([]);
     expect(await balanceOf(ana)).toBe(before);
 
-    await pix.runDueSchedules();
+    await runUntilDone();
     expect(await occurrencesOf(scheduled.id)).toHaveLength(1);
     expect(await balanceOf(ana)).toBe(before - 4_000n);
   });
@@ -160,7 +171,7 @@ describe('scheduled Pix on Postgres', () => {
     const [ana, bia] = await twoCustomers();
     const scheduled = await pix.schedule(ana, cpfKey(bia), 5_000, { firstDate: FIRST_DATE });
     clock.current = noonOf(FIRST_DATE);
-    await pix.runDueSchedules();
+    await runUntilDone();
     const before = await balanceOf(ana);
     // The schedule as if the worker had not moved it on.
     await pool.query(
@@ -170,7 +181,7 @@ describe('scheduled Pix on Postgres', () => {
       [scheduled.id, FIRST_DATE],
     );
 
-    await expect(pix.runDueSchedules()).rejects.toThrow(/schedule_id/);
+    await expect(runUntilDone()).rejects.toThrow(/schedule_id/);
 
     expect(await occurrencesOf(scheduled.id)).toHaveLength(1);
     expect(await balanceOf(ana)).toBe(before);
@@ -211,7 +222,7 @@ describe('scheduled Pix on Postgres', () => {
     }
 
     clock.current = noonOf(FIRST_DATE);
-    await pix.runDueSchedules();
+    await runUntilDone();
     expect(await occurrencesOf(scheduled.id)).toEqual([]);
   });
 
@@ -227,7 +238,7 @@ describe('scheduled Pix on Postgres', () => {
         scheduled.id,
       ]);
 
-      await pix.runDueSchedules();
+      await runUntilDone();
       expect(await occurrencesOf(scheduled.id)).toEqual([]);
       await canceller.query('ROLLBACK');
     } finally {
@@ -235,7 +246,7 @@ describe('scheduled Pix on Postgres', () => {
     }
 
     await pix.cancelSchedule(ana, scheduled.id);
-    await pix.runDueSchedules();
+    await runUntilDone();
     expect(await occurrencesOf(scheduled.id)).toEqual([]);
   });
 
@@ -274,7 +285,7 @@ describe('scheduled Pix on Postgres', () => {
     clock.current = noonOf(FIRST_DATE);
     const byHand = await pix.create(ana, bia, 100_000);
 
-    const [manual] = await Promise.all([pix.authorize(ana, byHand), pix.runDueSchedules()]);
+    const [manual] = await Promise.all([pix.authorize(ana, byHand), runUntilDone()]);
 
     const detail = await pix.schedules.get({ userId: ana.userId, scheduleId: scheduled.id });
     const outcomes = [manual.status, detail.occurrences[0]?.status].sort();

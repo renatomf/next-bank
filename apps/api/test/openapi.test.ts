@@ -68,6 +68,8 @@ describe('OpenAPI document', () => {
       'ChangePinRequestInput',
       'ClientIp',
       'CreatePinRequestInput',
+      // The scheduled Pix (v1.2.0 plan, task 7).
+      'CreatePixScheduleRequestInput',
       'CreatePixTransferRequestInput',
       'CreateTopUpRequestInput',
       'Health',
@@ -83,10 +85,16 @@ describe('OpenAPI document', () => {
       // The bank of a payee at another bank (v1.2.0 plan, task 3).
       'PixPayeeBank',
       'PixReceivingKey',
+      'PixSchedule',
+      'PixScheduleDetail',
+      'PixScheduleOccurrence',
+      'PixSchedulePage',
       'PixTransfer',
       'Problem',
       'RefreshRequestInput',
       'RegisterRequestInput',
+      'ScheduleRecurrence',
+      'ScheduleRecurrenceRequestInput',
       'SessionList',
       'Statement',
       'StatementCounterparty',
@@ -307,11 +315,37 @@ describe('OpenAPI document', () => {
         .sort(),
     ).toEqual([
       '/v1/me/sessions/{sessionId}/revoke',
+      '/v1/pix/schedules/{scheduleId}',
+      '/v1/pix/schedules/{scheduleId}/cancel',
       '/v1/pix/transfers/{transferId}',
       '/v1/pix/transfers/{transferId}/authorize',
       '/v1/pix/transfers/{transferId}/cancel',
       '/v1/top-ups/{topUpId}',
     ]);
+  });
+
+  // D10, PIX-05: scheduling authorizes money to move, so it is idempotent and asks for the PIN.
+  it('describes scheduling a Pix as a protected, idempotent command', () => {
+    const operation = document.paths['/v1/pix/schedules']?.post;
+
+    expect(operation?.operationId).toBe('createPixSchedule');
+    expect(operation?.security).toEqual([{ bearerAuth: [] }]);
+    expect(operation?.parameters).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ in: 'header', name: 'idempotency-key', required: true }),
+      ]),
+    );
+    expect(operation?.responses['201']?.content?.['application/json']?.schema).toEqual({
+      $ref: '#/components/schemas/PixSchedule',
+    });
+  });
+
+  // READ-04: the page size is the server's; only the cursor comes from the client.
+  it('lists the scheduled Pix by an opaque cursor only', () => {
+    const operation = document.paths['/v1/pix/schedules']?.get;
+
+    expect(operation?.operationId).toBe('listPixSchedules');
+    expect(operation?.parameters?.map((parameter) => parameter.name)).toEqual(['cursor']);
   });
 
   // TOP-02, PIX-05: a top-up moves money, so it is idempotent and asks for the PIN.
