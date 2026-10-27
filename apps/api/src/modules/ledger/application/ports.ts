@@ -48,6 +48,8 @@ export interface LedgerRepository {
    */
   lockForPosting(ids: readonly string[]): Promise<LedgerAccountState[]>;
   insertAccount(account: LedgerAccountState): Promise<void>;
+  /** Credits minus debits of one account: a system account's balance (database.md 5.3). */
+  postedSum(ledgerAccountId: string): Promise<Money>;
   /** The entry and its postings. */
   insertEntry(entry: JournalEntryState): Promise<void>;
   updateBalance(account: LedgerAccountState): Promise<void>;
