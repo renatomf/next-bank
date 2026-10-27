@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  dayToReconcile,
   findDivergences,
   type ReconciliationInput,
+  saoPauloDay,
 } from '../../../../src/modules/reconciliation/domain/reconciliation.ts';
 import { Money } from '../../../../src/shared/domain/money.ts';
 
@@ -101,5 +103,34 @@ describe('findDivergences', () => {
       'STALE_PROCESSING',
       'CLEARING_MISMATCH',
     ]);
+  });
+});
+
+// The day is São Paulo's (UTC−3, no daylight saving since 2019), as the SPI's
+// settlement file counts it.
+describe('saoPauloDay', () => {
+  it('starts and ends at midnight in São Paulo, and knows the day before', () => {
+    expect(saoPauloDay('2026-10-26')).toEqual({
+      start: new Date('2026-10-26T03:00:00.000Z'),
+      end: new Date('2026-10-27T03:00:00.000Z'),
+      dayBefore: '2026-10-25',
+    });
+  });
+
+  it('crosses months and years', () => {
+    expect(saoPauloDay('2026-01-01').dayBefore).toBe('2025-12-31');
+    expect(saoPauloDay('2028-03-01').dayBefore).toBe('2028-02-29');
+  });
+});
+
+// R3: at 03:00 in São Paulo, the day before is reconciled.
+describe('dayToReconcile', () => {
+  it('is the day before, from 03:00 in São Paulo', () => {
+    expect(dayToReconcile(new Date('2026-10-27T06:00:00.000Z'))).toBe('2026-10-26');
+    expect(dayToReconcile(new Date('2026-10-28T02:59:59.000Z'))).toBe('2026-10-26');
+  });
+
+  it('before 03:00 in São Paulo, is still the day before that, while yesterday may settle', () => {
+    expect(dayToReconcile(new Date('2026-10-27T05:59:59.000Z'))).toBe('2026-10-25');
   });
 });
