@@ -11,15 +11,10 @@ import {
   PixKeyNotFound,
   TooManyKeyLookups,
 } from '../domain/errors.ts';
-import { type PixKeyType, pixKeyValue } from '../domain/pix-key.ts';
+import type { PixKeyType } from '../domain/pix-key.ts';
 import { Idempotency, type RequestFingerprint } from '../../../shared/application/idempotency.ts';
-import { type PixPayee, PixTransfer } from '../domain/pix-transfer.ts';
-import {
-  findPayeeElsewhere,
-  findPayeeHere,
-  type PayeeElsewhere,
-  type PayeeHere,
-} from './find-payee.ts';
+import { PixTransfer } from '../domain/pix-transfer.ts';
+import { normalized, resolvePayee } from './find-payee.ts';
 import type { PixTransferView } from './pix-transfer-view.ts';
 import { viewOf } from './pix-transfer-view.ts';
 import type {
@@ -30,7 +25,6 @@ import type {
   PaymentsRepositories,
   PaymentsRepositoriesFactory,
   PixKeyValueProtector,
-  SealedKeyValue,
   SpiPort,
 } from './ports.ts';
 
@@ -105,21 +99,15 @@ export class CreatePixTransfer {
     input: CreatePixTransferInput,
     now: Date,
   ): Promise<{ status: number; body: PixTransferView }> {
-    const { accounts, ledger, quota, protector, ids } = this.#deps;
+    const { accounts, ledger, quota, ids } = this.#deps;
     const payer = await accounts.findByHolder(tx, input.userId);
     if (payer === null) throw new Error(`Customer ${input.userId} has no account`);
     if (payer.status !== 'ACTIVE') throw new AccountBlocked();
 
-    const value = normalized(input.key.type, input.key.value);
-    const key = value === null ? null : { type: input.key.type, value };
     // The DICT is asked here, after the idempotency claim, so a repeated
-    // request gets the stored answer without asking again (ADR 0007); the
-    // client's short deadline bounds how long the transaction waits for it.
-    const payee =
-      key &&
-      ((await findPayeeHere(this.#deps, tx, repositories, key)) ??
-        (await findPayeeElsewhere(this.#deps.spi, key)));
-    if (key === null || payee === null) {
+    // request gets the stored answer without asking again (ADR 0007).
+    const resolved = await resolvePayee(this.#deps, tx, repositories, input.key);
+    if (resolved === null) {
       quota.charge(input.userId, MISS_PENALTY, now);
       throw new PixKeyNotFound();
     }
@@ -128,7 +116,7 @@ export class CreatePixTransfer {
     const transfer = PixTransfer.create({
       id: ids.next(),
       payerAccountId: payer.id,
-      payee: snapshotOf(payee, input.key.type),
+      payee: resolved.payee,
       amount,
       description: input.description,
       now,
@@ -137,10 +125,7 @@ export class CreatePixTransfer {
     if (balance === null) throw new Error(`Account ${payer.id} has no ledger account`);
     if (balance.isLessThan(amount)) throw new InsufficientFunds();
 
-    await repositories.pixTransfers.insert(
-      transfer.state,
-      'bank' in payee ? sealed(protector.protect(key.type, key.value)) : undefined,
-    );
+    await repositories.pixTransfers.insert(transfer.state, resolved.payeeKey);
     await repositories.audit.record({
       id: ids.next(),
       occurredAt: now,
@@ -157,27 +142,5 @@ export class CreatePixTransfer {
       },
     });
     return { status: 201, body: viewOf(transfer.state) };
-  }
-}
-
-/** Who receives, as the Pix keeps it: a next bank account or another bank (P3). */
-function snapshotOf(payee: PayeeHere | PayeeElsewhere, keyType: PixKeyType): PixPayee {
-  const shown = { name: payee.name, documentMasked: payee.documentMasked, keyType };
-  return 'bank' in payee
-    ? { ...shown, accountId: null, bank: payee.bank, keyMasked: payee.keyMasked }
-    : { ...shown, accountId: payee.accountId, keyMasked: payee.keyMasked };
-}
-
-/** Only what decrypting needs: the blind index finds keys of next bank, not this one. */
-function sealed({ ciphertext, keyVersion }: SealedKeyValue): SealedKeyValue {
-  return { ciphertext, keyVersion };
-}
-
-/** The key as stored, or null when no key can have this value. */
-function normalized(type: PixKeyType, raw: string): string | null {
-  try {
-    return pixKeyValue(type, raw);
-  } catch {
-    return null;
   }
 }

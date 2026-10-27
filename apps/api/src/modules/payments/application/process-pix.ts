@@ -2,13 +2,7 @@ import type { Transaction } from '../../../shared/application/ports.ts';
 import type { Outbox } from '../../../shared/application/outbox.ts';
 import { DomainError } from '../../../shared/domain/domain-error.ts';
 import type { PixFailureReason, PixTransfer } from '../domain/pix-transfer.ts';
-import type {
-  AccountsPort,
-  EndToEndIds,
-  IdentityPort,
-  LedgerPort,
-  PayeeAccount,
-} from './ports.ts';
+import type { AccountsPort, EndToEndIds, IdentityPort, LedgerPort, PayeeAccount } from './ports.ts';
 
 /** The message that sends a Pix to another bank to the SPI. */
 export const SEND_EXTERNAL_PIX = 'pix.send-external';
