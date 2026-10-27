@@ -68,6 +68,7 @@ class StatementItem {
     name: r'kind',
     required: true,
     includeIfNull: false,
+  unknownEnumValue: StatementItemKindEnum.unknownDefaultOpenApi,
   )
 
 
@@ -80,6 +81,7 @@ class StatementItem {
     name: r'direction',
     required: true,
     includeIfNull: false,
+  unknownEnumValue: StatementItemDirectionEnum.unknownDefaultOpenApi,
   )
 
 
@@ -180,7 +182,9 @@ PIX_REFUNDED(r'PIX_REFUNDED'),
 @JsonValue(r'DEMO_FUNDING')
 DEMO_FUNDING(r'DEMO_FUNDING'),
 @JsonValue(r'TOP_UP')
-TOP_UP(r'TOP_UP');
+TOP_UP(r'TOP_UP'),
+@JsonValue(r'unknown_default_open_api')
+unknownDefaultOpenApi(r'unknown_default_open_api');
 
 const StatementItemKindEnum(this.value);
 
@@ -195,7 +199,9 @@ enum StatementItemDirectionEnum {
 @JsonValue(r'IN')
 IN(r'IN'),
 @JsonValue(r'OUT')
-OUT(r'OUT');
+OUT(r'OUT'),
+@JsonValue(r'unknown_default_open_api')
+unknownDefaultOpenApi(r'unknown_default_open_api');
 
 const StatementItemDirectionEnum(this.value);
 

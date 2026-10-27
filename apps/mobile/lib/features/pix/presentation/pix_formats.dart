@@ -19,8 +19,10 @@ String nameInitials(String name) {
   return (first + last).toUpperCase();
 }
 
-/// The payee's document as the server masked it; the app never sees more.
-String payeeDetail(PixPayee payee) => 'CPF ${payee.documentMasked} · next bank';
+/// The payee's document as the server masked it, and its bank: next bank,
+/// or the other bank the DICT named (v1.2.0 plan, D12).
+String payeeDetail(PixPayee payee) =>
+    'CPF ${payee.documentMasked} · ${payee.bankName ?? 'next bank'}';
 
 /// The kind of transfer and key, e.g. "Pix · Chave CPF".
 String pixType(PixKeyType keyType) => switch (keyType) {

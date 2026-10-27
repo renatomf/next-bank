@@ -61,7 +61,7 @@ void main() {
       '100',
     );
     final keyField = find.descendant(
-      of: find.widgetWithText(NbTextField, 'Chave CPF'),
+      of: find.widgetWithText(NbTextField, 'Chave Pix'),
       matching: find.byType(TextField),
     );
     await tester.enterText(keyField, brunoCpf);

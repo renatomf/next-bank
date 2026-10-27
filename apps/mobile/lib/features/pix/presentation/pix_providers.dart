@@ -18,10 +18,10 @@ final FutureProvider<PixTransfer> Function(String) pixTransferProvider =
       retry: (_, _) => null,
     );
 
-/// The pause between two reads of a Pix still processing; tests skip it.
-final Provider<Future<void> Function()> pixPollDelayProvider = Provider(
-  (ref) =>
-      () => Future<void>.delayed(const Duration(seconds: 1)),
+/// Waits as long as given between two reads of a Pix still processing;
+/// tests skip the wait and record it.
+final Provider<Future<void> Function(Duration)> pixPollDelayProvider = Provider(
+  (ref) => Future<void>.delayed,
 );
 
 /// The name a QR Code to receive carries: the signed-in customer's, from the

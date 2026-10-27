@@ -25,6 +25,7 @@ final class PixPayee {
     required this.documentMasked,
     required this.keyType,
     required this.keyMasked,
+    this.bankName,
   });
 
   /// Full name, so the payer can tell who receives (week 5 plan, D6).
@@ -38,6 +39,10 @@ final class PixPayee {
 
   /// The key masked by the server.
   final String keyMasked;
+
+  /// The other bank, as the DICT names it; null for a payee at next bank
+  /// (v1.2.0 plan, D12).
+  final String? bankName;
 }
 
 /// Where a Pix is in its life (domain-model.md, section 4).
@@ -71,6 +76,12 @@ enum PixFailureReason {
 
   /// The payer's account cannot send money.
   accountBlocked,
+
+  /// The payee's bank refused it; the money came back (v1.2.0 plan, W1).
+  payeeBankRejected,
+
+  /// A reason a later version of the API adds: the Pix failed, unexplained.
+  unknown,
 }
 
 /// A Pix as the server recorded it. The app shows it, never computes it.

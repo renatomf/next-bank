@@ -207,8 +207,8 @@ final Provider<GoRouter> routerProvider = Provider((ref) {
       GoRoute(
         path: AppRoutes.pix,
         builder: (context, state) => SendPixScreen(
-          // The CPF from the Home's Pix box rides as extra, never in the URL.
-          initialCpf: state.extra is String ? state.extra! as String : null,
+          // The key from the Home's Pix box rides as extra, never in the URL.
+          initialKey: state.extra is String ? state.extra! as String : null,
           onBack: () => _back(context),
           onReceive: () => context.push(AppRoutes.pixReceive),
           onReview: (id) => context.push(AppRoutes.pixReview(id)),

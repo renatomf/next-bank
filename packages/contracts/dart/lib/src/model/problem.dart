@@ -41,6 +41,7 @@ class Problem {
     name: r'type',
     required: true,
     includeIfNull: false,
+  unknownEnumValue: ProblemTypeEnum.unknownDefaultOpenApi,
   )
 
 
@@ -159,7 +160,9 @@ class Problem {
 
 enum ProblemTypeEnum {
 @JsonValue(r'about:blank')
-aboutColonBlank(r'about:blank');
+aboutColonBlank(r'about:blank'),
+@JsonValue(r'unknown_default_open_api')
+unknownDefaultOpenApi(r'unknown_default_open_api');
 
 const ProblemTypeEnum(this.value);
 

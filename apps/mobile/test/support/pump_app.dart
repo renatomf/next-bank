@@ -92,7 +92,7 @@ Future<ProviderContainer> pumpApp(
           statement ?? FakeStatementRepository(),
         ),
         idempotencyKeysProvider.overrideWithValue(sequentialKeys()),
-        pixPollDelayProvider.overrideWithValue(() async {}),
+        pixPollDelayProvider.overrideWithValue((_) async {}),
         monotonicClockProvider.overrideWithValue(clock ?? FakeMonotonicClock()),
         randomProvider.overrideWithValue(Random(42)),
         themeStoreProvider.overrideWithValue(theme ?? FakeThemeStore()),

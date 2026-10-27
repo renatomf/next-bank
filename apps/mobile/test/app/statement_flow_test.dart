@@ -263,6 +263,60 @@ void main() {
       expect(find.text('Detalhe'), findsOneWidget);
     });
 
+    // v1.2.0 plan, task 5 (W5): the money of a Pix another bank refused,
+    // linking to the Pix that failed, which has no receipt.
+    testWidgets('shows a refund, linking to the Pix it gives back', (
+      tester,
+    ) async {
+      final pix = FakePixRepository()
+        ..fetchAnswer = () async => pixTransfer(
+          status: PixStatus.failed,
+          failureReason: PixFailureReason.payeeBankRejected,
+        );
+      await openHome(
+        tester,
+        FakeStatementRepository({
+          null: () async => pageOf([
+            movement(
+              'refund',
+              kind: StatementKind.pixRefunded,
+              transferId: 'pix-1',
+            ),
+          ]),
+        }),
+        pix: pix,
+      );
+      await openStatement(tester);
+      await tester.tap(statementRows().first);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Pix devolvido'), findsOneWidget);
+      expect(find.text('Entrada'), findsOneWidget);
+      expect(find.text('CPF ***.456.789-**'), findsOneWidget);
+      expect(find.bySemanticsLabel('Ver comprovante'), findsNothing);
+
+      await tester.tap(find.bySemanticsLabel('Ver o Pix'));
+      await tester.pumpAndSettle();
+      expect(pix.callsOf('fetch').single.transferId, 'pix-1');
+    });
+
+    // A4: a kind a later API adds is a movement, with nothing to open.
+    testWidgets('shows a kind it does not know as a movement', (tester) async {
+      await openHome(
+        tester,
+        FakeStatementRepository({
+          null: () async =>
+              pageOf([movement('other', kind: StatementKind.other)]),
+        }),
+      );
+      await openStatement(tester);
+      await tester.tap(statementRows().first);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Movimentação'), findsOneWidget);
+      expect(find.bySemanticsLabel('Ver comprovante'), findsNothing);
+    });
+
     // domain-model.md 10: Extrato → Detalhe → Comprovante, and back (T4-3).
     testWidgets('opens the receipt of a Pix sent and comes back to it', (
       tester,

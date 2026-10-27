@@ -86,9 +86,10 @@ void main() {
       type: PixKeyType.cpf,
       value: _cpf,
     ));
-    // The holder the server returns (PIX-11), and the key shown in its field.
+    // The holder the server returns (PIX-11), and the key in its field as
+    // typed: one field takes every kind of key (v1.2.0 plan, task 5, A1).
     expect(find.text('Mariana Costa'), findsOneWidget);
-    expect(find.text('529.982.247-25'), findsOneWidget);
+    expect(find.text(_cpf), findsOneWidget);
   });
 
   // Each with its own title: "Transferir Pix" opens Transferir.
