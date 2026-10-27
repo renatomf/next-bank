@@ -99,9 +99,7 @@ describe('PixSchedule.create', () => {
 
   it('accepts up to 365 days ahead, and refuses one day more (S7)', () => {
     expect(() => PixSchedule.create(input({ firstDate: '2027-10-27' }))).not.toThrow();
-    expect(() => PixSchedule.create(input({ firstDate: '2027-10-28' }))).toThrow(
-      InvalidRecurrence,
-    );
+    expect(() => PixSchedule.create(input({ firstDate: '2027-10-28' }))).toThrow(InvalidRecurrence);
   });
 
   // S2: from 2 to 24 times; once is ONCE.
