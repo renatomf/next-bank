@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:next_bank/core/api_failure.dart';
 import 'package:next_bank/core/api_money.dart';
+import 'package:next_bank/features/pix/data/api_pix_key.dart';
 import 'package:next_bank/features/pix/domain/pix_repository.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/domain/receiving_key.dart';
@@ -58,19 +59,7 @@ class HttpPixRepository implements PixRepository {
       () => _api.createPixTransfer(
         idempotencyKey: idempotencyKey,
         createPixTransferRequestInput: api.CreatePixTransferRequestInput(
-          key: api.CreatePixTransferRequestInputKey(
-            type: switch (key.type) {
-              PixKeyType.cpf =>
-                api.CreatePixTransferRequestInputKeyTypeEnum.CPF,
-              PixKeyType.email =>
-                api.CreatePixTransferRequestInputKeyTypeEnum.EMAIL,
-              PixKeyType.phone =>
-                api.CreatePixTransferRequestInputKeyTypeEnum.PHONE,
-              PixKeyType.random =>
-                api.CreatePixTransferRequestInputKeyTypeEnum.RANDOM,
-            },
-            value: key.value,
-          ),
+          key: pixKeyRequestOf(key),
           amount: api.MoneyInput(
             amount: amountCents,
             currency: api.MoneyInputCurrencyEnum.BRL,
