@@ -85,10 +85,12 @@ void main() {
     });
 
     // S21 checkpoint of task 5b: "Agendamentos" on the same glass, at the
-    // other end, so no gap is left beside "Extrato"; layout only for now.
-    testWidgets('puts the schedules on the other end, saying they come', (
+    // other end, so no gap is left beside "Extrato"; since v1.2.0 (task 7,
+    // D11) it opens the scheduled Pix.
+    testWidgets('puts the schedules on the other end, and opens them', (
       tester,
     ) async {
+      var opened = 0;
       await tester.pumpWidget(
         host(
           BalanceCard(
@@ -97,6 +99,7 @@ void main() {
             hidden: false,
             onToggleHidden: () {},
             onStatement: () {},
+            onSchedules: () => opened++,
           ),
         ),
       );
@@ -119,7 +122,7 @@ void main() {
       await tester.tap(find.bySemanticsLabel('Agendamentos'));
       await tester.pump();
 
-      expect(find.text('Em breve.'), findsOneWidget);
+      expect(opened, 1);
     });
 
     testWidgets('leaves the statement line out without where it goes', (
