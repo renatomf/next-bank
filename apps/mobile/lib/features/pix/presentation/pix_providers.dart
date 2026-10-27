@@ -1,11 +1,19 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:next_bank/core/profile/profile_controller.dart';
 import 'package:next_bank/features/pix/domain/pix_repository.dart';
+import 'package:next_bank/features/pix/domain/pix_schedule_repository.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 
 /// Where Pix are sent. Bound to `HttpPixRepository` by the composition root
 /// (`main.dart`); tests override it with a fake.
 final Provider<PixRepository> pixRepositoryProvider = Provider(
+  (ref) => throw UnimplementedError('Bound in main.dart'),
+);
+
+/// Where Pix are scheduled (v1.2.0 plan, task 7). Bound to
+/// `HttpPixScheduleRepository` by the composition root (`main.dart`); tests
+/// override it with a fake.
+final Provider<PixScheduleRepository> pixScheduleRepositoryProvider = Provider(
   (ref) => throw UnimplementedError('Bound in main.dart'),
 );
 

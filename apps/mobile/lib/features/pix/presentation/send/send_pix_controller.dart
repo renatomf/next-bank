@@ -6,6 +6,8 @@ import 'package:next_bank/features/pix/domain/br_code.dart';
 import 'package:next_bank/features/pix/domain/pix_amount.dart';
 import 'package:next_bank/features/pix/domain/pix_key_input.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
+import 'package:next_bank/features/pix/presentation/new_schedule/new_schedule_controller.dart';
+import 'package:next_bank/features/pix/presentation/pix_formats.dart';
 import 'package:next_bank/features/pix/presentation/pix_providers.dart';
 
 /// Longest description a Pix takes (domain-model.md 3.4).
@@ -203,6 +205,23 @@ class SendPixController extends Notifier<SendPixState> {
         keyError: () => unchanged() ? messageFor(failure) : null,
       );
     }
+  }
+
+  /// What "Agendar" takes (v1.2.0 plan, task 7): the key, the payee as
+  /// shown, the amount and the description; null until the Pix could be
+  /// sent.
+  ScheduleDraft? scheduleDraft() {
+    final payee = state.payee;
+    final key = state.qrKey ?? pixKeyOf(state.key);
+    if (!state.canSubmit || payee == null || key == null) return null;
+    final description = state.description.trim();
+    return (
+      key: key,
+      payeeName: payee.name,
+      payeeDetail: payeeDetail(payee),
+      amountCents: state.amountCents,
+      description: description.isEmpty ? null : description,
+    );
   }
 
   /// Creates the Pix and returns its id for the review; null when it cannot
