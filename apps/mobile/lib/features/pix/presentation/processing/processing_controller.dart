@@ -49,4 +49,8 @@ String failureText(PixFailureReason reason) => switch (reason) {
     'A conta de destino não pode receber Pix agora.',
   PixFailureReason.accountBlocked =>
     'Sua conta está bloqueada. Fale com o suporte.',
+  PixFailureReason.payeeBankRejected =>
+    'O banco do recebedor recusou o Pix. O valor voltou para sua conta.',
+  // A reason a later API adds (A4): no explanation is better than a wrong one.
+  PixFailureReason.unknown => '',
 };

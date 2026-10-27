@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:next_bank/core/api_failure.dart';
+import 'package:next_bank/core/api_money.dart';
 import 'package:next_bank/features/pix/domain/pix_repository.dart';
 import 'package:next_bank/features/pix/domain/pix_transfer.dart';
 import 'package:next_bank/features/pix/domain/receiving_key.dart';
@@ -42,6 +43,7 @@ class HttpPixRepository implements PixRepository {
           throw const ApiUnexpected(),
       },
       keyMasked: found.keyMasked,
+      bankName: found.bank?.name,
     );
   }
 
@@ -140,18 +142,17 @@ class HttpPixRepository implements PixRepository {
         PixFailureReason.payeeUnavailable,
       api.PixTransferFailureReasonEnum.ACCOUNT_BLOCKED =>
         PixFailureReason.accountBlocked,
-      // Shown from v1.2.0 task 5; until then no Pix to another bank reaches a
-      // customer (W4).
       api.PixTransferFailureReasonEnum.PAYEE_BANK_REJECTED =>
-        throw const ApiUnexpected(),
+        PixFailureReason.payeeBankRejected,
+      // A reason a later API adds (A4): the Pix failed, unexplained.
       api.PixTransferFailureReasonEnum.unknownDefaultOpenApi =>
-        throw const ApiUnexpected(),
+        PixFailureReason.unknown,
     };
     // A failed Pix always says why, and only a failed one does.
     if ((status == PixStatus.failed) != (reason != null)) {
       throw const ApiUnexpected();
     }
-    final cents = transfer.amount.amount;
+    final cents = reaisCentsOf(transfer.amount);
     if (cents <= 0) throw const ApiUnexpected();
     final payee = transfer.payee;
     return PixTransfer(
@@ -171,6 +172,7 @@ class HttpPixRepository implements PixRepository {
             throw const ApiUnexpected(),
         },
         keyMasked: payee.keyMasked,
+        bankName: payee.bank?.name,
       ),
       endToEndId: transfer.endToEndId,
       failureReason: reason,

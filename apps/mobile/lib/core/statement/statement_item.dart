@@ -11,6 +11,12 @@ enum StatementKind {
 
   /// A phone top-up the customer paid (v1.1.0 plan, task 5).
   topUp,
+
+  /// The money of a Pix another bank refused, back (v1.2.0 plan, task 5).
+  pixRefunded,
+
+  /// A kind a later version of the API adds: shown, never a broken page.
+  other,
 }
 
 /// Whether the money came in or went out.

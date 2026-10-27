@@ -86,10 +86,13 @@ class StatementDetailScreen extends ConsumerWidget {
   }
 }
 
-/// What the masked document is: a top-up's is the number recharged, and a
-/// Pix's the other customer's CPF (F-38).
+/// What the masked document is: a top-up's is the number recharged, a Pix's
+/// the other customer's CPF (F-38), and a refund's the payee at the other
+/// bank, which the statement does not name.
 String _detailOf(StatementKind kind, String? document) => switch (kind) {
   StatementKind.topUp => document == null ? 'Celular' : 'Celular $document',
+  StatementKind.pixRefunded ||
+  StatementKind.other => document == null ? '' : 'CPF $document',
   _ => document == null ? 'next bank' : 'CPF $document · next bank',
 };
 
@@ -144,7 +147,10 @@ class _Detail extends ConsumerWidget {
         if (transferId != null) ...[
           const SizedBox(height: NbSpace.xl),
           SecondaryButton(
-            label: 'Ver comprovante',
+            // A refund's Pix was never paid: it has no receipt, only its end.
+            label: item.kind == StatementKind.pixRefunded
+                ? 'Ver o Pix'
+                : 'Ver comprovante',
             onPressed: () => onReceipt(transferId),
           ),
         ],
