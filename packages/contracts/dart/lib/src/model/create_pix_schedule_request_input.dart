@@ -80,7 +80,7 @@ class CreatePixScheduleRequestInput {
   )
 
 
-  final DateTime firstDate;
+  final String firstDate;
 
 
 

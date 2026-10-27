@@ -118,7 +118,7 @@ class PixScheduleDetail {
   )
 
 
-  final DateTime firstDate;
+  final String firstDate;
 
 
 
@@ -142,7 +142,7 @@ class PixScheduleDetail {
   )
 
 
-  final DateTime? nextOccurrenceDate;
+  final String? nextOccurrenceDate;
 
 
 
@@ -154,7 +154,7 @@ class PixScheduleDetail {
   )
 
 
-  final DateTime lastOccurrenceDate;
+  final String lastOccurrenceDate;
 
 
 

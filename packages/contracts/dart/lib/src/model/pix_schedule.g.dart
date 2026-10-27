@@ -17,13 +17,13 @@ abstract class _$PixScheduleCWProxy {
 
   PixSchedule payee(PixSchedulePayee payee);
 
-  PixSchedule firstDate(DateTime firstDate);
+  PixSchedule firstDate(String firstDate);
 
   PixSchedule recurrence(ScheduleRecurrence recurrence);
 
-  PixSchedule nextOccurrenceDate(DateTime? nextOccurrenceDate);
+  PixSchedule nextOccurrenceDate(String? nextOccurrenceDate);
 
-  PixSchedule lastOccurrenceDate(DateTime lastOccurrenceDate);
+  PixSchedule lastOccurrenceDate(String lastOccurrenceDate);
 
   PixSchedule createdAt(DateTime createdAt);
 
@@ -43,10 +43,10 @@ abstract class _$PixScheduleCWProxy {
     Money amount,
     String? description,
     PixSchedulePayee payee,
-    DateTime firstDate,
+    String firstDate,
     ScheduleRecurrence recurrence,
-    DateTime? nextOccurrenceDate,
-    DateTime lastOccurrenceDate,
+    String? nextOccurrenceDate,
+    String lastOccurrenceDate,
     DateTime createdAt,
     DateTime? cancelledAt,
   });
@@ -76,18 +76,18 @@ class _$PixScheduleCWProxyImpl implements _$PixScheduleCWProxy {
   PixSchedule payee(PixSchedulePayee payee) => call(payee: payee);
 
   @override
-  PixSchedule firstDate(DateTime firstDate) => call(firstDate: firstDate);
+  PixSchedule firstDate(String firstDate) => call(firstDate: firstDate);
 
   @override
   PixSchedule recurrence(ScheduleRecurrence recurrence) =>
       call(recurrence: recurrence);
 
   @override
-  PixSchedule nextOccurrenceDate(DateTime? nextOccurrenceDate) =>
+  PixSchedule nextOccurrenceDate(String? nextOccurrenceDate) =>
       call(nextOccurrenceDate: nextOccurrenceDate);
 
   @override
-  PixSchedule lastOccurrenceDate(DateTime lastOccurrenceDate) =>
+  PixSchedule lastOccurrenceDate(String lastOccurrenceDate) =>
       call(lastOccurrenceDate: lastOccurrenceDate);
 
   @override
@@ -143,7 +143,7 @@ class _$PixScheduleCWProxyImpl implements _$PixScheduleCWProxy {
       firstDate: firstDate == const $CopyWithPlaceholder() || firstDate == null
           ? _value.firstDate
           // ignore: cast_nullable_to_non_nullable
-          : firstDate as DateTime,
+          : firstDate as String,
       recurrence:
           recurrence == const $CopyWithPlaceholder() || recurrence == null
           ? _value.recurrence
@@ -152,13 +152,13 @@ class _$PixScheduleCWProxyImpl implements _$PixScheduleCWProxy {
       nextOccurrenceDate: nextOccurrenceDate == const $CopyWithPlaceholder()
           ? _value.nextOccurrenceDate
           // ignore: cast_nullable_to_non_nullable
-          : nextOccurrenceDate as DateTime?,
+          : nextOccurrenceDate as String?,
       lastOccurrenceDate:
           lastOccurrenceDate == const $CopyWithPlaceholder() ||
               lastOccurrenceDate == null
           ? _value.lastOccurrenceDate
           // ignore: cast_nullable_to_non_nullable
-          : lastOccurrenceDate as DateTime,
+          : lastOccurrenceDate as String,
       createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
@@ -182,65 +182,67 @@ extension $PixScheduleCopyWith on PixSchedule {
 // JsonSerializableGenerator
 // **************************************************************************
 
-PixSchedule _$PixScheduleFromJson(
-  Map<String, dynamic> json,
-) => $checkedCreate('PixSchedule', json, ($checkedConvert) {
-  $checkKeys(
-    json,
-    requiredKeys: const [
-      'id',
-      'status',
-      'amount',
-      'description',
-      'payee',
-      'firstDate',
-      'recurrence',
-      'nextOccurrenceDate',
-      'lastOccurrenceDate',
-      'createdAt',
-      'cancelledAt',
-    ],
-  );
-  final val = PixSchedule(
-    id: $checkedConvert('id', (v) => v as String),
-    status: $checkedConvert(
-      'status',
-      (v) => $enumDecode(
-        _$PixScheduleStatusEnumEnumMap,
-        v,
-        unknownValue: PixScheduleStatusEnum.unknownDefaultOpenApi,
-      ),
-    ),
-    amount: $checkedConvert(
-      'amount',
-      (v) => Money.fromJson(v as Map<String, dynamic>),
-    ),
-    description: $checkedConvert('description', (v) => v as String?),
-    payee: $checkedConvert(
-      'payee',
-      (v) => PixSchedulePayee.fromJson(v as Map<String, dynamic>),
-    ),
-    firstDate: $checkedConvert('firstDate', (v) => DateTime.parse(v as String)),
-    recurrence: $checkedConvert(
-      'recurrence',
-      (v) => ScheduleRecurrence.fromJson(v as Map<String, dynamic>),
-    ),
-    nextOccurrenceDate: $checkedConvert(
-      'nextOccurrenceDate',
-      (v) => v == null ? null : DateTime.parse(v as String),
-    ),
-    lastOccurrenceDate: $checkedConvert(
-      'lastOccurrenceDate',
-      (v) => DateTime.parse(v as String),
-    ),
-    createdAt: $checkedConvert('createdAt', (v) => DateTime.parse(v as String)),
-    cancelledAt: $checkedConvert(
-      'cancelledAt',
-      (v) => v == null ? null : DateTime.parse(v as String),
-    ),
-  );
-  return val;
-});
+PixSchedule _$PixScheduleFromJson(Map<String, dynamic> json) =>
+    $checkedCreate('PixSchedule', json, ($checkedConvert) {
+      $checkKeys(
+        json,
+        requiredKeys: const [
+          'id',
+          'status',
+          'amount',
+          'description',
+          'payee',
+          'firstDate',
+          'recurrence',
+          'nextOccurrenceDate',
+          'lastOccurrenceDate',
+          'createdAt',
+          'cancelledAt',
+        ],
+      );
+      final val = PixSchedule(
+        id: $checkedConvert('id', (v) => v as String),
+        status: $checkedConvert(
+          'status',
+          (v) => $enumDecode(
+            _$PixScheduleStatusEnumEnumMap,
+            v,
+            unknownValue: PixScheduleStatusEnum.unknownDefaultOpenApi,
+          ),
+        ),
+        amount: $checkedConvert(
+          'amount',
+          (v) => Money.fromJson(v as Map<String, dynamic>),
+        ),
+        description: $checkedConvert('description', (v) => v as String?),
+        payee: $checkedConvert(
+          'payee',
+          (v) => PixSchedulePayee.fromJson(v as Map<String, dynamic>),
+        ),
+        firstDate: $checkedConvert('firstDate', (v) => v as String),
+        recurrence: $checkedConvert(
+          'recurrence',
+          (v) => ScheduleRecurrence.fromJson(v as Map<String, dynamic>),
+        ),
+        nextOccurrenceDate: $checkedConvert(
+          'nextOccurrenceDate',
+          (v) => v as String?,
+        ),
+        lastOccurrenceDate: $checkedConvert(
+          'lastOccurrenceDate',
+          (v) => v as String,
+        ),
+        createdAt: $checkedConvert(
+          'createdAt',
+          (v) => DateTime.parse(v as String),
+        ),
+        cancelledAt: $checkedConvert(
+          'cancelledAt',
+          (v) => v == null ? null : DateTime.parse(v as String),
+        ),
+      );
+      return val;
+    });
 
 Map<String, dynamic> _$PixScheduleToJson(PixSchedule instance) =>
     <String, dynamic>{
@@ -249,10 +251,10 @@ Map<String, dynamic> _$PixScheduleToJson(PixSchedule instance) =>
       'amount': instance.amount.toJson(),
       'description': instance.description,
       'payee': instance.payee.toJson(),
-      'firstDate': instance.firstDate.toIso8601String(),
+      'firstDate': instance.firstDate,
       'recurrence': instance.recurrence.toJson(),
-      'nextOccurrenceDate': instance.nextOccurrenceDate?.toIso8601String(),
-      'lastOccurrenceDate': instance.lastOccurrenceDate.toIso8601String(),
+      'nextOccurrenceDate': instance.nextOccurrenceDate,
+      'lastOccurrenceDate': instance.lastOccurrenceDate,
       'createdAt': instance.createdAt.toIso8601String(),
       'cancelledAt': instance.cancelledAt?.toIso8601String(),
     };

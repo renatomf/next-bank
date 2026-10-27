@@ -13,7 +13,7 @@ abstract class _$CreatePixScheduleRequestInputCWProxy {
 
   CreatePixScheduleRequestInput description(String? description);
 
-  CreatePixScheduleRequestInput firstDate(DateTime firstDate);
+  CreatePixScheduleRequestInput firstDate(String firstDate);
 
   CreatePixScheduleRequestInput recurrence(
     ScheduleRecurrenceRequestInput recurrence,
@@ -33,7 +33,7 @@ abstract class _$CreatePixScheduleRequestInputCWProxy {
     PixKeyRequestInput key,
     MoneyInput amount,
     String? description,
-    DateTime firstDate,
+    String firstDate,
     ScheduleRecurrenceRequestInput recurrence,
     String pin,
   });
@@ -59,7 +59,7 @@ class _$CreatePixScheduleRequestInputCWProxyImpl
       call(description: description);
 
   @override
-  CreatePixScheduleRequestInput firstDate(DateTime firstDate) =>
+  CreatePixScheduleRequestInput firstDate(String firstDate) =>
       call(firstDate: firstDate);
 
   @override
@@ -103,7 +103,7 @@ class _$CreatePixScheduleRequestInputCWProxyImpl
       firstDate: firstDate == const $CopyWithPlaceholder() || firstDate == null
           ? _value.firstDate
           // ignore: cast_nullable_to_non_nullable
-          : firstDate as DateTime,
+          : firstDate as String,
       recurrence:
           recurrence == const $CopyWithPlaceholder() || recurrence == null
           ? _value.recurrence
@@ -147,7 +147,7 @@ CreatePixScheduleRequestInput _$CreatePixScheduleRequestInputFromJson(
       (v) => MoneyInput.fromJson(v as Map<String, dynamic>),
     ),
     description: $checkedConvert('description', (v) => v as String?),
-    firstDate: $checkedConvert('firstDate', (v) => DateTime.parse(v as String)),
+    firstDate: $checkedConvert('firstDate', (v) => v as String),
     recurrence: $checkedConvert(
       'recurrence',
       (v) => ScheduleRecurrenceRequestInput.fromJson(v as Map<String, dynamic>),
@@ -163,7 +163,7 @@ Map<String, dynamic> _$CreatePixScheduleRequestInputToJson(
   'key': instance.key.toJson(),
   'amount': instance.amount.toJson(),
   'description': ?instance.description,
-  'firstDate': instance.firstDate.toIso8601String(),
+  'firstDate': instance.firstDate,
   'recurrence': instance.recurrence.toJson(),
   'pin': instance.pin,
 };

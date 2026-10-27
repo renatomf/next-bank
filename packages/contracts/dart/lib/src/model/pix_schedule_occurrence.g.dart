@@ -9,7 +9,7 @@ part of 'pix_schedule_occurrence.dart';
 abstract class _$PixScheduleOccurrenceCWProxy {
   PixScheduleOccurrence sequence(int sequence);
 
-  PixScheduleOccurrence date(DateTime date);
+  PixScheduleOccurrence date(String date);
 
   PixScheduleOccurrence transferId(String transferId);
 
@@ -29,7 +29,7 @@ abstract class _$PixScheduleOccurrenceCWProxy {
   /// ```
   PixScheduleOccurrence call({
     int sequence,
-    DateTime date,
+    String date,
     String transferId,
     PixScheduleOccurrenceStatusEnum status,
     PixScheduleOccurrenceFailureReasonEnum? failureReason,
@@ -48,7 +48,7 @@ class _$PixScheduleOccurrenceCWProxyImpl
   PixScheduleOccurrence sequence(int sequence) => call(sequence: sequence);
 
   @override
-  PixScheduleOccurrence date(DateTime date) => call(date: date);
+  PixScheduleOccurrence date(String date) => call(date: date);
 
   @override
   PixScheduleOccurrence transferId(String transferId) =>
@@ -87,7 +87,7 @@ class _$PixScheduleOccurrenceCWProxyImpl
       date: date == const $CopyWithPlaceholder() || date == null
           ? _value.date
           // ignore: cast_nullable_to_non_nullable
-          : date as DateTime,
+          : date as String,
       transferId:
           transferId == const $CopyWithPlaceholder() || transferId == null
           ? _value.transferId
@@ -132,7 +132,7 @@ PixScheduleOccurrence _$PixScheduleOccurrenceFromJson(
   );
   final val = PixScheduleOccurrence(
     sequence: $checkedConvert('sequence', (v) => (v as num).toInt()),
-    date: $checkedConvert('date', (v) => DateTime.parse(v as String)),
+    date: $checkedConvert('date', (v) => v as String),
     transferId: $checkedConvert('transferId', (v) => v as String),
     status: $checkedConvert(
       'status',
@@ -159,7 +159,7 @@ Map<String, dynamic> _$PixScheduleOccurrenceToJson(
   PixScheduleOccurrence instance,
 ) => <String, dynamic>{
   'sequence': instance.sequence,
-  'date': instance.date.toIso8601String(),
+  'date': instance.date,
   'transferId': instance.transferId,
   'status': _$PixScheduleOccurrenceStatusEnumEnumMap[instance.status]!,
   'failureReason':

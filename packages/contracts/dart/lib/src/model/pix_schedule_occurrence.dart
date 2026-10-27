@@ -53,7 +53,7 @@ class PixScheduleOccurrence {
   )
 
 
-  final DateTime date;
+  final String date;
 
 
 
