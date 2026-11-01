@@ -8,6 +8,7 @@ import {
 } from '@opentelemetry/api';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { contextOf } from '../infrastructure/tracing.ts';
+import { isPartnerRoute } from './partner-routes.ts';
 
 /**
  * A span per request (v1.2.0 plan, task 8), named by the route's template,
@@ -63,9 +64,4 @@ export function registerRequestTracing(app: FastifyInstance): void {
     }
     done();
   });
-}
-
-/** The routes a partner calls, which may continue the partner's trace. */
-function isPartnerRoute(route: string): boolean {
-  return route === '/v1/spi/webhooks' || route.startsWith('/simulator/');
 }

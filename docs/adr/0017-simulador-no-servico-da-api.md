@@ -29,7 +29,7 @@ A v1.2.0 leva o Pix para outros bancos (fictícios) por um simulador do Bacen: o
 - ➕ A API trata o simulador como parceiro: timeout, falha injetada e chave do participante são exercitados de verdade, inclusive em produção
 - ➕ Trocar o simulador por um parceiro real é trocar a URL e a chave, sem mudar o código da API
 - ➖ O simulador divide a CPU e a memória da instância gratuita com a API e o worker do outbox
-- ➖ O rate limit global da API (100 por minuto por IP) também vale para as chamadas internas, que saem todas do `127.0.0.1`. Basta para a demo, mas o teste de caos (tarefa 9) vai precisar de outro limite para elas
+- ➖ O rate limit global da API (100 por minuto por IP) também vale para as chamadas internas, que saem todas do `127.0.0.1`. Basta para a demo, mas o teste de caos (tarefa 9) vai precisar de outro limite para elas. **Resolvido na tarefa 9 (F-44):** as chamadas às rotas de parceiro vindas de uma conexão local e sem `X-Forwarded-For` ficam fora do limite global; as de fora continuam limitadas
 - ➖ Uma queda do processo derruba a API e o simulador juntos, o que um banco real nunca teria; na demo, a consulta de status e a conciliação (tarefas 4 e 6) cobrem o que ficar pela metade
 - ➖ O banco ganha um terceiro papel e mais um pool de conexões no mesmo plano gratuito
 

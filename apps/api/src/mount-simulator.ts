@@ -19,6 +19,10 @@ export interface MountedSimulatorOptions {
   webhookUrl: string;
   /** SIMULATOR_FAULTS, a JSON fault profile (D5, P4); none when unset. */
   faults?: string;
+  /** Repeats the faults of a run (v1.2.0 plan, task 9, C3); drawn at each boot by default. */
+  faultSeed?: number;
+  /** The SPI's time, the system's by default; the chaos test moves it with the API's (C4). */
+  clock?: () => Date;
 }
 
 /** The mounted simulator's own work, which the server runs in a loop. */
@@ -45,8 +49,10 @@ export async function mountSimulator(
   app.addHook('onClose', async () => {
     await pool.end();
   });
-  // A fresh seed each boot: the faults of a run are not meant to repeat here.
-  const faults = new Faults(parseFaultProfile(options.faults), seededRandom(randomInt(2 ** 32)));
+  // A fresh seed each boot: the faults of a run are not meant to repeat here,
+  // unless a test asks to.
+  const seed = options.faultSeed ?? randomInt(2 ** 32);
+  const faults = new Faults(parseFaultProfile(options.faults), seededRandom(seed));
   await app.register(
     async (scope) => {
       scope.addHook('onRoute', (route) => {
@@ -63,7 +69,7 @@ export async function mountSimulator(
   const dispatcher = new WebhookDispatcher({
     pool,
     faults,
-    clock: () => new Date(),
+    clock: options.clock ?? (() => new Date()),
     webhook: { url: options.webhookUrl, secret: options.webhookSecret },
     send: async (url, body, headers) => {
       try {
