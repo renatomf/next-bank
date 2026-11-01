@@ -1,4 +1,5 @@
-import { afterAll, beforeEach, describe, expect, it } from 'vitest';
+import { randomUUID } from 'node:crypto';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { createPool } from '../../../../src/shared/db.ts';
 import { inRootSpan } from '../../../../src/shared/infrastructure/tracing.ts';
 import { testDatabaseUrl } from '../../../helpers.ts';
@@ -11,8 +12,9 @@ import { type Customer, pgPixStack } from './pg-pix-stack.ts';
 // transaction of its own under the round of the worker, named by its
 // schedule; one to another bank goes on through the outbox as any Pix does
 // (from there to the SPI and the webhook, the trace of the Pix to another
-// bank shows it). Other tests' schedules share the database, so each test
-// looks at the spans of its own schedules only.
+// bank shows it). Other tests' schedules share the database, some of them
+// due and unpayable (a schema test's, with no payer account), so each test
+// runs rounds until its own schedules are paid and looks at their spans only.
 const { spans, traceOf } = recordSpans();
 const pool = createPool(testDatabaseUrl());
 const clock = new FixedClock(new Date());
@@ -23,7 +25,28 @@ const FIRST_DATE = '2026-11-12';
 beforeEach(() => {
   clock.current = noonOf('2026-11-03');
 });
+// As the schema test leaves one, in CI: due, active, and with no payer account.
+const unpayable = randomUUID();
+beforeAll(async () => {
+  await pool.query(
+    `INSERT INTO payments.pix_schedules
+       (id, payer_account_id, payee_account_id, payee_key_type, payee_key_masked, payee_name,
+        payee_document_masked, amount, currency, first_date, frequency, times, status,
+        next_sequence, next_occurrence_date, version, created_at, updated_at)
+     VALUES ($1, $2, $3, 'CPF', '***.842.917-**', 'Marina Costa', '***.842.917-**', 15000,
+             'BRL', '2026-11-05', 'ONCE', 1, 'ACTIVE', 1, '2026-11-05', 0, now(), now())`,
+    [unpayable, randomUUID(), randomUUID()],
+  );
+});
+// Cancelled after, so it never stands in the way of the next test file.
 afterAll(async () => {
+  await pool.query(
+    `UPDATE payments.pix_schedules
+     SET status = 'CANCELLED', next_sequence = NULL, next_occurrence_date = NULL,
+         cancelled_at = now(), updated_at = now()
+     WHERE id = $1`,
+    [unpayable],
+  );
   await pool.end();
 });
 
@@ -31,12 +54,17 @@ const spi = new FakeSpi();
 spi.keys.set(AURORA_EMAIL, AURORA_KEY);
 const pix = pgPixStack(pool, clock, { spi });
 
-/** Rounds of the worker, each in its span as the server runs it, until nothing is due. */
-async function runRoundsUntilDone(): Promise<void> {
+/**
+ * Rounds of the worker, each in its span as the server runs it, until the
+ * occurrences of [scheduleIds] ran. A round that fails on another test's
+ * schedule still pays the rest, and the next round goes on.
+ */
+async function runRoundsUntilPaid(...scheduleIds: string[]): Promise<void> {
   for (let round = 0; round < 100; round += 1) {
-    if ((await inRootSpan('scheduled Pix', () => pix.runDueSchedules())) === 0) return;
+    await inRootSpan('scheduled Pix', () => pix.runDueSchedules()).catch(() => undefined);
+    if (scheduleIds.every((id) => occurrenceOf(id) !== undefined)) return;
   }
-  throw new Error('The worker never ran out of schedules due');
+  throw new Error('The worker never paid the schedules');
 }
 
 /** The transaction that paid an occurrence of [scheduleId]. */
@@ -57,7 +85,7 @@ describe('the trace of the scheduled Pix', () => {
     });
 
     clock.current = noonOf(FIRST_DATE);
-    await runRoundsUntilDone();
+    await runRoundsUntilPaid(scheduled.id);
     await pix.deliverOutbox();
 
     const occurrence = occurrenceOf(scheduled.id);
@@ -79,7 +107,7 @@ describe('the trace of the scheduled Pix', () => {
     const scheduled = await pix.schedule(ana, cpfKey(bia), 3_000, { firstDate: FIRST_DATE });
 
     clock.current = noonOf(FIRST_DATE);
-    await runRoundsUntilDone();
+    await runRoundsUntilPaid(scheduled.id);
 
     expect(occurrenceOf(scheduled.id)?.attributes).toMatchObject({
       'nextbank.schedule.id': scheduled.id,
@@ -97,7 +125,7 @@ describe('the trace of the scheduled Pix', () => {
     }
 
     clock.current = noonOf(FIRST_DATE);
-    await runRoundsUntilDone();
+    await runRoundsUntilPaid(scheduled.id);
 
     expect(occurrenceOf(scheduled.id)?.attributes).toMatchObject({
       'nextbank.pix.status': 'FAILED',
@@ -110,7 +138,7 @@ describe('the trace of the scheduled Pix', () => {
     const second = await pix.schedule(bia, cpfKey(ana), 1_000, { firstDate: FIRST_DATE });
 
     clock.current = noonOf(FIRST_DATE);
-    await runRoundsUntilDone();
+    await runRoundsUntilPaid(first.id, second.id);
 
     const [one, other] = [occurrenceOf(first.id), occurrenceOf(second.id)];
     expect(one?.spanContext().spanId).not.toBe(other?.spanContext().spanId);
