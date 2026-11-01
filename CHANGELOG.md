@@ -6,6 +6,37 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não publicado]
 
+## [1.2.0] — 2026-11-01
+
+Pix assíncrono: o Pix sai do next bank para outros bancos, fictícios, por um simulador do Bacen que falha de propósito, e o dinheiro nunca some, nunca duplica e sempre termina num estado final correto. O mesmo executor em segundo plano paga os Pix agendados (plano `v1.2.0-pix-assincrono.md`).
+
+### Adicionado
+- **Pix para outros bancos** (#172, #181, #182):
+  - três bancos fictícios (Aurora, Horizonte e Raiz), com chaves de clientes fictícios, num simulador do SPI e do DICT do próprio projeto (#169);
+  - a revisão mostra o banco e o documento mascarado do recebedor;
+  - o app acompanha o Pix "Processando" até o comprovante, e um Pix recusado pelo banco do recebedor volta para a conta, com o estorno no extrato.
+- **Pix agendado e recorrente** (#184): numa data, ou todo mês de 2 a 24 vezes, autorizado com o PIN uma vez só; a lista, o detalhe com cada ocorrência e o cancelamento. "Agendamentos" na Home deixa de ser "Em breve".
+- **Conciliação diária** (#183): todo dia, às 03:00 de São Paulo, o next bank confere o dia anterior contra o arquivo de liquidação do SPI, e cada divergência vira uma exceção para a equipe resolver no backoffice da `v1.3.0` (ADR 0018).
+- **Trace de ponta a ponta** (#187): da autorização ao webhook, num Jaeger local, só com ids, estados e o molde de cada rota; em produção, nada é exportado (ADR 0019).
+- **Teste de caos** (#189): mil Pix externos sob 30% de falhas injetadas, uma hora sem o SPI e um dia de divergências injetadas, num job obrigatório do CI.
+
+### Alterado
+- **Entrega garantida** (#170): o débito do Pix e a mensagem para o SPI são gravados juntos (outbox), e a resposta do SPI é aplicada uma vez só (inbox), por webhook ou por consulta de status (ADR 0016).
+- **Simulador no serviço da API** (#169, #172): o simulador roda dentro do serviço gratuito da API, sob `/simulator`, com papel próprio no banco (ADR 0017).
+- **App tolerante:** um estado ou tipo novo vindo da API não quebra a tela (#182).
+- **E2E:** o fluxo crítico paga também um banco fictício, com o simulador montado como em produção (#190, F-45).
+
+### Segurança
+- **Webhook assinado:** a resposta do SPI só é aceita com HMAC-SHA256 e carimbo de tempo, comparados em tempo constante (EXT-01).
+- **Simulador fechado:** toda rota dele exige a chave do participante, e a API só a manda para o `127.0.0.1` ou por HTTPS (EXT-09).
+- **Nunca estornar às cegas:** sem a recusa confirmada, o Pix espera a consulta de status e a conciliação (EXT-03, EXT-08).
+- **Dados pessoais:** a chave Pix consultada no DICT não vai para os logs nem para o Sentry (F-40, F-42), e o trace não leva nome, documento, chave nem valor (EXT-07, F-43).
+- **Rate limit:** as chamadas de dentro do serviço (a API e o simulador montado) não dividem mais o contador de um cliente, e as de fora continuam limitadas (F-44).
+- **Dependências:** `minimatch` 11.0.3, pelo GHSA-g3hv-75wg-m249 (#188), além das atualizações do Dependabot. As versões major do `go_router` e do `sentry_flutter` ficam para depois, com o motivo registrado (#185).
+
+### Corrigido
+- O seed da demo, logo depois do reset diário, às vezes encontrava a API ainda subindo e falhava; agora espera ela voltar (#186).
+
 ## [1.1.0] — 2026-10-21
 
 Produtos do dia a dia: o visitante já tem o que usar na primeira abertura, sempre com dinheiro, pessoas e empresas fictícios e sem nenhum provedor real (plano `v1.1.0-produtos-do-dia-a-dia.md`).

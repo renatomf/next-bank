@@ -6,7 +6,7 @@
 
 Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat model) · ➖ não se aplica
 
-**Conferido item a item em 2026-10-21, antes da `v1.1.0`** (a conferência anterior, de 2026-10-13, foi antes da `v1.0.0`). A evidência de cada item (teste, gate do CI ou verificação) está na matriz `controles-de-seguranca.md`.
+**Conferido item a item em 2026-11-01, antes da `v1.2.0`** (as anteriores, de 2026-10-21 e 2026-10-13, foram antes da `v1.1.0` e da `v1.0.0`). A evidência de cada item (teste, gate do CI ou verificação) está na matriz `controles-de-seguranca.md`.
 
 ## OWASP ASVS — API (nível 2)
 
@@ -16,6 +16,7 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 | Threat model mantido e revisado a cada feature | ✅ | 1+ |
 | Controles de segurança centralizados (auth, autorização, validação) e não espalhados | ✅ | 2 |
 | Fronteiras entre módulos verificadas automaticamente | ✅ | 2 |
+| O parceiro simulado isolado: só HTTP e webhook assinado, papel próprio no banco, sem ler os schemas da API (EXT-09, ADR 0017) | ✅ | v1.2.0 |
 
 ### Autenticação
 | Item | Status | Sem. |
@@ -68,6 +69,7 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 | Logs estruturados sem dados sensíveis (API-04, API-10) | ✅ | 2 |
 | Eventos de segurança auditados (login, falhas, PIN, sessões, Pix) (PIX-09) | ✅ | 3–5 |
 | Auditoria imutável (API-05) | ✅ | 4 |
+| Trace de ponta a ponta sem dado pessoal: atributos por lista de permitidos, só os spans da API e do simulador, `traceparent` de fora só de parceiro; nada exportado em produção (EXT-07, EXT-10) | ✅ | v1.2.0 (tarefa 8) |
 
 ### Proteção de dados
 | Item | Status | Sem. |
@@ -90,12 +92,24 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 | Proteção contra automação abusiva (rate limits) (AUTH-09, PIX-07) | ✅ | 3, 5 |
 | Operações idempotentes e resistentes a concorrência (PIX-02, PIX-03); a recarga com o saldo e o limite do dia sob requisições simultâneas (TOP-02) | ✅ | 5, v1.1.0 |
 | Limite diário da recarga somado no dia de São Paulo, com o relógio do servidor (TOP-02) | ✅ | v1.1.0 (tarefa 5) |
+| Pix agendado: PIN ao agendar, cada ocorrência paga uma vez só e nunca depois de cancelada (EXT-05, EXT-06) | ✅ | v1.2.0 (tarefa 7) |
 
 ### API e serviços web
 | Item | Status | Sem. |
 |---|---|---|
 | CORS negado por padrão (o app mobile não precisa) | ✅ | 2 |
 | Documentação OpenAPI sem dados reais | ✅ | 2 |
+
+### Integrações com parceiros (v1.2.0)
+| Item | Status | Sem. |
+|---|---|---|
+| Webhook autenticado por HMAC com carimbo de tempo, comparado em tempo constante (EXT-01) | ✅ | v1.2.0 (tarefa 4) |
+| Webhook repetido ou fora de ordem aplicado uma vez (inbox, estado final) (EXT-02) | ✅ | v1.2.0 (tarefa 4) |
+| Timeout não reenvia às cegas: consulta de status pelo id de ponta a ponta (EXT-03) | ✅ | v1.2.0 (tarefas 3 e 4) |
+| Entrega com novas tentativas e limite; estorno só com a recusa confirmada (EXT-08, D6) | ✅ | v1.2.0 (tarefas 2 a 4) |
+| Conciliação diária contra o arquivo do parceiro; toda divergência vira exceção (EXT-04) | ✅ | v1.2.0 (tarefa 6) |
+| Chamada ao parceiro com chave própria, só para o `127.0.0.1` ou por HTTPS (EXT-09) | ✅ | v1.2.0 (tarefa 3) |
+| Teste de caos: falhas injetadas não duplicam nem perdem dinheiro (job obrigatório no CI) | ✅ | v1.2.0 (tarefa 9) |
 
 ### Configuração e cadeia de suprimentos
 | Item | Status | Sem. |
@@ -124,7 +138,7 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 | | Proteção de telas sensíveis contra captura: o app inteiro no release (MOB-14) | ✅ | v1.1.0 (tarefa 7) |
 | | Opção de ocultar saldo (MOB-05) | ✅ | 4 |
 | **CODE** | Dependências atualizadas e verificadas (API-09) | ✅ | 2 |
-| | Validação de dados vindos da API antes do uso | ✅ | 2, 4, 6 |
+| | Validação de dados vindos da API antes do uso; estado ou tipo desconhecido tolerado sem quebrar a tela | ✅ | 2, 4, 6, v1.2.0 (tarefa 5) |
 | **RESILIENCE** | Build de release ofuscado (MOB-04) | ✅ | 8 |
 | | Verificação de integridade do app (Play Integrity / App Attest) | 🚫 | — |
 | **PRIVACY** | Coleta mínima de dados; Sentry sem PII (MOB-02) | ✅ | 2 |

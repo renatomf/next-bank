@@ -42,6 +42,7 @@ https://github.com/user-attachments/assets/a2748bde-302c-45a7-a953-d19fa6b02b93
 | Bruno | `bruno.demo@example.com` | `demo-bruno-next-bank` | `1470` |
 
 4. **A Pix in 30 seconds:** sign in as Ana, tap **Pix**, use Bruno's CPF key (`529.982.247-25`), choose the amount and confirm with PIN `2580`. The receipt shows up at once, and the Pix is already in both statements.
+5. **A Pix to another bank:** use the key `clara.aurora@example.com`, Clara's, at Banco Aurora (made up). The Pix goes through the project's own Bacen simulator and stays processing for a few seconds, until the "SPI" answers; the app follows it to the receipt on its own.
 
 **Good to know**
 
@@ -49,7 +50,7 @@ https://github.com/user-attachments/assets/a2748bde-302c-45a7-a953-d19fa6b02b93
 - **Shared accounts:** the demo accounts cannot change their password or PIN, nor end sessions, so no visitor can lock the others out.
 - **Everything resets daily at 06:00 UTC:** accounts created by visitors and all Pix are removed, and Ana and Bruno get their starting balance back.
 - **Your own account:** sign-up generates a valid fictitious CPF (Brazil's taxpayer id). Do not use real data.
-- **Play money:** Pix happens between next bank accounts; no real money moves.
+- **Play money:** Pix happens between next bank accounts and three made-up banks (Aurora, Horizonte and Raiz), through the project's own Bacen simulator; no real money moves, and nothing talks to the real Pix.
 - **Android only:** there is no iOS release, since it cannot be tested without a Mac.
 
 ---
