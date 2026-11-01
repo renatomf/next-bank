@@ -136,6 +136,13 @@ describe('platform schema', () => {
       await expect(insertMessage()).resolves.toBeTypeOf('string');
     });
 
+    // The trace across the wait (v1.2.0 plan, task 8, T3): random ids only.
+    it('takes the traceparent of the transaction that wrote it', async () => {
+      await expect(
+        insertMessage({ trace_parent: '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01' }),
+      ).resolves.toBeTypeOf('string');
+    });
+
     it.each([
       ['an unknown status', { status: 'LOST' }],
       ['a type out of format', { type: 'Pix Send' }],
@@ -143,6 +150,11 @@ describe('platform schema', () => {
       ['a payload over 2 KB', { payload: { blob: 'x'.repeat(3_000) } }],
       ['negative attempts', { attempts: -1 }],
       ['a delivered message without its time', { status: 'DONE' }],
+      ['a traceparent out of the W3C format', { trace_parent: 'clara.aurora@example.com' }],
+      [
+        'a traceparent in upper case',
+        { trace_parent: '00-4BF92F3577B34DA6A3CE929D0E0E4736-00F067AA0BA902B7-01' },
+      ],
     ])('refuses %s', async (_case, columns) => {
       await expect(insertMessage(columns)).rejects.toThrow();
     });

@@ -51,6 +51,13 @@ describe('the simulator schema', () => {
     await expect(insertPayment()).resolves.toBeUndefined();
   });
 
+  // The trace of the API's Pix, which the webhook continues (v1.2.0 plan, task 8, T3).
+  it('takes the traceparent the payment came with', async () => {
+    await expect(
+      insertPayment({ trace_parent: '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01' }),
+    ).resolves.toBeUndefined();
+  });
+
   it.each([
     ['a zero amount', { amount: 0 }],
     ['another currency', { currency: 'USD' }],
@@ -58,6 +65,7 @@ describe('the simulator schema', () => {
     ['a malformed end-to-end id', { end_to_end_id: 'E123' }],
     ['a settled payment without its time', { status: 'SETTLED' }],
     ['a rejected payment without its reason', { status: 'REJECTED' }],
+    ['a traceparent out of the W3C format', { trace_parent: 'clara.aurora@example.com' }],
   ])('refuses %s', async (_case, fields) => {
     await expect(insertPayment(fields)).rejects.toThrow();
   });
@@ -94,6 +102,9 @@ describe('the simulator role (S1)', () => {
     await expect(pool.query('UPDATE simulator.payments SET amount = 1')).rejects.toThrow(
       /permission denied/,
     );
+    await expect(
+      pool.query("UPDATE simulator.payments SET trace_parent = NULL WHERE amount = 0"),
+    ).rejects.toThrow(/permission denied/);
   });
 
   it('is not reached by the API role', async () => {

@@ -14,14 +14,14 @@ export function externalPixClient(app: FastifyInstance, ipPrefix: string) {
   return {
     auth,
 
-    async newCustomer(): Promise<string> {
+    async newCustomer(cpf = fictitiousCpf()): Promise<string> {
       const registered = await app.inject({
         method: 'POST',
         url: '/v1/auth/register',
         payload: {
           name: 'Maria Teste',
           email: uniqueEmail(),
-          cpf: fictitiousCpf(),
+          cpf,
           password: 'violet staple orbit 42',
         },
         remoteAddress: `${ipPrefix}.${String(nextIp++)}`,
