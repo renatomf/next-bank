@@ -9,10 +9,10 @@ import { type Context, context, propagation, ROOT_CONTEXT } from '@opentelemetry
 /** W3C Trace Context, version 00, lower case only. */
 const TRACEPARENT = /^00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$/;
 
-/** The `traceparent` of the span running now, or null when nothing is traced. */
-export function activeTraceparent(): string | null {
+/** The `traceparent` of the span in [traced], the running one by default; null when none. */
+export function traceparentOf(traced: Context = context.active()): string | null {
   const carrier: Record<string, string> = {};
-  propagation.inject(context.active(), carrier);
+  propagation.inject(traced, carrier);
   const traceparent = carrier.traceparent;
   return traceparent !== undefined && TRACEPARENT.test(traceparent) ? traceparent : null;
 }

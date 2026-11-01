@@ -1,7 +1,7 @@
-import { SpanKind, trace } from '@opentelemetry/api';
+import { ROOT_CONTEXT, SpanKind, trace } from '@opentelemetry/api';
 import type pg from 'pg';
 import type { Faults } from './faults.ts';
-import { activeTraceparent, contextOf } from './trace-context.ts';
+import { contextOf, traceparentOf } from './trace-context.ts';
 import { SIGNATURE_HEADER, signatureHeader } from './webhook-signer.ts';
 
 /** Posts a webhook; true when the participant answered with success. */
@@ -135,7 +135,8 @@ export class WebhookDispatcher {
       contextOf(delivery.traceParent),
       async (span) => {
         try {
-          const traceparent = activeTraceparent();
+          // The dispatch span's own: the ambient context is not read here.
+          const traceparent = traceparentOf(trace.setSpan(ROOT_CONTEXT, span));
           const headers = {
             'content-type': 'application/json',
             [SIGNATURE_HEADER]: signatureHeader(

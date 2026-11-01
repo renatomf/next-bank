@@ -4,7 +4,7 @@ import type pg from 'pg';
 import { z } from 'zod';
 import { ErrorBodySchema } from '../../base/error-body.ts';
 import type { Faults } from '../../base/faults.ts';
-import { activeTraceparent } from '../../base/trace-context.ts';
+import { traceparentOf } from '../../base/trace-context.ts';
 
 // The Bacen's end-to-end id: E, the payer's ISPB, the time and 11 characters.
 const END_TO_END_ID = /^E[0-9]{8}[0-9]{12}[A-Za-z0-9]{11}$/;
@@ -132,7 +132,7 @@ async function take(
         body.payer.name,
         body.payer.documentMasked,
         body.payeeKey,
-        activeTraceparent(),
+        traceparentOf(),
       ],
     );
     if (inserted.rowCount === 1) {
