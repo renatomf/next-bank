@@ -49,11 +49,15 @@ describe('allowedAttributes', () => {
   });
 });
 
-/** A span as the SDK ends it, with an event and, when given, an error message. */
-function finishedSpan(attributes: Attributes, errorMessage?: string): ReadableSpan {
+/** A span as the SDK ends it, with an event and, when given, an error message, by [tracer]. */
+function finishedSpan(
+  attributes: Attributes,
+  errorMessage?: string,
+  tracer = 'nextbank-api',
+): ReadableSpan {
   const memory = new InMemorySpanExporter();
   const provider = new BasicTracerProvider({ spanProcessors: [new SimpleSpanProcessor(memory)] });
-  const span = provider.getTracer('test').startSpan('POST /simulator/dict/keys/:key', {
+  const span = provider.getTracer(tracer).startSpan('POST /simulator/dict/keys/:key', {
     attributes,
   });
   span.addEvent('exception', { 'exception.message': 'the key clara.aurora@example.com' });
@@ -88,6 +92,23 @@ describe('AllowedAttributesExporter', () => {
     expect(exported?.attributes).toEqual({ 'http.route': '/simulator/dict/keys/:key' });
     expect(exported?.spanContext()).toEqual(span.spanContext());
     expect(exported?.parentSpanContext).toEqual(span.parentSpanContext);
+  });
+
+  // Security review of task 8: a library's own span, such as Sentry's HTTP
+  // server span, is named by whatever the library chose, the raw path included.
+  it.each(['@sentry/node', 'test'])(
+    'exports no span of a tracer other than the API and the simulator (%s)',
+    async (tracer) => {
+      const span = finishedSpan({ 'http.route': '/dict/keys/a@b.c' }, undefined, tracer);
+
+      expect(await exportedThroughFilter(span)).toBeUndefined();
+    },
+  );
+
+  it('exports the spans of the simulator, mounted in the API', async () => {
+    const span = finishedSpan({}, undefined, 'nextbank-simulator');
+
+    expect(await exportedThroughFilter(span)).toBeDefined();
   });
 
   it('drops the events and the status message, which may carry anything', async () => {

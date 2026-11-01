@@ -36,7 +36,7 @@ function enqueueIn(type: string): Promise<void> {
 
 /** Runs [work] as a request would: inside a span of its own. */
 function inRequest(work: () => Promise<void>): Promise<void> {
-  return trace.getTracer('test').startActiveSpan('POST /test', async (span) => {
+  return trace.getTracer('nextbank-api').startActiveSpan('POST /test', async (span) => {
     await work();
     span.end();
   });
