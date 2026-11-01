@@ -33,7 +33,7 @@ next bank é um banco fictício construído como **projeto de portfólio para va
 | **3. Backoffice** | Next.js: RBAC, dupla aprovação, fila de exceções da conciliação | ~2 semanas | `v1.3.0` |
 | **4. Produtos do app** | Minhas chaves Pix e QR Code dinâmico; recarga assíncrona, boleto e contas de consumo com provedor simulado; cartão de crédito e fatura | ~2 semanas por versão | `v1.4.0` → `v2.0.0` |
 
-> ✅ **Entregue:** `v1.2.0` ([Releases](https://github.com/renatomf/next-bank/releases/tag/v1.2.0)), com o plano em [v1.2.0-pix-assincrono.md](plans/v1.2.0-pix-assincrono.md); antes, `v1.1.0`, em 2026-10-21, com o plano em [v1.1.0-produtos-do-dia-a-dia.md](plans/v1.1.0-produtos-do-dia-a-dia.md). O que entrou em cada uma está no [CHANGELOG](../CHANGELOG.md).
+> ✅ **Entregue:** `v1.2.0`, em 2026-11-01 ([Releases](https://github.com/renatomf/next-bank/releases/tag/v1.2.0)), com o plano em [v1.2.0-pix-assincrono.md](plans/v1.2.0-pix-assincrono.md); antes, `v1.1.0`, em 2026-10-21, com o plano em [v1.1.0-produtos-do-dia-a-dia.md](plans/v1.1.0-produtos-do-dia-a-dia.md). O que entrou em cada uma está no [CHANGELOG](../CHANGELOG.md).
 >
 > Da Fase 2, o **débito automático** ficou para a Fase 4, com as contas de consumo (plano da `v1.2.0`, D9): sem uma conta a pagar, não há o que debitar.
 
