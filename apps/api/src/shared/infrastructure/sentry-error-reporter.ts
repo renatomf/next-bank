@@ -120,7 +120,7 @@ export class SentryErrorReporter implements ErrorReporter {
       ...(options.transport ? { transport: options.transport } : {}),
       skipOpenTelemetrySetup: true,
       sendDefaultPii: false,
-      tracesSampleRate: 0,
+      // No tracesSampleRate at all: even 0 turns Sentry's spans on (security review of task 8).
       beforeSend: (event) => scrubEvent(event),
       beforeBreadcrumb: scrubBreadcrumb,
     });

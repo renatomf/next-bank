@@ -22,6 +22,14 @@ const ALLOWED = new Set([
   'error.type',
 ]);
 
+/**
+ * The tracers whose spans may leave: the API's and the mounted simulator's,
+ * whose names are templates and fixed words. A library's own span, such as
+ * an HTTP server span named by the raw path, never leaves (security review
+ * of task 8).
+ */
+const ALLOWED_TRACERS = new Set(['nextbank-api', 'nextbank-simulator']);
+
 /** How an exporter is told the outcome of an export. */
 type ResultCallback = Parameters<SpanExporter['export']>[1];
 
@@ -46,8 +54,9 @@ function onlyAllowed(span: ReadableSpan): ReadableSpan {
 }
 
 /**
- * Filters every span before the exporter behind it sees it, whoever wrote
- * the span: the list decides, not each call site (EXT-07).
+ * Filters every span before the exporter behind it sees it: only the spans
+ * of the allowed tracers, with the allowed attributes. The lists decide, not
+ * each call site (EXT-07).
  */
 export class AllowedAttributesExporter implements SpanExporter {
   readonly #inner: SpanExporter;
@@ -57,7 +66,10 @@ export class AllowedAttributesExporter implements SpanExporter {
   }
 
   export(spans: ReadableSpan[], resultCallback: ResultCallback): void {
-    this.#inner.export(spans.map(onlyAllowed), resultCallback);
+    this.#inner.export(
+      spans.filter((span) => ALLOWED_TRACERS.has(span.instrumentationScope.name)).map(onlyAllowed),
+      resultCallback,
+    );
   }
 
   shutdown(): Promise<void> {
