@@ -1,5 +1,7 @@
+import { ROOT_CONTEXT, SpanKind, trace } from '@opentelemetry/api';
 import type pg from 'pg';
 import type { Faults } from './faults.ts';
+import { contextOf, traceparentOf } from './trace-context.ts';
 import { SIGNATURE_HEADER, signatureHeader } from './webhook-signer.ts';
 
 /** Posts a webhook; true when the participant answered with success. */
@@ -22,6 +24,7 @@ interface DueRow {
   status: 'PENDING' | 'SETTLED' | 'REJECTED';
   reason: string | null;
   decided_at: Date | null;
+  trace_parent: string | null;
 }
 
 /** A delivery claimed to be sent: its body, and how many times to send it. */
@@ -30,6 +33,8 @@ interface Claimed {
   attempts: number;
   body: string;
   deliveries: 1 | 2;
+  endToEndId: string;
+  traceParent: string | null;
 }
 
 /** A participant that does not answer gets the webhook again, up to this many times. */
@@ -76,7 +81,7 @@ export class WebhookDispatcher {
       // Served by webhook_deliveries_due_idx.
       const { rows } = await client.query<DueRow>(
         `SELECT d.id, d.event_id, d.attempts, p.end_to_end_id, p.payee_ispb,
-                p.status, p.reason, p.decided_at
+                p.status, p.reason, p.decided_at, p.trace_parent
          FROM simulator.webhook_deliveries d
          JOIN simulator.payments p ON p.end_to_end_id = d.end_to_end_id
          WHERE d.status = 'PENDING' AND d.due_at <= $1
@@ -102,26 +107,57 @@ export class WebhookDispatcher {
           'UPDATE simulator.webhook_deliveries SET locked_until = $2 WHERE id = $1',
           [row.id, new Date(now.getTime() + CLAIM_MS)],
         );
-        toSend.push({ id: row.id, attempts: row.attempts, body: bodyOf(decided, now), deliveries });
+        toSend.push({
+          id: row.id,
+          attempts: row.attempts,
+          body: bodyOf(decided, now),
+          deliveries,
+          endToEndId: row.end_to_end_id,
+          traceParent: row.trace_parent,
+        });
       }
       return { count: rows.length, toSend };
     });
   }
 
+  /**
+   * Sends the webhook in the trace of the payment it answers (v1.2.0 plan,
+   * task 8), with the `traceparent` beside the signature: it says only
+   * where the trace goes on, never what the webhook says.
+   */
   async #send(delivery: Claimed, now: Date): Promise<boolean> {
-    const headers = {
-      'content-type': 'application/json',
-      [SIGNATURE_HEADER]: signatureHeader(
-        this.#deps.webhook.secret,
-        delivery.body,
-        Math.floor(now.getTime() / 1000),
-      ),
-    };
-    let delivered = false;
-    for (let i = 0; i < delivery.deliveries; i++) {
-      if (await this.#deps.send(this.#deps.webhook.url, delivery.body, headers)) delivered = true;
-    }
-    return delivered;
+    return trace.getTracer('nextbank-simulator').startActiveSpan(
+      'webhook dispatch',
+      {
+        kind: SpanKind.CLIENT,
+        attributes: { 'nextbank.pix.end_to_end_id': delivery.endToEndId },
+      },
+      contextOf(delivery.traceParent),
+      async (span) => {
+        try {
+          // The dispatch span's own: the ambient context is not read here.
+          const traceparent = traceparentOf(trace.setSpan(ROOT_CONTEXT, span));
+          const headers = {
+            'content-type': 'application/json',
+            [SIGNATURE_HEADER]: signatureHeader(
+              this.#deps.webhook.secret,
+              delivery.body,
+              Math.floor(now.getTime() / 1000),
+            ),
+            ...(traceparent ? { traceparent } : {}),
+          };
+          let delivered = false;
+          for (let i = 0; i < delivery.deliveries; i++) {
+            if (await this.#deps.send(this.#deps.webhook.url, delivery.body, headers)) {
+              delivered = true;
+            }
+          }
+          return delivered;
+        } finally {
+          span.end();
+        }
+      },
+    );
   }
 
   async #record(delivery: Claimed, delivered: boolean, now: Date): Promise<void> {

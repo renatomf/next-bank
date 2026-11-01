@@ -1,13 +1,16 @@
 import type { Outbox, OutboxMessage } from '../application/outbox.ts';
 import type { IdGenerator, Transaction } from '../application/ports.ts';
 import { pgClientOf } from './pg-unit-of-work.ts';
+import { activeTraceparent } from './tracing.ts';
 
 /**
  * The outbox in Postgres (ADR 0016): the message goes on the connection of
  * the command's transaction. Only the types that have a handler are taken,
  * so a typo never leaves a message no worker will ever deliver. A message is
  * available from the application's clock, the one the worker reads, never
- * the database's: the two may differ.
+ * the database's: the two may differ. The message keeps the trace of the
+ * transaction that writes it, for the worker to deliver it in the same trace
+ * (v1.2.0 plan, task 8, T3).
  */
 export class PgOutbox implements Outbox {
   readonly #ids: IdGenerator;
@@ -25,9 +28,17 @@ export class PgOutbox implements Outbox {
       throw new Error(`unknown outbox message type: ${message.type}`);
     }
     await pgClientOf(tx).query(
-      `INSERT INTO platform.outbox_messages (id, type, payload, request_id, status, available_at)
-       VALUES ($1, $2, $3, $4, 'PENDING', $5)`,
-      [this.#ids.next(), message.type, message.payload, message.requestId, this.#clock()],
+      `INSERT INTO platform.outbox_messages
+         (id, type, payload, request_id, trace_parent, status, available_at)
+       VALUES ($1, $2, $3, $4, $5, 'PENDING', $6)`,
+      [
+        this.#ids.next(),
+        message.type,
+        message.payload,
+        message.requestId,
+        activeTraceparent(),
+        this.#clock(),
+      ],
     );
   }
 }

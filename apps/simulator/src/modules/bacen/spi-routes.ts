@@ -4,6 +4,7 @@ import type pg from 'pg';
 import { z } from 'zod';
 import { ErrorBodySchema } from '../../base/error-body.ts';
 import type { Faults } from '../../base/faults.ts';
+import { traceparentOf } from '../../base/trace-context.ts';
 
 // The Bacen's end-to-end id: E, the payer's ISPB, the time and 11 characters.
 const END_TO_END_ID = /^E[0-9]{8}[0-9]{12}[A-Za-z0-9]{11}$/;
@@ -102,8 +103,8 @@ export const spiRoutes: FastifyPluginAsyncZod<{ pool: pg.Pool; faults: Faults }>
 
 /**
  * Records the payment and the webhook it is owed (due after the injected
- * delay), in one transaction; a
- * repeated request finds the first. Simultaneous requests with the same id
+ * delay), in one transaction, with the trace the payment came in, which its
+ * webhook continues (v1.2.0 plan, task 8); a repeated request finds the first. Simultaneous requests with the same id
  * wait on the primary key, so one records and the others read it.
  */
 async function take(
@@ -118,9 +119,9 @@ async function take(
     const inserted = await client.query(
       `INSERT INTO simulator.payments
          (end_to_end_id, request_hash, amount, currency, payer_ispb, payer_name,
-          payer_document_masked, payee_key, payee_ispb, status)
+          payer_document_masked, payee_key, payee_ispb, status, trace_parent)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
-               (SELECT bank_ispb FROM simulator.dict_keys WHERE key = $8), 'PENDING')
+               (SELECT bank_ispb FROM simulator.dict_keys WHERE key = $8), 'PENDING', $9)
        ON CONFLICT (end_to_end_id) DO NOTHING`,
       [
         body.endToEndId,
@@ -131,6 +132,7 @@ async function take(
         body.payer.name,
         body.payer.documentMasked,
         body.payeeKey,
+        traceparentOf(),
       ],
     );
     if (inserted.rowCount === 1) {

@@ -339,4 +339,26 @@ describe('loadConfig', () => {
       ).not.toThrow();
     });
   });
+
+  // The trace (v1.2.0 plan, task 8): exported only where an endpoint is set (T5).
+  describe('tracing', () => {
+    it('exports no trace by default', () => {
+      expect(loadConfig(valid).tracing).toBeUndefined();
+    });
+
+    it('exports the trace to the OTLP endpoint given', () => {
+      expect(
+        loadConfig({ ...valid, OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318' }).tracing,
+      ).toEqual({ endpoint: 'http://127.0.0.1:4318' });
+    });
+
+    it.each(['not-a-url', 'ftp://127.0.0.1:4318', 'file:///tmp/traces'])(
+      'refuses the endpoint %s',
+      (endpoint) => {
+        expect(withEnv({ OTEL_EXPORTER_OTLP_ENDPOINT: endpoint })).toThrow(
+          /OTEL_EXPORTER_OTLP_ENDPOINT/,
+        );
+      },
+    );
+  });
 });

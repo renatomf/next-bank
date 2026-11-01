@@ -2,6 +2,7 @@ import pg from 'pg';
 import type { Transaction } from '../../../shared/application/ports.ts';
 import { pgClientOf } from '../../../shared/infrastructure/pg-unit-of-work.ts';
 import { PgIdempotencyRepository } from '../../../shared/infrastructure/pg-idempotency-repository.ts';
+import { annotate } from '../../../shared/infrastructure/tracing.ts';
 import { PgAuditTrail } from '../../audit/index.ts';
 import type {
   InboxRepository,
@@ -144,6 +145,7 @@ export class PgPixTransfersRepository implements PixTransfersRepository {
         payeeKey?.keyVersion ?? null,
       ],
     );
+    annotateTransfer(transfer);
   }
 
   /** Served by the primary key; the payer filter makes another customer's Pix invisible. */
@@ -227,7 +229,17 @@ export class PgPixTransfersRepository implements PixTransfersRepository {
         transfer.updatedAt,
       ],
     );
+    annotateTransfer(transfer);
   }
+}
+
+/** Names the Pix in the transaction's span: its ids and state only (EXT-07). */
+function annotateTransfer(transfer: PixTransferState): void {
+  annotate({
+    'nextbank.pix.transfer_id': transfer.id,
+    'nextbank.pix.status': transfer.status,
+    ...(transfer.endToEndId ? { 'nextbank.pix.end_to_end_id': transfer.endToEndId } : {}),
+  });
 }
 
 const TRANSFER_COLUMNS = `id, end_to_end_id, payer_account_id, payee_account_id, payee_key_type,

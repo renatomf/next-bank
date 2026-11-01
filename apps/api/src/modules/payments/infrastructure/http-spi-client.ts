@@ -1,5 +1,7 @@
+import { SpanKind } from '@opentelemetry/api';
 import { z } from 'zod';
 import { Money } from '../../../shared/domain/money.ts';
+import { annotate, inSpan, traceHeaders } from '../../../shared/infrastructure/tracing.ts';
 import type { DictKey, SpiPayment, SpiPaymentStatus, SpiPort } from '../application/ports.ts';
 
 /** The header the simulator reads the participant's key from (EXT-09). */
@@ -44,7 +46,11 @@ export class HttpSpiClient implements SpiPort {
   }
 
   async findKey(key: string): Promise<DictKey | null> {
-    const response = await this.#call('GET', `/dict/keys/${encodeURIComponent(key)}`);
+    const response = await this.#call(
+      'GET',
+      '/dict/keys/:key',
+      `/dict/keys/${encodeURIComponent(key)}`,
+    );
     if (response.status === 404) return null;
     if (response.status !== 200) throw new Error(`DICT answered ${String(response.status)}`);
     const { keyType, bank, owner } = DictKeySchema.parse(await response.json());
@@ -54,6 +60,7 @@ export class HttpSpiClient implements SpiPort {
   async send(payment: SpiPayment): Promise<void> {
     const response = await this.#call(
       'POST',
+      '/spi/payments',
       '/spi/payments',
       JSON.stringify({
         endToEndId: payment.endToEndId,
@@ -69,7 +76,11 @@ export class HttpSpiClient implements SpiPort {
   }
 
   async status(endToEndId: string): Promise<SpiPaymentStatus | null> {
-    const response = await this.#call('GET', `/spi/payments/${encodeURIComponent(endToEndId)}`);
+    const response = await this.#call(
+      'GET',
+      '/spi/payments/:endToEndId',
+      `/spi/payments/${encodeURIComponent(endToEndId)}`,
+    );
     if (response.status === 404) return null;
     if (response.status !== 200) throw new Error(`SPI answered ${String(response.status)}`);
     return PaymentStatusSchema.parse(await response.json()).status;
@@ -80,7 +91,11 @@ export class HttpSpiClient implements SpiPort {
    * the daily reconciliation (v1.2.0 plan, task 6).
    */
   async settlementFile(date: string): Promise<{ endToEndId: string; amount: Money }[]> {
-    const response = await this.#call('GET', `/settlements/${encodeURIComponent(date)}`);
+    const response = await this.#call(
+      'GET',
+      '/settlements/:date',
+      `/settlements/${encodeURIComponent(date)}`,
+    );
     if (response.status !== 200) throw new Error(`SPI answered ${String(response.status)}`);
     const file = SettlementFileSchema.parse(await response.json());
     return file.payments.map((payment) => ({
@@ -89,17 +104,32 @@ export class HttpSpiClient implements SpiPort {
     }));
   }
 
-  #call(method: 'GET' | 'POST', path: string, json?: string): Promise<Response> {
+  /**
+   * One call to the simulator, in a span named by the [route]'s template:
+   * the [path] carries the key or the id looked up, which never reaches the
+   * trace (EXT-07). The `traceparent` goes along, so the SPI's webhook comes
+   * back in the same trace (v1.2.0 plan, task 8).
+   */
+  #call(method: 'GET' | 'POST', route: string, path: string, json?: string): Promise<Response> {
     const { baseUrl, participantKey, timeoutMs } = this.#options;
-    return fetch(`${baseUrl}${path}`, {
-      method,
-      headers: {
-        [PARTICIPANT_KEY_HEADER]: participantKey,
-        ...(json === undefined ? {} : { 'content-type': 'application/json' }),
+    return inSpan(
+      `${method} ${route}`,
+      { kind: SpanKind.CLIENT, attributes: { 'http.request.method': method, 'http.route': route } },
+      async () => {
+        const response = await fetch(`${baseUrl}${path}`, {
+          method,
+          headers: {
+            [PARTICIPANT_KEY_HEADER]: participantKey,
+            ...(json === undefined ? {} : { 'content-type': 'application/json' }),
+            ...traceHeaders(),
+          },
+          ...(json === undefined ? {} : { body: json }),
+          redirect: 'error',
+          signal: AbortSignal.timeout(timeoutMs),
+        });
+        annotate({ 'http.response.status_code': response.status });
+        return response;
       },
-      ...(json === undefined ? {} : { body: json }),
-      redirect: 'error',
-      signal: AbortSignal.timeout(timeoutMs),
-    });
+    );
   }
 }

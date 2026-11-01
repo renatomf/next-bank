@@ -7,6 +7,7 @@ import {
 } from '../application/outbox.ts';
 import type { ErrorReporter } from '../application/ports.ts';
 import { withTransaction } from './pg-transaction.ts';
+import { contextOf, inSpan } from './tracing.ts';
 
 interface ClaimedRow {
   id: string;
@@ -14,6 +15,7 @@ interface ClaimedRow {
   payload: OutboxPayload;
   attempts: number;
   request_id: string | null;
+  trace_parent: string | null;
 }
 
 /** How long a claim holds a message while its handler runs; longer than any handler. */
@@ -62,7 +64,7 @@ export class OutboxWorker {
     return withTransaction(this.#pool, async (client) => {
       // Served by outbox_messages_available_idx.
       const { rows } = await client.query<ClaimedRow>(
-        `SELECT id, type, payload, attempts, request_id
+        `SELECT id, type, payload, attempts, request_id, trace_parent
          FROM platform.outbox_messages
          WHERE status = 'PENDING' AND available_at <= $1
            AND (locked_until IS NULL OR locked_until <= $1)
@@ -92,7 +94,19 @@ export class OutboxWorker {
     };
     try {
       if (!handler) throw new Error(`no handler for ${row.type}`);
-      await handler(message);
+      // In the trace of the transaction that wrote the message (task 8, T3).
+      await inSpan(
+        `outbox ${row.type}`,
+        {
+          parent: contextOf(row.trace_parent),
+          attributes: {
+            'messaging.message.id': row.id,
+            'nextbank.outbox.type': row.type,
+            'nextbank.outbox.attempt': row.attempts + 1,
+          },
+        },
+        () => handler(message),
+      );
     } catch (error) {
       await this.#failed(row, error, now, claimedUntil);
       return;

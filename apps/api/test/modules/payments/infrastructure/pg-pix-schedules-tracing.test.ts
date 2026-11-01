@@ -1,0 +1,149 @@
+import { randomUUID } from 'node:crypto';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { createPool } from '../../../../src/shared/db.ts';
+import { inRootSpan } from '../../../../src/shared/infrastructure/tracing.ts';
+import { testDatabaseUrl } from '../../../helpers.ts';
+import { isChildOf, recordSpans } from '../../../tracing.ts';
+import { FixedClock } from '../../identity/application/fakes.ts';
+import { AURORA_EMAIL, AURORA_KEY, FakeSpi } from '../application/fakes.ts';
+import { type Customer, pgPixStack } from './pg-pix-stack.ts';
+
+// The trace of the scheduled Pix (v1.2.0 plan, task 8): each occurrence is a
+// transaction of its own under the round of the worker, named by its
+// schedule; one to another bank goes on through the outbox as any Pix does
+// (from there to the SPI and the webhook, the trace of the Pix to another
+// bank shows it). Other tests' schedules share the database, some of them
+// due and unpayable (a schema test's, with no payer account), so each test
+// runs rounds until its own schedules are paid and looks at their spans only.
+const { spans, traceOf } = recordSpans();
+const pool = createPool(testDatabaseUrl());
+const clock = new FixedClock(new Date());
+
+const noonOf = (date: string) => new Date(`${date}T12:00:00-03:00`);
+const FIRST_DATE = '2026-11-12';
+
+beforeEach(() => {
+  clock.current = noonOf('2026-11-03');
+});
+// As the schema test leaves one, in CI: due, active, and with no payer account.
+const unpayable = randomUUID();
+beforeAll(async () => {
+  await pool.query(
+    `INSERT INTO payments.pix_schedules
+       (id, payer_account_id, payee_account_id, payee_key_type, payee_key_masked, payee_name,
+        payee_document_masked, amount, currency, first_date, frequency, times, status,
+        next_sequence, next_occurrence_date, version, created_at, updated_at)
+     VALUES ($1, $2, $3, 'CPF', '***.842.917-**', 'Marina Costa', '***.842.917-**', 15000,
+             'BRL', '2026-11-05', 'ONCE', 1, 'ACTIVE', 1, '2026-11-05', 0, now(), now())`,
+    [unpayable, randomUUID(), randomUUID()],
+  );
+});
+// Cancelled after, so it never stands in the way of the next test file.
+afterAll(async () => {
+  await pool.query(
+    `UPDATE payments.pix_schedules
+     SET status = 'CANCELLED', next_sequence = NULL, next_occurrence_date = NULL,
+         cancelled_at = now(), updated_at = now()
+     WHERE id = $1`,
+    [unpayable],
+  );
+  await pool.end();
+});
+
+const spi = new FakeSpi();
+spi.keys.set(AURORA_EMAIL, AURORA_KEY);
+const pix = pgPixStack(pool, clock, { spi });
+
+/**
+ * Rounds of the worker, each in its span as the server runs it, until the
+ * occurrences of [scheduleIds] ran. A round that fails on another test's
+ * schedule still pays the rest, and the next round goes on.
+ */
+async function runRoundsUntilPaid(...scheduleIds: string[]): Promise<void> {
+  for (let round = 0; round < 100; round += 1) {
+    await inRootSpan('scheduled Pix', () => pix.runDueSchedules()).catch(() => undefined);
+    if (scheduleIds.every((id) => occurrenceOf(id) !== undefined)) return;
+  }
+  throw new Error('The worker never paid the schedules');
+}
+
+/** The transaction that paid an occurrence of [scheduleId]. */
+const occurrenceOf = (scheduleId: string) =>
+  spans().find(
+    (span) => span.name === 'transaction' && span.attributes['nextbank.schedule.id'] === scheduleId,
+  );
+
+const rounds = () => spans().filter((span) => span.name === 'scheduled Pix');
+
+const cpfKey = (customer: Customer) => ({ type: 'CPF' as const, value: customer.cpf });
+
+describe('the trace of the scheduled Pix', () => {
+  it('traces an occurrence to another bank from the round to the outbox', async () => {
+    const ana = await pix.newCustomer();
+    const scheduled = await pix.schedule(ana, { type: 'EMAIL', value: AURORA_EMAIL }, 2_000, {
+      firstDate: FIRST_DATE,
+    });
+
+    clock.current = noonOf(FIRST_DATE);
+    await runRoundsUntilPaid(scheduled.id);
+    await pix.deliverOutbox();
+
+    const occurrence = occurrenceOf(scheduled.id);
+    const round = rounds().find((span) => isChildOf(occurrence, span));
+    expect(round?.parentSpanContext).toBeUndefined();
+    expect(occurrence?.attributes).toMatchObject({
+      'nextbank.schedule.id': scheduled.id,
+      'nextbank.pix.status': 'PROCESSING',
+    });
+    const delivery = traceOf(occurrence).find((span) => span.name === 'outbox pix.send-external');
+    expect(isChildOf(delivery, occurrence)).toBe(true);
+    expect(JSON.stringify(traceOf(occurrence).map((span) => span.attributes))).not.toContain(
+      'aurora',
+    );
+  });
+
+  it('traces an occurrence to next bank as one transaction with its Pix', async () => {
+    const [ana, bia] = [await pix.newCustomer(), await pix.newCustomer()];
+    const scheduled = await pix.schedule(ana, cpfKey(bia), 3_000, { firstDate: FIRST_DATE });
+
+    clock.current = noonOf(FIRST_DATE);
+    await runRoundsUntilPaid(scheduled.id);
+
+    expect(occurrenceOf(scheduled.id)?.attributes).toMatchObject({
+      'nextbank.schedule.id': scheduled.id,
+      'nextbank.pix.transfer_id': expect.any(String) as string,
+      'nextbank.pix.status': 'COMPLETED',
+    });
+  });
+
+  it('marks an occurrence that fails with the status of its Pix, not a free text', async () => {
+    const [ana, bia] = [await pix.newCustomer(), await pix.newCustomer()];
+    const scheduled = await pix.schedule(ana, cpfKey(bia), 3_000, { firstDate: FIRST_DATE });
+    // Ana spends everything before the date: the occurrence finds no balance.
+    for (let left = 1_000_000; left > 0; left -= 500_000) {
+      await pix.authorize(ana, await pix.create(ana, bia, Math.min(left, 500_000)));
+    }
+
+    clock.current = noonOf(FIRST_DATE);
+    await runRoundsUntilPaid(scheduled.id);
+
+    expect(occurrenceOf(scheduled.id)?.attributes).toMatchObject({
+      'nextbank.pix.status': 'FAILED',
+    });
+  });
+
+  it('gives each occurrence of a round a span of its own under the round', async () => {
+    const [ana, bia] = [await pix.newCustomer(), await pix.newCustomer()];
+    const first = await pix.schedule(ana, cpfKey(bia), 1_000, { firstDate: FIRST_DATE });
+    const second = await pix.schedule(bia, cpfKey(ana), 1_000, { firstDate: FIRST_DATE });
+
+    clock.current = noonOf(FIRST_DATE);
+    await runRoundsUntilPaid(first.id, second.id);
+
+    const [one, other] = [occurrenceOf(first.id), occurrenceOf(second.id)];
+    expect(one?.spanContext().spanId).not.toBe(other?.spanContext().spanId);
+    for (const occurrence of [one, other]) {
+      expect(rounds().some((round) => isChildOf(occurrence, round))).toBe(true);
+    }
+  });
+});

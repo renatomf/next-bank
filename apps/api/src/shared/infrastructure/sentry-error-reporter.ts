@@ -100,15 +100,27 @@ function maskPersonalNumbers(text: string): string {
   return text.replace(CPF, '[CPF]').replace(PHONE, '[PHONE]');
 }
 
-/** Sentry, set up once per process: errors only, no tracing, no personal data. */
+/**
+ * Sentry, set up once per process: errors only, no tracing, no personal data.
+ * The OpenTelemetry setup belongs to the API's tracing (v1.2.0 plan, task 8,
+ * T2): Sentry skips its own, which would register a second provider.
+ */
 export class SentryErrorReporter implements ErrorReporter {
-  constructor(options: { dsn: string; environment: string; release?: string }) {
+  constructor(options: {
+    dsn: string;
+    environment: string;
+    release?: string;
+    /** How the events leave; Sentry's own HTTP transport by default (tests replace it). */
+    transport?: Sentry.NodeOptions['transport'];
+  }) {
     Sentry.init({
       dsn: options.dsn,
       environment: options.environment,
       ...(options.release ? { release: options.release } : {}),
+      ...(options.transport ? { transport: options.transport } : {}),
+      skipOpenTelemetrySetup: true,
       sendDefaultPii: false,
-      tracesSampleRate: 0,
+      // No tracesSampleRate at all: even 0 turns Sentry's spans on (security review of task 8).
       beforeSend: (event) => scrubEvent(event),
       beforeBreadcrumb: scrubBreadcrumb,
     });

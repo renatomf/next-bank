@@ -195,6 +195,18 @@ Desde a tarefa 3 da v1.2.0, o simulador do Bacen e dos parceiros roda **dentro d
 
 5. Limpe: `Remove-Variable sim, participant, simUrl; Set-Clipboard -Value " "`. Depois do merge, `<API_URL>/simulator/health` responde `{"status":"ok"}`, e qualquer outra rota do simulador sem a chave responde `401`.
 
+## 11. Trace local (OpenTelemetry, v1.2.0)
+
+O trace de ponta a ponta do Pix (tarefa 8 da v1.2.0) só é exportado onde há um coletor. **Em produção não há** (T5): sem `OTEL_EXPORTER_OTLP_ENDPOINT` no Render, a API não registra nada e o custo é zero. Ligar um coletor em produção é decisão à parte, com o threat model revisto.
+
+Localmente:
+
+1. Suba o Jaeger, só neste computador: `docker compose --profile tracing up -d` na pasta `infra/`. O Postgres de todo dia continua subindo sem ele.
+2. No `apps/api/.env`, descomente `OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4318` e reinicie a API (`pnpm dev`).
+3. Faça um Pix para outro banco pelo app ou pelo emulador e abra `http://127.0.0.1:16686`, serviço `nextbank-api`: a autorização, a entrega pelo outbox, o SPI do simulador e o webhook aparecem num trace só.
+
+O trace leva só ids, estados e o molde de cada rota (EXT-07): nenhuma URL, chave Pix, nome, documento ou valor. O Jaeger guarda tudo em memória e perde o que tem quando para.
+
 ## Rotina
 
 - **Deploy:** automático depois de cada merge na `main` com o CI verde, ou manual pelo workflow.
