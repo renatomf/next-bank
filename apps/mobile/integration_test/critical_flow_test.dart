@@ -39,6 +39,61 @@ int balanceOnHome(WidgetTester tester) {
       int.parse(match.group(2)!);
 }
 
+/// From the Home, a Pix of R$ 1,00 to [key], up to the payee the DICT
+/// names, [payee].
+Future<void> lookUpPayee(
+  WidgetTester tester, {
+  required String key,
+  required String payee,
+}) async {
+  await tester.tap(find.bySemanticsLabel('Área Pix'));
+  await waitFor(tester, find.text('Buscar chave'));
+  await tester.enterText(
+    find.byWidgetPredicate(
+      (widget) =>
+          widget is TextField && widget.decoration?.labelText == 'Valor do Pix',
+    ),
+    '100',
+  );
+  await tester.enterText(
+    find.descendant(
+      of: find.widgetWithText(NbTextField, 'Chave Pix'),
+      matching: find.byType(TextField),
+    ),
+    key,
+  );
+  await tester.pump();
+  await scrollAndTap(tester, SendPixScreen, find.text('Buscar chave'));
+  await waitFor(tester, find.text(payee));
+}
+
+/// On the review, the PIN, checked on the server.
+Future<void> typePinOnReview(WidgetTester tester) async {
+  await waitFor(tester, find.byType(ReviewPixScreen));
+  await tester.scrollUntilVisible(
+    find.byType(PinField),
+    200,
+    scrollable: find
+        .descendant(
+          of: find.byType(ReviewPixScreen),
+          matching: find.byType(Scrollable),
+        )
+        .first,
+  );
+  await tester.enterText(find.byType(PinField), anaPin);
+}
+
+/// From the receipt back to the Home, with the balance shown.
+Future<void> backHome(WidgetTester tester) async {
+  await scrollAndTap(tester, ReceiptScreen, find.text('Voltar ao início'));
+  await waitFor(tester, find.byType(BalanceCard));
+  if (find.bySemanticsLabel('Mostrar saldo').evaluate().isNotEmpty) {
+    await tester.tap(find.bySemanticsLabel('Mostrar saldo'));
+    await tester.pumpAndSettle();
+  }
+  await waitFor(tester, find.bySemanticsLabel(RegExp(r'^R\$ ')));
+}
+
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -53,69 +108,32 @@ void main() {
     final before = balanceOnHome(tester);
 
     // Pix of R$ 1,00 to Bruno's CPF key.
-    await tester.tap(find.bySemanticsLabel('Área Pix'));
-    await waitFor(tester, find.text('Buscar chave'));
-    await tester.enterText(
-      find.byWidgetPredicate(
-        (widget) =>
-            widget is TextField &&
-            widget.decoration?.labelText == 'Valor do Pix',
-      ),
-      '100',
-    );
-    final keyField = find.descendant(
-      of: find.widgetWithText(NbTextField, 'Chave Pix'),
-      matching: find.byType(TextField),
-    );
-    await tester.enterText(keyField, brunoCpf);
-    await tester.pump();
-    await scrollAndTap(tester, SendPixScreen, find.text('Buscar chave'));
-    await waitFor(tester, find.text('Bruno Demo'));
+    await lookUpPayee(tester, key: brunoCpf, payee: 'Bruno Demo');
     await scrollAndTap(tester, SendPixScreen, find.text('Revisar Pix'));
-
-    // Review and PIN, checked on the server.
-    await waitFor(tester, find.byType(ReviewPixScreen));
-    await tester.scrollUntilVisible(
-      find.byType(PinField),
-      200,
-      scrollable: find
-          .descendant(
-            of: find.byType(ReviewPixScreen),
-            matching: find.byType(Scrollable),
-          )
-          .first,
-    );
-    await tester.enterText(find.byType(PinField), anaPin);
+    await typePinOnReview(tester);
     await waitFor(tester, find.text('Concluído'));
     expect(find.text('Comprovante'), findsOneWidget);
     expect(find.bySemanticsLabel(r'R$ 1,00'), findsWidgets);
 
     // Back home, the balance is exactly R$ 1,00 lower.
-    await scrollAndTap(tester, ReceiptScreen, find.text('Voltar ao início'));
-    await waitFor(tester, find.byType(BalanceCard));
-    if (find.bySemanticsLabel('Mostrar saldo').evaluate().isNotEmpty) {
-      await tester.tap(find.bySemanticsLabel('Mostrar saldo'));
-      await tester.pumpAndSettle();
-    }
-    await waitFor(tester, find.bySemanticsLabel(RegExp(r'^R\$ ')));
+    await backHome(tester);
     expect(balanceOnHome(tester), before - 100);
+
+    // A Pix of R$ 1,00 to another bank (v1.2.0 plan, task 10, R1): Clara, of
+    // the made-up Banco Aurora, through the SPI of the simulator mounted in
+    // the API. It waits for the SPI's answer, then ends completed.
+    await lookUpPayee(tester, key: claraEmail, payee: 'Clara Aurora Teixeira');
+    expect(find.text('CPF ***.407.256-** · Banco Aurora'), findsOneWidget);
+    await scrollAndTap(tester, SendPixScreen, find.text('Revisar Pix'));
+    await typePinOnReview(tester);
+    await waitFor(tester, find.text('Concluído'));
+    expect(find.text('CPF ***.407.256-** · Banco Aurora'), findsWidgets);
+    await backHome(tester);
+    expect(balanceOnHome(tester), before - 200);
 
     // A Pix to Bruno scheduled for the first day offered, then cancelled
     // (v1.2.0 plan, task 7): nothing moves now, so the balance stays.
-    await tester.tap(find.bySemanticsLabel('Área Pix'));
-    await waitFor(tester, find.text('Buscar chave'));
-    await tester.enterText(
-      find.byWidgetPredicate(
-        (widget) =>
-            widget is TextField &&
-            widget.decoration?.labelText == 'Valor do Pix',
-      ),
-      '100',
-    );
-    await tester.enterText(keyField, brunoCpf);
-    await tester.pump();
-    await scrollAndTap(tester, SendPixScreen, find.text('Buscar chave'));
-    await waitFor(tester, find.text('Bruno Demo'));
+    await lookUpPayee(tester, key: brunoCpf, payee: 'Bruno Demo');
     await scrollAndTap(tester, SendPixScreen, find.text('Agendar'));
     await waitFor(tester, find.byType(NewScheduleScreen));
     await tester.tap(find.byType(FilterPill).first);
