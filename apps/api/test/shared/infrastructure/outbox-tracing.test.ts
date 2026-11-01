@@ -104,8 +104,8 @@ describe('the trace through the outbox', () => {
     const type = newType();
     await pool.query(
       `INSERT INTO platform.outbox_messages (id, type, payload, request_id, status, available_at)
-       VALUES ($1, $2, '{"id":"a"}', NULL, 'PENDING', now())`,
-      [randomUUID(), type],
+       VALUES ($1, $2, '{"id":"a"}', NULL, 'PENDING', $3)`,
+      [randomUUID(), type, new Date(Date.now() - 1_000)],
     );
 
     expect(await deliver(type, () => Promise.resolve())).toBe(1);

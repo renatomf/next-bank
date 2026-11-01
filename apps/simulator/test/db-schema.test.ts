@@ -103,7 +103,7 @@ describe('the simulator role (S1)', () => {
       /permission denied/,
     );
     await expect(
-      pool.query("UPDATE simulator.payments SET trace_parent = NULL WHERE amount = 0"),
+      pool.query('UPDATE simulator.payments SET trace_parent = NULL WHERE amount = 0'),
     ).rejects.toThrow(/permission denied/);
   });
 

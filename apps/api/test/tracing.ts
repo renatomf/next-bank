@@ -28,9 +28,7 @@ export function recordSpans(): {
     spans,
     traceOf: (span) => {
       if (!span) throw new Error('no span');
-      return spans().filter(
-        (other) => other.spanContext().traceId === span.spanContext().traceId,
-      );
+      return spans().filter((other) => other.spanContext().traceId === span.spanContext().traceId);
     },
   };
 }

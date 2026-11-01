@@ -66,13 +66,13 @@ const AUTHORIZE = 'POST /v1/pix/transfers/:transferId/authorize';
 
 /** The one span named [name] among [among], failing on none or more. */
 function only(among: readonly ReadableSpan[], name: string): ReadableSpan {
-  const found = among.filter((span) => span.name === name);
-  if (found.length !== 1) throw new Error(`${String(found.length)} spans named ${name}`);
-  return found[0] as ReadableSpan;
+  const [span, ...others] = among.filter((candidate) => candidate.name === name);
+  if (!span || others.length > 0) throw new Error(`not one span named ${name}`);
+  return span;
 }
 
 /** The transaction spans of [among] that hang from [parent]. */
-function transactionsUnder(among: readonly ReadableSpan[], parent: ReadableSpan) {
+function transactionsUnder(among: readonly ReadableSpan[], parent: ReadableSpan | undefined) {
   return among.filter((span) => span.name === 'transaction' && isChildOf(span, parent));
 }
 
@@ -96,7 +96,7 @@ describe('the trace of a Pix to another bank', () => {
     const taken = only(trace, 'POST /simulator/spi/payments');
     const dispatched = only(trace, 'webhook dispatch');
     const webhook = only(trace, 'POST /v1/spi/webhooks');
-    const [authorized] = transactionsUnder(trace, authorize as ReadableSpan);
+    const [authorized] = transactionsUnder(trace, authorize);
 
     expect(authorize?.parentSpanContext).toBeUndefined();
     expect(authorized?.attributes).toMatchObject({

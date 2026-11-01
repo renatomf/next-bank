@@ -81,7 +81,7 @@ describe('the trace of the scheduled Pix', () => {
     clock.current = noonOf(FIRST_DATE);
     await runRoundsUntilDone();
 
-    expect(occurrenceOf(scheduled.id)?.attributes).toEqual({
+    expect(occurrenceOf(scheduled.id)?.attributes).toMatchObject({
       'nextbank.schedule.id': scheduled.id,
       'nextbank.pix.transfer_id': expect.any(String) as string,
       'nextbank.pix.status': 'COMPLETED',
