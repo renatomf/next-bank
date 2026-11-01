@@ -33,7 +33,9 @@ next bank é um banco fictício construído como **projeto de portfólio para va
 | **3. Backoffice** | Next.js: RBAC, dupla aprovação, fila de exceções da conciliação | ~2 semanas | `v1.3.0` |
 | **4. Produtos do app** | Minhas chaves Pix e QR Code dinâmico; recarga assíncrona, boleto e contas de consumo com provedor simulado; cartão de crédito e fatura | ~2 semanas por versão | `v1.4.0` → `v2.0.0` |
 
-> ✅ **Entregue:** `v1.1.0`, em 2026-10-21 ([Releases](https://github.com/renatomf/next-bank/releases/tag/v1.1.0)). O que entrou está no [CHANGELOG](../CHANGELOG.md), e o plano, em [v1.1.0-produtos-do-dia-a-dia.md](plans/v1.1.0-produtos-do-dia-a-dia.md).
+> ✅ **Entregue:** `v1.2.0` ([Releases](https://github.com/renatomf/next-bank/releases/tag/v1.2.0)), com o plano em [v1.2.0-pix-assincrono.md](plans/v1.2.0-pix-assincrono.md); antes, `v1.1.0`, em 2026-10-21, com o plano em [v1.1.0-produtos-do-dia-a-dia.md](plans/v1.1.0-produtos-do-dia-a-dia.md). O que entrou em cada uma está no [CHANGELOG](../CHANGELOG.md).
+>
+> Da Fase 2, o **débito automático** ficou para a Fase 4, com as contas de consumo (plano da `v1.2.0`, D9): sem uma conta a pagar, não há o que debitar.
 
 **Nova ordem (2026-10-14):** depois da `v1.0.0`, a `v1.1.0` antecipa a parte mais simples da Fase 4, que um visitante da demo usa na primeira abertura; as Fases 2 e 3 andam uma versão. Nenhuma versão usa provedor real: o dinheiro só se move entre contas do next bank.
 

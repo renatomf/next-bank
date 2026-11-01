@@ -42,6 +42,7 @@ https://github.com/user-attachments/assets/a2748bde-302c-45a7-a953-d19fa6b02b93
 | Bruno | `bruno.demo@example.com` | `demo-bruno-next-bank` | `1470` |
 
 4. **Um Pix em 30 segundos:** entre como Ana, toque em **Pix**, use a chave CPF de Bruno (`529.982.247-25`), escolha o valor e confirme com o PIN `2580`. O comprovante aparece na hora, e o Pix já está no extrato dos dois.
+5. **Um Pix para outro banco:** use a chave `clara.aurora@example.com`, de Clara, do Banco Aurora (fictício). O Pix passa pelo simulador do Bacen do próprio projeto e fica alguns segundos em processamento, até o "SPI" responder; o app acompanha sozinho até o comprovante.
 
 **Bom saber**
 
@@ -49,7 +50,7 @@ https://github.com/user-attachments/assets/a2748bde-302c-45a7-a953-d19fa6b02b93
 - **Contas compartilhadas:** as contas de demonstração não trocam senha nem PIN e não encerram sessões, para que nenhum visitante tranque os outros do lado de fora.
 - **Tudo volta ao começo todo dia, às 03:00 (horário de Brasília):** as contas criadas por visitantes e os Pix somem, e Ana e Bruno voltam com o saldo inicial.
 - **Sua própria conta:** o cadastro gera um CPF fictício válido. Não use dados reais.
-- **Dinheiro de mentira:** o Pix acontece entre contas do next bank; nenhum valor real é movimentado.
+- **Dinheiro de mentira:** o Pix acontece entre contas do next bank e de três bancos fictícios (Aurora, Horizonte e Raiz), por um simulador do Bacen do próprio projeto; nenhum valor real é movimentado, e nada fala com o Pix de verdade.
 - **Só Android:** a versão para iOS não é publicada, porque não há como testá-la sem um Mac.
 
 ---
