@@ -52,6 +52,13 @@ jobs:
       NEXTBANK_SIMULATOR_PASSWORD: ci-simulator
       MIGRATION_DATABASE_URL: postgres://nextbank_migrator:ci-migrator@localhost:5432/nextbank?sslmode=disable
       DATABASE_URL: postgres://nextbank_app:ci-app@localhost:5432/nextbank?sslmode=disable
+      # The simulator of the Bacen mounted in the API, as in production, with
+      # its own role and no injected faults, so the flow can pay another bank
+      # (v1.2.0 plan, task 10, R1). Its keys come with the API's below.
+      SIMULATOR_MIGRATION_DATABASE_URL: postgres://nextbank_migrator:ci-migrator@localhost:5432/nextbank?sslmode=disable
+      SIMULATOR_DATABASE_URL: postgres://nextbank_simulator:ci-simulator@localhost:5432/nextbank?sslmode=disable
+      EXTERNAL_PIX_ENABLED: 'true'
+      SIMULATOR_URL: http://127.0.0.1:3000/simulator
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -64,6 +71,7 @@ jobs:
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @nextbank/api db:migrate
+      - run: pnpm --filter @nextbank/simulator db:migrate
       # Fresh keys for this run only: masked, never stored, gone with the runner.
       - name: Throwaway API keys
         working-directory: apps/api

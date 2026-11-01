@@ -15,6 +15,9 @@ const String brunoEmail = 'bruno.demo@example.com';
 const String brunoPassword = 'demo-bruno-next-bank';
 const String brunoCpf = '52998224725';
 
+/// The e-mail key of Clara, of the made-up Banco Aurora (the simulator's seed).
+const String claraEmail = 'clara.aurora@example.com';
+
 /// Pumps until [finder] shows, failing after [timeout]: the API answers in
 /// its own time, so no fixed wait.
 Future<void> waitFor(
