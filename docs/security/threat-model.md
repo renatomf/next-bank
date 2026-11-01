@@ -5,6 +5,7 @@
 - **Referências:** OWASP ASVS (nível 2) para API, OWASP MASVS para o app — checklist em `checklist-asvs-masvs.md`; status consolidado dos controles em `controles-de-seguranca.md`
 - **Base:** `docs/architecture/domain-model.md`, `docs/architecture/database.md`
 - **Regra viva:** toda feature nova revisa este documento; ameaça nova vira uma linha aqui **e** um teste.
+- **Revisado em:** 2026-11-01, antes da `v1.2.0`: as ameaças EXT-01 a EXT-10 conferidas, cada uma com o seu teste
 
 ## 1. Escopo
 
