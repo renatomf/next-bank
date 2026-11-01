@@ -20,5 +20,15 @@ services:
       timeout: 3s
       retries: 15
 
+  # The end-to-end trace (v1.2.0 plan, task 8, T6), only when asked:
+  # `docker compose --profile tracing up -d`. Official image, pinned; the UI
+  # (16686) and the OTLP receiver (4318) only on this machine. Kept in memory.
+  jaeger:
+    image: jaegertracing/jaeger:2.22.0@sha256:836b967b5abcf1f7758066aa6b348619267a2f1459f72d472840570f9bd88a17
+    profiles: [tracing]
+    ports:
+      - "127.0.0.1:16686:16686"
+      - "127.0.0.1:4318:4318"
+
 volumes:
   pgdata:
