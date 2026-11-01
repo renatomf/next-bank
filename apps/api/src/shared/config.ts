@@ -91,6 +91,9 @@ const schema = z
       .optional(),
     // The simulator's fault profile (D5, P4), read by the simulator itself.
     SIMULATOR_FAULTS: z.string().max(1_000).optional(),
+    // Where the trace goes (v1.2.0 plan, task 8): a local Jaeger; unset in
+    // production, where nothing is exported (T5).
+    OTEL_EXPORTER_OTLP_ENDPOINT: z.url({ protocol: /^https?$/ }).optional(),
   })
   .refine((env) => env.PII_HMAC_KEY !== env.PII_ENCRYPTION_KEY, {
     // One key for two purposes would let a weakness in one use expose the other.
@@ -179,6 +182,8 @@ export interface Config {
     webhookSecret: Buffer;
     faults?: string;
   };
+  /** The trace's collector, when one is set (T5). */
+  tracing?: { endpoint: string };
 }
 
 /** Validates the environment at boot. Error messages never include the received values. */
@@ -235,6 +240,9 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
             ...(data.SIMULATOR_FAULTS ? { faults: data.SIMULATOR_FAULTS } : {}),
           },
         }
+      : {}),
+    ...(data.OTEL_EXPORTER_OTLP_ENDPOINT
+      ? { tracing: { endpoint: data.OTEL_EXPORTER_OTLP_ENDPOINT } }
       : {}),
   };
 }

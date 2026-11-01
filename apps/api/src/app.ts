@@ -46,6 +46,7 @@ import { createReconciliationModule, ErrorReporterAlarm } from './modules/reconc
 import { createTopUpsModule, topUpRoutes } from './modules/top-ups/index.ts';
 import { healthRoutes } from './shared/http/health.ts';
 import { registerProblemHandlers } from './shared/http/problem.ts';
+import { registerRequestTracing } from './shared/http/request-tracing.ts';
 import type { PiiKeys } from './shared/infrastructure/aes-gcm-pii-protector.ts';
 import { createOutbox } from './shared/infrastructure/outbox-factory.ts';
 import type { OutboxWorker } from './shared/infrastructure/outbox-worker.ts';
@@ -140,6 +141,8 @@ export function buildApp({
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
   registerProblemHandlers(app, errorReporter);
+  // Before any route, so every one of them is traced (v1.2.0 plan, task 8).
+  registerRequestTracing(app);
 
   app.addHook('onRequest', (request, reply, done) => {
     void reply.header('x-request-id', request.id);

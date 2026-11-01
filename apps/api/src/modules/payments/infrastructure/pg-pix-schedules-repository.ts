@@ -1,5 +1,6 @@
 import type pg from 'pg';
 import { Money } from '../../../shared/domain/money.ts';
+import { annotate } from '../../../shared/infrastructure/tracing.ts';
 import type {
   PixSchedulesRepository,
   ScheduleOccurrence,
@@ -92,6 +93,8 @@ export class PgPixSchedulesRepository implements PixSchedulesRepository {
     const row = rows[0];
     const schedule = stateOf(row);
     if (!row || !schedule) return null;
+    // The occurrence's transaction is named by its schedule (task 8).
+    annotate({ 'nextbank.schedule.id': schedule.id });
     const payeeKey =
       row.payee_key_ciphertext !== null && row.payee_key_version !== null
         ? { ciphertext: row.payee_key_ciphertext, keyVersion: row.payee_key_version }

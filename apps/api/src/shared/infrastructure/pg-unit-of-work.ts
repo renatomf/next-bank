@@ -1,6 +1,7 @@
 import type pg from 'pg';
 import type { Transaction, UnitOfWork } from '../application/ports.ts';
 import { withTransaction } from './pg-transaction.ts';
+import { inSpan } from './tracing.ts';
 
 /** A transaction backed by one Postgres connection. */
 export class PgTransaction implements Transaction {
@@ -25,7 +26,14 @@ export class PgUnitOfWork implements UnitOfWork {
     this.#pool = pool;
   }
 
+  /**
+   * Each transaction is a span of the trace (v1.2.0 plan, task 8), so what
+   * it writes, such as an outbox message, hangs from it; the repositories
+   * name the Pix and the schedule it touches.
+   */
   run<T>(work: (tx: Transaction) => Promise<T>): Promise<T> {
-    return withTransaction(this.#pool, (client) => work(new PgTransaction(client)));
+    return inSpan('transaction', {}, () =>
+      withTransaction(this.#pool, (client) => work(new PgTransaction(client))),
+    );
   }
 }

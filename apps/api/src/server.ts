@@ -3,6 +3,7 @@ import { mountSimulator } from './mount-simulator.ts';
 import { loadConfig } from './shared/config.ts';
 import { createPool } from './shared/db.ts';
 import { SentryErrorReporter } from './shared/infrastructure/sentry-error-reporter.ts';
+import { inRootSpan, otlpExporter, startTracing } from './shared/infrastructure/tracing.ts';
 
 /** How often the worker looks for messages to deliver (ADR 0016). */
 const OUTBOX_POLL_MS = 1_000;
@@ -16,6 +17,9 @@ const SCHEDULES_POLL_MS = 60_000;
 const RECONCILIATION_CHECK_MS = 60 * 60_000;
 
 const config = loadConfig(process.env);
+// Before anything else, so it is the one OpenTelemetry setup (task 8, T2);
+// only where a collector is set: production exports nothing (T5).
+const tracing = config.tracing ? startTracing(otlpExporter(config.tracing.endpoint)) : null;
 const app = buildApp({
   pool: createPool(config.databaseUrl),
   trustProxy: config.trustProxy,
@@ -45,14 +49,21 @@ const app = buildApp({
 /**
  * Runs [round] every [ms] in the API's process (D3), one round at a time: a
  * slow round is never overlapped by the next. A failed round is logged and
- * the next one tries again.
+ * the next one tries again. A [traced] round is a trace of its own, with
+ * what it pays or checks under it; the outbox and the webhooks are not,
+ * since each message already goes on the trace that wrote it (task 8).
  */
-function everyRound(name: string, ms: number, round: () => Promise<unknown>): void {
+function everyRound(
+  name: string,
+  ms: number,
+  round: () => Promise<unknown>,
+  { traced } = { traced: false },
+): void {
   let running = false;
   const timer = setInterval(() => {
     if (running) return;
     running = true;
-    round()
+    (traced ? inRootSpan(name, round) : round())
       .catch((err: unknown) => {
         app.log.error({ err }, `${name} failed`);
       })
@@ -77,10 +88,16 @@ if (config.simulator) {
 
 everyRound('outbox delivery', OUTBOX_POLL_MS, () => app.outboxWorker.runOnce());
 const statusCheck = app.spiStatusCheck;
-if (statusCheck) everyRound('SPI status check', STATUS_CHECK_MS, statusCheck);
-everyRound('scheduled Pix', SCHEDULES_POLL_MS, () => app.runDueSchedules());
+if (statusCheck) {
+  everyRound('SPI status check', STATUS_CHECK_MS, statusCheck, { traced: true });
+}
+everyRound('scheduled Pix', SCHEDULES_POLL_MS, () => app.runDueSchedules(), { traced: true });
 const reconcile = app.reconcileDueDay;
-if (reconcile) everyRound('reconciliation', RECONCILIATION_CHECK_MS, reconcile);
+if (reconcile) {
+  everyRound('reconciliation', RECONCILIATION_CHECK_MS, reconcile, { traced: true });
+}
+// After the rounds and the requests stop, what is left of the trace goes out.
+if (tracing) app.addHook('onClose', () => tracing.shutdown());
 
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.once(signal, () => {
