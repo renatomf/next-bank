@@ -74,6 +74,59 @@ jobs:
       - run: pnpm --filter @nextbank/simulator typecheck
       - run: pnpm --filter @nextbank/simulator test:coverage
 
+  chaos:
+    # The chaos test of the Pix to other banks (v1.2.0 plan, task 9, C1): a
+    # thousand Pix under 30% of faults, an hour without the SPI and a day of
+    # injected divergences. On a database of its own, since it checks
+    # invariants over the whole of it.
+    name: Chaos
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        # Authenticated pulls: anonymous ones share the runners' IP quota on
+        # Docker Hub and fail with toomanyrequests. Read-only token.
+        credentials:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci-postgres
+          POSTGRES_DB: nextbank
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d nextbank"
+          --health-interval 2s --health-timeout 3s --health-retries 15
+    env:
+      # Throwaway credentials for the ephemeral CI database only.
+      PGHOST: localhost
+      PGPASSWORD: ci-postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: nextbank
+      NEXTBANK_MIGRATOR_PASSWORD: ci-migrator
+      NEXTBANK_APP_PASSWORD: ci-app
+      NEXTBANK_SIMULATOR_PASSWORD: ci-simulator
+      TEST_DATABASE_URL: postgres://nextbank_app:ci-app@localhost:5432/nextbank_test?sslmode=disable
+      TEST_MIGRATION_DATABASE_URL: postgres://nextbank_migrator:ci-migrator@localhost:5432/nextbank_test?sslmode=disable
+      TEST_SIMULATOR_DATABASE_URL: postgres://nextbank_simulator:ci-simulator@localhost:5432/nextbank_test?sslmode=disable
+      TEST_SIMULATOR_MIGRATION_DATABASE_URL: postgres://nextbank_migrator:ci-migrator@localhost:5432/nextbank_test?sslmode=disable
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Create database roles (same bootstrap as local)
+        run: sh infra/postgres/init-roles.sh
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      # pnpm version comes from packageManager in package.json.
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      # CHAOS_SEED is drawn at each run and told on failure, to repeat it locally.
+      - run: pnpm --filter @nextbank/api test:chaos
+
   mobile:
     name: Mobile
     runs-on: ubuntu-24.04
