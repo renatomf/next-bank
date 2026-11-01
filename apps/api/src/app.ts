@@ -45,6 +45,7 @@ import {
 import { createReconciliationModule, ErrorReporterAlarm } from './modules/reconciliation/index.ts';
 import { createTopUpsModule, topUpRoutes } from './modules/top-ups/index.ts';
 import { healthRoutes } from './shared/http/health.ts';
+import { isCallInsideTheService } from './shared/http/partner-routes.ts';
 import { registerProblemHandlers } from './shared/http/problem.ts';
 import { registerRequestTracing } from './shared/http/request-tracing.ts';
 import type { PiiKeys } from './shared/infrastructure/aes-gcm-pii-protector.ts';
@@ -163,6 +164,8 @@ export function buildApp({
   void app.register(helmet);
   void app.register(rateLimit, {
     ...GLOBAL_RATE_LIMIT,
+    // The service calling itself, partner to partner (C7): never one client's counter.
+    allowList: (request) => isCallInsideTheService(request),
     // Thrown, so the error handler answers in the RFC 9457 format.
     errorResponseBuilder: (_request, context) =>
       Object.assign(new Error('rate limit exceeded'), { statusCode: context.statusCode }),
