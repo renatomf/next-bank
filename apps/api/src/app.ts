@@ -52,7 +52,7 @@ import type { PiiKeys } from './shared/infrastructure/aes-gcm-pii-protector.ts';
 import { createOutbox } from './shared/infrastructure/outbox-factory.ts';
 import type { OutboxWorker } from './shared/infrastructure/outbox-worker.ts';
 import { PgUnitOfWork } from './shared/infrastructure/pg-unit-of-work.ts';
-import type { ErrorReporter } from './shared/application/ports.ts';
+import type { Clock, ErrorReporter } from './shared/application/ports.ts';
 import { NoopErrorReporter } from './shared/infrastructure/sentry-error-reporter.ts';
 import { SystemClock, UuidV7Generator } from './shared/infrastructure/system-ports.ts';
 import { REDACT_PATHS, requestForLog } from './shared/logging.ts';
@@ -95,6 +95,8 @@ export interface AppDependencies {
   errorReporter?: ErrorReporter;
   /** The Pix to other banks: off unless given (v1.2.0 plan, P1). */
   externalPix?: { simulatorUrl: string; participantKey: string; webhookSecret: Uint8Array };
+  /** Server time; the system's by default. The chaos test moves it (v1.2.0 plan, task 9, C4). */
+  clock?: Clock;
 }
 
 /** A partner that does not answer in this long is a failure, retried by the caller. */
@@ -121,6 +123,7 @@ export function buildApp({
   release,
   errorReporter = new NoopErrorReporter(),
   externalPix,
+  clock = new SystemClock(),
 }: AppDependencies) {
   const app = Fastify({
     // The client is the hop before the trusted proxies: hop 0 is the socket peer,
@@ -183,7 +186,6 @@ export function buildApp({
     transformObject: jsonSchemaTransformObject,
   });
 
-  const clock = new SystemClock();
   const ids = new UuidV7Generator();
   const unitOfWork = new PgUnitOfWork(pool);
   const ledger = createLedgerModule({ clock, ids });
