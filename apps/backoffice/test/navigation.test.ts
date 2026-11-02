@@ -7,8 +7,8 @@ import { navigationFor } from '../components/nb/navigation';
 const pathsOf = (role: string) => navigationFor(role).map((item) => item.href);
 
 describe('navigationFor', () => {
-  it.each(['OPERATOR', 'ANALYST'])('shows the customers to the %s', (role) => {
-    expect(pathsOf(role)).toEqual(['/', '/clientes']);
+  it.each(['OPERATOR', 'ANALYST'])('shows the customers and the requests to the %s', (role) => {
+    expect(pathsOf(role)).toEqual(['/', '/clientes', '/pedidos']);
   });
 
   it('keeps the customers away from the admin (task 3, C1)', () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { adminApi, LoginRefused, SearchRefused, SessionEnded } from '../lib/api';
+import { adminApi, CommandRefused, LoginRefused, SearchRefused, SessionEnded } from '../lib/api';
 
 // The backoffice's client of the API's /admin routes (v1.3.0 plan, task 2;
 // B2, STF-08): only the server calls it, always with the backoffice's key
@@ -149,5 +149,68 @@ describe('adminApi', () => {
     const { fetch } = recordingFetch(401, { code: 'StaffSessionExpired' });
 
     await expect(api(fetch, 'opaque-token').customer('x')).rejects.toBeInstanceOf(SessionEnded);
+  });
+
+  // Blocking and the requests (v1.3.0 plan, task 4): every command carries
+  // the key the form was rendered with, so a double click acts once (K6).
+  it('blocks an account with the reason and the idempotency key of the form', async () => {
+    const id = '0190f0b6-1b2c-7d3e-8f40-123456789abc';
+    const key = '0190f0b6-0000-7000-8000-000000000001';
+    const { calls, fetch } = recordingFetch(204, null);
+
+    await api(fetch, 'opaque-token').blockAccount(id, 'FRAUD_SUSPECTED', key);
+
+    expect(calls[0]?.method).toBe('POST');
+    expect(calls[0]?.url).toBe(`https://api.example.test/admin/v1/customers/${id}/block`);
+    expect(calls[0]?.headers.get('idempotency-key')).toBe(key);
+    expect(JSON.parse(calls[0]?.body ?? '{}')).toEqual({ reason: 'FRAUD_SUSPECTED' });
+  });
+
+  it('opens, decides and cancels requests at their routes', async () => {
+    const id = '0190f0b6-1b2c-7d3e-8f40-123456789abc';
+    const key = '0190f0b6-0000-7000-8000-000000000002';
+    const { calls, fetch } = recordingFetch(200, { id });
+    const client = api(fetch, 'opaque-token');
+
+    await client.requestUnblock(id, 'CUSTOMER_REQUEST', 'Ligou', key);
+    await client.decideRequest(id, 'approve', null, key);
+    await client.decideRequest(id, 'reject', 'Sem documento', key);
+    await client.cancelRequest(id, key);
+
+    expect(calls.map((call) => call.url)).toEqual([
+      'https://api.example.test/admin/v1/requests',
+      `https://api.example.test/admin/v1/requests/${id}/approve`,
+      `https://api.example.test/admin/v1/requests/${id}/reject`,
+      `https://api.example.test/admin/v1/requests/${id}/cancel`,
+    ]);
+    expect(JSON.parse(calls[0]?.body ?? '{}')).toEqual({
+      kind: 'UNBLOCK_ACCOUNT',
+      customerId: id,
+      reason: 'CUSTOMER_REQUEST',
+      note: 'Ligou',
+    });
+    expect(calls.every((call) => call.headers.get('idempotency-key') === key)).toBe(true);
+  });
+
+  it('lists the requests by status, from a cursor', async () => {
+    const { calls, fetch } = recordingFetch(200, { items: [], nextCursor: null });
+
+    await api(fetch, 'opaque-token').listRequests('ALL', 'abc_DEF-1');
+
+    expect(calls[0]?.url).toBe(
+      'https://api.example.test/admin/v1/requests?status=ALL&cursor=abc_DEF-1',
+    );
+  });
+
+  it.each([
+    [409, 'AccountAlreadyBlocked'],
+    [403, 'SelfApprovalNotAllowed'],
+    [403, 'DemoCustomerProtected'],
+  ])('tells why a command was refused (%i %s)', async (status, code) => {
+    const { fetch } = recordingFetch(status, { code });
+
+    await expect(api(fetch, 'opaque-token').blockAccount('x', 'OTHER', 'k')).rejects.toEqual(
+      new CommandRefused(code),
+    );
   });
 });
