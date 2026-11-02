@@ -7,7 +7,7 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const expired = (await searchParams).sessao === 'expirada';
+  const expired = (await searchParams).session === 'expired';
 
   return (
     <main className="grid min-h-dvh place-items-center bg-[radial-gradient(ellipse_at_top,var(--nb-glow),transparent_60%)] p-4">
