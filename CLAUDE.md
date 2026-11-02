@@ -18,7 +18,10 @@ O projeto é tratado como um **banco real em produção**. Nenhum padrão abaixo
 **Legibilidade:** código escrito para humanos lerem: nomes que dizem o que a coisa é, funções curtas e diretas, comentários que explicam o porquê (não o quê). Sem abstração especulativa: uma interface ou camada só existe quando separa responsabilidades reais.
 
 **Desenho antes do código (obrigatório):** nenhuma fatia é implementada por tentativa e erro. Antes da primeira linha de teste, o desenho da fatia é escrito e aprovado pelo desenvolvedor, cobrindo:
-- **Fontes conferidas:** cada linha do threat model, ADR, regra do modelo de domínio e item do checklist ASVS/MASVS que a fatia toca, cada uma mapeada para o teste que a prova.
+- **Fontes conferidas:** cada linha do threat model, ADR, regra do modelo de domínio e item do checklist ASVS/MASVS que a fatia toca, cada uma mapeada para o teste que a prova. Entram sempre, também:
+  - os itens do "Pronto quando" da versão que a fatia toca, cada um com o teste que o prova (F-45);
+  - as consequências negativas dos ADRs que a fatia cita, e não só as decisões (F-44);
+  - o que cada dependência, nova ou já instalada, faz com o estado global do processo que a fatia usa: provider de trace, hooks e interceptadores (F-43).
 - **Estrutura:** onde cada peça fica (módulo, camada, porta, adaptador) e com quem conversa, conforme as regras de arquitetura.
 - **Concorrência:** o que acontece com requisições simultâneas sobre o mesmo recurso (contadores, saldos, tokens), e o teste que prova.
 - **Contratos:** entradas, saídas, erros do catálogo, schemas OpenAPI novos pelo nome, schema do banco (queries e índices) e configuração.

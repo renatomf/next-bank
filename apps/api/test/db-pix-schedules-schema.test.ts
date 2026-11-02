@@ -27,6 +27,9 @@ describe('Pix schedules schema', () => {
     );
   }
 
+  // Days in 2099: these schedules have no payer account, so the worker of
+  // another test file must never find them due (it runs in 2025 and 2026);
+  // the order of the files would decide whether that file passes.
   async function insertSchedule(columns: Record<string, unknown> = {}): Promise<string> {
     const row: Record<string, unknown> = {
       id: randomUUID(),
@@ -39,12 +42,12 @@ describe('Pix schedules schema', () => {
       amount: 15_000,
       currency: 'BRL',
       description: null,
-      first_date: '2026-11-05',
+      first_date: '2099-11-05',
       frequency: 'MONTHLY',
       times: 3,
       status: 'ACTIVE',
       next_sequence: 1,
-      next_occurrence_date: '2026-11-05',
+      next_occurrence_date: '2099-11-05',
       version: 0,
       created_at: new Date('2026-10-27T15:00:00Z'),
       cancelled_at: null,
@@ -85,7 +88,7 @@ describe('Pix schedules schema', () => {
       id: randomUUID(),
       schedule_id: scheduleId,
       sequence: 1,
-      occurrence_date: '2026-11-05',
+      occurrence_date: '2099-11-05',
       transfer_id: await insertTransfer(),
       executed_at: new Date('2026-11-05T12:00:00Z'),
       ...columns,
@@ -163,7 +166,7 @@ describe('Pix schedules schema', () => {
     await expect(insertOccurrence(scheduleId, { sequence: 2 })).rejects.toThrow(
       /schedule_id_occurrence_date_key/,
     );
-    await expect(insertOccurrence(scheduleId, { occurrence_date: '2026-12-05' })).rejects.toThrow(
+    await expect(insertOccurrence(scheduleId, { occurrence_date: '2099-12-05' })).rejects.toThrow(
       /schedule_id_sequence_key/,
     );
   });
@@ -193,7 +196,7 @@ describe('Pix schedules schema', () => {
     await expect(
       app.query(
         `UPDATE payments.pix_schedules
-         SET next_sequence = 2, next_occurrence_date = '2026-12-05', version = 1,
+         SET next_sequence = 2, next_occurrence_date = '2099-12-05', version = 1,
              updated_at = now()
          WHERE id = $1`,
         [scheduleId],
