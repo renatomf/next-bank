@@ -6,6 +6,9 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não publicado]
 
+### Alterado
+- **Nome do app no celular:** "Next Bank", com iniciais maiúsculas como os outros apps, embaixo do ícone e na tela de apps recentes. Dentro do app, a marca continua escrita "next bank".
+
 ## [1.2.0] — 2026-11-01
 
 Pix assíncrono: o Pix sai do next bank para outros bancos, fictícios, por um simulador do Bacen que falha de propósito, e o dinheiro nunca some, nunca duplica e sempre termina num estado final correto. O mesmo executor em segundo plano paga os Pix agendados (plano `v1.2.0-pix-assincrono.md`).

@@ -151,7 +151,8 @@ class _NextBankAppState extends ConsumerState<NextBankApp> {
     // Follows the phone until the customer picks one on the Profile (D9).
     final choice = ref.watch(themeChoiceProvider).value ?? ThemeChoice.system;
     return MaterialApp.router(
-      title: 'next bank',
+      // The app's name as the system lists it (recent apps).
+      title: 'Next Bank',
       theme: NbTheme.light(),
       darkTheme: NbTheme.dark(),
       themeMode: choice.mode,
