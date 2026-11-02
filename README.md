@@ -55,7 +55,7 @@ https://github.com/user-attachments/assets/a2748bde-302c-45a7-a953-d19fa6b02b93
 
 - **Primeira abertura:** a API roda num servidor gratuito que dorme sem uso. Se ele estiver dormindo, a primeira resposta pode levar até 1 minuto.
 - **Contas compartilhadas:** as contas de demonstração não trocam senha nem PIN e não encerram sessões, para que nenhum visitante tranque os outros do lado de fora.
-- **Equipe de demonstração:** Olívia e Diogo só enxergam Ana e Bruno. Os cadastros de visitantes nunca aparecem no backoffice publicado.
+- **Equipe de demonstração:** Olívia e Diogo só enxergam os clientes de demonstração; os cadastros de visitantes nunca aparecem no backoffice publicado. Para ver o bloqueio e a dupla aprovação, use a **Carla Demo**: Olívia bloqueia e pede o desbloqueio, Diogo aprova. Ana e Bruno, que todo visitante do app usa, não podem ser bloqueados pela equipe de demonstração.
 - **Tudo volta ao começo todo dia, às 03:00 (horário de Brasília):** as contas criadas por visitantes e os Pix somem, e Ana e Bruno voltam com o saldo inicial.
 - **Sua própria conta:** o cadastro gera um CPF fictício válido. Não use dados reais.
 - **Dinheiro de mentira:** o Pix acontece entre contas do next bank e de três bancos fictícios (Aurora, Horizonte e Raiz), por um simulador do Bacen do próprio projeto; nenhum valor real é movimentado, e nada fala com o Pix de verdade.
