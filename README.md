@@ -44,10 +44,18 @@ https://github.com/user-attachments/assets/a2748bde-302c-45a7-a953-d19fa6b02b93
 4. **Um Pix em 30 segundos:** entre como Ana, toque em **Pix**, use a chave CPF de Bruno (`529.982.247-25`), escolha o valor e confirme com o PIN `2580`. O comprovante aparece na hora, e o Pix já está no extrato dos dois.
 5. **Um Pix para outro banco:** use a chave `clara.aurora@example.com`, de Clara, do Banco Aurora (fictício). O Pix passa pelo simulador do Bacen do próprio projeto e fica alguns segundos em processamento, até o "SPI" responder; o app acompanha sozinho até o comprovante.
 
+**O banco por dentro:** no [backoffice](https://next-bank-backoffice.vercel.app), a equipe de demonstração consulta Ana e Bruno, com CPF e e-mail mascarados, e cada consulta fica na trilha de auditoria. O código vem de um aplicativo autenticador (Google Authenticator, Microsoft Authenticator, 1Password): cadastre a chave manualmente, como TOTP.
+
+| Equipe | E-mail | Senha | Chave do autenticador |
+|---|---|---|---|
+| Olívia (operadora) | `olivia.demo@example.com` | `demo-olivia-next-bank` | `N5WGS5TJMEQGIZLNN4QG4ZLYOQQGEYLONM` |
+| Diogo (analista) | `diogo.demo@example.com` | `demo-diogo-next-bank` | `MRUW6Z3PEBSGK3LPEBXGK6DUEBRGC3TL` |
+
 **Bom saber**
 
 - **Primeira abertura:** a API roda num servidor gratuito que dorme sem uso. Se ele estiver dormindo, a primeira resposta pode levar até 1 minuto.
 - **Contas compartilhadas:** as contas de demonstração não trocam senha nem PIN e não encerram sessões, para que nenhum visitante tranque os outros do lado de fora.
+- **Equipe de demonstração:** Olívia e Diogo só enxergam Ana e Bruno. Os cadastros de visitantes nunca aparecem no backoffice publicado.
 - **Tudo volta ao começo todo dia, às 03:00 (horário de Brasília):** as contas criadas por visitantes e os Pix somem, e Ana e Bruno voltam com o saldo inicial.
 - **Sua própria conta:** o cadastro gera um CPF fictício válido. Não use dados reais.
 - **Dinheiro de mentira:** o Pix acontece entre contas do next bank e de três bancos fictícios (Aurora, Horizonte e Raiz), por um simulador do Bacen do próprio projeto; nenhum valor real é movimentado, e nada fala com o Pix de verdade.

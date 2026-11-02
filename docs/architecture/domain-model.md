@@ -164,7 +164,7 @@ flowchart LR
 - Atributos: `id`, `occurredAt`, `actorType` (`USER`, `SYSTEM`, `STAFF`), `actorId`, `action`, `subjectType`, `subjectId`, `requestId`, `metadata`
 - Invariantes: só inclusão; `metadata` **nunca** contém senha, PIN, token, CPF completo ou valor de chave Pix completo
 - Ações da V1: `USER_REGISTERED`, `LOGIN_SUCCEEDED`, `LOGIN_FAILED`, `SESSION_CREATED`, `SESSION_REVOKED`, `REFRESH_REUSE_DETECTED`, `PIN_CREATED`, `PIN_LOCKED`, `PIN_CHANGED`, `PASSWORD_CHANGED`, `ACCOUNT_OPENED`, `PIX_CREATED`, `PIX_COMPLETED`, `PIX_SENT` (v1.2.0: Pix enviado a outro banco, com o id de ponta a ponta), `PIX_FAILED`, `PIX_CANCELLED`, `TOP_UP_COMPLETED` (v1.1.0: a operadora e o valor, nunca o número), `PIX_SCHEDULE_CREATED` e `PIX_SCHEDULE_CANCELLED` (v1.2.0: ator `USER`; cada ocorrência grava o desfecho do Pix com ator `SYSTEM` e o id do agendamento)
-- Ações da equipe (v1.3.0, tarefa 1; ator `STAFF`, ou `SYSTEM` quando ninguém está autenticado): `STAFF_MEMBER_CREATED`, `STAFF_LOGIN_SUCCEEDED`, `STAFF_LOGIN_FAILED` (o motivo só no `metadata`: senha, código, código repetido ou membro desativado) e `STAFF_SESSION_REVOKED`
+- Ações da equipe (v1.3.0, tarefa 1; ator `STAFF`, ou `SYSTEM` quando ninguém está autenticado): `STAFF_MEMBER_CREATED`, `STAFF_LOGIN_SUCCEEDED`, `STAFF_LOGIN_FAILED` (o motivo só no `metadata`: senha, código, código repetido ou membro desativado) e `STAFF_SESSION_REVOKED`; na tarefa 3, `SENSITIVE_DATA_ACCESSED` (sujeito: o cliente, `USER`; `metadata.view`: `CUSTOMER` ou `STATEMENT`) e `CUSTOMERS_SEARCHED` (sujeito: o membro; `metadata`: o tipo do termo e a quantidade, nunca o termo)
 
 ## 4. Máquina de estados do Pix
 
