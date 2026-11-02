@@ -2,9 +2,11 @@ import { ArrowLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { AccountActionsPanel } from '@/features/customers/account-actions-panel';
 import { CustomerCard } from '@/features/customers/customer-card';
 import { StatementList } from '@/features/customers/statement-list';
-import { asSignedInMember } from '@/lib/backend';
+import { asSignedInMember, signedInMember } from '@/lib/backend';
+import { newIdempotencyKey } from '@/lib/idempotency';
 
 /**
  * A customer's card and statement (v1.3.0 plan, task 3). Every load is a
@@ -28,6 +30,7 @@ export default async function CustomerPage({
     ]),
   );
   if (!customer || !statement) notFound();
+  const member = await signedInMember();
 
   return (
     <div className="space-y-8">
@@ -38,6 +41,14 @@ export default async function CustomerPage({
         </Link>
       </Button>
       <CustomerCard customer={customer} />
+      <AccountActionsPanel
+        customerId={customer.id}
+        accountStatus={customer.account.status}
+        canBlock={member.role === 'OPERATOR' || member.role === 'ANALYST'}
+        canRequest={member.role === 'OPERATOR'}
+        blockKey={newIdempotencyKey()}
+        requestKey={newIdempotencyKey()}
+      />
       <section aria-labelledby="statement-title" className="space-y-4">
         <h2 id="statement-title" className="text-xl font-semibold">
           Extrato
