@@ -381,6 +381,28 @@ A conciliação diária, num contexto e num schema próprios. Ela só lê os out
 
 O saldo de `pix_clearing` e a soma dos Pix em espera são lidos na mesma transação `REPEATABLE READ`, para um Pix que termina no meio não acusar diferença falsa.
 
+### 5.7 `staff` (v1.3.0, tarefa 1)
+
+A equipe do backoffice, num contexto próprio, separado de Identity (plano `v1.3.0-backoffice.md`, B4).
+
+- **`members`:**
+  - e-mail único e em minúsculas (`CHECK`); nome de 2 a 80;
+  - `password_hash` só Argon2id; o segredo TOTP cifrado com a `STAFF_TOTP_KEY` (S5), com a versão da chave;
+  - `last_totp_step`: o passo do último código aceito, para um código valer uma vez (RFC 6238, 5.2);
+  - `role` (`OPERATOR`, `ANALYST`, `ADMIN`), `status` (`ACTIVE`, `DISABLED`) e `is_demo`, todos com `CHECK`.
+- **`sessions`:**
+  - só o SHA-256 do token (32 bytes, único), nunca o token (S1);
+  - `CHECK` de coerência: o último uso depois do início, o fim em no máximo 8 h e a revogação depois do início (STF-06);
+  - índice `(member_id)`, para encerrar todas as sessões de um membro desativado (tarefa 7).
+- **`GRANT`:** `SELECT, INSERT` nas duas tabelas. `UPDATE` só de `last_totp_step` e `updated_at` em `members`, e de `last_seen_at` e `revoked_at` em `sessions`. Sem `DELETE`. Papel e status ganham `UPDATE` com a tela do admin (tarefa 7).
+- **Consultas** (`EXPLAIN ANALYZE` no banco de testes; com tabelas tão pequenas, o Postgres prefere a varredura sequencial, e o plano abaixo é o mesmo com ela desligada):
+
+  | Consulta | Índice | Tempo |
+  |---|---|---|
+  | Login pelo e-mail | `members_email_key` | 0,03 ms |
+  | Sessão pelo hash do token, com o membro | `sessions_token_hash_key` e `members_pkey` | 0,04 ms |
+  | Trava do membro no login | `members_pkey`, `FOR UPDATE` | — |
+
 ## 6. Permissões no banco (menor privilégio)
 
 | Papel | Uso | Permissões |

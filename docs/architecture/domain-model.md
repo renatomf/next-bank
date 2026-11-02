@@ -164,6 +164,7 @@ flowchart LR
 - Atributos: `id`, `occurredAt`, `actorType` (`USER`, `SYSTEM`, `STAFF`), `actorId`, `action`, `subjectType`, `subjectId`, `requestId`, `metadata`
 - Invariantes: só inclusão; `metadata` **nunca** contém senha, PIN, token, CPF completo ou valor de chave Pix completo
 - Ações da V1: `USER_REGISTERED`, `LOGIN_SUCCEEDED`, `LOGIN_FAILED`, `SESSION_CREATED`, `SESSION_REVOKED`, `REFRESH_REUSE_DETECTED`, `PIN_CREATED`, `PIN_LOCKED`, `PIN_CHANGED`, `PASSWORD_CHANGED`, `ACCOUNT_OPENED`, `PIX_CREATED`, `PIX_COMPLETED`, `PIX_SENT` (v1.2.0: Pix enviado a outro banco, com o id de ponta a ponta), `PIX_FAILED`, `PIX_CANCELLED`, `TOP_UP_COMPLETED` (v1.1.0: a operadora e o valor, nunca o número), `PIX_SCHEDULE_CREATED` e `PIX_SCHEDULE_CANCELLED` (v1.2.0: ator `USER`; cada ocorrência grava o desfecho do Pix com ator `SYSTEM` e o id do agendamento)
+- Ações da equipe (v1.3.0, tarefa 1; ator `STAFF`, ou `SYSTEM` quando ninguém está autenticado): `STAFF_MEMBER_CREATED`, `STAFF_LOGIN_SUCCEEDED`, `STAFF_LOGIN_FAILED` (o motivo só no `metadata`: senha, código, código repetido ou membro desativado) e `STAFF_SESSION_REVOKED`
 
 ## 4. Máquina de estados do Pix
 
@@ -298,6 +299,8 @@ O extrato não é um agregado: é uma consulta (lado de leitura do CQRS) que lê
 | `Unauthenticated` | 401 | Qualquer | Token de acesso ausente, inválido ou expirado: o app tenta o refresh uma vez; se falhar, volta ao login: "Faça login para continuar." |
 | `SessionExpired` | 401 | Qualquer | Volta para o login: "Sua sessão expirou." |
 | `RefreshTokenReuseDetected` | 401 | Qualquer | Volta para o login: "Por segurança, entre novamente." |
+| `StaffSessionExpired` | 401 | Backoffice | A sessão da equipe acabou (15 min sem uso, 8 h, logout ou membro desativado): volta ao login do backoffice (v1.3.0) |
+| `Forbidden` | 403 | Backoffice | O papel do membro não permite a ação (STF-02): "Você não tem permissão para isso." (v1.3.0) |
 | `InvalidPin` | 422 | Criar PIN | "Use 4 dígitos que não sejam repetidos nem em sequência." |
 | `PinIncorrect` | 422 | Revisar Pix | "PIN incorreto. Restam N tentativas." |
 | `PinLocked` | 423 | Revisar Pix | "PIN bloqueado por 30 minutos." |

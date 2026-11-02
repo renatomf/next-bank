@@ -207,6 +207,21 @@ Localmente:
 
 O trace leva só ids, estados e o molde de cada rota (EXT-07): nenhuma URL, chave Pix, nome, documento ou valor. O Jaeger guarda tudo em memória e perde o que tem quando para.
 
+## 12. Equipe do backoffice (v1.3.0)
+
+As rotas da equipe (`/admin/v1`) só existem com as duas chaves: `BACKOFFICE_API_KEY`, que só o servidor do backoffice manda, e `STAFF_TOTP_KEY`, que cifra os segredos do autenticador. Sem elas, a API sobe sem nenhuma rota `/admin`. Em produção, elas entram com o deploy do backoffice (tarefa 2 da `v1.3.0`).
+
+Localmente:
+
+1. Gere as chaves (`node scripts/generate-dev-keys.ts` em `apps/api` já imprime as duas) e copie para o `apps/api/.env`.
+2. Crie um membro:
+   ```powershell
+   pnpm --filter @nextbank/api staff:create --name "Lia Operadora" --email lia@example.com --role ADMIN
+   ```
+3. O script mostra **uma vez** a senha e o segredo do autenticador. Digite o segredo num aplicativo autenticador ("inserir chave de configuração"). O banco guarda só o hash da senha e o segredo cifrado.
+
+O login da equipe pede e-mail, senha e o código de 6 dígitos do autenticador, e o código vale uma vez.
+
 ## Rotina
 
 - **Deploy:** automático depois de cada merge na `main` com o CI verde, ou manual pelo workflow.
