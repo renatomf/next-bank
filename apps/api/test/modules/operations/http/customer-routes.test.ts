@@ -116,7 +116,7 @@ const search = (token: string, query: string) =>
     payload: { query },
   });
 
-const found = (response: { json: <T>() => T }) =>
+const found = (response: Awaited<ReturnType<typeof search>>) =>
   response.json<{ customers: { id: string }[] }>().customers.map((c) => c.id);
 
 const card = (token: string, id: string) =>
@@ -179,6 +179,13 @@ describe('POST /admin/v1/customers/search', () => {
 
     expect(found(await search(token, '%%%'))).toEqual([]);
     expect(found(await search(token, '___'))).toEqual([]);
+  });
+
+  it('finds a name that holds % and _ by those very letters', async () => {
+    const { token } = await staff('ANALYST');
+    const unusual = await customer({ name: `Zé_100%_${randomUUID().slice(0, 8)}` });
+
+    expect(found(await search(token, unusual.name))).toEqual([unusual.id]);
   });
 
   it('writes one event per search, never the term (C3)', async () => {
