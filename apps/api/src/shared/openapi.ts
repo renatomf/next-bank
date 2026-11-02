@@ -46,10 +46,18 @@ function referencedSchemas(document: OpenApiDocument): Set<string> {
  * Builds the OpenAPI contract the clients are generated from (ADR 0008).
  * The Zod provider registers an input and an output variant of every named schema;
  * only the ones the paths reference are kept, so clients get no unused classes.
+ * [includes] picks the paths of one contract: the app's or the staff's (B8).
  */
-export async function buildOpenApiDocument(app: FastifyInstance): Promise<OpenApiDocument> {
+export async function buildOpenApiDocument(
+  app: FastifyInstance,
+  includes: (path: string) => boolean = () => true,
+): Promise<OpenApiDocument> {
   await app.ready();
-  const document = app.swagger() as unknown as OpenApiDocument;
+  const built = app.swagger() as unknown as OpenApiDocument;
+  const document = {
+    ...built,
+    paths: Object.fromEntries(Object.entries(built.paths).filter(([path]) => includes(path))),
+  };
   const used = referencedSchemas(document);
   const schemas = Object.fromEntries(
     Object.entries(document.components.schemas)

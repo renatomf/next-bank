@@ -20,6 +20,9 @@ const SECRETS = {
   // Personal data never goes to logs either (database.md, section 2; F-13).
   email: 'fake-person@example.test',
   name: 'Fake Person Name',
+  // The staff's login (v1.3.0 plan, task 1): the authenticator's code and secret.
+  mfaCode: '864209',
+  totpSecret: 'FAKESECRETFAKESECRET',
 };
 
 /** Every value at the leaves of a log line, as text. */

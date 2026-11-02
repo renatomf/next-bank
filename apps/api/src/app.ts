@@ -21,6 +21,7 @@ import {
 } from './modules/accounts/index.ts';
 import {
   type AccessTokenKeys,
+  Argon2idHasher,
   createIdentityModule,
   loginRoutes,
   mePasswordRoutes,
@@ -28,6 +29,7 @@ import {
   meSessionsRoutes,
   registerAuthentication,
   pinRoutes,
+  RandomRefreshTokens,
   sessionRoutes,
 } from './modules/identity/index.ts';
 import { createLedgerModule } from './modules/ledger/index.ts';
@@ -43,6 +45,11 @@ import {
   transferRoutes,
 } from './modules/payments/index.ts';
 import { createReconciliationModule, ErrorReporterAlarm } from './modules/reconciliation/index.ts';
+import {
+  createStaffModule,
+  registerStaffAuthentication,
+  staffAuthRoutes,
+} from './modules/staff/index.ts';
 import { createTopUpsModule, topUpRoutes } from './modules/top-ups/index.ts';
 import { healthRoutes } from './shared/http/health.ts';
 import { isCallInsideTheService } from './shared/http/partner-routes.ts';
@@ -97,6 +104,8 @@ export interface AppDependencies {
   externalPix?: { simulatorUrl: string; participantKey: string; webhookSecret: Uint8Array };
   /** Server time; the system's by default. The chaos test moves it (v1.2.0 plan, task 9, C4). */
   clock?: Clock;
+  /** The backoffice's /admin routes: off unless both keys are given (v1.3.0, task 1, S4). */
+  backoffice?: { apiKey: string; totpKey: Uint8Array };
 }
 
 /** A partner that does not answer in this long is a failure, retried by the caller. */
@@ -124,6 +133,7 @@ export function buildApp({
   errorReporter = new NoopErrorReporter(),
   externalPix,
   clock = new SystemClock(),
+  backoffice,
 }: AppDependencies) {
   const app = Fastify({
     // The client is the hop before the trusted proxies: hop 0 is the socket peer,
@@ -344,6 +354,29 @@ export function buildApp({
   void app.register(topUpRoutes, { createTopUp: topUps.createTopUp, getTopUp: topUps.getTopUp });
   void app.register(myAccountRoutes, { getMyAccount: accounts.getMyAccount });
   void app.register(statementRoutes, { getMyStatement: accounts.getMyStatement });
+
+  // The staff's routes, under /admin/v1, only for the backoffice's server
+  // (v1.3.0 plan, task 1; B1, STF-08). Without its keys, none of them exists.
+  if (backoffice) {
+    const staff = createStaffModule({
+      unitOfWork,
+      clock,
+      ids,
+      totpKey: backoffice.totpKey,
+      hasher: new Argon2idHasher(),
+      tokens: new RandomRefreshTokens(),
+    });
+    void app.register(
+      async (scope) => {
+        registerStaffAuthentication(scope, {
+          apiKey: backoffice.apiKey,
+          authenticate: (token) => staff.authenticate.execute(token),
+        });
+        await scope.register(staffAuthRoutes, { login: staff.login, logout: staff.logout });
+      },
+      { prefix: '/admin/v1' },
+    );
+  }
 
   return app;
 }

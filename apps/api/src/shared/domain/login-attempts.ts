@@ -1,4 +1,4 @@
-import { TooManyAttempts } from './errors.ts';
+import { TooManyAttempts } from './too-many-attempts.ts';
 
 const MAX_FAILURES = 5;
 const WINDOW_MS = 60_000;

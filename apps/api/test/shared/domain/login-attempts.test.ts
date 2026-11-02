@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { TooManyAttempts } from '../../../../src/modules/identity/domain/errors.ts';
-import { LoginAttempts } from '../../../../src/modules/identity/domain/login-attempts.ts';
+import { TooManyAttempts } from '../../../src/shared/domain/too-many-attempts.ts';
+import { LoginAttempts } from '../../../src/shared/domain/login-attempts.ts';
 
 // Per-account protection against brute force (AUTH-01): 5 wrong attempts within
 // 1 minute block the account's logins; each further block doubles, up to 15 minutes.

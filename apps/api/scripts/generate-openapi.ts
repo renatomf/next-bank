@@ -5,7 +5,9 @@ import { createPool } from '../src/shared/db.ts';
 import { buildOpenApiDocument } from '../src/shared/openapi.ts';
 
 const output = process.argv[2];
-if (!output) throw new Error('usage: generate-openapi.ts <output.json>');
+// The staff's contract (v1.3.0 plan, B8): only the /admin routes, apart from the app's.
+const admin = process.argv[3] === '--admin';
+if (!output) throw new Error('usage: generate-openapi.ts <output.json> [--admin]');
 
 // The pool never connects: building the document only reads the route schemas.
 const app = buildApp({
@@ -18,7 +20,9 @@ const app = buildApp({
     pinPepper: randomBytes(32),
     topUpPhoneKey: randomBytes(32),
   },
+  ...(admin ? { backoffice: { apiKey: 'contract', totpKey: randomBytes(32) } } : {}),
 });
-const document = await buildOpenApiDocument(app);
+const isAdmin = (path: string) => path.startsWith('/admin/');
+const document = await buildOpenApiDocument(app, admin ? isAdmin : (path) => !isAdmin(path));
 await app.close();
 writeFileSync(output, `${JSON.stringify(document, null, 2)}\n`);

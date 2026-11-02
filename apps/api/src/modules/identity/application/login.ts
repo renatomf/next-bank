@@ -5,7 +5,7 @@ import type {
   UnitOfWork,
 } from '../../../shared/application/ports.ts';
 import { InvalidCredentials } from '../domain/errors.ts';
-import { LoginAttempts } from '../domain/login-attempts.ts';
+import { LoginAttempts } from '../../../shared/domain/login-attempts.ts';
 import { Session } from '../domain/session.ts';
 import { normalizeEmail } from '../domain/user.ts';
 import type {

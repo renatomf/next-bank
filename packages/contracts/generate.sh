@@ -5,6 +5,8 @@ set -eu
 cd "$(dirname "$0")"
 
 pnpm --filter @nextbank/api contract
+# The staff's contract (v1.3.0 plan, B8): the /admin routes only, for the backoffice.
+pnpm --filter @nextbank/api contract:admin
 
 # A day (format: date) stays the text YYYY-MM-DD the API speaks: a DateTime
 # would be sent with a time, and read on the device's midnight.

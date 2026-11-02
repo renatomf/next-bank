@@ -361,4 +361,44 @@ describe('loadConfig', () => {
       },
     );
   });
+
+  // The backoffice (v1.3.0 plan, task 1, S4, S5): both keys or none.
+  describe('backoffice', () => {
+    const backoffice = {
+      BACKOFFICE_API_KEY: randomBytes(32).toString('base64'),
+      STAFF_TOTP_KEY: randomBytes(32).toString('base64'),
+    };
+
+    it('leaves the backoffice out by default', () => {
+      expect(loadConfig(valid).backoffice).toBeUndefined();
+    });
+
+    it('reads both keys', () => {
+      expect(loadConfig({ ...valid, ...backoffice }).backoffice).toEqual({
+        apiKey: backoffice.BACKOFFICE_API_KEY,
+        totpKey: Buffer.from(backoffice.STAFF_TOTP_KEY, 'base64'),
+      });
+    });
+
+    it.each(['BACKOFFICE_API_KEY', 'STAFF_TOTP_KEY'])('refuses %s alone', (name) => {
+      expect(withEnv({ [name]: backoffice[name as keyof typeof backoffice] })).toThrow(
+        /BACKOFFICE_API_KEY/,
+      );
+    });
+
+    it('refuses keys that are not 32 bytes', () => {
+      expect(
+        withEnv({ ...backoffice, BACKOFFICE_API_KEY: randomBytes(16).toString('base64') }),
+      ).toThrow(/BACKOFFICE_API_KEY/);
+    });
+
+    it('refuses a key already used for another purpose', () => {
+      expect(withEnv({ ...backoffice, STAFF_TOTP_KEY: valid.PII_ENCRYPTION_KEY })).toThrow(
+        /STAFF_TOTP_KEY/,
+      );
+      expect(withEnv({ ...backoffice, BACKOFFICE_API_KEY: backoffice.STAFF_TOTP_KEY })).toThrow(
+        /BACKOFFICE_API_KEY|STAFF_TOTP_KEY/,
+      );
+    });
+  });
 });

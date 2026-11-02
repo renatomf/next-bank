@@ -92,13 +92,8 @@ export class InvalidCredentials extends DomainError {
   }
 }
 
-export class TooManyAttempts extends DomainError {
-  readonly code = 'TooManyAttempts';
-
-  constructor() {
-    super('Too many login attempts for this account');
-  }
-}
+// Shared with the staff's login (v1.3.0 plan, task 1, S6); still Identity's to export.
+export { TooManyAttempts } from '../../../shared/domain/too-many-attempts.ts';
 
 /** A replaced refresh token came back: the session was revoked (AUTH-03). */
 export class RefreshTokenReuseDetected extends DomainError {

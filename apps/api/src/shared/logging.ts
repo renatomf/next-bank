@@ -22,6 +22,9 @@ export const SENSITIVE_KEYS = [
   // Personal data: never in logs (database.md, section 2). Error class names stay in err.type.
   'email',
   'name',
+  // The staff's login (v1.3.0 plan, task 1): the authenticator's code and secret.
+  'mfaCode',
+  'totpSecret',
 ];
 
 export const REDACT_PATHS = SENSITIVE_KEYS.flatMap((key) => [key, `*.${key}`, `*.*.${key}`]);
