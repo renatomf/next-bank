@@ -1,6 +1,7 @@
 packages:
   - apps/api
   - apps/simulator
+  - apps/backoffice
 
 overrides:
   'minimatch@<11.0.1': ^11.0.3
