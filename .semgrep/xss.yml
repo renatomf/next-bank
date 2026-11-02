@@ -1,0 +1,10 @@
+rules:
+  # STF-05: the backoffice shows what customers wrote (names, Pix descriptions).
+  # React escapes text; only dangerouslySetInnerHTML would run it as HTML.
+  - id: no-dangerously-set-inner-html
+    languages: [typescript]
+    severity: ERROR
+    message: >-
+      dangerouslySetInnerHTML renders text as HTML, so a customer's data could
+      run as a script (STF-05). Render it as text: {value}.
+    pattern-regex: \bdangerouslySetInnerHTML\b

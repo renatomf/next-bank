@@ -2,6 +2,8 @@
 // its password and TOTP secret once: they are never stored in the clear, and
 // no public route creates staff. Uses the API's role and STAFF_TOTP_KEY.
 // Usage: pnpm staff:create --name "Lia Operadora" --email lia@example.com --role OPERATOR [--demo]
+// The demo's reset: pnpm staff:create --admin-from-env (MIGRATION_DATABASE_URL,
+// STAFF_TOTP_KEY and the STAFF_ADMIN_* secrets).
 import { parseArgs } from 'node:util';
 import type pg from 'pg';
 import { Argon2idHasher, RandomRefreshTokens } from '../src/modules/identity/index.ts';
@@ -24,7 +26,39 @@ export function staffCreator(deps: { pool: pg.Pool; totpKey: Uint8Array; clock?:
   }).createMember;
 }
 
-if (import.meta.main) {
+/**
+ * The admin of the published demo, recreated after every reset with the
+ * credentials kept in the deploy's secrets (v1.3.0 plan, task 2, D4): the
+ * same admin, with the same authenticator, every day. Prints nothing.
+ */
+async function seedAdminFromEnv(): Promise<void> {
+  const env = {
+    databaseUrl: process.env.MIGRATION_DATABASE_URL,
+    totpKey: process.env.STAFF_TOTP_KEY,
+    email: process.env.STAFF_ADMIN_EMAIL,
+    password: process.env.STAFF_ADMIN_PASSWORD,
+    totpSecret: process.env.STAFF_ADMIN_TOTP_SECRET,
+  };
+  for (const [name, value] of Object.entries(env)) {
+    if (!value) throw new Error(`${name} is not set for the admin of the reset`);
+  }
+  const pool = createPool(env.databaseUrl ?? '');
+  try {
+    await staffCreator({ pool, totpKey: Buffer.from(env.totpKey ?? '', 'base64') }).execute({
+      name: 'Admin next bank',
+      email: env.email ?? '',
+      role: 'ADMIN',
+      isDemo: false,
+      credentials: { password: env.password ?? '', totpSecret: env.totpSecret ?? '' },
+    });
+  } finally {
+    await pool.end();
+  }
+}
+
+if (import.meta.main && process.argv.includes('--admin-from-env')) {
+  await seedAdminFromEnv();
+} else if (import.meta.main) {
   const { values } = parseArgs({
     options: {
       name: { type: 'string' },

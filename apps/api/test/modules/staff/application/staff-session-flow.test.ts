@@ -102,6 +102,26 @@ describe('CreateStaffMember', () => {
     expect(db.actions()).toEqual(['STAFF_MEMBER_CREATED']);
   });
 
+  // The admin of the published demo, recreated at every reset with the
+  // credentials kept in the deploy's secrets (v1.3.0 plan, task 2, D4).
+  it('takes given credentials instead of drawing new ones', async () => {
+    const created = await create.execute({
+      email: 'admin@example.com',
+      name: 'Admin',
+      role: 'ADMIN',
+      isDemo: false,
+      credentials: { password: 'a kept password, long enough', totpSecret: 'KEPTSECRET' },
+    });
+
+    expect(created).toMatchObject({
+      password: 'a kept password, long enough',
+      totpSecret: 'KEPTSECRET',
+    });
+    expect(Buffer.from(db.members.get(created.id)?.totpSecret.ciphertext ?? []).toString()).toBe(
+      'sealed:KEPTSECRET',
+    );
+  });
+
   it('refuses an e-mail already in the staff', async () => {
     await create.execute({ email: 'lia@example.com', name: 'Lia', role: 'ADMIN', isDemo: false });
 

@@ -15,6 +15,12 @@ export interface CreateStaffMemberInput {
   name: string;
   role: StaffRole;
   isDemo: boolean;
+  /**
+   * Credentials kept elsewhere, for a member recreated with the same ones,
+   * as the demo's admin at every reset (v1.3.0 plan, task 2, D4). Drawn here
+   * when absent.
+   */
+  credentials?: { password: string; totpSecret: string };
 }
 
 /** What the new member needs to sign in, shown once and never stored in the clear. */
@@ -53,9 +59,16 @@ export class CreateStaffMember {
 
   async execute(input: CreateStaffMemberInput): Promise<CreatedStaffMember> {
     const now = this.#deps.clock.now();
-    const member = StaffMember.create({ ...input, id: this.#deps.ids.next(), now });
-    const password = this.#deps.tokens.generate().token;
-    const totpSecret = this.#deps.totp.newSecret();
+    const member = StaffMember.create({
+      email: input.email,
+      name: input.name,
+      role: input.role,
+      isDemo: input.isDemo,
+      id: this.#deps.ids.next(),
+      now,
+    });
+    const password = input.credentials?.password ?? this.#deps.tokens.generate().token;
+    const totpSecret = input.credentials?.totpSecret ?? this.#deps.totp.newSecret();
     const passwordHash = await this.#deps.hasher.hash(password);
 
     await this.#deps.unitOfWork.run(async (tx) => {

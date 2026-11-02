@@ -127,6 +127,29 @@ jobs:
       # CHAOS_SEED is drawn at each run and told on failure, to repeat it locally.
       - run: pnpm --filter @nextbank/api test:chaos
 
+  backoffice:
+    # The backoffice, the staff's BFF (v1.3.0 plan, task 2): no database of
+    # its own, so no service; the build is what the host runs.
+    name: Backoffice
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @nextbank/backoffice format:check
+      - run: pnpm --filter @nextbank/backoffice lint
+      - run: pnpm --filter @nextbank/backoffice typecheck
+      - run: pnpm --filter @nextbank/backoffice test
+      - run: pnpm --filter @nextbank/backoffice build
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+
   mobile:
     name: Mobile
     runs-on: ubuntu-24.04
