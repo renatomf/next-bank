@@ -31,15 +31,18 @@ export function LogoMark({ className }: { className?: string }) {
       role="img"
       aria-label="next bank"
       className={cn(
-        'inline-flex size-9 items-center justify-center rounded-sm bg-icon-ground font-display text-xl leading-none font-bold tracking-[-0.04em] text-icon-letter',
+        'inline-grid size-9 place-items-center rounded-md bg-icon-ground font-display text-xl leading-none font-bold tracking-[-0.04em] text-icon-letter',
         className,
       )}
     >
-      n
-      <span
-        aria-hidden="true"
-        className="ml-[0.08em] inline-block size-[0.28em] self-end rounded-full bg-mint mb-[0.18em]"
-      />
+      {/* The dot sits on the letter's baseline, right after the "n". */}
+      <span className="inline-flex items-baseline">
+        n
+        <span
+          aria-hidden="true"
+          className="ml-[0.06em] inline-block size-[0.26em] rounded-full bg-mint"
+        />
+      </span>
     </span>
   );
 }
