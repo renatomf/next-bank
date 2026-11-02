@@ -23,6 +23,9 @@
 
   /* Brand, the same in both modes. */
   --nb-mint: #00ffc8;
+  /* The launcher icon's tile, dark in both modes as on the phone. */
+  --nb-icon-ground: #0a0f14;
+  --nb-icon-letter: #f2f6f8;
 
   /* Shape (brief, section 4). */
   --nb-radius-pill: 999px;

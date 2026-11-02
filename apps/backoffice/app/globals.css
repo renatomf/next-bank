@@ -47,6 +47,8 @@
   --color-glow: var(--nb-glow);
   --color-mint: var(--nb-mint);
   --color-selected: var(--nb-accent-soft);
+  --color-icon-ground: var(--nb-icon-ground);
+  --color-icon-letter: var(--nb-icon-letter);
 
   --radius-sm: var(--nb-radius-tag);
   --radius-md: var(--nb-radius-inner);
@@ -65,6 +67,13 @@
 
   body {
     @apply bg-background font-sans text-foreground antialiased;
+  }
+
+  /* Tailwind 4 leaves buttons with the default cursor: every one that can be
+     pressed shows the hand, as links do. */
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']) {
+    cursor: pointer;
   }
 
   h1,
