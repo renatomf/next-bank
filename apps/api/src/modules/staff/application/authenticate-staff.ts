@@ -10,6 +10,8 @@ export interface StaffCaller {
   sessionId: string;
   name: string;
   role: StaffRole;
+  /** A member of the public demo, who reads only demo customers (B5, STF-11). */
+  isDemo: boolean;
 }
 
 export interface AuthenticateStaffDependencies {
@@ -48,6 +50,7 @@ export class AuthenticateStaff {
         sessionId: found.session.id,
         name: found.member.name,
         role: found.member.role,
+        isDemo: found.member.isDemo,
       };
     });
   }

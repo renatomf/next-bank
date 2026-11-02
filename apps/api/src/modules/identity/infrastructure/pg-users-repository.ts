@@ -1,6 +1,8 @@
 import pg from 'pg';
+import { literalLike } from '../../../shared/infrastructure/literal-like.ts';
 import type {
   Credentials,
+  CustomerRecord,
   LoginAccount,
   Payee,
   Profile,
@@ -27,6 +29,28 @@ export class PgUsersRepository implements UsersRepository {
   static readonly FIND_PROFILE_SQL = `SELECT u.name, u.cpf_masked,
       EXISTS (SELECT 1 FROM identity.transaction_pins p WHERE p.user_id = u.id) AS has_pin
     FROM identity.users u WHERE u.id = $1`;
+
+  // The staff's reads of customers (v1.3.0, task 3). $2 keeps the demo staff
+  // to the demo customers (B5, STF-11); it is the server's, never the client's.
+  static readonly #CUSTOMER = `SELECT id, name, cpf_masked, email, status FROM identity.users`;
+  static readonly #SCOPE = 'AND (is_demo OR NOT $2::boolean)';
+
+  /** Served by the primary key. */
+  static readonly FIND_CUSTOMERS_SQL = `${PgUsersRepository.#CUSTOMER}
+    WHERE id = ANY($1::uuid[]) ${PgUsersRepository.#SCOPE} ORDER BY lower(name), id`;
+
+  /** Served by the users_email_key unique index. */
+  static readonly FIND_CUSTOMER_BY_EMAIL_SQL = `${PgUsersRepository.#CUSTOMER}
+    WHERE email = $1 ${PgUsersRepository.#SCOPE}`;
+
+  /** Served by the users_cpf_hmac_key unique index. */
+  static readonly FIND_CUSTOMER_BY_CPF_SQL = `${PgUsersRepository.#CUSTOMER}
+    WHERE cpf_hmac = $1 ${PgUsersRepository.#SCOPE}`;
+
+  /** Served by users_name_prefix_idx: a prefix, never a pattern from outside (READ-04). */
+  static readonly SEARCH_CUSTOMERS_BY_NAME_SQL = `${PgUsersRepository.#CUSTOMER}
+    WHERE lower(name) LIKE $1 ESCAPE '\\' ${PgUsersRepository.#SCOPE}
+    ORDER BY lower(name), id LIMIT $3`;
 
   readonly #client: pg.ClientBase;
 
@@ -99,6 +123,45 @@ export class PgUsersRepository implements UsersRepository {
     return row ? { name: row.name, documentMasked: row.cpf_masked } : null;
   }
 
+  async findCustomers(ids: string[], onlyDemo: boolean): Promise<CustomerRecord[]> {
+    const { rows } = await this.#client.query<CustomerRow>(PgUsersRepository.FIND_CUSTOMERS_SQL, [
+      ids,
+      onlyDemo,
+    ]);
+    return rows.map(customerOf);
+  }
+
+  async findCustomerByEmail(email: string, onlyDemo: boolean): Promise<CustomerRecord | null> {
+    const { rows } = await this.#client.query<CustomerRow>(
+      PgUsersRepository.FIND_CUSTOMER_BY_EMAIL_SQL,
+      [email, onlyDemo],
+    );
+    return rows[0] ? customerOf(rows[0]) : null;
+  }
+
+  async findCustomerByCpf(
+    cpfBlindIndex: Uint8Array,
+    onlyDemo: boolean,
+  ): Promise<CustomerRecord | null> {
+    const { rows } = await this.#client.query<CustomerRow>(
+      PgUsersRepository.FIND_CUSTOMER_BY_CPF_SQL,
+      [Buffer.from(cpfBlindIndex), onlyDemo],
+    );
+    return rows[0] ? customerOf(rows[0]) : null;
+  }
+
+  async searchCustomersByName(
+    prefix: string,
+    onlyDemo: boolean,
+    limit: number,
+  ): Promise<CustomerRecord[]> {
+    const { rows } = await this.#client.query<CustomerRow>(
+      PgUsersRepository.SEARCH_CUSTOMERS_BY_NAME_SQL,
+      [`${literalLike(prefix.toLowerCase())}%`, onlyDemo, limit],
+    );
+    return rows.map(customerOf);
+  }
+
   async insert(user: UserState, cpf: StoredCpf): Promise<void> {
     try {
       await this.#client.query(
@@ -126,6 +189,24 @@ export class PgUsersRepository implements UsersRepository {
       throw error;
     }
   }
+}
+
+interface CustomerRow {
+  id: string;
+  name: string;
+  cpf_masked: string;
+  email: string;
+  status: UserStatus;
+}
+
+function customerOf(row: CustomerRow): CustomerRecord {
+  return {
+    id: row.id,
+    name: row.name,
+    cpfMasked: row.cpf_masked,
+    email: row.email,
+    status: row.status,
+  };
 }
 
 function isUniqueViolationOn(error: unknown, constraints: Set<string>): boolean {

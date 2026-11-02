@@ -95,6 +95,15 @@ export interface Payee {
   documentMasked: string;
 }
 
+/** A customer as the staff finds it (v1.3.0, task 3): the CPF only masked, never the hashes. */
+export interface CustomerRecord {
+  id: string;
+  name: string;
+  cpfMasked: string;
+  email: string;
+  status: UserStatus;
+}
+
 export interface UsersRepository {
   existsWithEmailOrCpf(email: string, cpfBlindIndex: Uint8Array): Promise<boolean>;
   findByEmail(email: string): Promise<LoginAccount | null>;
@@ -108,6 +117,16 @@ export interface UsersRepository {
    * password change and a login opening its session run one after the other.
    */
   lockPasswordHash(id: string): Promise<string | null>;
+  /** The customers among [ids]; with [onlyDemo], the demo ones only (B5). */
+  findCustomers(ids: string[], onlyDemo: boolean): Promise<CustomerRecord[]>;
+  findCustomerByEmail(email: string, onlyDemo: boolean): Promise<CustomerRecord | null>;
+  findCustomerByCpf(cpfBlindIndex: Uint8Array, onlyDemo: boolean): Promise<CustomerRecord | null>;
+  /** Names starting with [prefix], whatever the case, in name order. */
+  searchCustomersByName(
+    prefix: string,
+    onlyDemo: boolean,
+    limit: number,
+  ): Promise<CustomerRecord[]>;
 }
 
 export interface SessionsRepository {

@@ -9,7 +9,7 @@ import { AesGcmSecretBox } from './infrastructure/aes-gcm-secret-box.ts';
 import { OtpauthTotp } from './infrastructure/otpauth-totp.ts';
 import { PgStaffRepositories } from './infrastructure/pg-staff-repositories.ts';
 
-export { registerStaffAuthentication } from './http/staff-authentication.ts';
+export { registerStaffAuthentication, staffCallerOf } from './http/staff-authentication.ts';
 export { staffAuthRoutes } from './http/staff-auth-routes.ts';
 export type { StaffCaller } from './application/authenticate-staff.ts';
 export type { CreatedStaffMember } from './application/create-staff-member.ts';

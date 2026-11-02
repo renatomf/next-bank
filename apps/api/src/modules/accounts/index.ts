@@ -2,6 +2,7 @@
 // use only what is exported here (ADR 0002, ADR 0010).
 import type { Clock, IdGenerator, UnitOfWork } from '../../shared/application/ports.ts';
 import { AccountDirectory } from './application/account-directory.ts';
+import { CustomerAccountsReader } from './application/customer-accounts-reader.ts';
 import { GetMyAccount } from './application/get-my-account.ts';
 import { GetMyStatement } from './application/get-my-statement.ts';
 import { OpenAccount } from './application/open-account.ts';
@@ -10,6 +11,14 @@ import { PgAccountsRepositories } from './infrastructure/pg-accounts-repository.
 
 export { myAccountRoutes } from './http/my-account-route.ts';
 export { statementRoutes } from './http/statement-route.ts';
+// The staff reads a customer's statement as the app does (v1.3.0, task 3).
+export {
+  decodeCursor,
+  StatementCursorSchema,
+  StatementSchema,
+  statementBody,
+} from './http/statement-body.ts';
+export type { CustomerAccountsReader } from './application/customer-accounts-reader.ts';
 export type { AccountDirectory } from './application/account-directory.ts';
 export type { GetMyAccount } from './application/get-my-account.ts';
 export type { GetMyStatement } from './application/get-my-statement.ts';
@@ -22,6 +31,8 @@ export interface AccountsModule {
   getMyStatement: GetMyStatement;
   /** Implements the AccountsPort of Payments. */
   directory: AccountDirectory;
+  /** Implements the CustomerAccountsPort of Operations (v1.3.0, task 3). */
+  customerAccounts: CustomerAccountsReader;
 }
 
 /** Builds the accounts context with its production adapters. */
@@ -37,5 +48,6 @@ export function createAccountsModule(settings: {
     getMyAccount: new GetMyAccount({ repositories, ...settings }),
     getMyStatement: new GetMyStatement({ repositories, ...settings }),
     directory: new AccountDirectory(repositories),
+    customerAccounts: new CustomerAccountsReader(repositories, settings.ledger),
   };
 }

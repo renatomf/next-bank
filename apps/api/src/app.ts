@@ -33,6 +33,7 @@ import {
   sessionRoutes,
 } from './modules/identity/index.ts';
 import { createLedgerModule } from './modules/ledger/index.ts';
+import { createOperationsModule, customerRoutes } from './modules/operations/index.ts';
 import {
   createPaymentsModule,
   createPaymentsOutboxHandlers,
@@ -366,6 +367,14 @@ export function buildApp({
       hasher: new Argon2idHasher(),
       tokens: new RandomRefreshTokens(),
     });
+    // Operations reaches Identity and Accounts only through the ports it defines.
+    const operations = createOperationsModule({
+      unitOfWork,
+      clock,
+      ids,
+      customers: identity.customers,
+      accounts: accounts.customerAccounts,
+    });
     void app.register(
       async (scope) => {
         registerStaffAuthentication(scope, {
@@ -373,6 +382,7 @@ export function buildApp({
           authenticate: (token) => staff.authenticate.execute(token),
         });
         await scope.register(staffAuthRoutes, { login: staff.login, logout: staff.logout });
+        await scope.register(customerRoutes, operations);
       },
       { prefix: '/admin/v1' },
     );

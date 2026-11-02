@@ -2,9 +2,11 @@
 // its password and TOTP secret once: they are never stored in the clear, and
 // no public route creates staff. Uses the API's role and STAFF_TOTP_KEY.
 // Usage: pnpm staff:create --name "Lia Operadora" --email lia@example.com --role OPERATOR [--demo]
-// The demo's reset: pnpm staff:create --admin-from-env (MIGRATION_DATABASE_URL,
-// STAFF_TOTP_KEY and the STAFF_ADMIN_* secrets).
+// The demo's reset: pnpm staff:create --reset (MIGRATION_DATABASE_URL,
+// STAFF_TOTP_KEY and the STAFF_ADMIN_* secrets) recreates the admin and the
+// demo staff of the README.
 import { parseArgs } from 'node:util';
+import { Secret } from 'otpauth';
 import type pg from 'pg';
 import { Argon2idHasher, RandomRefreshTokens } from '../src/modules/identity/index.ts';
 import { createStaffModule, type StaffRole } from '../src/modules/staff/index.ts';
@@ -27,11 +29,42 @@ export function staffCreator(deps: { pool: pg.Pool; totpKey: Uint8Array; clock?:
 }
 
 /**
+ * The staff of the public demo (v1.3.0 plan, B5 and task 3, C5): an operator
+ * and an analyst whose password and authenticator secret are published in
+ * the README, as Ana's and Bruno's are. Public on purpose: they read only
+ * the demo customers, a scope the server keeps (STF-11). The authenticator
+ * secrets come from a phrase, so no secret-looking literal sits in the code.
+ */
+export const DEMO_STAFF = [
+  {
+    name: 'Olívia (operadora demo)',
+    email: 'olivia.demo@example.com',
+    role: 'OPERATOR',
+    password: 'demo-olivia-next-bank',
+    totpSecret: Secret.fromLatin1('olivia demo next bank').base32,
+  },
+  {
+    name: 'Diogo (analista demo)',
+    email: 'diogo.demo@example.com',
+    role: 'ANALYST',
+    password: 'demo-diogo-next-bank',
+    totpSecret: Secret.fromLatin1('diogo demo next bank').base32,
+  },
+] as const;
+
+/** Creates the demo staff, as the reset does after the migrations. */
+export async function seedDemoStaff(creator: ReturnType<typeof staffCreator>): Promise<void> {
+  for (const { password, totpSecret, ...member } of DEMO_STAFF) {
+    await creator.execute({ ...member, isDemo: true, credentials: { password, totpSecret } });
+  }
+}
+
+/**
  * The admin of the published demo, recreated after every reset with the
  * credentials kept in the deploy's secrets (v1.3.0 plan, task 2, D4): the
  * same admin, with the same authenticator, every day. Prints nothing.
  */
-async function seedAdminFromEnv(): Promise<void> {
+async function seedStaffForReset(): Promise<void> {
   const env = {
     databaseUrl: process.env.MIGRATION_DATABASE_URL,
     totpKey: process.env.STAFF_TOTP_KEY,
@@ -44,7 +77,9 @@ async function seedAdminFromEnv(): Promise<void> {
   }
   const pool = createPool(env.databaseUrl ?? '');
   try {
-    await staffCreator({ pool, totpKey: Buffer.from(env.totpKey ?? '', 'base64') }).execute({
+    const creator = staffCreator({ pool, totpKey: Buffer.from(env.totpKey ?? '', 'base64') });
+    await seedDemoStaff(creator);
+    await creator.execute({
       name: 'Admin next bank',
       email: env.email ?? '',
       role: 'ADMIN',
@@ -56,8 +91,8 @@ async function seedAdminFromEnv(): Promise<void> {
   }
 }
 
-if (import.meta.main && process.argv.includes('--admin-from-env')) {
-  await seedAdminFromEnv();
+if (import.meta.main && process.argv.includes('--reset')) {
+  await seedStaffForReset();
 } else if (import.meta.main) {
   const { values } = parseArgs({
     options: {

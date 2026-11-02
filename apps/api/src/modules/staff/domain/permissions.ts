@@ -4,7 +4,7 @@ export const STAFF_ROLES = ['OPERATOR', 'ANALYST', 'ADMIN'] as const;
 export type StaffRole = (typeof STAFF_ROLES)[number];
 
 /** Everything a staff route may ask for; each task of v1.3.0 adds its own. */
-export const PERMISSIONS = ['staff.self'] as const;
+export const PERMISSIONS = ['staff.self', 'customers.read'] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
 /**
@@ -13,8 +13,9 @@ export type Permission = (typeof PERMISSIONS)[number];
  * that does not exist, is denied.
  */
 const GRANTS: Readonly<Record<StaffRole, readonly Permission[]>> = {
-  OPERATOR: ['staff.self'],
-  ANALYST: ['staff.self'],
+  OPERATOR: ['staff.self', 'customers.read'],
+  ANALYST: ['staff.self', 'customers.read'],
+  // Manages the staff and reads no customer: segregation of duties (task 3, C1).
   ADMIN: ['staff.self'],
 };
 
