@@ -19,6 +19,9 @@ process.stdout.write(
     `TOP_UP_PHONE_KEY=${randomBytes(32).toString('base64')}`,
     `SIMULATOR_PARTICIPANT_KEY=${randomBytes(32).toString('base64')}`,
     `SIMULATOR_WEBHOOK_SECRET=${randomBytes(32).toString('base64')}`,
+    // The backoffice (v1.3.0 plan, task 1): its server's key and the staff's TOTP key.
+    `BACKOFFICE_API_KEY=${randomBytes(32).toString('base64')}`,
+    `STAFF_TOTP_KEY=${randomBytes(32).toString('base64')}`,
     '',
   ].join('\n'),
 );

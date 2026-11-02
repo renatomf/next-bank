@@ -46,6 +46,9 @@ const CATALOG_STATUS: Readonly<Record<string, number>> = {
   RefreshTokenReuseDetected: 401,
   Unauthenticated: 401,
   InvalidCredentials: 401,
+  // The staff (v1.3.0 plan, task 1): a session that ended, and a role that does not grant the route.
+  StaffSessionExpired: 401,
+  Forbidden: 403,
   // 422, not 401: the caller is signed in, and a 401 would sign them out.
   PasswordIncorrect: 422,
   TooManyAttempts: 429,

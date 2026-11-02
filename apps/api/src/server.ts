@@ -44,6 +44,7 @@ const app = buildApp({
     topUpPhoneKey: config.topUpPhoneKey,
   },
   ...(config.externalPix ? { externalPix: config.externalPix } : {}),
+  ...(config.backoffice ? { backoffice: config.backoffice } : {}),
 });
 
 /**

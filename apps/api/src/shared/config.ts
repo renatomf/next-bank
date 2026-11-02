@@ -94,6 +94,11 @@ const schema = z
     // Where the trace goes (v1.2.0 plan, task 8): a local Jaeger; unset in
     // production, where nothing is exported (T5).
     OTEL_EXPORTER_OTLP_ENDPOINT: z.url({ protocol: /^https?$/ }).optional(),
+    // The backoffice (v1.3.0 plan, task 1): the key only its server holds
+    // (S4) and the key that seals the staff's TOTP secrets (S5). Both or none:
+    // without them, the API has no /admin route.
+    BACKOFFICE_API_KEY: key32.optional(),
+    STAFF_TOTP_KEY: key32.optional(),
   })
   .refine((env) => env.PII_HMAC_KEY !== env.PII_ENCRYPTION_KEY, {
     // One key for two purposes would let a weakness in one use expose the other.
@@ -151,6 +156,36 @@ const schema = z
       URL.parse(env.SIMULATOR_DATABASE_URL)?.searchParams.get('sslmode') === 'verify-full',
     { message: 'must use sslmode=verify-full in production', path: ['SIMULATOR_DATABASE_URL'] },
   )
+  .refine((env) => (env.BACKOFFICE_API_KEY === undefined) === (env.STAFF_TOTP_KEY === undefined), {
+    message: 'BACKOFFICE_API_KEY and STAFF_TOTP_KEY come together',
+    path: ['BACKOFFICE_API_KEY'],
+  })
+  // One key for two purposes would let a leak of one open the other.
+  .refine(
+    (env) =>
+      env.STAFF_TOTP_KEY === undefined ||
+      ![
+        env.PII_ENCRYPTION_KEY,
+        env.PII_HMAC_KEY,
+        env.PIN_PEPPER,
+        env.TOP_UP_PHONE_KEY,
+        env.SIMULATOR_WEBHOOK_SECRET,
+        env.BACKOFFICE_API_KEY,
+      ].includes(env.STAFF_TOTP_KEY),
+    { message: 'must differ from the other keys', path: ['STAFF_TOTP_KEY'] },
+  )
+  .refine(
+    (env) =>
+      env.BACKOFFICE_API_KEY === undefined ||
+      ![
+        env.PII_ENCRYPTION_KEY,
+        env.PII_HMAC_KEY,
+        env.PIN_PEPPER,
+        env.TOP_UP_PHONE_KEY,
+        env.SIMULATOR_WEBHOOK_SECRET,
+      ].includes(env.BACKOFFICE_API_KEY),
+    { message: 'must differ from the other keys', path: ['BACKOFFICE_API_KEY'] },
+  )
   // ADR 0009: in production the database certificate is always checked.
   .refine(
     (env) =>
@@ -184,6 +219,8 @@ export interface Config {
   };
   /** The trace's collector, when one is set (T5). */
   tracing?: { endpoint: string };
+  /** The backoffice's /admin routes, when both its keys are set (v1.3.0, task 1). */
+  backoffice?: { apiKey: string; totpKey: Buffer };
 }
 
 /** Validates the environment at boot. Error messages never include the received values. */
@@ -243,6 +280,14 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
       : {}),
     ...(data.OTEL_EXPORTER_OTLP_ENDPOINT
       ? { tracing: { endpoint: data.OTEL_EXPORTER_OTLP_ENDPOINT } }
+      : {}),
+    ...(data.BACKOFFICE_API_KEY && data.STAFF_TOTP_KEY
+      ? {
+          backoffice: {
+            apiKey: data.BACKOFFICE_API_KEY,
+            totpKey: required(decodeBase64(data.STAFF_TOTP_KEY)),
+          },
+        }
       : {}),
   };
 }

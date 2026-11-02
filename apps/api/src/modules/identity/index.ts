@@ -25,6 +25,9 @@ import { PgIdentityRepositories } from './infrastructure/pg-identity-repositorie
 import { RandomRefreshTokens } from './infrastructure/random-refresh-tokens.ts';
 
 export { AuthTokensSchema, authTokensBody } from './http/auth-tokens.ts';
+// The staff's module uses the same Argon2id and the same random tokens (v1.3.0, task 1).
+export { Argon2idHasher } from './infrastructure/argon2id-hasher.ts';
+export { RandomRefreshTokens } from './infrastructure/random-refresh-tokens.ts';
 export { callerOf, registerAuthentication } from './http/authentication.ts';
 export { loginRoutes } from './http/login-route.ts';
 export { mePasswordRoutes } from './http/me-password-route.ts';
