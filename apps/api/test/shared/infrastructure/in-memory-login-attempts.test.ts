@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { LoginAttempts } from '../../../../src/modules/identity/domain/login-attempts.ts';
-import { InMemoryLoginAttempts } from '../../../../src/modules/identity/infrastructure/in-memory-login-attempts.ts';
+import { LoginAttempts } from '../../../src/shared/domain/login-attempts.ts';
+import { InMemoryLoginAttempts } from '../../../src/shared/infrastructure/in-memory-login-attempts.ts';
 
 // Login attempt counters in memory (plan D3: one instance in V1).
 const NOW = new Date('2026-10-06T12:00:00.000Z');

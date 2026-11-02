@@ -1,5 +1,5 @@
 import { PasswordIncorrect } from '../domain/errors.ts';
-import { LoginAttempts } from '../domain/login-attempts.ts';
+import { LoginAttempts } from '../../../shared/domain/login-attempts.ts';
 import type { Credentials, LoginAttemptsStore, SecretHasher } from './ports.ts';
 
 /**

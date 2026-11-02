@@ -19,7 +19,7 @@ import type { PiiKeys } from '../../shared/infrastructure/aes-gcm-pii-protector.
 import { AesGcmCpfProtector } from './infrastructure/aes-gcm-cpf-protector.ts';
 import { Argon2idHasher } from './infrastructure/argon2id-hasher.ts';
 import { loadCommonPasswords } from './infrastructure/common-password-file.ts';
-import { InMemoryLoginAttempts } from './infrastructure/in-memory-login-attempts.ts';
+import { InMemoryLoginAttempts } from '../../shared/infrastructure/in-memory-login-attempts.ts';
 import { type AccessTokenKeys, JoseAccessTokens } from './infrastructure/jose-access-tokens.ts';
 import { PgIdentityRepositories } from './infrastructure/pg-identity-repositories.ts';
 import { RandomRefreshTokens } from './infrastructure/random-refresh-tokens.ts';

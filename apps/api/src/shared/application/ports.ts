@@ -1,3 +1,5 @@
+import type { LoginAttemptsState } from '../domain/login-attempts.ts';
+
 /** Server time. Business rules never read the clock directly, so tests control it (PIX-10). */
 export interface Clock {
   now(): Date;
@@ -55,4 +57,11 @@ export interface ReportedRequest {
  */
 export interface ErrorReporter {
   report(error: unknown, request: ReportedRequest): void;
+}
+
+/** Login attempt counters per account (AUTH-01), keyed by the normalized e-mail. */
+export interface LoginAttemptsStore {
+  get(key: string): LoginAttemptsState | undefined;
+  set(key: string, state: LoginAttemptsState): void;
+  delete(key: string): void;
 }

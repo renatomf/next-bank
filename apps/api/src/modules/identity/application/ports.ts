@@ -1,7 +1,6 @@
 import type { AuditTrail, Transaction } from '../../../shared/application/ports.ts';
 import type { Cpf } from '../../../shared/domain/cpf.ts';
 import type { IssuedRefreshToken, SessionState } from '../domain/session.ts';
-import type { LoginAttemptsState } from '../domain/login-attempts.ts';
 import type { TransactionPinState } from '../domain/transaction-pin.ts';
 import type { UserState, UserStatus } from '../domain/user.ts';
 
@@ -163,9 +162,4 @@ export interface IdentityRepositoriesFactory {
   for(tx: Transaction): IdentityRepositories;
 }
 
-/** Login attempt counters per account (AUTH-01), keyed by the normalized e-mail. */
-export interface LoginAttemptsStore {
-  get(key: string): LoginAttemptsState | undefined;
-  set(key: string, state: LoginAttemptsState): void;
-  delete(key: string): void;
-}
+export type { LoginAttemptsStore } from '../../../shared/application/ports.ts';
