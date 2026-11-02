@@ -210,6 +210,7 @@ Uma equipe fictícia, com papéis, consulta clientes e resolve pedidos e exceç�
 | STF-08 | A API `/admin`, exposta na internet, aceita quem não é o backoffice | S, E | A1, A2 | Credencial própria do servidor do backoffice, além do token da equipe; `audience` separado dos clientes; rate limit próprio | Sem a credencial → 401; token de cliente em `/admin` → 401; token da equipe no app → 401. Provado na tarefa 1: `staff-auth-routes.test.ts` (chave ausente ou errada, inclusive no login; sem as chaves, nenhuma rota `/admin` existe; token de cliente em `/admin` e sessão da equipe em `/v1/me` → 401) | v1.3.0 |
 | STF-09 | A mesma aprovação aplicada duas vezes (clique duplo, duas abas, dois analistas) | T | A8 | Máquina de estados do pedido, trava `FOR UPDATE` e `Idempotency-Key` | Dois analistas aprovando ao mesmo tempo → um efeito só | v1.3.0 |
 | STF-10 | Alguém da equipe apaga o próprio rastro | R | A8 | Auditoria só por inclusão, gravada na transação do comando; nenhuma rota apaga | Nenhuma rota nem papel altera a auditoria (teste de schema) | v1.3.0 |
+| STF-11 | As credenciais da equipe demo são públicas (B5): qualquer pessoa entra como operadora ou analista e tenta ver os cadastros de visitantes | I | A1 | O escopo de demonstração fica no servidor: o `is_demo` do membro é lido do banco a cada requisição, nunca vem do cliente, e toda leitura de cliente filtra por ele | O teste do STF-07: cliente de visitante → 404 para a equipe demo, e ausente da busca | v1.3.0 |
 
 ## 6. Decisões de segurança
 
