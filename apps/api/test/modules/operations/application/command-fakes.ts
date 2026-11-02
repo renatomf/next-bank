@@ -96,12 +96,12 @@ export class InMemoryOperationsBank
         this.requests.set(state.id, { ...state });
         return Promise.resolve();
       },
-      hasPending: (customerId, kind, now) =>
+      // One kind of request so far: the customer and the time decide.
+      hasPending: (customerId, _kind, now) =>
         Promise.resolve(
           [...this.requests.values()].some(
             (request) =>
               request.customerId === customerId &&
-              request.kind === kind &&
               request.decision === null &&
               now < request.expiresAt,
           ),

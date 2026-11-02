@@ -40,6 +40,12 @@ export class InMemoryAccounts implements AccountsRepositoriesFactory {
             this.accounts.find((a) => a.branch === branch && a.number === number) ?? null,
           ),
         lockForShare: (ids) => Promise.resolve(this.accounts.filter((a) => ids.includes(a.id))),
+        lockByHolder: (userId) =>
+          Promise.resolve(this.accounts.find((a) => a.holderUserId === userId) ?? null),
+        updateStatus: (account) => {
+          this.accounts = this.accounts.map((a) => (a.id === account.id ? { ...account } : a));
+          return Promise.resolve();
+        },
       },
       audit: {
         record: (event) => {

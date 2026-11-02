@@ -102,8 +102,9 @@ describe('operations.requests and operations.decisions', () => {
     const request = await insertRequest();
 
     // Someone else posing as the requester to cancel: no such request.
+    const impostor = randomUUID();
     await expect(
-      insertDecision({ id: request.id, requested_by: randomUUID() }, 'CANCELLED', randomUUID()),
+      insertDecision({ id: request.id, requested_by: impostor }, 'CANCELLED', impostor),
     ).rejects.toThrow(/decisions_request_fkey/);
   });
 
@@ -123,6 +124,22 @@ describe('operations.requests and operations.decisions', () => {
     await expect(insertDecision(request, 'MAYBE', randomUUID())).rejects.toThrow(
       /decisions_decision_check/,
     );
+  });
+
+  it('lets the API lock a request, and still never change it (STF-09, STF-10)', async () => {
+    const request = await insertRequest();
+
+    await app.query('BEGIN');
+    try {
+      await expect(
+        app.query('SELECT id FROM operations.requests WHERE id = $1 FOR UPDATE', [request.id]),
+      ).resolves.toBeDefined();
+    } finally {
+      await app.query('ROLLBACK');
+    }
+    await expect(
+      app.query('UPDATE operations.requests SET id = id WHERE id = $1', [request.id]),
+    ).rejects.toThrow(/append-only/);
   });
 
   it('denies UPDATE and DELETE to the API role (STF-10)', async () => {

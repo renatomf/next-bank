@@ -61,6 +61,10 @@ export class RefreshSession {
       // token meanwhile, and deciding on the first read would rotate it twice.
       const presented = await repositories.refreshTokens.findByHash(presentedHash);
       if (presented === null) throw new SessionExpired();
+      // A locked-out customer never renews, whatever session the block left (F-12).
+      if ((await repositories.users.findStatus(state.userId)) !== 'ACTIVE') {
+        throw new SessionExpired();
+      }
       const session = Session.restore(state);
       const activeTokenId = await repositories.refreshTokens.findActive(state.id);
 

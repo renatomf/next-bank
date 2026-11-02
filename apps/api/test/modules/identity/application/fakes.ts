@@ -221,8 +221,6 @@ export class InMemoryDatabase implements UnitOfWork, IdentityRepositoriesFactory
               : null,
           );
         },
-        lockPasswordHash: (id) =>
-          Promise.resolve(tables.users.find((u) => u.state.id === id)?.state.passwordHash ?? null),
         lockLoginState: (id) => {
           const found = tables.users.find((u) => u.state.id === id);
           return Promise.resolve(

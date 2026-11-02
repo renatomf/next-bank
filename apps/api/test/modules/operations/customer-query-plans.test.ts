@@ -2,6 +2,7 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { afterAll, describe, expect, it } from 'vitest';
 import { PgAccountsRepository } from '../../../src/modules/accounts/infrastructure/pg-accounts-repository.ts';
 import { PgUsersRepository } from '../../../src/modules/identity/infrastructure/pg-users-repository.ts';
+import { PgRequestsRepository } from '../../../src/modules/operations/infrastructure/pg-operations-repositories.ts';
 import { createPool } from '../../../src/shared/db.ts';
 import { testDatabaseUrl } from '../../helpers.ts';
 
@@ -53,6 +54,18 @@ describe('the customer queries of the staff', () => {
       PgAccountsRepository.FIND_BY_HOLDERS_SQL,
       [[randomUUID()]],
       'accounts_holder_user_id_key',
+    ],
+    [
+      'requests: the queue, a page from a position',
+      PgRequestsRepository.LIST_SQL,
+      ['PENDING', new Date(), false, new Date(), randomUUID(), 21],
+      'requests_queue_idx',
+    ],
+    [
+      'requests: an open one for the customer',
+      PgRequestsRepository.HAS_PENDING_SQL,
+      [randomUUID(), 'UNBLOCK_ACCOUNT', new Date()],
+      'requests_customer_idx',
     ],
     [
       'the account by number',

@@ -83,6 +83,22 @@ export class PgAccountsRepository implements AccountsRepository {
     return stateOf(rows[0]);
   }
 
+  /** Served by the accounts_holder_user_id_key unique index. */
+  async lockByHolder(userId: string): Promise<AccountState | null> {
+    const { rows } = await this.#client.query<AccountRow>(
+      `${PgAccountsRepository.FIND_BY_HOLDER_SQL} FOR UPDATE`,
+      [userId],
+    );
+    return stateOf(rows[0]);
+  }
+
+  async updateStatus(account: AccountState): Promise<void> {
+    await this.#client.query(
+      'UPDATE accounts.accounts SET status = $2, updated_at = $3 WHERE id = $1',
+      [account.id, account.status, account.updatedAt],
+    );
+  }
+
   /** Served by the primary key; FOR SHARE holds the status until the commit. */
   async lockForShare(ids: string[]): Promise<AccountState[]> {
     const { rows } = await this.#client.query<AccountRow>(

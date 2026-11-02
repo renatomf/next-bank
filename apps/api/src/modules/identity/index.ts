@@ -5,6 +5,7 @@ import { ActiveSessions } from './application/active-sessions.ts';
 import { ChangePassword } from './application/change-password.ts';
 import { ChangePin } from './application/change-pin.ts';
 import { CreatePin } from './application/create-pin.ts';
+import { CustomerAccess } from './application/customer-access.ts';
 import { CustomerDirectory } from './application/customer-directory.ts';
 import { GetProfile } from './application/get-profile.ts';
 import { ListSessions } from './application/list-sessions.ts';
@@ -36,6 +37,7 @@ export { meRoutes } from './http/me-route.ts';
 export { meSessionsRoutes } from './http/me-sessions-routes.ts';
 export { pinRoutes } from './http/pin-route.ts';
 export { sessionRoutes } from './http/session-routes.ts';
+export type { CustomerAccess } from './application/customer-access.ts';
 export type { CustomerDirectory } from './application/customer-directory.ts';
 export type { PayeeDirectory } from './application/payee-directory.ts';
 export type { AccessTokenKeys } from './infrastructure/jose-access-tokens.ts';
@@ -66,6 +68,8 @@ export interface IdentityModule {
   payees: PayeeDirectory;
   /** Implements the CustomersPort of Operations (v1.3.0, task 3). */
   customers: CustomerDirectory;
+  /** Implements the CustomerAccessPort of Operations (v1.3.0, task 4). */
+  access: CustomerAccess;
 }
 
 export interface IdentitySettings {
@@ -172,5 +176,6 @@ export function createIdentityModule(settings: IdentitySettings): IdentityModule
     getProfile: new GetProfile({ unitOfWork: settings.unitOfWork, repositories }),
     payees: new PayeeDirectory(repositories),
     customers: new CustomerDirectory(repositories, cpfProtector),
+    access: new CustomerAccess({ repositories, ids: settings.ids }),
   };
 }

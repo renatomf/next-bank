@@ -33,7 +33,11 @@ import {
   sessionRoutes,
 } from './modules/identity/index.ts';
 import { createLedgerModule } from './modules/ledger/index.ts';
-import { createOperationsModule, customerRoutes } from './modules/operations/index.ts';
+import {
+  createOperationsModule,
+  customerRoutes,
+  requestRoutes,
+} from './modules/operations/index.ts';
 import {
   createPaymentsModule,
   createPaymentsOutboxHandlers,
@@ -57,6 +61,7 @@ import { isCallInsideTheService } from './shared/http/partner-routes.ts';
 import { registerProblemHandlers } from './shared/http/problem.ts';
 import { registerRequestTracing } from './shared/http/request-tracing.ts';
 import type { PiiKeys } from './shared/infrastructure/aes-gcm-pii-protector.ts';
+import { HmacRequestFingerprint } from './shared/infrastructure/hmac-request-fingerprint.ts';
 import { createOutbox } from './shared/infrastructure/outbox-factory.ts';
 import type { OutboxWorker } from './shared/infrastructure/outbox-worker.ts';
 import { PgUnitOfWork } from './shared/infrastructure/pg-unit-of-work.ts';
@@ -374,6 +379,10 @@ export function buildApp({
       ids,
       customers: identity.customers,
       accounts: accounts.customerAccounts,
+      accountStatus: accounts.statusChanger,
+      access: identity.access,
+      staffNames: staff.directory,
+      fingerprint: new HmacRequestFingerprint(security.piiKeys),
     });
     void app.register(
       async (scope) => {
@@ -383,6 +392,7 @@ export function buildApp({
         });
         await scope.register(staffAuthRoutes, { login: staff.login, logout: staff.logout });
         await scope.register(customerRoutes, operations);
+        await scope.register(requestRoutes, operations);
       },
       { prefix: '/admin/v1' },
     );

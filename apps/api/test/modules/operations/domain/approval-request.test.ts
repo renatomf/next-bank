@@ -84,7 +84,9 @@ describe('deciding', () => {
     (verb) => {
       const request = opened();
 
-      expect(() => request[verb]('operator-1', later(10), null)).toThrow(SelfApprovalNotAllowed);
+      expect(() => {
+        request[verb]('operator-1', later(10), null);
+      }).toThrow(SelfApprovalNotAllowed);
       expect(request.statusAt(later(10))).toBe('PENDING');
     },
   );
@@ -93,8 +95,12 @@ describe('deciding', () => {
     const request = opened();
     request.approve('analyst-1', later(10), null);
 
-    expect(() => request.approve('analyst-2', later(11), null)).toThrow(RequestNotPending);
-    expect(() => request.reject('analyst-2', later(11), null)).toThrow(RequestNotPending);
+    expect(() => {
+      request.approve('analyst-2', later(11), null);
+    }).toThrow(RequestNotPending);
+    expect(() => {
+      request.reject('analyst-2', later(11), null);
+    }).toThrow(RequestNotPending);
   });
 
   it('expires 24 hours after it was opened, and is no longer decided (K4)', () => {
@@ -102,7 +108,9 @@ describe('deciding', () => {
 
     expect(request.statusAt(later(24 * 60 - 1))).toBe('PENDING');
     expect(request.statusAt(later(24 * 60))).toBe('EXPIRED');
-    expect(() => request.approve('analyst-1', later(24 * 60), null)).toThrow(RequestNotPending);
+    expect(() => {
+      request.approve('analyst-1', later(24 * 60), null);
+    }).toThrow(RequestNotPending);
   });
 });
 
@@ -117,14 +125,20 @@ describe('cancelling', () => {
   });
 
   it('refuses anyone else', () => {
-    expect(() => opened().cancel('analyst-1', later(5))).toThrow(NotTheRequester);
+    expect(() => {
+      opened().cancel('analyst-1', later(5));
+    }).toThrow(NotTheRequester);
   });
 
   it('refuses a request already decided or expired', () => {
     const decided = opened();
     decided.reject('analyst-1', later(5), null);
 
-    expect(() => decided.cancel('operator-1', later(6))).toThrow(RequestNotPending);
-    expect(() => opened().cancel('operator-1', later(24 * 60))).toThrow(RequestNotPending);
+    expect(() => {
+      decided.cancel('operator-1', later(6));
+    }).toThrow(RequestNotPending);
+    expect(() => {
+      opened().cancel('operator-1', later(24 * 60));
+    }).toThrow(RequestNotPending);
   });
 });

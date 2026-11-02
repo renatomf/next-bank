@@ -93,6 +93,15 @@ export class InMemoryStaffDatabase implements UnitOfWork, StaffRepositoriesFacto
             [...this.members.values()].find((member) => member.state.email === email) ?? null,
           ),
         lock: (id) => Promise.resolve(this.members.get(id)?.state ?? null),
+        namesOf: (ids) =>
+          Promise.resolve(
+            new Map(
+              ids.flatMap((id) => {
+                const member = this.members.get(id);
+                return member ? [[id, member.state.name] as const] : [];
+              }),
+            ),
+          ),
         insert: (record) => {
           if ([...this.members.values()].some((m) => m.state.email === record.state.email)) {
             return Promise.reject(new Error('duplicate key value violates unique constraint'));

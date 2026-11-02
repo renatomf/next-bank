@@ -2,6 +2,7 @@
 // use only what is exported here (ADR 0002, ADR 0010).
 import type { Clock, IdGenerator, UnitOfWork } from '../../shared/application/ports.ts';
 import { AccountDirectory } from './application/account-directory.ts';
+import { AccountStatusChanger } from './application/account-status-changer.ts';
 import { CustomerAccountsReader } from './application/customer-accounts-reader.ts';
 import { GetMyAccount } from './application/get-my-account.ts';
 import { GetMyStatement } from './application/get-my-statement.ts';
@@ -18,6 +19,7 @@ export {
   StatementSchema,
   statementBody,
 } from './http/statement-body.ts';
+export type { AccountStatusChanger } from './application/account-status-changer.ts';
 export type { CustomerAccountsReader } from './application/customer-accounts-reader.ts';
 export type { AccountDirectory } from './application/account-directory.ts';
 export type { GetMyAccount } from './application/get-my-account.ts';
@@ -33,6 +35,8 @@ export interface AccountsModule {
   directory: AccountDirectory;
   /** Implements the CustomerAccountsPort of Operations (v1.3.0, task 3). */
   customerAccounts: CustomerAccountsReader;
+  /** Implements the AccountStatusPort of Operations (v1.3.0, task 4). */
+  statusChanger: AccountStatusChanger;
 }
 
 /** Builds the accounts context with its production adapters. */
@@ -49,5 +53,6 @@ export function createAccountsModule(settings: {
     getMyStatement: new GetMyStatement({ repositories, ...settings }),
     directory: new AccountDirectory(repositories),
     customerAccounts: new CustomerAccountsReader(repositories, settings.ledger),
+    statusChanger: new AccountStatusChanger({ repositories, ids: settings.ids }),
   };
 }

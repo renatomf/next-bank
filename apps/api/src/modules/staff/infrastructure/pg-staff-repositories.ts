@@ -82,6 +82,15 @@ class PgStaffMembersRepository implements StaffMembersRepository {
     return row ? toMember(row) : null;
   }
 
+  /** Served by the primary key. */
+  async namesOf(ids: string[]): Promise<Map<string, string>> {
+    const { rows } = await this.#client.query<{ id: string; name: string }>(
+      'SELECT id, name FROM staff.members WHERE id = ANY($1::uuid[])',
+      [ids],
+    );
+    return new Map(rows.map((row) => [row.id, row.name]));
+  }
+
   async insert({ state, passwordHash, totpSecret }: StaffMemberRecord): Promise<void> {
     await this.#client.query(
       `INSERT INTO staff.members
