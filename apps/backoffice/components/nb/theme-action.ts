@@ -1,10 +1,10 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import { themeCookie, themeOf } from '@/lib/theme';
+import { chosenTheme, themeCookie } from '@/lib/theme';
 
-/** Keeps the member's theme; anything but light, dark or system follows the system. */
+/** Keeps the theme the toggle chose; anything but light or dark changes nothing. */
 export async function setTheme(form: FormData): Promise<void> {
-  const choice = form.get('theme');
-  (await cookies()).set(themeCookie(themeOf(typeof choice === 'string' ? choice : undefined)));
+  const choice = chosenTheme(form.get('theme'));
+  if (choice !== null) (await cookies()).set(themeCookie(choice));
 }

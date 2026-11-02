@@ -24,3 +24,8 @@ export function themeCookie(theme: Theme) {
     maxAge: 365 * 24 * 60 * 60,
   };
 }
+
+/** What the toggle may record (task 3.5, E10): light or dark; anything else, nothing. */
+export function chosenTheme(value: unknown): 'light' | 'dark' | null {
+  return value === 'light' || value === 'dark' ? value : null;
+}

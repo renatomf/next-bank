@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { cache } from 'react';
 import { adminApi, SessionEnded } from './api';
 import { SESSION_COOKIE } from './session';
+import { SIDEBAR_COOKIE, sidebarCollapsedOf } from './sidebar';
 import { THEME_COOKIE, themeOf } from './theme';
 
 /** The configuration of this server: never sent to a browser (STF-08). */
@@ -41,6 +42,11 @@ export const signedInMember = cache(() => asSignedInMember((api) => api.me()));
 /** The member's theme, from the cookie: the system's until one is picked (task 3.5, E2). */
 export async function themeOfThisRequest() {
   return themeOf((await cookies()).get(THEME_COOKIE)?.value);
+}
+
+/** Whether the member left the sidebar collapsed (task 3.5, E7). */
+export async function sidebarCollapsedOfThisRequest() {
+  return sidebarCollapsedOf((await cookies()).get(SIDEBAR_COOKIE)?.value);
 }
 
 /** How each role reads on the screen. */

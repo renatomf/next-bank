@@ -18,3 +18,14 @@ export function Logo({ className }: { className?: string }) {
     </span>
   );
 }
+
+/** The logo's mint dot alone: the brand in the collapsed sidebar. */
+export function LogoMark({ className }: { className?: string }) {
+  return (
+    <span
+      role="img"
+      aria-label="next bank"
+      className={cn('inline-block size-3 rounded-full bg-mint', className)}
+    />
+  );
+}

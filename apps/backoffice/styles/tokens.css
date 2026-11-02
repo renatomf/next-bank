@@ -18,6 +18,9 @@
   --nb-danger: light-dark(#c62828, #ff6b6b);
   --nb-glow: light-dark(#00ffc838, #00ffc81a);
 
+  /* Brief, section 2.2: the ground of what is selected (not in tokens.dart). */
+  --nb-accent-soft: light-dark(#00ffc838, #00ffc81f);
+
   /* Brand, the same in both modes. */
   --nb-mint: #00ffc8;
 

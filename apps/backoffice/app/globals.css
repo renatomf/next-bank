@@ -46,6 +46,7 @@
   --color-danger: var(--nb-danger);
   --color-glow: var(--nb-glow);
   --color-mint: var(--nb-mint);
+  --color-selected: var(--nb-accent-soft);
 
   --radius-sm: var(--nb-radius-tag);
   --radius-md: var(--nb-radius-inner);
