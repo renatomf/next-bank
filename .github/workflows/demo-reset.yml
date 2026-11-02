@@ -58,5 +58,16 @@ jobs:
           MIGRATION_DATABASE_URL: ${{ secrets.MIGRATION_DATABASE_URL }}
           SEED_API_URL: ${{ vars.API_URL }}
         run: pnpm --filter @nextbank/api seed:demo
+      # The backoffice's admin, recreated with the same credentials kept in the
+      # secrets (v1.3.0 plan, task 2, D4). Only once the backoffice exists.
+      - name: Recreate the backoffice's admin
+        if: vars.BACKOFFICE_URL != ''
+        env:
+          MIGRATION_DATABASE_URL: ${{ secrets.MIGRATION_DATABASE_URL }}
+          STAFF_TOTP_KEY: ${{ secrets.STAFF_TOTP_KEY }}
+          STAFF_ADMIN_EMAIL: ${{ secrets.STAFF_ADMIN_EMAIL }}
+          STAFF_ADMIN_PASSWORD: ${{ secrets.STAFF_ADMIN_PASSWORD }}
+          STAFF_ADMIN_TOTP_SECRET: ${{ secrets.STAFF_ADMIN_TOTP_SECRET }}
+        run: pnpm --filter @nextbank/api staff:create --admin-from-env
       - name: Smoke test
         run: sh infra/scripts/smoke-test.sh "$API_URL"
