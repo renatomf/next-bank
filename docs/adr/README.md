@@ -25,6 +25,7 @@ Cada ADR registra **uma** decisão de arquitetura: o contexto, as alternativas c
 | [0017](0017-simulador-no-servico-da-api.md) | Simulador montado no serviço da API | Aceito |
 | [0018](0018-pix-assincrono-e-conciliacao.md) | Pix assíncrono e conciliação diária | Aceito |
 | [0019](0019-trace-com-opentelemetry.md) | Trace de ponta a ponta com OpenTelemetry | Aceito |
+| [0020](0020-ui-do-backoffice.md) | UI do backoffice: Tailwind, shadcn e os tokens do app | Aceito |
 
 ## Template
 
