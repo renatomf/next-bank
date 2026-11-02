@@ -36,6 +36,7 @@ Fora do escopo desta versão: simulador do Bacen (Fase 2) e backoffice (Fase 3),
 | **A5** Quem obtém dump, backup ou logs | Acesso de leitura a dados em repouso | Ler CPF, hashes, tokens em log |
 | **A6** Cadeia de suprimentos | Dependência ou action comprometida | Pacote npm malicioso |
 | **A7** Quem alcança o webhook do SPI (v1.2.0) | A rota pública que recebe as notificações do simulador do Bacen | Forjar ou repetir uma confirmação ou uma falha de Pix externo |
+| **A8** Membro da equipe mal-intencionado, ou alguém com a credencial dele (v1.3.0) | Conta de equipe com um papel, acesso ao backoffice | Ver dados de clientes sem motivo, aprovar o próprio pedido, mover dinheiro sem uma segunda pessoa |
 
 ## 4. Fluxo de dados e fronteiras de confiança
 
@@ -192,6 +193,23 @@ O Pix passa a sair para outros bancos (fictícios) por um simulador do Bacen que
 | EXT-08 | Fila do outbox cresce sem fim com o SPI fora, ou um Pix é estornado sem confirmação | D, T | rede | Retry com backoff e limite; depois, consulta de status e exceção manual; estorno só com a falha confirmada (D6) | SPI fora por 1 hora → nenhum Pix duplicado nem estornado sem confirmação; a fila drena quando ele volta. Provado na tarefa 9 (`external-pix.chaos.ts`): 50 Pix autorizados e o SPI fora por uma hora; nenhum muda de estado nem é estornado, as mensagens vão para `DEAD`, e quando o SPI volta a consulta de status reenvia e todos terminam, com o dinheiro inteiro. O lado do outbox já provado em `pg-outbox.test.ts` (esperas que dobram, `DEAD` e relato depois da décima tentativa, nenhuma trava durante o tratador). Na tarefa 4: a consulta que não obtém resposta não muda nada e tenta na próxima rodada, e só uma recusa confirmada estorna (`check-pending-pix.test.ts`) | v1.2.0 |
 | EXT-09 | O simulador publicado é alcançado por qualquer um, que injeta pagamentos ou suja o arquivo de liquidação, gerando divergências falsas | T, D | A1 | Toda rota do simulador (DICT, SPI e liquidação) exige a chave do participante, comparada em tempo constante; o SPI de verdade usa mTLS | `dict-routes.test.ts`, `spi-routes.test.ts` e `participant-auth.test.ts` (simulador): sem a chave ou com a chave errada → 401, nada gravado nem mostrado. Montado no serviço da API (tarefa 3, ADR 0017): `mount-simulator.test.ts`, sem a chave → 401 mesmo com as rotas públicas para o token; `config.test.ts`, a API só manda a chave para o `127.0.0.1` ou por HTTPS | v1.2.0 |
 | EXT-10 | Um cliente manda um `traceparent` forjado e pendura as suas requisições no trace de outra pessoa, ou enche o trace de lixo | T | A1 | O `traceparent` de fora só é lido nas rotas de parceiro (o webhook do SPI e o simulador montado) e só no formato W3C, em minúsculas; as rotas do app começam sempre um trace novo, ligado ao app pelo `requestId` (tarefa 8, T4). Na coluna do outbox e do simulador, `CHECK` do mesmo formato | `http-tracing.test.ts`: rota do app com `traceparent` → trace novo; webhook com `traceparent` válido → filho dele; malformado, zerado ou em maiúsculas → ignorado; `db-platform-schema.test.ts` e `db-schema.test.ts` (simulador), formato fora do W3C → recusado | v1.2.0 |
+
+### 5.9 Backoffice (v1.3.0, propostas)
+
+Uma equipe fictícia, com papéis, consulta clientes e resolve pedidos e exceções pelo backoffice (plano `v1.3.0-backoffice.md`). Novo ator: **A8** (seção 3). A API `/admin` fica na internet, porque o plano gratuito não tem rede privada (decisão B1), então a proteção é em camadas: a credencial do servidor do backoffice, o token próprio da equipe e o MFA. Cada linha vira teste na fatia que a cria.
+
+| ID | Ameaça | STRIDE | Ator | Mitigação | Teste | Sem. |
+|---|---|---|---|---|---|---|
+| STF-01 | Senha da equipe roubada ou adivinhada | S | A1, A8 | MFA TOTP obrigatório; bloqueio progressivo; Argon2id | Senha certa sem o código → nada; força bruta → bloqueio | v1.3.0 |
+| STF-02 | Um papel chama uma rota de outro (operador aprova, analista gerencia a equipe) | E | A8 | RBAC no servidor, negar por padrão, papel lido do banco a cada comando | Matriz papel × rota inteira: tudo fora da permissão → 403 | v1.3.0 |
+| STF-03 | Quem pede aprova o próprio pedido, ou uma pessoa usa duas contas | E, R | A8 | Pedido e aprovação de pessoas diferentes, no domínio e num `CHECK`; o admin não cria contas para si | Autoaprovação → recusada na API e no E2E | v1.3.0 |
+| STF-04 | CSRF numa Server Action | T | A1 | Cookie `SameSite=Strict`, origem conferida, nenhuma mutação por `GET` | Requisição de outra origem → recusada | v1.3.0 |
+| STF-05 | XSS com um dado do cliente (nome, descrição do Pix) | T, I | A2 | Escape do React, CSP estrita sem `unsafe-inline`, nenhum `dangerouslySetInnerHTML` | Nome com `<script>` aparece como texto; regra do Semgrep no CI | v1.3.0 |
+| STF-06 | Sessão da equipe roubada | S | A1, A4 | Cookie `httpOnly`, `Secure`, `SameSite=Strict`; inatividade de 15 min e máximo de 8 h; sessão revogável no servidor | Cookie expirado ou revogado → volta ao login | v1.3.0 |
+| STF-07 | A equipe vê mais dado pessoal do que precisa | I | A8 | Dados mascarados por padrão; cada consulta a um cliente auditada (`SENSITIVE_DATA_ACCESSED`); a equipe de demonstração só vê clientes de demonstração | Consulta gera o evento; cliente de visitante → 404 para a equipe da demo | v1.3.0 |
+| STF-08 | A API `/admin`, exposta na internet, aceita quem não é o backoffice | S, E | A1, A2 | Credencial própria do servidor do backoffice, além do token da equipe; `audience` separado dos clientes; rate limit próprio | Sem a credencial → 401; token de cliente em `/admin` → 401; token da equipe no app → 401 | v1.3.0 |
+| STF-09 | A mesma aprovação aplicada duas vezes (clique duplo, duas abas, dois analistas) | T | A8 | Máquina de estados do pedido, trava `FOR UPDATE` e `Idempotency-Key` | Dois analistas aprovando ao mesmo tempo → um efeito só | v1.3.0 |
+| STF-10 | Alguém da equipe apaga o próprio rastro | R | A8 | Auditoria só por inclusão, gravada na transação do comando; nenhuma rota apaga | Nenhuma rota nem papel altera a auditoria (teste de schema) | v1.3.0 |
 
 ## 6. Decisões de segurança
 
