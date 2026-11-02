@@ -33,9 +33,9 @@ beforeAll(() => {
     clock,
   });
 });
+// Closing the app ends the pool too.
 afterAll(async () => {
   await app.close();
-  await pool.end();
 });
 beforeEach(() => {
   clock.current = new Date();
@@ -271,13 +271,13 @@ describe('customers and staff never cross', () => {
 describe('the permission of every /admin route', () => {
   it('refuses to start a staff route that declares no permission', async () => {
     const server = Fastify();
-    await server.register((scope, _options, done) => {
+    void server.register((scope) => {
       registerStaffAuthentication(scope, {
         apiKey: BACKOFFICE_KEY,
         authenticate: () => Promise.reject(new Error('unused')),
       });
       scope.get('/forgotten', () => ({ ok: true }));
-      done();
+      return Promise.resolve();
     });
 
     await expect(server.ready()).rejects.toThrow(/permission/);

@@ -113,7 +113,10 @@ describe('staff schema', () => {
     ).resolves.toBeDefined();
     await expect(
       app.query(
-        'UPDATE staff.sessions SET last_seen_at = now(), revoked_at = now() WHERE id = $1',
+        `UPDATE staff.sessions
+         SET last_seen_at = created_at + interval '1 minute',
+             revoked_at = created_at + interval '2 minutes'
+         WHERE id = $1`,
         [session],
       ),
     ).resolves.toBeDefined();

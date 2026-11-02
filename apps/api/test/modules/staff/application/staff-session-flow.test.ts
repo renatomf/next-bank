@@ -91,7 +91,8 @@ describe('CreateStaffMember', () => {
     expect(created).toEqual({
       id: 'id-1',
       email: 'lia@example.com',
-      password: expect.stringMatching(/^.{24,}$/) as string,
+      // Drawn by the token generator, 43 characters in production.
+      password: 'token-1',
       totpSecret: 'SECRET1',
       totpUri: 'otpauth://totp/next%20bank:lia@example.com?secret=SECRET1',
     });
