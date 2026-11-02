@@ -35,8 +35,9 @@ export function LogoMark({ className }: { className?: string }) {
         className,
       )}
     >
-      {/* The dot sits on the letter's baseline, right after the "n". */}
-      <span className="inline-flex items-baseline">
+      {/* The dot sits on the letter's baseline, right after the "n"; the pair
+          moves 2 px right, where it looks centered in the tile. */}
+      <span className="inline-flex translate-x-0.5 items-baseline">
         n
         <span
           aria-hidden="true"
