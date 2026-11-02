@@ -210,9 +210,14 @@ class PgStaffSessionsRepository implements StaffSessionsRepository {
     return row ? toSession(row) : null;
   }
 
+  /**
+   * A revocation is never undone nor moved: a request that read the session
+   * before a logout writes back a null revoked_at, which must not win (F-46).
+   */
   async update(state: StaffSessionState): Promise<void> {
     await this.#client.query(
-      'UPDATE staff.sessions SET last_seen_at = $2, revoked_at = $3 WHERE id = $1',
+      `UPDATE staff.sessions SET last_seen_at = $2, revoked_at = COALESCE(revoked_at, $3)
+       WHERE id = $1`,
       [state.id, state.lastSeenAt, state.revokedAt],
     );
   }
