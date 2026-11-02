@@ -18,13 +18,22 @@ export async function apiForThisRequest() {
   return adminApi({ ...settings(), token: token === '' ? undefined : token });
 }
 
-/** The member signed in, or the login when the API no longer takes the session. */
-export async function signedInMember() {
+/** A read as the member of this session; the login when the API no longer takes it. */
+export async function asSignedInMember<T>(
+  read: (api: Awaited<ReturnType<typeof apiForThisRequest>>) => Promise<T>,
+): Promise<T> {
   try {
-    const api = await apiForThisRequest();
-    return await api.me();
+    return await read(await apiForThisRequest());
   } catch (error) {
     if (error instanceof SessionEnded) redirect('/login?sessao=expirada');
     throw error;
   }
 }
+
+/** The member signed in, or the login when the API no longer takes the session. */
+export function signedInMember() {
+  return asSignedInMember((api) => api.me());
+}
+
+/** The roles that read customers; the API decides, this only spares a 403 (task 3, C1). */
+export const READS_CUSTOMERS: readonly string[] = ['OPERATOR', 'ANALYST'];

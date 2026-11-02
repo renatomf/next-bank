@@ -1,4 +1,5 @@
-import { signedInMember } from '../lib/backend';
+import Link from 'next/link';
+import { READS_CUSTOMERS, signedInMember } from '../lib/backend';
 import { logout } from './actions';
 
 const ROLES: Readonly<Record<string, string>> = {
@@ -7,7 +8,7 @@ const ROLES: Readonly<Record<string, string>> = {
   ADMIN: 'Administração',
 };
 
-/** The staff's home: who is signed in. The next tasks bring the customers and the requests. */
+/** The staff's home: who is signed in, and where their role may go. */
 export default async function HomePage() {
   const member = await signedInMember();
 
@@ -18,6 +19,11 @@ export default async function HomePage() {
           Olá, {member.name}
         </h1>
         <p className="muted">{ROLES[member.role] ?? member.role}</p>
+        {READS_CUSTOMERS.includes(member.role) ? (
+          <p>
+            <Link href="/clientes">Clientes →</Link>
+          </p>
+        ) : null}
         <form action={logout}>
           <button type="submit" className="secondary">
             Sair
