@@ -79,7 +79,7 @@
 | SCA: dependências vulneráveis | ✅ | Job `Dependencies (osv-scanner)` em todos os lockfiles, obrigatório para o merge; Dependabot alerts e security updates ativos. | 2 |
 | Dependabot / Renovate | ✅ / 🚫 | Dependabot ativo, inclusive para as GitHub Actions fixadas por SHA. Renovate descartado: uma ferramenta basta. | 2 |
 | SBOM | 🔭 | Pouco valor para uma demo sem distribuição a terceiros. Evolução: SBOM anexado a cada release. | — |
-| DAST: OWASP ZAP | ✅ | Baseline (passivo) contra a API publicada em 2026-10-13: 65 verificações aprovadas, nenhuma falha; dois avisos informativos vêm do `Cache-Control: no-store` proposital (F-06). Rodado à mão, fora do CI (F-32). | 8 |
+| DAST: OWASP ZAP | ✅ | Baseline (passivo) contra a API publicada em 2026-10-13: 65 verificações aprovadas, nenhuma falha; dois avisos informativos vêm do `Cache-Control: no-store` proposital (F-06). Rodado à mão, fora do CI (F-32). De novo em 2026-11-02, depois da `v1.2.0`, contra a API e contra o simulador montado (`/simulator/health`): 66 aprovadas e nenhuma falha em cada um, com os mesmos dois avisos | 8, v1.2.0 |
 | Ambiente de staging | 🚫 | Decisão do roadmap: um ambiente publicado (demo) e o local. O ZAP roda contra a demo. | — |
 | Secrets scanning | ✅ | gitleaks em todo o histórico no CI (obrigatório) e no `pre-commit` local (#31); secret scanning e push protection do GitHub ativos. | 2 |
 
