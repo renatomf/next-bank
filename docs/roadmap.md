@@ -30,7 +30,7 @@ next bank é um banco fictício construído como **projeto de portfólio para va
 | **1. V1 Core** | App Flutter + API: Auth, Ledger, PIX interno, extrato, testes, CI, deploy | 8 semanas | `v1.0.0` → **começar as candidaturas** |
 | **1.1 Produtos do dia a dia** | Pix por QR Code (pagar e receber), recarga de celular síncrona, comprovante compartilhado, biometria (desbloqueio e confirmação), cartão na Home (só interface), `FLAG_SECURE`, verificação automática do IP. Plano: `docs/plans/v1.1.0-produtos-do-dia-a-dia.md` | ~2,5 semanas | `v1.1.0` |
 | **2. PIX assíncrono** | Simulador do Bacen (SPI/DICT), PIX externo, conta transitória, conciliação, tracing; o executor em segundo plano traz agendamentos, pagamentos recorrentes e débito automático | ~2–3 semanas | `v1.2.0` |
-| **3. Backoffice** | Next.js: RBAC, dupla aprovação, fila de exceções da conciliação | ~2 semanas | `v1.3.0` |
+| **3. Backoffice** | Next.js: RBAC, MFA da equipe, dupla aprovação, fila de exceções da conciliação. Plano: `docs/plans/v1.3.0-backoffice.md` | ~3 semanas | `v1.3.0` |
 | **4. Produtos do app** | Minhas chaves Pix e QR Code dinâmico; recarga assíncrona, boleto e contas de consumo com provedor simulado; cartão de crédito e fatura | ~2 semanas por versão | `v1.4.0` → `v2.0.0` |
 
 > ✅ **Entregue:** `v1.2.0`, em 2026-11-01 ([Releases](https://github.com/renatomf/next-bank/releases/tag/v1.2.0)), com o plano em [v1.2.0-pix-assincrono.md](plans/v1.2.0-pix-assincrono.md); antes, `v1.1.0`, em 2026-10-21, com o plano em [v1.1.0-produtos-do-dia-a-dia.md](plans/v1.1.0-produtos-do-dia-a-dia.md). O que entrou em cada uma está no [CHANGELOG](../CHANGELOG.md).
@@ -363,7 +363,7 @@ O simulador é um só, com um módulo por parceiro; o do Bacen é o primeiro (pl
 
 **Pronto quando:** um PIX externo sob 30% de falhas injetadas termina sempre num estado final correto, sem duplicidade, e a conciliação aponta 100% das divergências injetadas.
 
-## 10. Fase 3 — Backoffice Next.js (~2 semanas, `v1.3.0`)
+## 10. Fase 3 — Backoffice Next.js (~3 semanas, `v1.3.0`)
 
 **Objetivo:** mostrar web moderno e o "banco por dentro".
 
@@ -381,11 +381,11 @@ O simulador é um só, com um módulo por parceiro; o do Bacen é o primeiro (pl
 - **API:** endpoints `/admin/*` no contexto **Operations**, com RBAC verificado no servidor.
 - **Next.js:** App Router, Server Components para leitura, Server Actions para comandos, cliente TS gerado do OpenAPI.
 - **Testes:** Playwright cobrindo o fluxo de dupla aprovação, incluindo a tentativa do solicitante de aprovar a própria solicitação (deve falhar).
-- **Deploy:** Render, no mesmo provedor da API. Os endpoints `/admin/*` são servidos por uma instância separada da API (mesma imagem, modo `admin`), implantada como **serviço privado**, sem URL pública: só o backoffice a alcança pela rede interna. A API pública não registra as rotas `/admin/*`. Evolução opcional: gateway de identidade (zero trust) na frente do backoffice.
+- **Deploy** (revisto no plano da `v1.3.0`, B1): o Next.js na Vercel, no plano gratuito, e as rotas `/admin/*` no mesmo serviço da API no Render. O "serviço privado" previsto antes é pago no Render, e um segundo serviço gratuito dividiria as 750 horas da API (ADR 0012). Sem rede privada, a API `/admin` é protegida em camadas: a credencial que só o servidor do backoffice tem, o token da equipe com `audience` próprio e o MFA (STF-08). Evolução opcional: gateway de identidade (zero trust) na frente do backoffice.
 
 - **Revisão do BFF (ADR 0011):** o desenho da fase começa respondendo se o servidor do Next.js basta como BFF do backoffice (sessão em cookie `httpOnly`, Server Actions chamando a API `/admin/*` privada) ou se é preciso um serviço dedicado, e como ficam CSRF/`SameSite` e a propagação do `requestId` e da `Idempotency-Key` nos comandos do staff.
 
-**ADR:** 0012 Backoffice: RBAC e dupla aprovação
+**ADRs:** os da fase são numerados a partir do 0020 (hospedagem do backoffice; RBAC e dupla aprovação). O número 0012 citado antes já é o da hospedagem da V1
 
 **Pronto quando:** um PIX divergente da Fase 2 é resolvido pelo backoffice, com dupla aprovação, e aparece corretamente no extrato do cliente e na trilha de auditoria.
 
