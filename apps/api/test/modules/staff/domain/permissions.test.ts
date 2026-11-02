@@ -17,8 +17,21 @@ describe('permissions', () => {
     }
   });
 
+  it('lets the operator and the analyst read customers, never the admin (task 3, C1)', () => {
+    expect(() => {
+      assertAllowed('OPERATOR', 'customers.read');
+    }).not.toThrow();
+    expect(() => {
+      assertAllowed('ANALYST', 'customers.read');
+    }).not.toThrow();
+    // The admin manages the staff and sees no customer: segregation of duties.
+    expect(() => {
+      assertAllowed('ADMIN', 'customers.read');
+    }).toThrow(Forbidden);
+  });
+
   it('knows only the permissions of the table', () => {
-    expect(PERMISSIONS).toEqual(['staff.self']);
+    expect(PERMISSIONS).toEqual(['staff.self', 'customers.read']);
   });
 
   it('denies a permission nobody granted', () => {

@@ -4,6 +4,9 @@ import createClient from 'openapi-fetch';
 import type { components, paths } from './api-types';
 
 type StaffMember = components['schemas']['StaffMember'];
+export type CustomerSearch = components['schemas']['CustomerSearch'];
+export type CustomerCard = components['schemas']['CustomerCard'];
+export type Statement = components['schemas']['Statement'];
 
 /** The API refused a login; [code] is the catalog's (InvalidCredentials, TooManyAttempts). */
 export class LoginRefused extends Error {
@@ -12,6 +15,17 @@ export class LoginRefused extends Error {
   constructor(code: string) {
     super(code);
     this.name = 'LoginRefused';
+    this.code = code;
+  }
+}
+
+/** The API refused a search term; [code] is the catalog's (InvalidRequest, InvalidCpf). */
+export class SearchRefused extends Error {
+  readonly code: string;
+
+  constructor(code: string) {
+    super(code);
+    this.name = 'SearchRefused';
     this.code = code;
   }
 }
@@ -76,6 +90,34 @@ export function adminApi(options: AdminApiOptions) {
       const { response } = await client.POST('/admin/v1/auth/logout', { headers: headers() });
       if (!response.ok) throw failureOf(response);
     },
+
+    /** By POST: the term (a CPF, an e-mail) never sits in a URL (task 3, C2). */
+    async searchCustomers(query: string): Promise<CustomerSearch> {
+      const { data, error, response } = await client.POST('/admin/v1/customers/search', {
+        headers: headers(),
+        body: { query },
+      });
+      if (data !== undefined) return data;
+      if (response.status === 422) throw new SearchRefused(codeOf(error, response));
+      throw failureOf(response);
+    },
+
+    /** The card, or null when the API shows this member no such customer. */
+    async customer(customerId: string): Promise<CustomerCard | null> {
+      const { data, response } = await client.GET('/admin/v1/customers/{customerId}', {
+        headers: headers(),
+        params: { path: { customerId } },
+      });
+      return data ?? orNullWhenMissing(response);
+    },
+
+    async customerStatement(customerId: string, cursor: string | null): Promise<Statement | null> {
+      const { data, response } = await client.GET('/admin/v1/customers/{customerId}/statement', {
+        headers: headers(),
+        params: { path: { customerId }, query: cursor === null ? {} : { cursor } },
+      });
+      return data ?? orNullWhenMissing(response);
+    },
   };
 }
 
@@ -84,6 +126,11 @@ function codeOf(error: unknown, response: Response): string {
     return String(error.code);
   }
   return `HTTP ${String(response.status)}`;
+}
+
+function orNullWhenMissing(response: Response): null {
+  if (response.status === 404 || response.status === 422) return null;
+  throw failureOf(response);
 }
 
 function failureOf(response: Response): Error {

@@ -5,6 +5,7 @@ import { ActiveSessions } from './application/active-sessions.ts';
 import { ChangePassword } from './application/change-password.ts';
 import { ChangePin } from './application/change-pin.ts';
 import { CreatePin } from './application/create-pin.ts';
+import { CustomerDirectory } from './application/customer-directory.ts';
 import { GetProfile } from './application/get-profile.ts';
 import { ListSessions } from './application/list-sessions.ts';
 import { Login } from './application/login.ts';
@@ -35,6 +36,7 @@ export { meRoutes } from './http/me-route.ts';
 export { meSessionsRoutes } from './http/me-sessions-routes.ts';
 export { pinRoutes } from './http/pin-route.ts';
 export { sessionRoutes } from './http/session-routes.ts';
+export type { CustomerDirectory } from './application/customer-directory.ts';
 export type { PayeeDirectory } from './application/payee-directory.ts';
 export type { AccessTokenKeys } from './infrastructure/jose-access-tokens.ts';
 export type {
@@ -62,6 +64,8 @@ export interface IdentityModule {
   getProfile: GetProfile;
   /** Implements the IdentityPort of Payments. */
   payees: PayeeDirectory;
+  /** Implements the CustomersPort of Operations (v1.3.0, task 3). */
+  customers: CustomerDirectory;
 }
 
 export interface IdentitySettings {
@@ -84,13 +88,14 @@ export function createIdentityModule(settings: IdentitySettings): IdentityModule
   // One counter for every check of the password: login, PIN change (AUTH-01).
   const loginAttempts = new InMemoryLoginAttempts();
   const commonPasswords = loadCommonPasswords();
+  const cpfProtector = new AesGcmCpfProtector(settings.piiKeys);
   return {
     registerUser: new RegisterUser({
       repositories,
       clock: settings.clock,
       ids: settings.ids,
       hasher,
-      cpfProtector: new AesGcmCpfProtector(settings.piiKeys),
+      cpfProtector,
       commonPasswords,
       refreshTokens,
       accessTokens,
@@ -166,5 +171,6 @@ export function createIdentityModule(settings: IdentitySettings): IdentityModule
     }),
     getProfile: new GetProfile({ unitOfWork: settings.unitOfWork, repositories }),
     payees: new PayeeDirectory(repositories),
+    customers: new CustomerDirectory(repositories, cpfProtector),
   };
 }

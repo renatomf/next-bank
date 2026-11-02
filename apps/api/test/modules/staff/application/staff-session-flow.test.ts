@@ -138,7 +138,7 @@ describe('CreateStaffMember', () => {
 });
 
 describe('AuthenticateStaff', () => {
-  it('answers the member, the role and the session of a token', async () => {
+  it('answers the member, the role, the demo scope and the session of a token', async () => {
     const token = await signedIn();
 
     await expect(authenticate.execute(token)).resolves.toEqual({
@@ -146,6 +146,8 @@ describe('AuthenticateStaff', () => {
       sessionId: 'id-3',
       name: 'Lia Operadora',
       role: 'ANALYST',
+      // Read from the database on every request, never from the client (STF-11).
+      isDemo: false,
     });
   });
 

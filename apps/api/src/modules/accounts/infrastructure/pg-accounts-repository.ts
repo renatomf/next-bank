@@ -25,6 +25,16 @@ export class PgAccountsRepository implements AccountsRepository {
       opened_at, updated_at
     FROM accounts.accounts WHERE holder_user_id = $1`;
 
+  /** Served by the accounts_holder_user_id_key unique index. */
+  static readonly FIND_BY_HOLDERS_SQL = `SELECT id, holder_user_id, branch, number, status,
+      opened_at, updated_at
+    FROM accounts.accounts WHERE holder_user_id = ANY($1::uuid[])`;
+
+  /** Served by the accounts_branch_number_key unique index. */
+  static readonly FIND_BY_NUMBER_SQL = `SELECT id, holder_user_id, branch, number, status,
+      opened_at, updated_at
+    FROM accounts.accounts WHERE branch = $1 AND number = $2`;
+
   readonly #client: pg.ClientBase;
 
   constructor(client: pg.ClientBase) {
@@ -54,6 +64,22 @@ export class PgAccountsRepository implements AccountsRepository {
        FROM accounts.accounts WHERE id = $1`,
       [id],
     );
+    return stateOf(rows[0]);
+  }
+
+  async findByHolders(userIds: string[]): Promise<AccountState[]> {
+    const { rows } = await this.#client.query<AccountRow>(
+      PgAccountsRepository.FIND_BY_HOLDERS_SQL,
+      [userIds],
+    );
+    return rows.flatMap((row) => stateOf(row) ?? []);
+  }
+
+  async findByNumber(branch: string, number: string): Promise<AccountState | null> {
+    const { rows } = await this.#client.query<AccountRow>(PgAccountsRepository.FIND_BY_NUMBER_SQL, [
+      branch,
+      number,
+    ]);
     return stateOf(rows[0]);
   }
 

@@ -52,10 +52,99 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/v1/customers/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["searchCustomers"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/customers/{customerId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getCustomer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/customers/{customerId}/statement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getCustomerStatement"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        CustomerAccount: {
+            branch: string;
+            number: string;
+            /** @enum {string} */
+            status: "ACTIVE" | "BLOCKED" | "CLOSED";
+        };
+        CustomerCard: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            cpfMasked: string;
+            emailMasked: string;
+            /** @enum {string} */
+            status: "ACTIVE" | "LOCKED";
+            account: {
+                branch: string;
+                number: string;
+                /** @enum {string} */
+                status: "ACTIVE" | "BLOCKED" | "CLOSED";
+                /** Format: date-time */
+                openedAt: string;
+            };
+            balance: components["schemas"]["Money"];
+        };
+        CustomerSearch: {
+            customers: components["schemas"]["CustomerSummary"][];
+            truncated: boolean;
+        };
+        CustomerSearchRequestInput: {
+            query: string;
+        };
+        CustomerSummary: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            cpfMasked: string;
+            emailMasked: string;
+            /** @enum {string} */
+            status: "ACTIVE" | "LOCKED";
+            account: components["schemas"]["CustomerAccount"];
+        };
         Money: {
             /** @description Integer amount of cents, e.g. 35000 for R$ 350,00 */
             amount: number;
@@ -88,6 +177,28 @@ export interface components {
             /** Format: date-time */
             expiresAt: string;
             member: components["schemas"]["StaffMember"];
+        };
+        Statement: {
+            items: components["schemas"]["StatementItem"][];
+            nextCursor: string | null;
+        };
+        StatementCounterparty: {
+            name: string;
+            documentMasked: string | null;
+        };
+        StatementItem: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            occurredAt: string;
+            /** @enum {string} */
+            kind: "PIX_SENT" | "PIX_RECEIVED" | "PIX_REFUNDED" | "DEMO_FUNDING" | "TOP_UP";
+            /** @enum {string} */
+            direction: "IN" | "OUT";
+            amount: components["schemas"]["Money"];
+            counterparty: components["schemas"]["StatementCounterparty"] | null;
+            transferId: string | null;
+            topUpId: string | null;
         };
     };
     responses: never;
@@ -196,6 +307,175 @@ export interface operations {
             };
             /** @description Default Response */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    searchCustomers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomerSearchRequestInput"];
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerSearch"];
+                };
+            };
+            /** @description Default Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Default Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Default Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getCustomer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                customerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerCard"];
+                };
+            };
+            /** @description Default Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Default Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Default Response */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Default Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getCustomerStatement: {
+        parameters: {
+            query?: {
+                cursor?: string;
+            };
+            header?: never;
+            path: {
+                customerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Statement"];
+                };
+            };
+            /** @description Default Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Default Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Default Response */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Default Response */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };

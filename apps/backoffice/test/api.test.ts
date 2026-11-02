@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { adminApi, LoginRefused, SessionEnded } from '../lib/api';
+import { adminApi, LoginRefused, SearchRefused, SessionEnded } from '../lib/api';
 
 // The backoffice's client of the API's /admin routes (v1.3.0 plan, task 2;
 // B2, STF-08): only the server calls it, always with the backoffice's key
@@ -101,5 +101,53 @@ describe('adminApi', () => {
 
     expect(calls[0]?.url).toBe('https://api.example.test/admin/v1/auth/logout');
     expect(calls[0]?.headers.get('authorization')).toBe('Bearer opaque-token');
+  });
+
+  // The customers (v1.3.0 plan, task 3): the term goes in the body, never in a URL (C2).
+  it('searches customers by POST, with the term in the body', async () => {
+    const { calls, fetch } = recordingFetch(200, { customers: [], truncated: false });
+
+    await expect(api(fetch, 'opaque-token').searchCustomers('ana@example.test')).resolves.toEqual({
+      customers: [],
+      truncated: false,
+    });
+    expect(calls[0]?.method).toBe('POST');
+    expect(calls[0]?.url).toBe('https://api.example.test/admin/v1/customers/search');
+    expect(JSON.parse(calls[0]?.body ?? '{}')).toEqual({ query: 'ana@example.test' });
+    expect(calls[0]?.cache).toBe('no-store');
+  });
+
+  it('tells why a search was refused', async () => {
+    const { fetch } = recordingFetch(422, { code: 'InvalidCpf' });
+
+    await expect(api(fetch, 'opaque-token').searchCustomers('11111111111')).rejects.toEqual(
+      new SearchRefused('InvalidCpf'),
+    );
+  });
+
+  it("reads a customer's card and statement, the statement from a cursor", async () => {
+    const id = '0190f0b6-1b2c-7d3e-8f40-123456789abc';
+    const { calls, fetch } = recordingFetch(200, { items: [], nextCursor: null });
+
+    await api(fetch, 'opaque-token').customer(id);
+    await api(fetch, 'opaque-token').customerStatement(id, 'abc_DEF-1');
+
+    expect(calls.map((call) => call.url)).toEqual([
+      `https://api.example.test/admin/v1/customers/${id}`,
+      `https://api.example.test/admin/v1/customers/${id}/statement?cursor=abc_DEF-1`,
+    ]);
+  });
+
+  it('answers null for a customer the API does not show this member', async () => {
+    const { fetch } = recordingFetch(404, { code: 'NotFound' });
+
+    await expect(api(fetch, 'opaque-token').customer('x')).resolves.toBeNull();
+    await expect(api(fetch, 'opaque-token').customerStatement('x', null)).resolves.toBeNull();
+  });
+
+  it('ends the session the API refuses on a customer read', async () => {
+    const { fetch } = recordingFetch(401, { code: 'StaffSessionExpired' });
+
+    await expect(api(fetch, 'opaque-token').customer('x')).rejects.toBeInstanceOf(SessionEnded);
   });
 });

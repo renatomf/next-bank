@@ -111,3 +111,84 @@ button.secondary {
   margin: 16px 0 0;
   color: var(--danger);
 }
+
+a {
+  color: var(--mint);
+}
+
+/* The pages after the login: customers and their statements (task 3). */
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.page nav {
+  margin-bottom: 16px;
+}
+
+.card.wide {
+  max-width: none;
+  margin-bottom: 32px;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 24px;
+  margin: 0;
+}
+
+.facts dt {
+  color: var(--text-muted);
+}
+
+.facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.search button {
+  width: auto;
+  padding: 12px 24px;
+}
+
+.results {
+  padding: 0;
+  list-style: none;
+}
+
+.results li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.results .muted {
+  margin: 0;
+}
+
+.statement {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+.statement th,
+.statement td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.statement th {
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.statement .in {
+  color: var(--mint);
+}

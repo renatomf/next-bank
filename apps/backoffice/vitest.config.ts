@@ -6,5 +6,5 @@ export default defineConfig({
     // server-only throws outside the server's build; the tests are the server.
     alias: { 'server-only': fileURLToPath(new URL('./test/server-only.ts', import.meta.url)) },
   },
-  test: { include: ['test/**/*.test.ts'], environment: 'node' },
+  test: { include: ['test/**/*.test.{ts,tsx}'], environment: 'node' },
 });

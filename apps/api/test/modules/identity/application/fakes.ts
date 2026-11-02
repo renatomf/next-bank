@@ -206,6 +206,11 @@ export class InMemoryDatabase implements UnitOfWork, IdentityRepositoriesFactory
           );
           return Promise.resolve();
         },
+        // The staff's reads: proved against Postgres (customer-routes.test.ts), not here.
+        findCustomers: () => Promise.reject(new Error('not used by these tests')),
+        findCustomerByEmail: () => Promise.reject(new Error('not used by these tests')),
+        findCustomerByCpf: () => Promise.reject(new Error('not used by these tests')),
+        searchCustomersByName: () => Promise.reject(new Error('not used by these tests')),
         findCredentials: (id) => {
           const found = tables.users.find((u) => u.state.id === id);
           return Promise.resolve(

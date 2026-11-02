@@ -1,7 +1,7 @@
 export type AccountStatus = 'ACTIVE' | 'BLOCKED' | 'CLOSED';
 
 /** The only branch in V1. */
-const BRANCH = '0001';
+export const BRANCH = '0001';
 
 export interface AccountState {
   id: string;

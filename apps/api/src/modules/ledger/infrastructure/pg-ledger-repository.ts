@@ -11,6 +11,7 @@ import type {
 } from '../application/ports.ts';
 import type { JournalEntryKind, JournalEntryState } from '../domain/journal-entry.ts';
 import type { Direction, LedgerAccountKind, LedgerAccountState } from '../domain/ledger-account.ts';
+import { literalLike } from '../../../shared/infrastructure/literal-like.ts';
 
 interface LedgerAccountRow {
   id: string;
@@ -226,9 +227,4 @@ function toState(row: LedgerAccountRow): LedgerAccountState {
     version: Number(row.version),
     createdAt: row.created_at,
   };
-}
-
-/** The client's text as plain characters in LIKE: \, % and _ escaped (READ-04). */
-function literalLike(text: string): string {
-  return text.replace(/[\\%_]/g, (char) => `\\${char}`);
 }

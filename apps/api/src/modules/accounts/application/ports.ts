@@ -9,6 +9,9 @@ export interface AccountsRepository {
   /** The account of a customer: one per customer in V1. */
   findByHolder(userId: string): Promise<AccountState | null>;
   findById(id: string): Promise<AccountState | null>;
+  /** The accounts of these customers, for the staff's search (v1.3.0, task 3). */
+  findByHolders(userIds: string[]): Promise<AccountState[]>;
+  findByNumber(branch: string, number: string): Promise<AccountState | null>;
   /** In id order, so two Pix in opposite directions never wait on each other. */
   lockForShare(ids: string[]): Promise<AccountState[]>;
 }

@@ -239,12 +239,12 @@ O backoffice roda na Vercel, no plano gratuito, e só o servidor dele fala com a
 2. **Render** (serviço da API, Environment): `BACKOFFICE_API_KEY` = `$backofficeKey` e `STAFF_TOTP_KEY` = `$totpKey`. Salve e espere o deploy. Para conferir: `POST <API_URL>/admin/v1/auth/login` sem cabeçalho responde **401**, e não 404.
 3. **GitHub** (ambiente `production`):
    - segredos `STAFF_TOTP_KEY` (`$totpKey`), `STAFF_ADMIN_EMAIL` (um e-mail fictício, como `admin@nextbank.example`), `STAFF_ADMIN_PASSWORD` (`$adminPassword`) e `STAFF_ADMIN_TOTP_SECRET` (`$adminTotp`);
-   - a variável `BACKOFFICE_URL` fica para o passo 5.
+   - a variável `BACKOFFICE_URL` fica para o passo 5, em **Secrets and variables › Actions › Variables**, no nível do repositório, junto de `API_URL` e das `NEON_*`.
 4. **Vercel:**
    1. **Add New › Project**, importe o repositório `next-bank` e, em **Root Directory**, escolha `apps/backoffice` (o framework Next.js é detectado).
    2. Em **Environment Variables**, marque **só Production** (D3) e acrescente `API_URL` (o endereço da API no Render) e `BACKOFFICE_API_KEY` (`$backofficeKey`). As prévias de cada PR ficam sem a chave, então não alcançam a API.
    3. **Deploy.** Em **Settings › Deployment Protection**, deixe a proteção das prévias ligada (Vercel Authentication).
-5. **De volta ao GitHub:** a variável `BACKOFFICE_URL` (ambiente `production`) com o endereço `https://<projeto>.vercel.app`. Rode **Actions › Demo reset › Run workflow** uma vez: o passo "Recreate the backoffice's admin" cria o admin, e ele volta igual a cada reset diário.
+5. **De volta ao GitHub:** a variável de repositório `BACKOFFICE_URL` com o endereço `https://<projeto>.vercel.app`. Rode **Actions › Demo reset › Run workflow** uma vez, na `main`: o passo "Recreate the backoffice's staff" (`staff:create --reset`) cria o admin e a equipe de demonstração do README (Olívia e Diogo, tarefa 3), e todos voltam iguais a cada reset diário.
 6. **Confira:** abra o endereço da Vercel e entre com `STAFF_ADMIN_EMAIL`, a senha e o código do autenticador. A tela inicial mostra "Olá, Admin next bank" e "Administração".
 7. **Limpe:** `Remove-Variable backofficeKey, totpKey, adminPassword, adminTotp; Set-Clipboard -Value " "`.
 
