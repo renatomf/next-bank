@@ -28,7 +28,7 @@ export default async function RequestsPage({
         {TABS.map((tab) => (
           <Link
             key={tab.status}
-            href={`/pedidos?status=${tab.status}`}
+            href={`/requests?status=${tab.status}`}
             aria-current={tab.status === status ? 'page' : undefined}
             className={cn(
               'rounded-full px-4 py-1.5 text-sm font-semibold transition-colors',
@@ -44,7 +44,7 @@ export default async function RequestsPage({
       <RequestsTable requests={page.items} />
       {page.nextCursor ? (
         <Button asChild variant="outline">
-          <Link href={`/pedidos?status=${status}&cursor=${page.nextCursor}`}>
+          <Link href={`/requests?status=${status}&cursor=${page.nextCursor}`}>
             Mais antigos
             <ChevronRight aria-hidden="true" />
           </Link>

@@ -40,7 +40,7 @@ export async function decideRequest(
     if (error instanceof CommandRefused) return { error: refusalMessage(error.code) };
     throw error;
   }
-  revalidatePath(`/pedidos/${requestId}`);
-  revalidatePath('/pedidos');
+  revalidatePath(`/requests/${requestId}`);
+  revalidatePath('/requests');
   return { error: null };
 }

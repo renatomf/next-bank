@@ -35,7 +35,7 @@ export default async function CustomerPage({
   return (
     <div className="space-y-8">
       <Button asChild variant="ghost" size="sm">
-        <Link href="/clientes">
+        <Link href="/customers">
           <ArrowLeft aria-hidden="true" />
           Clientes
         </Link>
@@ -56,7 +56,7 @@ export default async function CustomerPage({
         <StatementList items={statement.items} />
         {statement.nextCursor ? (
           <Button asChild variant="outline">
-            <Link href={`/clientes/${id}?cursor=${statement.nextCursor}`}>
+            <Link href={`/customers/${id}?cursor=${statement.nextCursor}`}>
               Mais antigos
               <ChevronRight aria-hidden="true" />
             </Link>

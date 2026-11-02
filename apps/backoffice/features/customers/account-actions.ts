@@ -38,7 +38,7 @@ export async function blockAccount(_previous: ActionState, form: FormData): Prom
     if (error instanceof CommandRefused) return { error: refusalMessage(error.code) };
     throw error;
   }
-  revalidatePath(`/clientes/${customerId}`);
+  revalidatePath(`/customers/${customerId}`);
   return { error: null };
 }
 
@@ -60,5 +60,5 @@ export async function requestUnblock(_previous: ActionState, form: FormData): Pr
     if (error instanceof CommandRefused) return { error: refusalMessage(error.code) };
     throw error;
   }
-  redirect(`/pedidos/${requestId}`);
+  redirect(`/requests/${requestId}`);
 }

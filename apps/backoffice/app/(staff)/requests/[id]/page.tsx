@@ -20,7 +20,7 @@ export default async function RequestPage({ params }: { params: Promise<{ id: st
   return (
     <div className="space-y-8">
       <Button asChild variant="ghost" size="sm">
-        <Link href="/pedidos">
+        <Link href="/requests">
           <ArrowLeft aria-hidden="true" />
           Pedidos
         </Link>
@@ -34,7 +34,7 @@ export default async function RequestPage({ params }: { params: Promise<{ id: st
         cancelKey={newIdempotencyKey()}
       />
       <Button asChild variant="link">
-        <Link href={`/clientes/${request.customer.id}`}>Abrir a ficha do cliente</Link>
+        <Link href={`/customers/${request.customer.id}`}>Abrir a ficha do cliente</Link>
       </Button>
     </div>
   );

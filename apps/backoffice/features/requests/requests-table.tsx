@@ -38,7 +38,7 @@ export function RequestsTable({ requests }: { requests: ApprovalRequest[] }) {
           <TableRow key={request.id}>
             <TableCell>
               <Link
-                href={`/pedidos/${request.id}`}
+                href={`/requests/${request.id}`}
                 className="font-semibold text-link hover:underline"
               >
                 {KINDS[request.kind]}

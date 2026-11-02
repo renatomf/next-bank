@@ -5,8 +5,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ROLE_LABELS, signedInMember } from '@/lib/backend';
 
 const DESCRIPTIONS: Readonly<Record<string, string>> = {
-  '/clientes': 'Busca, ficha e extrato',
-  '/pedidos': 'Desbloqueios que pedem outra pessoa',
+  '/customers': 'Busca, ficha e extrato',
+  '/requests': 'Desbloqueios que pedem outra pessoa',
 };
 
 /** The staff's home: who is signed in, and a shortcut to each page the role may open. */

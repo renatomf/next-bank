@@ -85,7 +85,7 @@ const rendered: [string, ReactElement][] = [
   ['Logo', <Logo key="i" />],
   [
     'SidebarNav, open',
-    <SidebarNav key="l" role="ANALYST" currentPath="/clientes" collapsed={false} />,
+    <SidebarNav key="l" role="ANALYST" currentPath="/customers" collapsed={false} />,
   ],
   [
     'SidebarNav, collapsed to icons with tooltips',
@@ -126,13 +126,13 @@ describe('the components of the screens', () => {
 describe('SidebarNav', () => {
   it('marks the current page', () => {
     const html = renderToStaticMarkup(
-      <SidebarNav role="ANALYST" currentPath="/clientes/0190f0b6" collapsed={false} />,
+      <SidebarNav role="ANALYST" currentPath="/customers/0190f0b6" collapsed={false} />,
     );
 
     const current = [...html.matchAll(/<a [^>]*>/g)].filter(([tag]) =>
       tag.includes('aria-current="page"'),
     );
-    expect(current.map(([tag]) => /href="([^"]+)"/.exec(tag)?.[1])).toEqual(['/clientes']);
+    expect(current.map(([tag]) => /href="([^"]+)"/.exec(tag)?.[1])).toEqual(['/customers']);
     expect(html).toContain('Clientes');
   });
 
