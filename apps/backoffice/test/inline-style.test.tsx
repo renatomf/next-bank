@@ -18,6 +18,8 @@ import {
 } from '../components/ui/table';
 import { Logo } from '../components/nb/logo';
 import { MoneyText } from '../components/nb/money-text';
+import { SidebarNav } from '../components/nb/sidebar-nav';
+import { ThemeToggle } from '../components/nb/theme-toggle';
 import { StatementList } from '../features/customers/statement-list';
 
 // The CSP has no unsafe-inline (STF-05; task 3.5, E5): a style attribute in
@@ -60,6 +62,15 @@ const rendered: [string, ReactElement][] = [
     </Table>,
   ],
   ['Logo', <Logo key="i" />],
+  [
+    'SidebarNav, open',
+    <SidebarNav key="l" role="ANALYST" currentPath="/clientes" collapsed={false} />,
+  ],
+  [
+    'SidebarNav, collapsed to icons with tooltips',
+    <SidebarNav key="m" role="ANALYST" currentPath="/" collapsed />,
+  ],
+  ['ThemeToggle', <ThemeToggle key="n" />],
   ['MoneyText', <MoneyText key="j" money={{ amount: 123456, currency: 'BRL' }} />],
   [
     'StatementList',
@@ -84,5 +95,28 @@ const rendered: [string, ReactElement][] = [
 describe('the components of the screens', () => {
   it.each(rendered)('%s renders with no inline style', (_name, element) => {
     expect(renderToStaticMarkup(element)).not.toMatch(/\sstyle="/);
+  });
+});
+
+// The sidebar marks where the member is and keeps every name for screen
+// readers, even collapsed to icons (task 3.5; brief, section 8).
+describe('SidebarNav', () => {
+  it('marks the current page', () => {
+    const html = renderToStaticMarkup(
+      <SidebarNav role="ANALYST" currentPath="/clientes/0190f0b6" collapsed={false} />,
+    );
+
+    const current = [...html.matchAll(/<a [^>]*>/g)].filter(([tag]) =>
+      tag.includes('aria-current="page"'),
+    );
+    expect(current.map(([tag]) => /href="([^"]+)"/.exec(tag)?.[1])).toEqual(['/clientes']);
+    expect(html).toContain('Clientes');
+  });
+
+  it('keeps the names as accessible labels when collapsed', () => {
+    const html = renderToStaticMarkup(<SidebarNav role="ANALYST" currentPath="/" collapsed />);
+
+    expect(html).toContain('aria-label="Início"');
+    expect(html).toContain('aria-label="Clientes"');
   });
 });
