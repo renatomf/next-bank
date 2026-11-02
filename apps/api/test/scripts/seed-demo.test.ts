@@ -74,6 +74,21 @@ describe('seedDemoAccounts', () => {
     );
   });
 
+  // K5, STF-13: the demo staff blocks Carla, never the app's shared Ana and Bruno.
+  it('protects Ana and Bruno from the demo staff, and leaves Carla to the backoffice', async () => {
+    await seedDemoAccounts(inProcess(app), migrator);
+
+    const { rows } = await migrator.query<{ email: string; demo_protected: boolean }>(
+      'SELECT email, demo_protected FROM identity.users WHERE email = ANY($1) ORDER BY email',
+      [DEMO_ACCOUNTS.map((account) => account.email)],
+    );
+    expect(rows).toEqual([
+      { email: 'ana.demo@example.com', demo_protected: true },
+      { email: 'bruno.demo@example.com', demo_protected: true },
+      { email: 'carla.demo@example.com', demo_protected: false },
+    ]);
+  });
+
   it('keeps one account each, whatever the number of runs', async () => {
     await seedDemoAccounts(inProcess(app), migrator);
     await seedDemoAccounts(inProcess(app), migrator);
