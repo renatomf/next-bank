@@ -31,7 +31,7 @@ export function LogoMark({ className }: { className?: string }) {
       role="img"
       aria-label="next bank"
       className={cn(
-        'inline-flex size-9 items-center justify-center rounded-lg bg-icon-ground font-display text-xl leading-none font-bold tracking-[-0.04em] text-icon-letter',
+        'inline-flex size-9 items-center justify-center rounded-sm bg-icon-ground font-display text-xl leading-none font-bold tracking-[-0.04em] text-icon-letter',
         className,
       )}
     >
