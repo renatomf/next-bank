@@ -3,7 +3,15 @@ import nextPlugin from '@next/eslint-plugin-next';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['eslint.config.js', '.next', 'next-env.d.ts', 'lib/api-types.ts'] },
+  {
+    ignores: [
+      'eslint.config.js',
+      'postcss.config.mjs',
+      '.next',
+      'next-env.d.ts',
+      'lib/api-types.ts',
+    ],
+  },
   js.configs.recommended,
   tseslint.configs.strictTypeChecked,
   tseslint.configs.stylisticTypeChecked,

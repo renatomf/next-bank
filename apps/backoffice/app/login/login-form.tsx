@@ -1,6 +1,11 @@
 'use client';
 
+import { ArrowUpRight } from 'lucide-react';
 import { useActionState } from 'react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { login, type LoginState } from '../actions';
 
 const NO_ERROR: LoginState = { error: null };
@@ -11,35 +16,42 @@ export function LoginForm({ notice }: { notice: string | null }) {
   const error = state.error ?? notice;
 
   return (
-    <form action={action}>
-      <label htmlFor="email">E-mail</label>
-      <input id="email" name="email" type="email" autoComplete="username" required />
-      <label htmlFor="password">Senha</label>
-      <input
-        id="password"
-        name="password"
-        type="password"
-        autoComplete="current-password"
-        required
-      />
-      <label htmlFor="mfaCode">Código do autenticador</label>
-      <input
-        id="mfaCode"
-        name="mfaCode"
-        inputMode="numeric"
-        autoComplete="one-time-code"
-        pattern="[0-9]{6}"
-        maxLength={6}
-        required
-      />
+    <form action={action} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="email">E-mail</Label>
+        <Input id="email" name="email" type="email" autoComplete="username" required />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="password">Senha</Label>
+        <Input
+          id="password"
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          required
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="mfaCode">Código do autenticador</Label>
+        <Input
+          id="mfaCode"
+          name="mfaCode"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          pattern="[0-9]{6}"
+          maxLength={6}
+          required
+        />
+      </div>
       {error ? (
-        <p className="error" role="alert">
-          {error}
-        </p>
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       ) : null}
-      <button type="submit" disabled={pending}>
+      <Button type="submit" size="lg" className="w-full" disabled={pending}>
         {pending ? 'Entrando…' : 'Entrar'}
-      </button>
+        <ArrowUpRight aria-hidden="true" />
+      </Button>
     </form>
   );
 }

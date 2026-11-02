@@ -1,8 +1,10 @@
+import { ArrowLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { asSignedInMember } from '../../../lib/backend';
-import { CustomerCard } from './customer-card';
-import { StatementList } from './statement-list';
+import { Button } from '@/components/ui/button';
+import { CustomerCard } from '@/features/customers/customer-card';
+import { StatementList } from '@/features/customers/statement-list';
+import { asSignedInMember } from '@/lib/backend';
 
 /**
  * A customer's card and statement (v1.3.0 plan, task 3). Every load is a
@@ -28,18 +30,28 @@ export default async function CustomerPage({
   if (!customer || !statement) notFound();
 
   return (
-    <main className="page">
-      <nav>
-        <Link href="/clientes">← Clientes</Link>
-      </nav>
+    <div className="space-y-8">
+      <Button asChild variant="ghost" size="sm">
+        <Link href="/clientes">
+          <ArrowLeft aria-hidden="true" />
+          Clientes
+        </Link>
+      </Button>
       <CustomerCard customer={customer} />
-      <section aria-labelledby="statement-title">
-        <h2 id="statement-title">Extrato</h2>
+      <section aria-labelledby="statement-title" className="space-y-4">
+        <h2 id="statement-title" className="text-xl font-semibold">
+          Extrato
+        </h2>
         <StatementList items={statement.items} />
         {statement.nextCursor ? (
-          <Link href={`/clientes/${id}?cursor=${statement.nextCursor}`}>Mais antigos →</Link>
+          <Button asChild variant="outline">
+            <Link href={`/clientes/${id}?cursor=${statement.nextCursor}`}>
+              Mais antigos
+              <ChevronRight aria-hidden="true" />
+            </Link>
+          </Button>
         ) : null}
       </section>
-    </main>
+    </div>
   );
 }

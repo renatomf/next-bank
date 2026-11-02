@@ -1,3 +1,5 @@
+import { Logo } from '@/components/nb/logo';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LoginForm } from './login-form';
 
 export default async function LoginPage({
@@ -8,14 +10,18 @@ export default async function LoginPage({
   const expired = (await searchParams).sessao === 'expirada';
 
   return (
-    <main className="centered">
-      <section className="card" aria-labelledby="title">
-        <h1 id="title" className="brand">
-          next<span>.</span> backoffice
-        </h1>
-        <p className="muted">Acesso da equipe, com o código do autenticador.</p>
-        <LoginForm notice={expired ? 'Sua sessão expirou. Entre de novo.' : null} />
-      </section>
+    <main className="grid min-h-dvh place-items-center bg-[radial-gradient(ellipse_at_top,var(--nb-glow),transparent_60%)] p-4">
+      <Card className="w-full max-w-sm">
+        <CardHeader>
+          <CardTitle className="text-3xl">
+            <Logo /> <span className="font-normal text-muted-foreground">backoffice</span>
+          </CardTitle>
+          <CardDescription>Acesso da equipe, com o código do autenticador.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <LoginForm notice={expired ? 'Sua sessão expirou. Entre de novo.' : null} />
+        </CardContent>
+      </Card>
     </main>
   );
 }

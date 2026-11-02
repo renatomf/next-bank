@@ -385,7 +385,7 @@ O simulador é um só, com um módulo por parceiro; o do Bacen é o primeiro (pl
 
 - **Revisão do BFF (ADR 0011):** o desenho da fase começa respondendo se o servidor do Next.js basta como BFF do backoffice (sessão em cookie `httpOnly`, Server Actions chamando a API `/admin/*` privada) ou se é preciso um serviço dedicado, e como ficam CSRF/`SameSite` e a propagação do `requestId` e da `Idempotency-Key` nos comandos do staff.
 
-**ADRs:** os da fase são numerados a partir do 0020 (hospedagem do backoffice; RBAC e dupla aprovação). O número 0012 citado antes já é o da hospedagem da V1
+**ADRs:** os da fase são numerados a partir do 0020 (0020: UI do backoffice; a seguir, hospedagem do backoffice e RBAC com dupla aprovação). O número 0012 citado antes já é o da hospedagem da V1
 
 **Pronto quando:** um PIX divergente da Fase 2 é resolvido pelo backoffice, com dupla aprovação, e aparece corretamente no extrato do cliente e na trilha de auditoria.
 

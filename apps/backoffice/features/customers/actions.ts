@@ -1,7 +1,7 @@
 'use server';
 
-import { type CustomerSearch, SearchRefused } from '../../lib/api';
-import { asSignedInMember } from '../../lib/backend';
+import { type CustomerSearch, SearchRefused } from '@/lib/api';
+import { asSignedInMember } from '@/lib/backend';
 
 export interface SearchState {
   result: CustomerSearch | null;

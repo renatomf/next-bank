@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { CustomerCard } from '../app/clientes/[id]/customer-card';
+import { CustomerCard } from '../features/customers/customer-card';
 
 // The card of a customer (v1.3.0 plan, task 3): what customers wrote is
 // shown as text, never run (STF-05), and only masked documents (STF-07).
