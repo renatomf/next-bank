@@ -249,4 +249,28 @@ describe('Login', () => {
     await expect(pending).rejects.toBeInstanceOf(InvalidCredentials);
     expect(db.sessions).toEqual([]);
   });
+
+  // STF-12 (attack first): a login checked while the customer was being
+  // blocked must not open a session the block would never revoke.
+  it('refuses a login whose customer was blocked while it was checked', async () => {
+    const { db, hasher, login } = setup();
+    let release = (): void => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const verify = hasher.verify.bind(hasher);
+    hasher.verify = async (hash, secret) => {
+      const matches = await verify(hash, secret);
+      await gate;
+      return matches;
+    };
+
+    const pending = login.execute(attempt(PASSWORD));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    db.users = db.users.map((user) => ({ ...user, state: { ...user.state, status: 'LOCKED' } }));
+    release();
+
+    await expect(pending).rejects.toBeInstanceOf(InvalidCredentials);
+    expect(db.sessions).toEqual([]);
+  });
 });

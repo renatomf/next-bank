@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { Account, accountNumberFrom } from '../../../../src/modules/accounts/domain/account.ts';
+import {
+  AccountAlreadyBlocked,
+  AccountNotBlocked,
+} from '../../../../src/modules/accounts/domain/errors.ts';
 
 // Current account (domain-model.md 3.2): branch 0001, a sequential number
 // with a mod-11 check digit, and no balance (that is the ledger's job).
@@ -58,5 +62,44 @@ describe('Account', () => {
     } as const;
 
     expect(Account.restore(state).state).toEqual(state);
+  });
+});
+
+// Blocking (domain-model.md 3.2; v1.3.0 plan, task 4): only an ACTIVE
+// account moves money, and the staff blocks and unblocks it.
+describe('Account.block and unblock', () => {
+  const LATER = new Date('2026-11-02T15:00:00.000Z');
+  const open = () => Account.open({ id: 'a1', holderUserId: 'u1', sequence: 100000, now: NOW });
+
+  it('blocks an active account', () => {
+    const account = open();
+
+    account.block(LATER);
+
+    expect(account.state).toMatchObject({ status: 'BLOCKED', updatedAt: LATER });
+  });
+
+  it('refuses to block twice', () => {
+    const account = open();
+    account.block(LATER);
+
+    expect(() => {
+      account.block(LATER);
+    }).toThrow(AccountAlreadyBlocked);
+  });
+
+  it('unblocks a blocked account', () => {
+    const account = open();
+    account.block(LATER);
+
+    account.unblock(LATER);
+
+    expect(account.state.status).toBe('ACTIVE');
+  });
+
+  it('refuses to unblock an account that is not blocked', () => {
+    expect(() => {
+      open().unblock(LATER);
+    }).toThrow(AccountNotBlocked);
   });
 });
