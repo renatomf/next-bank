@@ -1,43 +1,57 @@
-import type { CustomerCard as Card } from '../../../lib/api';
-import { formatDateTime, formatMoney } from '../../../lib/format';
+import { MoneyText } from '@/components/nb/money-text';
+import { StatusBadge } from '@/components/nb/status-badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import type { CustomerCard as CustomerCardData } from '@/lib/api';
+import { formatDateTime } from '@/lib/format';
 
-const CUSTOMER_STATUS: Readonly<Record<Card['status'], string>> = {
-  ACTIVE: 'Ativo',
-  LOCKED: 'Bloqueado',
-};
+const CUSTOMER_STATUS = {
+  ACTIVE: { tone: 'ok', label: 'Cliente ativo' },
+  LOCKED: { tone: 'blocked', label: 'Cliente bloqueado' },
+} as const;
 
-const ACCOUNT_STATUS: Readonly<Record<Card['account']['status'], string>> = {
-  ACTIVE: 'Ativa',
-  BLOCKED: 'Bloqueada',
-  CLOSED: 'Encerrada',
-};
+const ACCOUNT_STATUS = {
+  ACTIVE: { tone: 'ok', label: 'Conta ativa' },
+  BLOCKED: { tone: 'blocked', label: 'Conta bloqueada' },
+  CLOSED: { tone: 'closed', label: 'Conta encerrada' },
+} as const;
 
 /**
  * A customer's card (v1.3.0 plan, task 3): the documents only masked
  * (STF-07), and what the customer wrote shown as text by React (STF-05).
  */
-export function CustomerCard({ customer }: { customer: Card }) {
+export function CustomerCard({ customer }: { customer: CustomerCardData }) {
+  const facts = [
+    ['CPF', customer.cpfMasked],
+    ['E-mail', customer.emailMasked],
+    ['Conta', `${customer.account.branch} · ${customer.account.number}`],
+    ['Aberta em', formatDateTime(customer.account.openedAt)],
+  ] as const;
+
   return (
-    <section className="card wide" aria-labelledby="customer-name">
-      <h1 id="customer-name" className="brand">
-        {customer.name}
-      </h1>
-      <p className="muted">{CUSTOMER_STATUS[customer.status]}</p>
-      <dl className="facts">
-        <dt>CPF</dt>
-        <dd>{customer.cpfMasked}</dd>
-        <dt>E-mail</dt>
-        <dd>{customer.emailMasked}</dd>
-        <dt>Conta</dt>
-        <dd>
-          {customer.account.branch} · {customer.account.number} (
-          {ACCOUNT_STATUS[customer.account.status]})
-        </dd>
-        <dt>Aberta em</dt>
-        <dd>{formatDateTime(customer.account.openedAt)}</dd>
-        <dt>Saldo</dt>
-        <dd>{formatMoney(customer.balance)}</dd>
-      </dl>
-    </section>
+    <Card>
+      <CardHeader className="flex flex-wrap items-start justify-between gap-4">
+        <div className="space-y-2">
+          <CardTitle className="text-2xl break-words">{customer.name}</CardTitle>
+          <div className="flex flex-wrap gap-2">
+            <StatusBadge {...CUSTOMER_STATUS[customer.status]} />
+            <StatusBadge {...ACCOUNT_STATUS[customer.account.status]} />
+          </div>
+        </div>
+        <div className="text-right">
+          <p className="text-sm text-muted-foreground">Saldo disponível</p>
+          <MoneyText money={customer.balance} className="text-3xl font-semibold" />
+        </div>
+      </CardHeader>
+      <CardContent>
+        <dl className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-2 text-sm">
+          {facts.map(([term, value]) => (
+            <div key={term} className="contents">
+              <dt className="text-muted-foreground">{term}</dt>
+              <dd className="break-all">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      </CardContent>
+    </Card>
   );
 }

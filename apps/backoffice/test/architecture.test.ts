@@ -47,7 +47,7 @@ describe('the boundaries of the UI', () => {
   it.each(sources('features'))('%s uses no other feature', (file) => {
     const feature = file.split('/')[1];
     const others = importsOf(file).filter(
-      (target) => /features\//.test(target) && !target.includes(`features/${String(feature)}`),
+      (target) => target.includes('features/') && !target.includes(`features/${String(feature)}`),
     );
     expect(others).toEqual([]);
   });

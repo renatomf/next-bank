@@ -1,5 +1,14 @@
-import type { Statement } from '../../../lib/api';
-import { formatDateTime, formatMoney } from '../../../lib/format';
+import { MoneyText } from '@/components/nb/money-text';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import type { Statement } from '@/lib/api';
+import { formatDateTime } from '@/lib/format';
 
 const KINDS: Readonly<Record<Statement['items'][number]['kind'], string>> = {
   PIX_SENT: 'Pix enviado',
@@ -11,34 +20,43 @@ const KINDS: Readonly<Record<Statement['items'][number]['kind'], string>> = {
 
 /** One page of a customer's statement, the counterparty's document masked. */
 export function StatementList({ items }: { items: Statement['items'] }) {
-  if (items.length === 0) return <p className="muted">Nenhum lançamento.</p>;
+  if (items.length === 0) return <p className="text-muted-foreground">Nenhum lançamento.</p>;
   return (
-    <table className="statement">
-      <thead>
-        <tr>
-          <th scope="col">Quando</th>
-          <th scope="col">O quê</th>
-          <th scope="col">Com quem</th>
-          <th scope="col">Valor</th>
-        </tr>
-      </thead>
-      <tbody>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Quando</TableHead>
+          <TableHead>O quê</TableHead>
+          <TableHead>Com quem</TableHead>
+          <TableHead className="text-right">Valor</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
         {items.map((item) => (
-          <tr key={item.id}>
-            <td>{formatDateTime(item.occurredAt)}</td>
-            <td>{KINDS[item.kind]}</td>
-            <td>
-              {item.counterparty
-                ? `${item.counterparty.name}${item.counterparty.documentMasked ? ` · ${item.counterparty.documentMasked}` : ''}`
-                : '—'}
-            </td>
-            <td className={item.direction === 'IN' ? 'in' : 'out'}>
-              {item.direction === 'OUT' ? '- ' : '+ '}
-              {formatMoney(item.amount)}
-            </td>
-          </tr>
+          <TableRow key={item.id}>
+            <TableCell>{formatDateTime(item.occurredAt)}</TableCell>
+            <TableCell>{KINDS[item.kind]}</TableCell>
+            <TableCell>
+              {item.counterparty ? (
+                <>
+                  {item.counterparty.name}
+                  {item.counterparty.documentMasked ? (
+                    <span className="text-muted-foreground">
+                      {' '}
+                      · {item.counterparty.documentMasked}
+                    </span>
+                  ) : null}
+                </>
+              ) : (
+                '—'
+              )}
+            </TableCell>
+            <TableCell className="text-right">
+              <MoneyText money={item.amount} direction={item.direction} />
+            </TableCell>
+          </TableRow>
         ))}
-      </tbody>
-    </table>
+      </TableBody>
+    </Table>
   );
 }

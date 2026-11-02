@@ -1,194 +1,74 @@
-/* The brand of the app (packages/design_system, tokens.dart), dark only. */
-:root {
-  --background: #0a0f14;
-  --surface: #121a21;
-  --surface-2: #1a242d;
-  --border: rgb(255 255 255 / 8%);
-  --text: #f2f6f8;
-  --text-muted: #8a97a3;
-  --mint: #00ffc8;
-  --on-mint: #0a0f14;
-  --danger: #ff6b6b;
-  --radius: 12px;
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import '../styles/tokens.css';
+
+/*
+ * dark: follows the theme the server set on <html> (E2), and the system's
+ * preference when the member kept "system", instead of Tailwind's default.
+ */
+@custom-variant dark {
+  &:where([data-theme='dark'], [data-theme='dark'] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where([data-theme='system'], [data-theme='system'] *) {
+      @slot;
+    }
+  }
 }
 
-* {
-  box-sizing: border-box;
+/*
+ * The names shadcn's components use, pointed at the app's tokens (ADR 0020).
+ * shadcn's "accent" is the hover background, not the brand's accent: the
+ * brand's mint for links and icons is "link".
+ */
+@theme inline {
+  --color-background: var(--nb-background);
+  --color-foreground: var(--nb-text);
+  --color-card: var(--nb-surface);
+  --color-card-foreground: var(--nb-text);
+  --color-popover: var(--nb-surface);
+  --color-popover-foreground: var(--nb-text);
+  --color-primary: var(--nb-primary);
+  --color-primary-foreground: var(--nb-on-primary);
+  --color-secondary: var(--nb-surface-2);
+  --color-secondary-foreground: var(--nb-text);
+  --color-muted: var(--nb-surface-2);
+  --color-muted-foreground: var(--nb-text-muted);
+  --color-accent: var(--nb-surface-2);
+  --color-accent-foreground: var(--nb-text);
+  --color-destructive: var(--nb-danger);
+  --color-border: var(--nb-border);
+  --color-input: var(--nb-border);
+  --color-ring: var(--nb-accent);
+  --color-link: var(--nb-accent);
+  --color-success: var(--nb-success);
+  --color-danger: var(--nb-danger);
+  --color-glow: var(--nb-glow);
+  --color-mint: var(--nb-mint);
+
+  --radius-sm: var(--nb-radius-tag);
+  --radius-md: var(--nb-radius-inner);
+  --radius-lg: var(--nb-radius-field);
+  --radius-xl: var(--nb-radius-box);
+  --radius-2xl: var(--nb-radius-card);
+
+  --font-sans: var(--font-manrope);
+  --font-display: var(--font-sora);
 }
 
-body {
-  margin: 0;
-  min-height: 100vh;
-  background: var(--background);
-  color: var(--text);
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
-}
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
 
-.centered {
-  display: grid;
-  place-items: center;
-  min-height: 100vh;
-  padding: 24px;
-}
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+  }
 
-.card {
-  width: 100%;
-  max-width: 400px;
-  padding: 32px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-.brand {
-  margin: 0 0 4px;
-  font-size: 24px;
-  font-weight: 700;
-}
-
-.brand span {
-  color: var(--mint);
-}
-
-.muted {
-  margin: 0 0 24px;
-  color: var(--text-muted);
-}
-
-label {
-  display: block;
-  margin: 16px 0 6px;
-  font-size: 14px;
-  color: var(--text-muted);
-}
-
-input {
-  width: 100%;
-  padding: 12px;
-  font: inherit;
-  color: var(--text);
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-}
-
-input:focus-visible,
-button:focus-visible {
-  outline: 2px solid var(--mint);
-  outline-offset: 2px;
-}
-
-button {
-  width: 100%;
-  margin-top: 24px;
-  padding: 12px;
-  font: inherit;
-  font-weight: 600;
-  color: var(--on-mint);
-  background: var(--mint);
-  border: 0;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-button:disabled {
-  opacity: 0.6;
-  cursor: progress;
-}
-
-button.secondary {
-  color: var(--text);
-  background: transparent;
-  border: 1px solid var(--border);
-}
-
-.error {
-  margin: 16px 0 0;
-  color: var(--danger);
-}
-
-a {
-  color: var(--mint);
-}
-
-/* The pages after the login: customers and their statements (task 3). */
-.page {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 24px 16px 48px;
-}
-
-.page nav {
-  margin-bottom: 16px;
-}
-
-.card.wide {
-  max-width: none;
-  margin-bottom: 32px;
-}
-
-.facts {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 8px 24px;
-  margin: 0;
-}
-
-.facts dt {
-  color: var(--text-muted);
-}
-
-.facts dd {
-  margin: 0;
-  overflow-wrap: anywhere;
-}
-
-.search button {
-  width: auto;
-  padding: 12px 24px;
-}
-
-.results {
-  padding: 0;
-  list-style: none;
-}
-
-.results li {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 16px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.results .muted {
-  margin: 0;
-}
-
-.statement {
-  display: block;
-  width: 100%;
-  overflow-x: auto;
-  border-collapse: collapse;
-}
-
-.statement th,
-.statement td {
-  padding: 8px 12px;
-  text-align: left;
-  border-bottom: 1px solid var(--border);
-}
-
-.statement th {
-  font-weight: 500;
-  color: var(--text-muted);
-}
-
-.statement .in {
-  color: var(--mint);
+  h1,
+  h2,
+  h3 {
+    @apply font-display;
+  }
 }
