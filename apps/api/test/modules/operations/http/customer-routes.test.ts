@@ -4,7 +4,7 @@ import { Secret, TOTP } from 'otpauth';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../../../../src/app.ts';
 import { createPool } from '../../../../src/shared/db.ts';
-import { staffCreator } from '../../../../scripts/create-staff.ts';
+import { DEMO_STAFF, seedDemoStaff, staffCreator } from '../../../../scripts/create-staff.ts';
 import {
   captureLogs,
   testDatabaseUrl,
@@ -314,6 +314,34 @@ describe('the demo staff', () => {
       expect(found(await search(token, term))).toEqual([]);
     }
     expect(await auditOf(visitor.id)).toEqual([]);
+  });
+});
+
+// C5: the demo staff of the README, recreated at every reset with its
+// published credentials, signs in and stays inside the demo.
+describe('the published demo staff', () => {
+  it('signs in with the credentials of the README and reads only demo customers', async () => {
+    await seedDemoStaff(creator);
+    const visitor = await customer();
+
+    for (const member of DEMO_STAFF) {
+      const totp = new TOTP({ secret: Secret.fromBase32(member.totpSecret) });
+      const login = await app.inject({
+        method: 'POST',
+        url: '/admin/v1/auth/login',
+        headers: { 'x-backoffice-key': BACKOFFICE_KEY },
+        payload: {
+          email: member.email,
+          password: member.password,
+          mfaCode: totp.generate({ timestamp: clock.now().getTime() }),
+        },
+      });
+      expect(login.statusCode, login.body).toBe(200);
+      const { token } = login.json<{ token: string }>();
+
+      expect((await card(token, visitor.id)).statusCode).toBe(404);
+    }
+    expect(DEMO_STAFF.map((member) => member.role)).toEqual(['OPERATOR', 'ANALYST']);
   });
 });
 
