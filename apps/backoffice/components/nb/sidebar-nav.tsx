@@ -24,7 +24,7 @@ export function SidebarNav({
 }) {
   return (
     <TooltipProvider delayDuration={200}>
-      <nav aria-label="Navegação principal" className="flex flex-col gap-1">
+      <nav aria-label="Navegação principal" className="flex flex-col gap-2">
         {navigationFor(role).map(({ href, label, icon: Icon }) => {
           const current = isCurrent(href, currentPath);
           const link = (
