@@ -22,6 +22,23 @@ O script (`apps/api/scripts/measure-latency.ts`) entra como **Bruno**, da demo, 
 - **Sem lixo na demo:** os Pix da medição somem no reset diário (DEMO-02).
 - **`/health` é a base da rede:** ele não toca o banco, então o tempo dele é praticamente a ida e volta até o servidor.
 
+## Resultado de 2026-11-02, depois da `v1.2.0`
+
+Medido do Brasil, numa rede doméstica, contra a API publicada com o código da `v1.2.0`. O Pix externo está ligado, e o mesmo processo roda o simulador montado e os laços em segundo plano: outbox e webhooks a cada segundo, mais a consulta de status, os agendamentos e a conciliação. Valores em milissegundos:
+
+| Rota | Amostras | p50 | p95 | Máx | Orçamento (p95) |
+|---|---|---|---|---|---|
+| `GET /health` | 36 | 151 | 305 | 605 | — |
+| `GET /v1/me/account` | 36 | 156 | 204 | 266 | < 200 |
+| `GET /v1/me/statement` | 36 | 161 | 239 | 324 | < 200 |
+| `POST /v1/pix/key-lookups` | 12 | 158 | 203 | 203 | < 200 |
+| `POST /v1/pix/transfers` | 12 | 176 | 221 | 221 | < 400 |
+| `POST /v1/pix/transfers/{id}/authorize` | 12 | 261 | 895 | 895 | < 400 |
+
+**Tempo no servidor (estimado),** comparado com 2026-10-13: conta ~5 ms (era ~9), extrato ~10 ms (~10), consulta da chave ~7 ms (~12), criação do Pix ~25 ms (~32), autorização ~110 ms (~194).
+
+**Leitura:** nenhuma regressão. Os laços e o simulador da `v1.2.0` não pesaram nas rotas do cliente. Como antes, o p95 das leituras passa de 200 ms pela distância até a Virginia, e o da autorização, pelo Argon2id do PIN na CPU compartilhada (ADR 0012).
+
 ## Resultado de 2026-10-13
 
 Medido do Brasil, numa rede doméstica, contra a API publicada (Render gratuito e Neon, ambos em `us-east-1`), com o código da API do PR #115 (o último que mudou a API), em milissegundos:
