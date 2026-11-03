@@ -52,6 +52,24 @@ void main() {
       },
     );
 
+    // F-52: a sign out that cannot forget the biometric PIN still signs out,
+    // and the failure is not hidden.
+    test('signs out even when forgetting the biometric PIN fails', () async {
+      final store = FakeTokenStore(tokens);
+      final biometrics = FakeBiometricPinStore(pin: '2580')
+        ..clearError = StateError('keystore');
+      final container = containerWith(store, biometrics: biometrics);
+      await container.read(sessionProvider.future);
+
+      await expectLater(
+        container.read(sessionProvider.notifier).signOut(),
+        throwsA(isA<StateError>()),
+      );
+
+      expect(store.stored, isNull);
+      expect(container.read(sessionProvider).value, isA<SignedOut>());
+    });
+
     test('restores a signed-in session from the device on start', () async {
       final container = containerWith(FakeTokenStore(tokens));
 

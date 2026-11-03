@@ -7,14 +7,21 @@ import 'package:next_bank/core/session/secure_greeting_name_store.dart';
 
 /// The Keystore without Android: keeps values per key and records the
 /// Android options of every call; [readError] makes the next read fail as
-/// the platform does.
+/// the platform does, and [keystoreError] every call, as a phone with no
+/// strong biometric enrolled refuses the key itself.
 class _FakeStorage extends FlutterSecureStorage {
   new();
 
   final Map<String, String> values = {};
   final List<AndroidOptions?> options = [];
   PlatformException? readError;
+  PlatformException? keystoreError;
   final List<String> deleted = [];
+
+  void _keystore() {
+    final error = keystoreError;
+    if (error != null) throw error;
+  }
 
   @override
   Future<void> write({
@@ -58,6 +65,7 @@ class _FakeStorage extends FlutterSecureStorage {
     WindowsOptions? wOptions,
   }) async {
     options.add(aOptions);
+    _keystore();
     return values.containsKey(key);
   }
 
@@ -72,10 +80,20 @@ class _FakeStorage extends FlutterSecureStorage {
     WindowsOptions? wOptions,
   }) async {
     options.add(aOptions);
+    _keystore();
     deleted.add(key);
     values.remove(key);
   }
 }
+
+/// What the Keystore answers for a key that needs biometrics on a phone
+/// that has a screen lock but no strong biometric enrolled (F-52).
+final PlatformException _noBiometricEnrolled = PlatformException(
+  code: 'Exception encountered',
+  message:
+      'java.lang.IllegalStateException: At least one biometric must be '
+      'enrolled to create keys requiring user authentication for every use',
+);
 
 PlatformException _promptError(int code) => PlatformException(
   code: 'Exception encountered',
@@ -169,6 +187,39 @@ void main() {
     expect(await store.isAvailable(), isTrue);
     expect(await without.isAvailable(), isFalse);
   });
+
+  // F-52: a phone with a screen lock and no fingerprint enrolled refuses the
+  // key even to look or to delete. Nothing kept under it can be read there,
+  // so there is no PIN to tell of, and nothing left to forget.
+  group('on a phone with no strong biometric enrolled', () {
+    late SecureBiometricPinStore without;
+
+    setUp(() {
+      storage.keystoreError = _noBiometricEnrolled;
+      without = SecureBiometricPinStore(
+        storage: storage,
+        hasStrongBiometrics: () async => false,
+      );
+    });
+
+    test('tells no PIN is kept, without touching the Keystore', () async {
+      expect(await without.hasPin(), isFalse);
+      expect(storage.options, isEmpty);
+    });
+
+    test('forgets the PIN without failing', () async {
+      await expectLater(without.clear(), completes);
+    });
+  });
+
+  test(
+    'still reports a failure to forget while biometrics are enrolled',
+    () async {
+      storage.keystoreError = _noBiometricEnrolled;
+
+      await expectLater(store.clear(), throwsA(isA<PlatformException>()));
+    },
+  );
 
   group('SecureGreetingNameStore', () {
     test('keeps, reads and forgets the first name', () async {

@@ -18,6 +18,9 @@ class FakeBiometricPinStore implements BiometricPinStore {
   /// How many times biometrics were asked for.
   int reads = 0;
 
+  /// What forgetting the PIN fails with, if anything.
+  Object? clearError;
+
   @override
   Future<bool> isAvailable() async => available;
 
@@ -38,5 +41,9 @@ class FakeBiometricPinStore implements BiometricPinStore {
   }
 
   @override
-  Future<void> clear() async => pin = null;
+  Future<void> clear() async {
+    final error = clearError;
+    if (error != null) throw error;
+    pin = null;
+  }
 }
