@@ -319,4 +319,29 @@ describe('adminApi', () => {
       new CommandRefused('StaffSelfChangeNotAllowed'),
     );
   });
+
+  // v1.3.0 plan, task 8: the audit trail, by exactly one filter.
+  it('reads the audit trail by one filter, from a cursor', async () => {
+    const id = '0190f0b6-1b2c-7d3e-8f40-123456789abc';
+    const { calls, fetch } = recordingFetch(200, { items: [], nextCursor: null });
+    const client = api(fetch, 'opaque-token');
+
+    await client.auditTrail({ customerId: id }, null);
+    await client.auditTrail({ memberId: id }, 'abc_DEF-1');
+    await client.auditTrail({ requestId: id }, null);
+
+    expect(calls.map((call) => call.url)).toEqual([
+      `https://api.example.test/admin/v1/audit?customerId=${id}`,
+      `https://api.example.test/admin/v1/audit?memberId=${id}&cursor=abc_DEF-1`,
+      `https://api.example.test/admin/v1/audit?requestId=${id}`,
+    ]);
+  });
+
+  it('reads no trail the API does not show this member', async () => {
+    const { fetch } = recordingFetch(404, { code: 'NotFound' });
+
+    await expect(
+      api(fetch, 'opaque-token').auditTrail({ memberId: 'x' }, null),
+    ).resolves.toBeNull();
+  });
 });

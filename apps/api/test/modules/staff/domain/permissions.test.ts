@@ -41,7 +41,19 @@ describe('permissions', () => {
       'exceptions.read',
       'exceptions.explain',
       'staff.manage',
+      'audit.read',
     ]);
+  });
+
+  it('lets the analyst and the admin read the audit trail, never the operator (task 8, H1)', () => {
+    for (const role of ['ANALYST', 'ADMIN'] as const) {
+      expect(() => {
+        assertAllowed(role, 'audit.read');
+      }).not.toThrow();
+    }
+    expect(() => {
+      assertAllowed('OPERATOR', 'audit.read');
+    }).toThrow(Forbidden);
   });
 
   it('lets the operator and the analyst read exceptions, and only the analyst explain one (task 6, X2)', () => {

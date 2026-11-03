@@ -32,8 +32,10 @@ import {
   RandomRefreshTokens,
   sessionRoutes,
 } from './modules/identity/index.ts';
+import { PgAuditReader } from './modules/audit/index.ts';
 import { createLedgerModule, InsufficientFunds } from './modules/ledger/index.ts';
 import {
+  auditRoutes,
   createOperationsModule,
   customerRoutes,
   exceptionRoutes,
@@ -408,6 +410,7 @@ export function buildApp({
         concludeWaitingPix: (tx, conclusion) =>
           payments.applySpiOutcome.concludeByStaff(tx, conclusion),
       },
+      auditReader: new PgAuditReader(),
     });
     void app.register(
       async (scope) => {
@@ -420,6 +423,7 @@ export function buildApp({
         await scope.register(customerRoutes, operations);
         await scope.register(requestRoutes, operations);
         await scope.register(exceptionRoutes, operations);
+        await scope.register(auditRoutes, operations);
       },
       { prefix: '/admin/v1' },
     );

@@ -124,6 +124,13 @@ export class InMemoryBank
     );
   }
 
+  /** Here a customer's account id is named after its holder. */
+  accountIdOf(_tx: Transaction, holderId: string): Promise<string | null> {
+    return Promise.resolve(
+      this.accounts.some((a) => a.holderId === holderId) ? `account-of-${holderId}` : null,
+    );
+  }
+
   holderOf(_tx: Transaction, number: string): Promise<string | null> {
     return Promise.resolve(this.accounts.find((a) => a.number === number)?.holderId ?? null);
   }

@@ -82,6 +82,8 @@ export interface CustomerAccountsPort {
   holderOf(tx: Transaction, number: string): Promise<string | null>;
   /** The customer who holds this account (v1.3.0, task 5). */
   holderOfAccount(tx: Transaction, accountId: string): Promise<string | null>;
+  /** The id of the customer's account, the subject of its events (v1.3.0, task 8). */
+  accountIdOf(tx: Transaction, holderId: string): Promise<string | null>;
   /** The holder of each of these accounts, by account id, in one read (v1.3.0, task 6). */
   holdersOfAccounts(tx: Transaction, accountIds: string[]): Promise<Map<string, string>>;
   balanceOf(tx: Transaction, holderId: string): Promise<Money>;
@@ -129,6 +131,8 @@ export interface CustomerAccessPort {
 /** The staff members' names, for the requests' screens; the Staff context implements it. */
 export interface StaffNamesPort {
   namesOf(tx: Transaction, ids: string[]): Promise<Map<string, string>>;
+  /** A member's name and whether it is the public demo's, for its trail (task 8, STF-11). */
+  memberOf(tx: Transaction, id: string): Promise<{ name: string; isDemo: boolean } | null>;
 }
 
 /** Where a page of requests ends: the last one's time and id. */
@@ -255,6 +259,44 @@ export interface StalePixPort {
       outcome: 'SETTLED' | 'REJECTED';
       actorId: string;
       requestId: string | null;
+      /** The approved request that decided it, cited in the Pix's event (task 8, H5). */
+      approvalRequestId: string;
     },
   ): Promise<'APPLIED' | 'NOT_WAITING'>;
+}
+
+/** Which events a reading of the trail asks for: exactly one of the three (STF-16). */
+export type AuditFilter =
+  | { by: 'CUSTOMER'; customerId: string; accountId: string | null }
+  | { by: 'MEMBER'; memberId: string }
+  | { by: 'REQUEST'; requestId: string };
+
+/** Where a page of the trail ends: the last event's time and id. */
+export interface AuditPosition {
+  occurredAt: Date;
+  id: string;
+}
+
+/** An event of the trail as recorded (v1.3.0, task 8). */
+export interface AuditRecord {
+  id: string;
+  occurredAt: Date;
+  actorType: 'USER' | 'SYSTEM' | 'STAFF';
+  actorId: string | null;
+  action: string;
+  subjectType: string;
+  subjectId: string;
+  requestId: string | null;
+  metadata: Record<string, unknown>;
+}
+
+/** What the trail's screen needs from the Audit context, which implements it (task 8). */
+export interface AuditReaderPort {
+  /** Newest first, a page at a time; the trail itself is only ever inserted into (STF-10). */
+  eventsOf(
+    tx: Transaction,
+    filter: AuditFilter,
+    after: AuditPosition | null,
+    limit: number,
+  ): Promise<AuditRecord[]>;
 }

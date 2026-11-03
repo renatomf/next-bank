@@ -292,6 +292,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/v1/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["readAuditTrail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -335,6 +351,32 @@ export interface components {
         };
         ApprovalRequestsPage: {
             items: components["schemas"]["ApprovalRequest"][];
+            nextCursor: string | null;
+        };
+        AuditEntry: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            occurredAt: string;
+            actor: {
+                /** @enum {string} */
+                type: "USER" | "SYSTEM" | "STAFF";
+                id: string | null;
+                name: string | null;
+            };
+            action: string;
+            subject: {
+                type: string;
+                /** Format: uuid */
+                id: string;
+            };
+            requestId: string | null;
+            metadata: {
+                [key: string]: unknown;
+            };
+        };
+        AuditPage: {
+            items: components["schemas"]["AuditEntry"][];
             nextCursor: string | null;
         };
         CreatedStaffMember: {
@@ -1719,6 +1761,67 @@ export interface operations {
             };
             /** @description Default Response */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Default Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    readAuditTrail: {
+        parameters: {
+            query?: {
+                customerId?: string;
+                memberId?: string;
+                requestId?: string;
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditPage"];
+                };
+            };
+            /** @description Default Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Default Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Default Response */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

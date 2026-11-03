@@ -12,6 +12,7 @@ import { OtpauthTotp } from './infrastructure/otpauth-totp.ts';
 import { PgStaffRepositories } from './infrastructure/pg-staff-repositories.ts';
 
 export { registerStaffAuthentication, staffCallerOf } from './http/staff-authentication.ts';
+export { assertAllowed } from './domain/permissions.ts';
 export { staffAuthRoutes } from './http/staff-auth-routes.ts';
 export { staffManagementRoutes } from './http/staff-management-routes.ts';
 export type { StaffCaller } from './application/authenticate-staff.ts';

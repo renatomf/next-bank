@@ -17,6 +17,10 @@ export type StaffMemberView = components['schemas']['StaffMemberView'];
 export type StaffPage = components['schemas']['StaffPage'];
 export type CreatedStaffMember = components['schemas']['CreatedStaffMember'];
 export type ManagedRole = 'OPERATOR' | 'ANALYST';
+export type AuditEntry = components['schemas']['AuditEntry'];
+export type AuditPage = components['schemas']['AuditPage'];
+/** The trail is read by exactly one of these (task 8, STF-16). */
+export type AuditFilter = { customerId: string } | { memberId: string } | { requestId: string };
 
 /** The API refused a login; [code] is the catalog's (InvalidCredentials, TooManyAttempts). */
 export class LoginRefused extends Error {
@@ -274,6 +278,15 @@ export function adminApi(options: AdminApiOptions) {
       });
       if (data === undefined) throw refusalOf(error, response);
       return data;
+    },
+
+    /** The audit trail by one filter, or null when the API shows this member none (task 8). */
+    async auditTrail(filter: AuditFilter, cursor: string | null): Promise<AuditPage | null> {
+      const { data, response } = await client.GET('/admin/v1/audit', {
+        headers: headers(),
+        params: { query: cursor === null ? filter : { ...filter, cursor } },
+      });
+      return data ?? orNullWhenMissing(response);
     },
 
     // The staff management, by the admin (v1.3.0 plan, task 7).

@@ -23,6 +23,7 @@ import { ThemeToggle } from '../components/nb/theme-toggle';
 import { StatementList } from '../features/customers/statement-list';
 import { ExceptionDetail } from '../features/reconciliation/exception-detail';
 import { ExceptionsTable } from '../features/reconciliation/exceptions-table';
+import { AuditTable } from '../features/audit/audit-table';
 import { NewMemberCredentials } from '../features/staff/new-member-credentials';
 import { StaffTable } from '../features/staff/staff-table';
 import { RequestDetail } from '../features/requests/request-detail';
@@ -141,6 +142,23 @@ const rendered: [string, ReactElement][] = [
           status: 'ACTIVE',
           isDemo: false,
           createdAt: '2026-11-03T12:00:00.000Z',
+        },
+      ]}
+    />,
+  ],
+  [
+    'AuditTable',
+    <AuditTable
+      key="u"
+      entries={[
+        {
+          id: '0190f0b6-1b2c-7d3e-8f40-123456789ab3',
+          occurredAt: '2026-11-03T15:00:00.000Z',
+          actor: { type: 'STAFF', id: '0190f0b6-1b2c-7d3e-8f40-123456789ab4', name: 'Diogo' },
+          action: 'REQUEST_APPROVED',
+          subject: { type: 'APPROVAL_REQUEST', id: '0190f0b6-1b2c-7d3e-8f40-123456789ab5' },
+          requestId: null,
+          metadata: { kind: 'UNBLOCK_ACCOUNT' },
         },
       ]}
     />,

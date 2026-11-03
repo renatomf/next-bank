@@ -201,7 +201,13 @@ describe('approving a resolution', () => {
 
       expect(decided.status).toBe('APPROVED');
       expect(bank.concluded).toEqual([
-        { endToEndId: E2E.carla, outcome: spiOutcome, actorId: 'analyst-1', requestId: 'req-2' },
+        {
+          endToEndId: E2E.carla,
+          outcome: spiOutcome,
+          actorId: 'analyst-1',
+          requestId: 'req-2',
+          approvalRequestId: request.id,
+        },
       ]);
       expect(bank.exceptions.get('stale-carla')?.resolution).toEqual({
         exceptionId: 'stale-carla',
