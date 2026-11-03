@@ -109,6 +109,11 @@ export class InMemoryBank
     return Promise.resolve(this.accounts.filter((a) => holderIds.includes(a.holderId)));
   }
 
+  /** Here an account's id is its holder's: one account per customer. */
+  holderOfAccount(_tx: Transaction, accountId: string): Promise<string | null> {
+    return Promise.resolve(this.accounts.some((a) => a.holderId === accountId) ? accountId : null);
+  }
+
   holderOf(_tx: Transaction, number: string): Promise<string | null> {
     return Promise.resolve(this.accounts.find((a) => a.number === number)?.holderId ?? null);
   }

@@ -151,6 +151,79 @@ describe('CustomerLedgerAccounts', () => {
     expect(ledger.balanceOf('id-1')).toBe(5_000n);
   });
 
+  // v1.3.0 plan, task 5 (B7, ADR 0005): a reversal is a new entry, never a
+  // change of the Pix's: the payee gives the amount back to the payer.
+  const REVERSAL = {
+    transferId: 'pix-1',
+    payerAccountId: 'account-a',
+    payeeAccountId: 'account-b',
+    amount: Money.of(8_000n),
+    payer: { name: 'Ana Souza', documentMasked: '***.444.777-**' },
+    payee: { name: 'Marina Costa', documentMasked: '***.456.789-**' },
+  };
+
+  async function afterPix(payeeFunds = 0n) {
+    const context = setup();
+    await context.accounts.open(tx, 'account-a');
+    await context.accounts.open(tx, 'account-b');
+    await context.accounts.fund(tx, { accountId: 'account-a', amount: Money.of(10_000n) });
+    if (payeeFunds > 0n) {
+      await context.accounts.fund(tx, { accountId: 'account-b', amount: Money.of(payeeFunds) });
+    }
+    await context.accounts.transferPix(tx, REVERSAL);
+    return context;
+  }
+
+  it('reverses an internal Pix from payee to payer, in a new entry', async () => {
+    const { ledger, accounts } = await afterPix();
+
+    await accounts.reversePix(tx, REVERSAL);
+
+    expect(ledger.balanceOf('id-1')).toBe(10_000n);
+    expect(ledger.balanceOf('id-2')).toBe(0n);
+    const reversal = ledger.entries.find((entry) => entry.kind === 'PIX_REVERSAL');
+    expect(reversal).toMatchObject({ referenceType: 'PIX_TRANSFER', referenceId: 'pix-1' });
+    expect(reversal?.postings).toEqual([
+      expect.objectContaining({
+        ledgerAccountId: 'id-2',
+        direction: 'DEBIT',
+        amount: Money.of(8_000n),
+        counterpartyName: 'Ana Souza',
+      }),
+      expect.objectContaining({
+        ledgerAccountId: 'id-1',
+        direction: 'CREDIT',
+        amount: Money.of(8_000n),
+        counterpartyName: 'Marina Costa',
+      }),
+    ]);
+    // The Pix's own entry stays as it was (append-only).
+    expect(ledger.entries.filter((entry) => entry.kind === 'PIX_INTERNAL')).toHaveLength(1);
+  });
+
+  it('refuses when the payee no longer has the money, and writes nothing (B7)', async () => {
+    const { ledger, accounts } = await afterPix();
+    await accounts.transferPix(tx, {
+      ...REVERSAL,
+      transferId: 'pix-2',
+      payerAccountId: 'account-b',
+      payeeAccountId: 'account-a',
+      amount: Money.of(5_000n),
+    });
+
+    await expect(accounts.reversePix(tx, REVERSAL)).rejects.toThrow(InsufficientFunds);
+    expect(ledger.entries.filter((entry) => entry.kind === 'PIX_REVERSAL')).toEqual([]);
+    expect(ledger.balanceOf('id-2')).toBe(3_000n);
+  });
+
+  it('knows whether a Pix was reversed', async () => {
+    const { accounts } = await afterPix();
+
+    await expect(accounts.isReversed(tx, 'pix-1')).resolves.toBe(false);
+    await accounts.reversePix(tx, REVERSAL);
+    await expect(accounts.isReversed(tx, 'pix-1')).resolves.toBe(true);
+  });
+
   // v1.1.0 plan, task 5: the money leaves for the operator's system account;
   // the customer's posting keeps the operator and the masked number, which is
   // what the statement shows (READ-02).
