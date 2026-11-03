@@ -1,6 +1,10 @@
 import type {
   AccountStatus,
   AccountStatusPort,
+  AuditFilter,
+  AuditPosition,
+  AuditReaderPort,
+  AuditRecord,
   CompletedPix,
   CustomerAccessPort,
   ExceptionPosition,
@@ -46,7 +50,8 @@ export class InMemoryOperationsBank
     PixTransfersPort,
     PixReversalsPort,
     ReconciliationExceptionsPort,
-    StalePixPort
+    StalePixPort,
+    AuditReaderPort
 {
   /** Pix by id, as Payments keeps them; the account ids are the holders' here. */
   readonly pix = new Map<string, CompletedPix>();
@@ -81,6 +86,7 @@ export class InMemoryOperationsBank
     outcome: 'SETTLED' | 'REJECTED';
     actorId: string;
     requestId: string | null;
+    approvalRequestId: string;
   }[] = [];
 
   // ReconciliationExceptionsPort
@@ -132,6 +138,7 @@ export class InMemoryOperationsBank
       outcome: 'SETTLED' | 'REJECTED';
       actorId: string;
       requestId: string | null;
+      approvalRequestId: string;
     },
   ): Promise<'APPLIED' | 'NOT_WAITING'> {
     if (!this.waiting.delete(input.endToEndId)) return Promise.resolve('NOT_WAITING');
@@ -154,6 +161,53 @@ export class InMemoryOperationsBank
     }
     this.reversed.add(posting.transferId);
     return Promise.resolve('REVERSED');
+  }
+
+  /** The audit trail as the staff reads it (task 8), apart from what the commands record. */
+  readonly auditEvents: AuditRecord[] = [];
+  /** Each member's name and whether it is the public demo's. */
+  readonly staffMembers = new Map<string, { name: string; isDemo: boolean }>();
+
+  // AuditReaderPort
+  eventsOf(
+    _tx: Transaction,
+    filter: AuditFilter,
+    after: AuditPosition | null,
+    limit: number,
+  ): Promise<AuditRecord[]> {
+    const matches = (event: AuditRecord): boolean => {
+      switch (filter.by) {
+        case 'MEMBER':
+          return event.actorType === 'STAFF' && event.actorId === filter.memberId;
+        case 'REQUEST':
+          return (
+            (event.subjectType === 'APPROVAL_REQUEST' && event.subjectId === filter.requestId) ||
+            event.metadata.approvalRequestId === filter.requestId
+          );
+        case 'CUSTOMER':
+          return (
+            (event.actorType === 'USER' && event.actorId === filter.customerId) ||
+            (event.subjectType === 'USER' && event.subjectId === filter.customerId) ||
+            (event.subjectType === 'ACCOUNT' && event.subjectId === filter.accountId)
+          );
+      }
+    };
+    return Promise.resolve(
+      this.auditEvents
+        .filter(matches)
+        .sort((a, b) => b.occurredAt.getTime() - a.occurredAt.getTime() || b.id.localeCompare(a.id))
+        .filter(
+          (event) =>
+            after === null ||
+            event.occurredAt < after.occurredAt ||
+            (event.occurredAt.getTime() === after.occurredAt.getTime() && event.id < after.id),
+        )
+        .slice(0, limit),
+    );
+  }
+
+  memberOf(_tx: Transaction, id: string): Promise<{ name: string; isDemo: boolean } | null> {
+    return Promise.resolve(this.staffMembers.get(id) ?? null);
   }
 
   readonly statuses = new Map<string, AccountStatus>();

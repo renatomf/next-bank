@@ -12,12 +12,18 @@ describe('navigationFor', () => {
   it.each(['OPERATOR', 'ANALYST'])(
     'shows the customers, the requests and the reconciliation to the %s',
     (role) => {
-      expect(pathsOf(role)).toEqual(['/', '/customers', '/requests', '/reconciliation']);
+      expect(pathsOf(role)).toEqual([
+        '/',
+        '/customers',
+        '/requests',
+        '/reconciliation',
+        ...(role === 'ANALYST' ? ['/audit'] : []),
+      ]);
     },
   );
 
   it('shows the admin the staff, and keeps the customers away (task 3, C1; task 7)', () => {
-    expect(pathsOf('ADMIN')).toEqual(['/', '/staff']);
+    expect(pathsOf('ADMIN')).toEqual(['/', '/staff', '/audit']);
   });
 
   it('shows only the home to a role it does not know', () => {

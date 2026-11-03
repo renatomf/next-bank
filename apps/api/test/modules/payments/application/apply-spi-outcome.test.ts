@@ -156,6 +156,7 @@ describe('ApplySpiOutcome', () => {
       outcome,
       actorId: 'analyst-1',
       requestId: 'req-9',
+      approvalRequestId: 'approval-1',
     });
 
     it('refunds a Pix still waiting, as the SPI refusing it would, with the staff as its author', async () => {
@@ -175,7 +176,8 @@ describe('ApplySpiOutcome', () => {
           action: 'PIX_FAILED',
           subjectId: 'pix-2',
           requestId: 'req-9',
-          metadata: { endToEndId: E2E },
+          // The request that decided it, for its trail (task 8, H5).
+          metadata: { endToEndId: E2E, approvalRequestId: 'approval-1' },
         }),
       ]);
     });
