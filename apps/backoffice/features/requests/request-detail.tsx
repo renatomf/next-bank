@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { ApprovalRequest } from '@/lib/api';
 import { formatDateTime, formatMoney } from '@/lib/format';
-import { KIND_LABELS, REASON_LABELS } from '@/lib/staff-words';
+import { KIND_LABELS, REASON_LABELS, RESOLUTION_LABELS } from '@/lib/staff-words';
 import { RequestStatusBadge } from './request-status-badge';
 
 const DECISIONS: Readonly<Record<NonNullable<ApprovalRequest['decision']>['decision'], string>> = {
@@ -22,6 +22,9 @@ export function RequestDetail({ request }: { request: ApprovalRequest }) {
           ['Valor do Pix', formatMoney(request.transfer.amount)],
           ['Recebedor', request.transfer.payeeName],
         ] as [string, string][])
+      : []),
+    ...(request.exception
+      ? ([['Resolução', RESOLUTION_LABELS[request.exception.resolution]]] as [string, string][])
       : []),
     ['Motivo', REASON_LABELS[request.reason]],
     ['Pedido por', request.requestedBy.name],

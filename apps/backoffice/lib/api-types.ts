@@ -196,6 +196,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/v1/exceptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listExceptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/exceptions/{exceptionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getException"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/exceptions/{exceptionId}/explain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["explainException"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -204,7 +252,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            kind: "UNBLOCK_ACCOUNT" | "REVERSE_PIX";
+            kind: "UNBLOCK_ACCOUNT" | "REVERSE_PIX" | "RESOLVE_EXCEPTION";
             /** @enum {string} */
             status: "PENDING" | "EXPIRED" | "APPROVED" | "REJECTED" | "CANCELLED";
             customer: components["schemas"]["Person"];
@@ -213,6 +261,12 @@ export interface components {
                 id: string;
                 amount: components["schemas"]["Money"];
                 payeeName: string;
+            } | null;
+            exception: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                resolution: "SETTLE" | "REFUND";
             } | null;
             /** @enum {string} */
             reason: "FRAUD_SUSPECTED" | "CUSTOMER_REQUEST" | "LEGAL_ORDER" | "OTHER";
@@ -296,6 +350,50 @@ export interface components {
             remainingAttempts?: number;
             limit?: components["schemas"]["Money"];
             remaining?: components["schemas"]["Money"];
+        };
+        ReconciliationException: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date */
+            runDate: string;
+            /** @enum {string} */
+            kind: "MISSING_HERE" | "MISSING_AT_SPI" | "AMOUNT_MISMATCH" | "STATUS_MISMATCH" | "STALE_PROCESSING" | "CLEARING_MISMATCH";
+            endToEndId: string | null;
+            expected: components["schemas"]["Money"] | null;
+            actual: components["schemas"]["Money"] | null;
+            /** Format: date-time */
+            detectedAt: string;
+            /** @enum {string} */
+            status: "OPEN" | "RESOLVED";
+            pix: {
+                /** Format: uuid */
+                id: string;
+                amount: components["schemas"]["Money"];
+                status: string;
+                customer: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                };
+            } | null;
+            pendingRequestId: string | null;
+            resolution: {
+                /** @enum {string} */
+                outcome: "SETTLED" | "REFUNDED" | "EXPLAINED";
+                resolvedBy: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                };
+                /** Format: date-time */
+                resolvedAt: string;
+                explanation: string | null;
+                approvalRequestId: string | null;
+            } | null;
+        };
+        ReconciliationExceptionsPage: {
+            items: components["schemas"]["ReconciliationException"][];
+            nextCursor: string | null;
         };
         StaffLoginRequestInput: {
             /** Format: email */
@@ -772,6 +870,16 @@ export interface operations {
                     /** @enum {string} */
                     reason: "FRAUD_SUSPECTED" | "CUSTOMER_REQUEST" | "LEGAL_ORDER" | "OTHER";
                     note?: string | null;
+                } | {
+                    /** @enum {string} */
+                    kind: "RESOLVE_EXCEPTION";
+                    /** Format: uuid */
+                    exceptionId: string;
+                    /** @enum {string} */
+                    resolution: "SETTLE" | "REFUND";
+                    /** @enum {string} */
+                    reason: "FRAUD_SUSPECTED" | "CUSTOMER_REQUEST" | "LEGAL_ORDER" | "OTHER";
+                    note?: string | null;
                 };
             };
         };
@@ -1064,6 +1172,189 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApprovalRequest"];
+                };
+            };
+            /** @description Default Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Default Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Default Response */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Default Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Default Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listExceptions: {
+        parameters: {
+            query?: {
+                status?: "OPEN" | "ALL";
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReconciliationExceptionsPage"];
+                };
+            };
+            /** @description Default Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Default Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Default Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getException: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                exceptionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReconciliationException"];
+                };
+            };
+            /** @description Default Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Default Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Default Response */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Default Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    explainException: {
+        parameters: {
+            query?: never;
+            header: {
+                "idempotency-key": string;
+            };
+            path: {
+                exceptionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    explanation: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReconciliationException"];
                 };
             };
             /** @description Default Response */

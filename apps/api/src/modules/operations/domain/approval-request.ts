@@ -4,8 +4,9 @@ import {
   RequestNotPending,
   SelfApprovalNotAllowed,
 } from './errors.ts';
+import type { Resolution } from './reconciliation-exception.ts';
 
-export const REQUEST_KINDS = ['UNBLOCK_ACCOUNT', 'REVERSE_PIX'] as const;
+export const REQUEST_KINDS = ['UNBLOCK_ACCOUNT', 'REVERSE_PIX', 'RESOLVE_EXCEPTION'] as const;
 export type RequestKind = (typeof REQUEST_KINDS)[number];
 
 /** Why the staff acts; a code, never free text, so the audit holds no personal data. */
@@ -35,6 +36,9 @@ export interface ApprovalRequestState {
   expiresAt: Date;
   /** About a demo customer: the only requests the demo staff sees (STF-11). */
   demoScope: boolean;
+  /** The exception a resolution resolves, and how (v1.3.0, task 6); none for the others. */
+  exceptionId: string | null;
+  resolution: Resolution | null;
   decision: DecisionState | null;
 }
 
@@ -59,15 +63,23 @@ export class ApprovalRequest {
     kind: RequestKind;
     customerId: string;
     transferId: string | null;
+    /** Only a request to resolve an exception names one (task 6). */
+    exception?: { id: string; resolution: Resolution };
     reason: Reason;
     note: string | null;
     requestedBy: string;
     demoScope: boolean;
     now: Date;
   }): ApprovalRequest {
-    // A reversal names its Pix, an unblock none: a bug in the caller otherwise.
+    // A reversal names its Pix, a resolution its exception, an unblock neither:
+    // a bug in the caller otherwise.
     if ((input.kind === 'REVERSE_PIX') !== (input.transferId !== null)) {
       throw new Error(`A ${input.kind} request ${input.transferId ? 'names no' : 'needs its'} Pix`);
+    }
+    if ((input.kind === 'RESOLVE_EXCEPTION') !== (input.exception !== undefined)) {
+      throw new Error(
+        `A ${input.kind} request ${input.exception ? 'names no' : 'needs its'} exception`,
+      );
     }
     return new ApprovalRequest({
       id: input.id,
@@ -80,6 +92,8 @@ export class ApprovalRequest {
       requestedAt: input.now,
       expiresAt: new Date(input.now.getTime() + VALIDITY_MS),
       demoScope: input.demoScope,
+      exceptionId: input.exception?.id ?? null,
+      resolution: input.exception?.resolution ?? null,
       decision: null,
     });
   }

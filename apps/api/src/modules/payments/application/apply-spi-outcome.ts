@@ -18,6 +18,21 @@ export interface SpiOutcome {
 /** Applied; ignored (and recorded); or an event already taken. */
 export type SpiOutcomeResult = 'APPLIED' | 'IGNORED' | 'DUPLICATE';
 
+/** The staff's conclusion of a Pix left waiting, after checking with the SPI (task 6). */
+export interface StaffConclusion {
+  endToEndId: string;
+  outcome: 'SETTLED' | 'REJECTED';
+  actorId: string;
+  requestId: string | null;
+}
+
+/** Who ended the Pix, for the audit trail: the system, or a member of the staff. */
+interface Author {
+  actorType: 'SYSTEM' | 'STAFF';
+  actorId: string | null;
+  requestId: string | null;
+}
+
 export interface ApplySpiOutcomeDependencies {
   unitOfWork: UnitOfWork;
   repositories: PaymentsRepositoriesFactory;
@@ -59,9 +74,35 @@ export class ApplySpiOutcome {
       }
       if (!transfer || !applies) return 'IGNORED';
 
-      await this.#apply(tx, repositories, transfer, outcome, now);
+      const system: Author = { actorType: 'SYSTEM', actorId: null, requestId: null };
+      await this.#apply(tx, repositories, transfer, outcome, system, now);
       return 'APPLIED';
     });
+  }
+
+  /**
+   * The staff ends a Pix left waiting for the SPI (v1.3.0 plan, task 6;
+   * REC-01), in the transaction of the approval that decided it: the same
+   * lock and the same moves as the SPI's answer, so the two never both
+   * apply. A Pix no longer waiting moves nothing (X4).
+   */
+  async concludeByStaff(
+    tx: Transaction,
+    conclusion: StaffConclusion,
+  ): Promise<'APPLIED' | 'NOT_WAITING'> {
+    const repositories = this.#deps.repositories.for(tx);
+    const state = await repositories.pixTransfers.lockByEndToEndId(conclusion.endToEndId);
+    const transfer = state && PixTransfer.restore(state);
+    if (!transfer?.waitsForSpi) return 'NOT_WAITING';
+    await this.#apply(
+      tx,
+      repositories,
+      transfer,
+      { eventId: null, endToEndId: conclusion.endToEndId, status: conclusion.outcome },
+      { actorType: 'STAFF', actorId: conclusion.actorId, requestId: conclusion.requestId },
+      this.#deps.clock.now(),
+    );
+    return 'APPLIED';
   }
 
   async #apply(
@@ -69,6 +110,7 @@ export class ApplySpiOutcome {
     repositories: PaymentsRepositories,
     transfer: PixTransfer,
     outcome: SpiOutcome,
+    author: Author,
     now: Date,
   ): Promise<void> {
     const { state } = transfer;
@@ -91,12 +133,10 @@ export class ApplySpiOutcome {
     await repositories.audit.record({
       id: this.#deps.ids.next(),
       occurredAt: now,
-      actorType: 'SYSTEM',
-      actorId: null,
+      ...author,
       action: outcome.status === 'SETTLED' ? 'PIX_COMPLETED' : 'PIX_FAILED',
       subjectType: 'PIX_TRANSFER',
       subjectId: state.id,
-      requestId: null,
       metadata: {
         endToEndId: outcome.endToEndId,
         ...(outcome.eventId === null ? {} : { eventId: outcome.eventId }),

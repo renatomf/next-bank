@@ -147,4 +147,69 @@ describe('ApplySpiOutcome', () => {
     expect(repositories.inbox.size).toBe(0);
     expect(repositories.auditEvents[0]?.metadata).toEqual({ endToEndId: E2E });
   });
+
+  // v1.3.0 plan, task 6 (REC-01): the staff ends a Pix left waiting, after
+  // checking with the SPI, in the transaction of the approval.
+  describe('concluded by the staff', () => {
+    const byStaff = (outcome: 'SETTLED' | 'REJECTED') => ({
+      endToEndId: E2E,
+      outcome,
+      actorId: 'analyst-1',
+      requestId: 'req-9',
+    });
+
+    it('refunds a Pix still waiting, as the SPI refusing it would, with the staff as its author', async () => {
+      const { repositories, ledger, apply } = setup();
+
+      await expect(
+        apply.concludeByStaff({ kind: 'transaction' }, byStaff('REJECTED')),
+      ).resolves.toBe('APPLIED');
+
+      expect(repositories.transfers[0]).toMatchObject({ status: 'FAILED' });
+      expect(ledger.refunded).toHaveLength(1);
+      expect(repositories.inbox.size).toBe(0);
+      expect(repositories.auditEvents).toEqual([
+        expect.objectContaining({
+          actorType: 'STAFF',
+          actorId: 'analyst-1',
+          action: 'PIX_FAILED',
+          subjectId: 'pix-2',
+          requestId: 'req-9',
+          metadata: { endToEndId: E2E },
+        }),
+      ]);
+    });
+
+    it('settles a Pix still waiting', async () => {
+      const { repositories, ledger, apply } = setup();
+
+      await apply.concludeByStaff({ kind: 'transaction' }, byStaff('SETTLED'));
+
+      expect(repositories.transfers[0]).toMatchObject({ status: 'COMPLETED' });
+      expect(ledger.settled).toHaveLength(1);
+    });
+
+    it('moves nothing once the SPI answered: the Pix is no longer waiting (X4)', async () => {
+      const { repositories, ledger, apply } = setup();
+      await apply.execute(webhook('SETTLED'));
+
+      await expect(
+        apply.concludeByStaff({ kind: 'transaction' }, byStaff('REJECTED')),
+      ).resolves.toBe('NOT_WAITING');
+
+      expect(repositories.transfers[0]?.status).toBe('COMPLETED');
+      expect(ledger.refunded).toEqual([]);
+    });
+
+    it('answers NOT_WAITING for an end-to-end id it does not know', async () => {
+      const { apply } = setup();
+
+      await expect(
+        apply.concludeByStaff(
+          { kind: 'transaction' },
+          { ...byStaff('SETTLED'), endToEndId: 'E00000000202610261501zzzzzzzzzzz' },
+        ),
+      ).resolves.toBe('NOT_WAITING');
+    });
+  });
 });

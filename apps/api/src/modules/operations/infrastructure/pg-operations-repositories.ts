@@ -15,6 +15,7 @@ import type {
   Reason,
   RequestKind,
 } from '../domain/approval-request.ts';
+import type { Resolution } from '../domain/reconciliation-exception.ts';
 
 interface RequestRow {
   id: string;
@@ -27,6 +28,8 @@ interface RequestRow {
   requested_at: Date;
   expires_at: Date;
   demo_scope: boolean;
+  exception_id: string | null;
+  resolution: Resolution | null;
   decision: Decision | null;
   decided_by: string | null;
   decided_at: Date | null;
@@ -35,7 +38,7 @@ interface RequestRow {
 
 const REQUEST_WITH_DECISION = `SELECT r.id, r.kind, r.customer_id, r.transfer_id, r.reason, r.note,
     r.requested_by,
-    r.requested_at, r.expires_at, r.demo_scope,
+    r.requested_at, r.expires_at, r.demo_scope, r.exception_id, r.resolution,
     d.decision, d.decided_by, d.decided_at, d.note AS decision_note
   FROM operations.requests r
   LEFT JOIN operations.decisions d ON d.request_id = r.id`;
@@ -59,6 +62,12 @@ export class PgRequestsRepository implements RequestsRepository {
         AND NOT EXISTS (SELECT 1 FROM operations.decisions d WHERE d.request_id = r.id)
     ) AS pending`;
 
+  /** Served by requests_exception_idx and the decisions' primary key. */
+  static readonly PENDING_FOR_EXCEPTIONS_SQL = `SELECT r.exception_id, r.id
+    FROM operations.requests r
+    WHERE r.exception_id = ANY($1::uuid[]) AND r.expires_at > $2
+      AND NOT EXISTS (SELECT 1 FROM operations.decisions d WHERE d.request_id = r.id)`;
+
   /** Served by requests_transfer_idx and the decisions' primary key. */
   static readonly HAS_PENDING_FOR_TRANSFER_SQL = `SELECT EXISTS (
       SELECT 1 FROM operations.requests r
@@ -76,8 +85,8 @@ export class PgRequestsRepository implements RequestsRepository {
     await this.#client.query(
       `INSERT INTO operations.requests
          (id, kind, customer_id, transfer_id, reason, note, requested_by, requested_at,
-          expires_at, demo_scope)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+          expires_at, demo_scope, exception_id, resolution)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
       [
         state.id,
         state.kind,
@@ -89,6 +98,8 @@ export class PgRequestsRepository implements RequestsRepository {
         state.requestedAt,
         state.expiresAt,
         state.demoScope,
+        state.exceptionId,
+        state.resolution,
       ],
     );
   }
@@ -150,6 +161,15 @@ export class PgRequestsRepository implements RequestsRepository {
     return rows[0]?.pending ?? false;
   }
 
+  async pendingForExceptions(exceptionIds: string[], now: Date): Promise<Map<string, string>> {
+    if (exceptionIds.length === 0) return new Map();
+    const { rows } = await this.#client.query<{ exception_id: string; id: string }>(
+      PgRequestsRepository.PENDING_FOR_EXCEPTIONS_SQL,
+      [exceptionIds, now],
+    );
+    return new Map(rows.map((row) => [row.exception_id, row.id]));
+  }
+
   async list(filter: {
     status: 'PENDING' | 'ALL';
     onlyDemo: boolean;
@@ -181,6 +201,8 @@ function stateOf(row: RequestRow): ApprovalRequestState {
     requestedAt: row.requested_at,
     expiresAt: row.expires_at,
     demoScope: row.demo_scope,
+    exceptionId: row.exception_id,
+    resolution: row.resolution,
     decision:
       row.decision && row.decided_by && row.decided_at
         ? {

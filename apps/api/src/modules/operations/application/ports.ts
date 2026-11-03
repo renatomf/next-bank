@@ -3,6 +3,7 @@ import type { AuditTrail, Transaction } from '../../../shared/application/ports.
 import type { Money } from '../../../shared/domain/money.ts';
 import type { ApprovalRequestState, RequestKind } from '../domain/approval-request.ts';
 import type { CustomerQuery } from '../domain/customer-query.ts';
+import type { ExceptionState, ResolutionState } from '../domain/reconciliation-exception.ts';
 
 /** Who reads, as the staff's session says: never what the client sends (STF-02). */
 export interface StaffReader {
@@ -81,6 +82,8 @@ export interface CustomerAccountsPort {
   holderOf(tx: Transaction, number: string): Promise<string | null>;
   /** The customer who holds this account (v1.3.0, task 5). */
   holderOfAccount(tx: Transaction, accountId: string): Promise<string | null>;
+  /** The holder of each of these accounts, by account id, in one read (v1.3.0, task 6). */
+  holdersOfAccounts(tx: Transaction, accountIds: string[]): Promise<Map<string, string>>;
   balanceOf(tx: Transaction, holderId: string): Promise<Money>;
   statementOf(
     tx: Transaction,
@@ -145,6 +148,8 @@ export interface RequestsRepository {
   hasPending(customerId: string, kind: RequestKind, now: Date): Promise<boolean>;
   /** A pending reversal of this Pix: one at a time (v1.3.0, task 5). */
   hasPendingForTransfer(transferId: string, now: Date): Promise<boolean>;
+  /** The pending request of each of these exceptions, by exception id (v1.3.0, task 6). */
+  pendingForExceptions(exceptionIds: string[], now: Date): Promise<Map<string, string>>;
   /** Newest first, a page at a time; the demo staff sees the demo ones only. */
   list(filter: {
     status: 'PENDING' | 'ALL';
@@ -169,6 +174,8 @@ export interface OperationsRepositoriesFactory {
 /** A Pix as the staff's reversal reads it; the amount is the Pix's own (PIX-14). */
 export interface CompletedPix {
   id: string;
+  /** The SPI's id of a Pix to another bank, once sent; the reconciliation's key. */
+  endToEndId: string | null;
   payerAccountId: string;
   /** Null for a Pix to another bank, never reversed here (B9). */
   payeeAccountId: string | null;
@@ -181,6 +188,8 @@ export interface CompletedPix {
 export interface PixTransfersPort {
   pixById(tx: Transaction, transferId: string): Promise<CompletedPix | null>;
   pixByIds(tx: Transaction, ids: string[]): Promise<CompletedPix[]>;
+  /** The Pix of the reconciliation's exceptions (v1.3.0, task 6); those not here are left out. */
+  pixByEndToEndIds(tx: Transaction, endToEndIds: string[]): Promise<CompletedPix[]>;
 }
 
 /** Who was on each side, as the statement shows them. */
@@ -207,4 +216,45 @@ export interface PixReversalsPort {
       payee: PixParty;
     },
   ): Promise<'REVERSED' | 'PAYEE_WITHOUT_FUNDS'>;
+}
+
+/** Where a page of exceptions ends: the last one's time and id. */
+export interface ExceptionPosition {
+  detectedAt: Date;
+  id: string;
+}
+
+/**
+ * What the exceptions queue needs from the reconciliation (v1.3.0, task 6);
+ * the reconciliation implements it. Each exception comes with its
+ * resolution, if it has one; the exception itself is never written (R5).
+ */
+export interface ReconciliationExceptionsPort {
+  /** Newest first, a page at a time; open only or all of them. */
+  exceptionsPage(
+    tx: Transaction,
+    filter: { status: 'OPEN' | 'ALL'; after: ExceptionPosition | null; limit: number },
+  ): Promise<ExceptionState[]>;
+  exceptionById(tx: Transaction, id: string): Promise<ExceptionState | null>;
+  /** FOR UPDATE: a request and an explanation of one exception run one at a time. */
+  lockException(tx: Transaction, id: string): Promise<ExceptionState | null>;
+  /** One per exception: the primary key refuses a second. */
+  recordResolution(tx: Transaction, resolution: ResolutionState): Promise<void>;
+}
+
+/**
+ * Ends a Pix left waiting for the SPI as the SPI's answer would, with the
+ * staff as its author (v1.3.0, task 6; REC-01); Payments implements it. A
+ * Pix no longer waiting is an answer, not an error: nothing moves (X4).
+ */
+export interface StalePixPort {
+  concludeWaitingPix(
+    tx: Transaction,
+    input: {
+      endToEndId: string;
+      outcome: 'SETTLED' | 'REJECTED';
+      actorId: string;
+      requestId: string | null;
+    },
+  ): Promise<'APPLIED' | 'NOT_WAITING'>;
 }

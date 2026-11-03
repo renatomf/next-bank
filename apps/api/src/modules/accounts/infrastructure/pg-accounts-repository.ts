@@ -67,6 +67,16 @@ export class PgAccountsRepository implements AccountsRepository {
     return stateOf(rows[0]);
   }
 
+  /** Served by the primary key. */
+  async findByIds(ids: string[]): Promise<AccountState[]> {
+    const { rows } = await this.#client.query<AccountRow>(
+      `SELECT id, holder_user_id, branch, number, status, opened_at, updated_at
+       FROM accounts.accounts WHERE id = ANY($1::uuid[])`,
+      [ids],
+    );
+    return rows.flatMap((row) => stateOf(row) ?? []);
+  }
+
   async findByHolders(userIds: string[]): Promise<AccountState[]> {
     const { rows } = await this.#client.query<AccountRow>(
       PgAccountsRepository.FIND_BY_HOLDERS_SQL,

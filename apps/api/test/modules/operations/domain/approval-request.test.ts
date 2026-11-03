@@ -43,6 +43,8 @@ describe('ApprovalRequest.open', () => {
       requestedAt: OPENED,
       expiresAt: later(24 * 60),
       demoScope: false,
+      exceptionId: null,
+      resolution: null,
       decision: null,
     });
     expect(request.statusAt(OPENED)).toBe('PENDING');
@@ -180,5 +182,37 @@ describe('a reversal request', () => {
         now: OPENED,
       }),
     ).toThrow(/Pix/);
+  });
+});
+
+// v1.3.0 plan, task 6: settling or refunding a Pix left waiting names the
+// exception and how; nothing else names one.
+describe('a request to resolve an exception', () => {
+  const resolution = (kind: 'RESOLVE_EXCEPTION' | 'UNBLOCK_ACCOUNT', withException: boolean) =>
+    ApprovalRequest.open({
+      id: 'req-4',
+      kind,
+      customerId: 'customer-1',
+      transferId: null,
+      ...(withException ? { exception: { id: 'exception-1', resolution: 'REFUND' as const } } : {}),
+      reason: 'OTHER',
+      note: null,
+      requestedBy: 'operator-1',
+      demoScope: false,
+      now: OPENED,
+    });
+
+  it('opens with the exception and how to resolve it', () => {
+    expect(resolution('RESOLVE_EXCEPTION', true).state).toMatchObject({
+      kind: 'RESOLVE_EXCEPTION',
+      exceptionId: 'exception-1',
+      resolution: 'REFUND',
+      transferId: null,
+    });
+  });
+
+  it('refuses one without its exception, and another kind with one', () => {
+    expect(() => resolution('RESOLVE_EXCEPTION', false)).toThrow(/exception/);
+    expect(() => resolution('UNBLOCK_ACCOUNT', true)).toThrow(/exception/);
   });
 });

@@ -10,6 +10,9 @@ export type Statement = components['schemas']['Statement'];
 export type ApprovalRequest = components['schemas']['ApprovalRequest'];
 export type ApprovalRequestsPage = components['schemas']['ApprovalRequestsPage'];
 export type Reason = ApprovalRequest['reason'];
+export type ReconciliationException = components['schemas']['ReconciliationException'];
+export type ReconciliationExceptionsPage = components['schemas']['ReconciliationExceptionsPage'];
+export type Resolution = NonNullable<ApprovalRequest['exception']>['resolution'];
 
 /** The API refused a login; [code] is the catalog's (InvalidCredentials, TooManyAttempts). */
 export class LoginRefused extends Error {
@@ -227,6 +230,64 @@ export function adminApi(options: AdminApiOptions) {
         params: { path: { requestId } },
       });
       return data ?? orNullWhenMissing(response);
+    },
+
+    // The reconciliation's exceptions (v1.3.0 plan, task 6).
+
+    async listExceptions(
+      status: 'OPEN' | 'ALL',
+      cursor: string | null,
+    ): Promise<ReconciliationExceptionsPage> {
+      const { data, response } = await client.GET('/admin/v1/exceptions', {
+        headers: headers(),
+        params: { query: cursor === null ? { status } : { status, cursor } },
+      });
+      if (data === undefined) throw failureOf(response);
+      return data;
+    },
+
+    /** The exception, or null when the API shows this member no such exception. */
+    async exception(exceptionId: string): Promise<ReconciliationException | null> {
+      const { data, response } = await client.GET('/admin/v1/exceptions/{exceptionId}', {
+        headers: headers(),
+        params: { path: { exceptionId } },
+      });
+      return data ?? orNullWhenMissing(response);
+    },
+
+    /** Settling or refunding a Pix left waiting: someone else approves it (X3). */
+    async requestResolution(
+      exceptionId: string,
+      resolution: Resolution,
+      reason: Reason,
+      note: string | null,
+      idempotencyKey: string,
+    ): Promise<ApprovalRequest> {
+      const { data, error, response } = await client.POST('/admin/v1/requests', {
+        headers: headers(),
+        params: { header: { 'idempotency-key': idempotencyKey } },
+        body: { kind: 'RESOLVE_EXCEPTION', exceptionId, resolution, reason, note },
+      });
+      if (data === undefined) throw refusalOf(error, response);
+      return data;
+    },
+
+    /** An exception that needs nothing more, by the analyst alone (X2). */
+    async explainException(
+      exceptionId: string,
+      explanation: string,
+      idempotencyKey: string,
+    ): Promise<ReconciliationException> {
+      const { data, error, response } = await client.POST(
+        '/admin/v1/exceptions/{exceptionId}/explain',
+        {
+          headers: headers(),
+          params: { header: { 'idempotency-key': idempotencyKey }, path: { exceptionId } },
+          body: { explanation },
+        },
+      );
+      if (data === undefined) throw refusalOf(error, response);
+      return data;
     },
   };
 }

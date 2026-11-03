@@ -64,6 +64,8 @@ export interface PixTransfersRepository {
    * (v1.3.0, task 5), never on a customer's request.
    */
   findByIds(ids: string[]): Promise<PixTransferState[]>;
+  /** The Pix the SPI knows by these ids, for the staff (v1.3.0, task 6); no payer filter. */
+  findByEndToEndIds(endToEndIds: string[]): Promise<PixTransferState[]>;
   update(transfer: PixTransferState): Promise<void>;
   /**
    * Locks the Pix the SPI knows by this id until the transaction ends, for

@@ -53,6 +53,12 @@ export class CustomerAccountsReader {
     return account?.holderUserId ?? null;
   }
 
+  async holdersOfAccounts(tx: Transaction, accountIds: string[]): Promise<Map<string, string>> {
+    if (accountIds.length === 0) return new Map();
+    const accounts = await this.#repositories.for(tx).accounts.findByIds(accountIds);
+    return new Map(accounts.map((account) => [account.id, account.holderUserId]));
+  }
+
   async balanceOf(tx: Transaction, holderId: string): Promise<Money> {
     const accountId = await this.#accountOf(tx, holderId);
     const balance = await this.#ledger.availableBalance(tx, accountId);

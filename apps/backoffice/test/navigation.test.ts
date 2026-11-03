@@ -9,9 +9,12 @@ import { navigationFor } from '../components/nb/navigation';
 const pathsOf = (role: string) => navigationFor(role).map((item) => item.href);
 
 describe('navigationFor', () => {
-  it.each(['OPERATOR', 'ANALYST'])('shows the customers and the requests to the %s', (role) => {
-    expect(pathsOf(role)).toEqual(['/', '/customers', '/requests']);
-  });
+  it.each(['OPERATOR', 'ANALYST'])(
+    'shows the customers, the requests and the reconciliation to the %s',
+    (role) => {
+      expect(pathsOf(role)).toEqual(['/', '/customers', '/requests', '/reconciliation']);
+    },
+  );
 
   it('keeps the customers away from the admin (task 3, C1)', () => {
     expect(pathsOf('ADMIN')).toEqual(['/']);

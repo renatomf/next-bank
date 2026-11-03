@@ -36,6 +36,7 @@ import { createLedgerModule, InsufficientFunds } from './modules/ledger/index.ts
 import {
   createOperationsModule,
   customerRoutes,
+  exceptionRoutes,
   requestRoutes,
 } from './modules/operations/index.ts';
 import {
@@ -49,7 +50,11 @@ import {
   spiWebhookRoutes,
   transferRoutes,
 } from './modules/payments/index.ts';
-import { createReconciliationModule, ErrorReporterAlarm } from './modules/reconciliation/index.ts';
+import {
+  createReconciliationModule,
+  ErrorReporterAlarm,
+  PgExceptionQueue,
+} from './modules/reconciliation/index.ts';
 import {
   createStaffModule,
   registerStaffAuthentication,
@@ -372,7 +377,7 @@ export function buildApp({
       hasher: new Argon2idHasher(),
       tokens: new RandomRefreshTokens(),
     });
-    // Operations reaches Identity and Accounts only through the ports it defines.
+    // Operations reaches the other contexts only through the ports it defines.
     const operations = createOperationsModule({
       unitOfWork,
       clock,
@@ -397,6 +402,11 @@ export function buildApp({
           }
         },
       },
+      exceptions: new PgExceptionQueue(),
+      stalePix: {
+        concludeWaitingPix: (tx, conclusion) =>
+          payments.applySpiOutcome.concludeByStaff(tx, conclusion),
+      },
     });
     void app.register(
       async (scope) => {
@@ -407,6 +417,7 @@ export function buildApp({
         await scope.register(staffAuthRoutes, { login: staff.login, logout: staff.logout });
         await scope.register(customerRoutes, operations);
         await scope.register(requestRoutes, operations);
+        await scope.register(exceptionRoutes, operations);
       },
       { prefix: '/admin/v1' },
     );

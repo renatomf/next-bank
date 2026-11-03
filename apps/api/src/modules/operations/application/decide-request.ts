@@ -1,5 +1,6 @@
 import { Idempotency } from '../../../shared/application/idempotency.ts';
 import type { Transaction } from '../../../shared/application/ports.ts';
+import { concludeException } from './exceptions.ts';
 import type { StaffReader } from './ports.ts';
 import { reversePix } from './request-reversal.ts';
 import {
@@ -13,8 +14,9 @@ import {
 /**
  * Approves or rejects a request, by someone other than its requester
  * (v1.3.0 plan, B6; STF-03). The request is locked, so it is decided once
- * (STF-09); an approval runs its command in the same transaction: for an
- * unblock, the account turns ACTIVE and the customer may sign in again.
+ * (STF-09); an approval runs its command in the same transaction: an unblock
+ * lets the customer sign in again, a reversal gives the Pix back, and a
+ * resolution ends a Pix left waiting for the SPI (task 6).
  */
 export class DecideRequest {
   readonly #deps: CommandDependencies;
@@ -50,10 +52,15 @@ export class DecideRequest {
           const request = await lockedRequestFor(this.#deps, tx, actor, input.requestId);
           if (input.decision === 'APPROVE') {
             request.approve(actor.memberId, now, input.note);
-            if (request.state.kind === 'REVERSE_PIX') {
-              await reversePix(this.#deps, tx, actor, request.state, now);
-            } else {
-              await this.#unblock(tx, actor, request.state.customerId, now);
+            switch (request.state.kind) {
+              case 'REVERSE_PIX':
+                await reversePix(this.#deps, tx, actor, request.state, now);
+                break;
+              case 'RESOLVE_EXCEPTION':
+                await concludeException(this.#deps, tx, actor, request.state, now);
+                break;
+              case 'UNBLOCK_ACCOUNT':
+                await this.#unblock(tx, actor, request.state.customerId, now);
             }
           } else {
             request.reject(actor.memberId, now, input.note);
