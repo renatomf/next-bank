@@ -50,7 +50,7 @@ export function SearchForm() {
                 {state.result.customers.map((customer) => (
                   <Link
                     key={customer.id}
-                    href={`/clientes/${customer.id}`}
+                    href={`/customers/${customer.id}`}
                     className="flex items-center gap-4 rounded-md px-3 py-3 hover:bg-accent"
                   >
                     <span className="flex-1">

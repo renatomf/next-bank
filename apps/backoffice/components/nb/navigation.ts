@@ -1,4 +1,4 @@
-import { House, type LucideIcon, Users } from 'lucide-react';
+import { ClipboardCheck, House, type LucideIcon, Users } from 'lucide-react';
 
 export interface NavigationItem {
   href: string;
@@ -12,7 +12,8 @@ export interface NavigationItem {
 // E9). Each task of v1.3.0 adds its own item: requests, exceptions, staff, audit.
 const ITEMS: readonly NavigationItem[] = [
   { href: '/', label: 'Início', icon: House },
-  { href: '/clientes', label: 'Clientes', icon: Users, roles: ['OPERATOR', 'ANALYST'] },
+  { href: '/customers', label: 'Clientes', icon: Users, roles: ['OPERATOR', 'ANALYST'] },
+  { href: '/requests', label: 'Pedidos', icon: ClipboardCheck, roles: ['OPERATOR', 'ANALYST'] },
 ];
 
 /** The items a role may open. */

@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { navigationFor } from '../components/nb/navigation';
 
@@ -7,8 +9,8 @@ import { navigationFor } from '../components/nb/navigation';
 const pathsOf = (role: string) => navigationFor(role).map((item) => item.href);
 
 describe('navigationFor', () => {
-  it.each(['OPERATOR', 'ANALYST'])('shows the customers to the %s', (role) => {
-    expect(pathsOf(role)).toEqual(['/', '/clientes']);
+  it.each(['OPERATOR', 'ANALYST'])('shows the customers and the requests to the %s', (role) => {
+    expect(pathsOf(role)).toEqual(['/', '/customers', '/requests']);
   });
 
   it('keeps the customers away from the admin (task 3, C1)', () => {
@@ -23,6 +25,14 @@ describe('navigationFor', () => {
     for (const item of navigationFor('ANALYST')) {
       expect(item.label.length).toBeGreaterThan(0);
       expect(item.icon).toBeDefined();
+    }
+  });
+
+  // A link to a page that moved fails here, not in the browser.
+  it('leads every item to a page that exists', () => {
+    for (const { href } of navigationFor('ANALYST')) {
+      const page = new URL(`../app/(staff)${href === '/' ? '' : href}/page.tsx`, import.meta.url);
+      expect(existsSync(fileURLToPath(page)), href).toBe(true);
     }
   });
 });

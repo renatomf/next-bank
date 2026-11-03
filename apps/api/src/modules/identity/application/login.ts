@@ -135,8 +135,12 @@ export class Login {
       // lock makes this wait for a change in flight, and a changed hash means
       // the checked password is no longer the account's, so no session opens
       // that the change would not end (AUTH-06).
-      const currentHash = await repositories.users.lockPasswordHash(userId);
-      if (currentHash !== account.passwordHash) throw new InvalidCredentials();
+      // The same lock makes this wait for a block in flight (STF-12): a
+      // customer locked out meanwhile opens no session the block missed.
+      const current = await repositories.users.lockLoginState(userId);
+      if (current?.passwordHash !== account.passwordHash || current.status !== 'ACTIVE') {
+        throw new InvalidCredentials();
+      }
       await repositories.sessions.insert(session.state);
       await repositories.refreshTokens.insert({
         id: ids.next(),

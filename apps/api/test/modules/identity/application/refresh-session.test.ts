@@ -12,6 +12,7 @@ import {
   InMemoryDatabase,
   SequentialIds,
   SequentialRefreshTokens,
+  storedUser,
 } from './fakes.ts';
 
 // Refresh and logout (ADR 0004, AUTH-03, AUTH-06, D5).
@@ -26,6 +27,7 @@ function at(offsetMs: number): Date {
 /** A session opened at START with its first refresh token, "refresh-0". */
 function setup() {
   const db = new InMemoryDatabase();
+  db.users.push(storedUser({ id: 'user-1', status: 'ACTIVE' }));
   const clock = new FixedClock(START);
   const session = Session.create({
     id: 'session-1',
@@ -70,6 +72,17 @@ describe('RefreshSession', () => {
     expect(db.replacements.get('token-0')).toEqual({ replacedAt: at(DAY), replacedById: 'id-1' });
     expect(db.refreshTokens.at(-1)).toMatchObject({ id: 'id-1', sessionId: 'session-1' });
     expect(db.sessions[0]).toMatchObject({ lastUsedAt: at(DAY), idleExpiresAt: at(8 * DAY) });
+  });
+
+  // F-12 (attack first): a blocked customer's token, even one from a session
+  // the block somehow missed, never renews.
+  it('refuses to renew the session of a locked customer (SessionExpired, F-12)', async () => {
+    const { db, clock, refresh } = setup();
+    db.users = db.users.map((user) => ({ ...user, state: { ...user.state, status: 'LOCKED' } }));
+    clock.current = at(DAY);
+
+    await expect(refresh.execute(refreshWith('refresh-0'))).rejects.toThrow(SessionExpired);
+    expect(db.replacements.size).toBe(0);
   });
 
   it('refuses a malformed token without opening a transaction (SessionExpired)', async () => {

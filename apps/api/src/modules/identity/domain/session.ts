@@ -7,7 +7,12 @@ const ABSOLUTE_LIFETIME_MS = 30 * DAY;
 // A client whose refresh response was lost retries with the old token right away.
 const REUSE_GRACE_MS = 10 * SECOND;
 
-export type RevokedReason = 'LOGOUT' | 'REFRESH_TOKEN_REUSE' | 'PASSWORD_CHANGED';
+export type RevokedReason =
+  | 'LOGOUT'
+  | 'REFRESH_TOKEN_REUSE'
+  | 'PASSWORD_CHANGED'
+  /** The staff blocked the customer's account (v1.3.0, task 4). */
+  | 'ACCOUNT_BLOCKED';
 
 export interface SessionState {
   id: string;

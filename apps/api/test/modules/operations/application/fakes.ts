@@ -45,9 +45,16 @@ export class InMemoryBank
     return work({ kind: 'transaction' });
   }
 
-  addCustomer(input: { id: string; name: string; email: string; isDemo: boolean }): void {
+  addCustomer(input: {
+    id: string;
+    name: string;
+    email: string;
+    isDemo: boolean;
+    demoProtected?: boolean;
+  }): void {
     this.customers.push({
       ...input,
+      demoProtected: input.demoProtected ?? false,
       cpfMasked: '***.444.777-**',
       cpfDigits: input.id.replace(/\D/g, '').padEnd(11, '0').slice(0, 11),
       status: 'ACTIVE',
@@ -132,6 +139,6 @@ export class InMemoryBank
 
 function recordOf(customer: StoredCustomer | undefined): CustomerRecord | null {
   if (!customer) return null;
-  const { id, name, cpfMasked, email, status } = customer;
-  return { id, name, cpfMasked, email, status };
+  const { id, name, cpfMasked, email, status, demoProtected } = customer;
+  return { id, name, cpfMasked, email, status, demoProtected };
 }

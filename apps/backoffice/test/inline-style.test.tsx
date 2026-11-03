@@ -21,10 +21,31 @@ import { MoneyText } from '../components/nb/money-text';
 import { SidebarNav } from '../components/nb/sidebar-nav';
 import { ThemeToggle } from '../components/nb/theme-toggle';
 import { StatementList } from '../features/customers/statement-list';
+import { RequestDetail } from '../features/requests/request-detail';
+import { RequestsTable } from '../features/requests/requests-table';
 
 // The CSP has no unsafe-inline (STF-05; task 3.5, E5): a style attribute in
 // the server's HTML would be dropped by the browser. Every component the
 // screens use renders without one.
+// A request as the API answers it (task 4), decided, with notes.
+const request = {
+  id: '0190f0b6-1b2c-7d3e-8f40-123456789abc',
+  kind: 'UNBLOCK_ACCOUNT' as const,
+  status: 'APPROVED' as const,
+  customer: { id: '0190f0b6-1b2c-7d3e-8f40-123456789abd', name: 'Carla Demo' },
+  reason: 'CUSTOMER_REQUEST' as const,
+  note: 'Cliente confirmou a identidade',
+  requestedBy: { id: '0190f0b6-1b2c-7d3e-8f40-123456789abe', name: 'Olívia' },
+  requestedAt: '2026-11-02T12:00:00.000Z',
+  expiresAt: '2026-11-03T12:00:00.000Z',
+  decision: {
+    decision: 'APPROVED' as const,
+    decidedBy: { id: '0190f0b6-1b2c-7d3e-8f40-123456789abf', name: 'Diogo' },
+    decidedAt: '2026-11-02T13:00:00.000Z',
+    note: '<b>conferido</b>',
+  },
+};
+
 const rendered: [string, ReactElement][] = [
   [
     'Alert',
@@ -64,13 +85,15 @@ const rendered: [string, ReactElement][] = [
   ['Logo', <Logo key="i" />],
   [
     'SidebarNav, open',
-    <SidebarNav key="l" role="ANALYST" currentPath="/clientes" collapsed={false} />,
+    <SidebarNav key="l" role="ANALYST" currentPath="/customers" collapsed={false} />,
   ],
   [
     'SidebarNav, collapsed to icons with tooltips',
     <SidebarNav key="m" role="ANALYST" currentPath="/" collapsed />,
   ],
   ['ThemeToggle', <ThemeToggle key="n" />],
+  ['RequestsTable', <RequestsTable key="o" requests={[request]} />],
+  ['RequestDetail', <RequestDetail key="p" request={request} />],
   ['MoneyText', <MoneyText key="j" money={{ amount: 123456, currency: 'BRL' }} />],
   [
     'StatementList',
@@ -103,13 +126,13 @@ describe('the components of the screens', () => {
 describe('SidebarNav', () => {
   it('marks the current page', () => {
     const html = renderToStaticMarkup(
-      <SidebarNav role="ANALYST" currentPath="/clientes/0190f0b6" collapsed={false} />,
+      <SidebarNav role="ANALYST" currentPath="/customers/0190f0b6" collapsed={false} />,
     );
 
     const current = [...html.matchAll(/<a [^>]*>/g)].filter(([tag]) =>
       tag.includes('aria-current="page"'),
     );
-    expect(current.map(([tag]) => /href="([^"]+)"/.exec(tag)?.[1])).toEqual(['/clientes']);
+    expect(current.map(([tag]) => /href="([^"]+)"/.exec(tag)?.[1])).toEqual(['/customers']);
     expect(html).toContain('Clientes');
   });
 
@@ -118,5 +141,14 @@ describe('SidebarNav', () => {
 
     expect(html).toContain('aria-label="Início"');
     expect(html).toContain('aria-label="Clientes"');
+  });
+});
+
+// The staff's notes are shown as text, never run (STF-05).
+describe('RequestDetail', () => {
+  it('shows a note with markup as text', () => {
+    const html = renderToStaticMarkup(<RequestDetail request={request} />);
+
+    expect(html).toContain('&lt;b&gt;conferido&lt;/b&gt;');
   });
 });

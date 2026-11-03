@@ -1,3 +1,5 @@
+import { AccountAlreadyBlocked, AccountNotBlocked } from './errors.ts';
+
 export type AccountStatus = 'ACTIVE' | 'BLOCKED' | 'CLOSED';
 
 /** The only branch in V1. */
@@ -19,7 +21,7 @@ export interface AccountState {
  * balance: the money lives in the ledger.
  */
 export class Account {
-  readonly #state: AccountState;
+  #state: AccountState;
 
   private constructor(state: AccountState) {
     this.#state = { ...state };
@@ -40,6 +42,18 @@ export class Account {
 
   static restore(state: AccountState): Account {
     return new Account(state);
+  }
+
+  /** The staff blocks it: no money moves in or out (v1.3.0, task 4). */
+  block(now: Date): void {
+    if (this.#state.status === 'BLOCKED') throw new AccountAlreadyBlocked();
+    this.#state = { ...this.#state, status: 'BLOCKED', updatedAt: now };
+  }
+
+  /** Only after another person approved the request (B6). */
+  unblock(now: Date): void {
+    if (this.#state.status !== 'BLOCKED') throw new AccountNotBlocked();
+    this.#state = { ...this.#state, status: 'ACTIVE', updatedAt: now };
   }
 
   get state(): Readonly<AccountState> {

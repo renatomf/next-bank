@@ -1,5 +1,5 @@
-// Creates the public demo's accounts, Ana and Bruno (roadmap 8.2; week 8 plan,
-// E2E and D5). They go through the API's own routes, in process, so they meet
+// Creates the public demo's accounts: Ana and Bruno for the app (roadmap 8.2;
+// week 8 plan, E2E and D5), and Carla for the backoffice (v1.3.0, task 4, K5). They go through the API's own routes, in process, so they meet
 // every rule a visitor meets; then the migration role marks them as demo
 // accounts (DEMO-03), which no route can do. Safe to run any number of times.
 // Usage: pnpm seed:demo (locally), or with SEED_API_URL for the published API.
@@ -17,6 +17,11 @@ export interface DemoAccount {
   /** Fictitious, as every CPF of the project; Bruno's is Ana's Pix key. */
   cpf: string;
   pin: string;
+  /**
+   * Shared by every visitor of the app: the demo staff, whose credentials are
+   * public too, never blocks it (v1.3.0 plan, task 4, K5; STF-13).
+   */
+  protectedFromStaff: boolean;
 }
 
 /** The accounts the README lists for visitors, with fictitious data only. */
@@ -27,6 +32,7 @@ export const DEMO_ACCOUNTS: readonly DemoAccount[] = [
     password: 'demo-ana-next-bank',
     cpf: '11144477735',
     pin: '2580',
+    protectedFromStaff: true,
   },
   {
     name: 'Bruno Demo',
@@ -34,6 +40,16 @@ export const DEMO_ACCOUNTS: readonly DemoAccount[] = [
     password: 'demo-bruno-next-bank',
     cpf: '52998224725',
     pin: '1470',
+    protectedFromStaff: true,
+  },
+  // The backoffice's own: the demo staff blocks and unblocks her (task 4, K5).
+  {
+    name: 'Carla Demo',
+    email: 'carla.demo@example.com',
+    password: 'demo-carla-next-bank',
+    cpf: '12345678909',
+    pin: '3690',
+    protectedFromStaff: false,
   },
 ];
 
@@ -121,9 +137,10 @@ export async function seedDemoAccounts(
     expectStatus(pin.status, [204, 409], `PIN of ${account.email}`);
     const logout = await api({ url: '/v1/auth/logout', token });
     expectStatus(logout.status, [204], `logout of ${account.email}`);
-    await migrator.query('UPDATE identity.users SET is_demo = true WHERE email = $1', [
-      account.email,
-    ]);
+    await migrator.query(
+      'UPDATE identity.users SET is_demo = true, demo_protected = $2 WHERE email = $1',
+      [account.email, account.protectedFromStaff],
+    );
   }
 }
 

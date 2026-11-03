@@ -4,6 +4,7 @@ import type {
   Credentials,
   CustomerRecord,
   LoginAccount,
+  LoginState,
   Payee,
   Profile,
   StoredCpf,
@@ -32,7 +33,8 @@ export class PgUsersRepository implements UsersRepository {
 
   // The staff's reads of customers (v1.3.0, task 3). $2 keeps the demo staff
   // to the demo customers (B5, STF-11); it is the server's, never the client's.
-  static readonly #CUSTOMER = `SELECT id, name, cpf_masked, email, status FROM identity.users`;
+  static readonly #CUSTOMER = `SELECT id, name, cpf_masked, email, status, demo_protected
+    FROM identity.users`;
   static readonly #SCOPE = 'AND (is_demo OR NOT $2::boolean)';
 
   /** Served by the primary key. */
@@ -86,13 +88,39 @@ export class PgUsersRepository implements UsersRepository {
     return row ? { email: row.email, passwordHash: row.password_hash, isDemo: row.is_demo } : null;
   }
 
-  /** FOR SHARE: blocks a password change until this transaction ends, and waits for one. */
-  async lockPasswordHash(id: string): Promise<string | null> {
-    const { rows } = await this.#client.query<{ password_hash: string }>(
-      'SELECT password_hash FROM identity.users WHERE id = $1 FOR SHARE',
+  /** FOR SHARE: a password change or a block waits for this transaction, and it for them. */
+  async lockLoginState(id: string): Promise<LoginState | null> {
+    const { rows } = await this.#client.query<{ password_hash: string; status: UserStatus }>(
+      'SELECT password_hash, status FROM identity.users WHERE id = $1 FOR SHARE',
       [id],
     );
-    return rows[0]?.password_hash ?? null;
+    const row = rows[0];
+    return row ? { passwordHash: row.password_hash, status: row.status } : null;
+  }
+
+  /** Served by the primary key; a plain read. */
+  async findStatus(id: string): Promise<UserStatus | null> {
+    const { rows } = await this.#client.query<{ status: UserStatus }>(
+      'SELECT status FROM identity.users WHERE id = $1',
+      [id],
+    );
+    return rows[0]?.status ?? null;
+  }
+
+  /** FOR UPDATE: blocks and unblocks of one customer run one at a time. */
+  async lockStatus(id: string): Promise<UserStatus | null> {
+    const { rows } = await this.#client.query<{ status: UserStatus }>(
+      'SELECT status FROM identity.users WHERE id = $1 FOR UPDATE',
+      [id],
+    );
+    return rows[0]?.status ?? null;
+  }
+
+  async updateStatus(id: string, status: UserStatus, now: Date): Promise<void> {
+    await this.#client.query(
+      'UPDATE identity.users SET status = $2, updated_at = $3 WHERE id = $1',
+      [id, status, now],
+    );
   }
 
   /** Only the hash: the plain password never reaches the database. */
@@ -197,6 +225,7 @@ interface CustomerRow {
   cpf_masked: string;
   email: string;
   status: UserStatus;
+  demo_protected: boolean;
 }
 
 function customerOf(row: CustomerRow): CustomerRecord {
@@ -206,6 +235,7 @@ function customerOf(row: CustomerRow): CustomerRecord {
     cpfMasked: row.cpf_masked,
     email: row.email,
     status: row.status,
+    demoProtected: row.demo_protected,
   };
 }
 

@@ -21,7 +21,7 @@ import type { LoginAttemptsState } from '../../../../src/shared/domain/login-att
 import { PinAlreadyCreated } from '../../../../src/modules/identity/domain/errors.ts';
 import type { SessionState } from '../../../../src/modules/identity/domain/session.ts';
 import type { TransactionPinState } from '../../../../src/modules/identity/domain/transaction-pin.ts';
-import type { UserState } from '../../../../src/modules/identity/domain/user.ts';
+import type { UserState, UserStatus } from '../../../../src/modules/identity/domain/user.ts';
 
 export class FixedClock implements Clock {
   current: Date;
@@ -106,6 +106,29 @@ export interface StoredUser {
   cpf: { ciphertext: Uint8Array; blindIndex: Uint8Array; masked: string; keyVersion: number };
   /** Set by the demo seed only (DEMO-03). */
   isDemo?: boolean;
+  /** Ana and Bruno: the demo staff never blocks them (task 4, K5). */
+  demoProtected?: boolean;
+}
+
+/** A stored customer for the tests, with a fictitious textbook CPF. */
+export function storedUser(input: {
+  id: string;
+  status: UserStatus;
+  demoProtected?: boolean;
+}): StoredUser {
+  return {
+    state: {
+      id: input.id,
+      name: 'Ana Teste',
+      email: `${input.id}@example.test`,
+      cpf: Cpf.parse('123.456.789-09'),
+      passwordHash: 'hashed(22)',
+      status: input.status,
+      createdAt: new Date('2026-10-01T12:00:00.000Z'),
+    },
+    cpf: { ciphertext: new Uint8Array(), blindIndex: new Uint8Array(), masked: '', keyVersion: 1 },
+    ...(input.demoProtected === undefined ? {} : { demoProtected: input.demoProtected }),
+  };
 }
 
 interface Tables {
@@ -198,8 +221,22 @@ export class InMemoryDatabase implements UnitOfWork, IdentityRepositoriesFactory
               : null,
           );
         },
-        lockPasswordHash: (id) =>
-          Promise.resolve(tables.users.find((u) => u.state.id === id)?.state.passwordHash ?? null),
+        lockLoginState: (id) => {
+          const found = tables.users.find((u) => u.state.id === id);
+          return Promise.resolve(
+            found ? { passwordHash: found.state.passwordHash, status: found.state.status } : null,
+          );
+        },
+        findStatus: (id) =>
+          Promise.resolve(tables.users.find((u) => u.state.id === id)?.state.status ?? null),
+        lockStatus: (id) =>
+          Promise.resolve(tables.users.find((u) => u.state.id === id)?.state.status ?? null),
+        updateStatus: (id, status) => {
+          tables.users = tables.users.map((u) =>
+            u.state.id === id ? { ...u, state: { ...u.state, status } } : u,
+          );
+          return Promise.resolve();
+        },
         updatePasswordHash: (id, passwordHash) => {
           tables.users = tables.users.map((u) =>
             u.state.id === id ? { ...u, state: { ...u.state, passwordHash } } : u,

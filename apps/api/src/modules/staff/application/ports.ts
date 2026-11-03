@@ -19,6 +19,8 @@ export interface StaffMembersRepository {
   findByEmail(email: string): Promise<StaffMemberRecord | null>;
   /** The member locked for the rest of the transaction (the TOTP step, STF-01). */
   lock(id: string): Promise<StaffMemberState | null>;
+  /** The names of these members, for the requests' screens (v1.3.0, task 4). */
+  namesOf(ids: string[]): Promise<Map<string, string>>;
   insert(record: StaffMemberRecord): Promise<void>;
   /** Only what a login changes: the last TOTP step. */
   update(state: StaffMemberState): Promise<void>;

@@ -4,6 +4,7 @@ import { AuthenticateStaff } from './application/authenticate-staff.ts';
 import { CreateStaffMember } from './application/create-staff-member.ts';
 import type { SecretHasher, SessionTokens } from './application/ports.ts';
 import { StaffLogin } from './application/staff-login.ts';
+import { StaffDirectory } from './application/staff-directory.ts';
 import { StaffLogout } from './application/staff-logout.ts';
 import { AesGcmSecretBox } from './infrastructure/aes-gcm-secret-box.ts';
 import { OtpauthTotp } from './infrastructure/otpauth-totp.ts';
@@ -13,6 +14,7 @@ export { registerStaffAuthentication, staffCallerOf } from './http/staff-authent
 export { staffAuthRoutes } from './http/staff-auth-routes.ts';
 export type { StaffCaller } from './application/authenticate-staff.ts';
 export type { CreatedStaffMember } from './application/create-staff-member.ts';
+export type { StaffDirectory } from './application/staff-directory.ts';
 export type { StaffRole } from './domain/permissions.ts';
 
 export interface StaffModule {
@@ -20,6 +22,8 @@ export interface StaffModule {
   logout: StaffLogout;
   authenticate: AuthenticateStaff;
   createMember: CreateStaffMember;
+  /** Implements the StaffNamesPort of Operations (v1.3.0, task 4). */
+  directory: StaffDirectory;
 }
 
 export interface StaffSettings {
@@ -64,5 +68,6 @@ export function createStaffModule(settings: StaffSettings): StaffModule {
       secrets,
       tokens: settings.tokens,
     }),
+    directory: new StaffDirectory(repositories),
   };
 }

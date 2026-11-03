@@ -28,7 +28,7 @@ export async function asSignedInMember<T>(
   try {
     return await read(await apiForThisRequest());
   } catch (error) {
-    if (error instanceof SessionEnded) redirect('/login?sessao=expirada');
+    if (error instanceof SessionEnded) redirect('/login?session=expired');
     throw error;
   }
 }

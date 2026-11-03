@@ -24,8 +24,11 @@ const pool = createPool(testDatabaseUrl());
 const migrator = createPool(testMigrationDatabaseUrl());
 let app: FastifyInstance;
 
-beforeAll(() => {
+// One run for the tests that only read what it left: each run signs in to
+// every account from the seed's address, and the login allows 10 a minute.
+beforeAll(async () => {
   app = buildApp({ pool, logStream: captureLogs().stream, security: testSecurity() });
+  await seedDemoAccounts(inProcess(app), migrator);
 });
 
 afterAll(async () => {
@@ -43,9 +46,7 @@ function login(email: string, password: string) {
 }
 
 describe('seedDemoAccounts', () => {
-  it('creates Ana and Bruno, signed in by password and unlocked by PIN', async () => {
-    await seedDemoAccounts(inProcess(app), migrator);
-
+  it('creates the demo customers, signed in by password and unlocked by PIN', async () => {
     for (const account of DEMO_ACCOUNTS) {
       const signedIn = await login(account.email, account.password);
       expect(signedIn.statusCode, account.email).toBe(200);
@@ -61,8 +62,6 @@ describe('seedDemoAccounts', () => {
   });
 
   it('marks them as demo accounts (DEMO-03)', async () => {
-    await seedDemoAccounts(inProcess(app), migrator);
-
     const { rows } = await migrator.query<{ email: string; is_demo: boolean }>(
       'SELECT email, is_demo FROM identity.users WHERE email = ANY($1) ORDER BY email',
       [DEMO_ACCOUNTS.map((account) => account.email)],
@@ -74,8 +73,20 @@ describe('seedDemoAccounts', () => {
     );
   });
 
+  // K5, STF-13: the demo staff blocks Carla, never the app's shared Ana and Bruno.
+  it('protects Ana and Bruno from the demo staff, and leaves Carla to the backoffice', async () => {
+    const { rows } = await migrator.query<{ email: string; demo_protected: boolean }>(
+      'SELECT email, demo_protected FROM identity.users WHERE email = ANY($1) ORDER BY email',
+      [DEMO_ACCOUNTS.map((account) => account.email)],
+    );
+    expect(rows).toEqual([
+      { email: 'ana.demo@example.com', demo_protected: true },
+      { email: 'bruno.demo@example.com', demo_protected: true },
+      { email: 'carla.demo@example.com', demo_protected: false },
+    ]);
+  });
+
   it('keeps one account each, whatever the number of runs', async () => {
-    await seedDemoAccounts(inProcess(app), migrator);
     await seedDemoAccounts(inProcess(app), migrator);
 
     const { rows } = await migrator.query<{ count: string }>(

@@ -102,6 +102,14 @@ export interface CustomerRecord {
   cpfMasked: string;
   email: string;
   status: UserStatus;
+  /** Ana and Bruno: the demo staff never blocks them (v1.3.0, task 4, K5). */
+  demoProtected: boolean;
+}
+
+/** What opening a session checks again under the row's lock (F-24, STF-12). */
+export interface LoginState {
+  passwordHash: string;
+  status: UserStatus;
 }
 
 export interface UsersRepository {
@@ -113,10 +121,16 @@ export interface UsersRepository {
   findCredentials(id: string): Promise<Credentials | null>;
   updatePasswordHash(id: string, passwordHash: string): Promise<void>;
   /**
-   * Reads the password hash and holds the row until the transaction ends, so a
-   * password change and a login opening its session run one after the other.
+   * Reads the password hash and the status and holds the row until the
+   * transaction ends, so a password change or a block and a login opening its
+   * session run one after the other.
    */
-  lockPasswordHash(id: string): Promise<string | null>;
+  lockLoginState(id: string): Promise<LoginState | null>;
+  /** Plain read: the refresh checks the customer was not locked out (F-12). */
+  findStatus(id: string): Promise<UserStatus | null>;
+  /** FOR UPDATE: the block and the unblock change the status one at a time. */
+  lockStatus(id: string): Promise<UserStatus | null>;
+  updateStatus(id: string, status: UserStatus, now: Date): Promise<void>;
   /** The customers among [ids]; with [onlyDemo], the demo ones only (B5). */
   findCustomers(ids: string[], onlyDemo: boolean): Promise<CustomerRecord[]>;
   findCustomerByEmail(email: string, onlyDemo: boolean): Promise<CustomerRecord | null>;

@@ -7,6 +7,9 @@ type StaffMember = components['schemas']['StaffMember'];
 export type CustomerSearch = components['schemas']['CustomerSearch'];
 export type CustomerCard = components['schemas']['CustomerCard'];
 export type Statement = components['schemas']['Statement'];
+export type ApprovalRequest = components['schemas']['ApprovalRequest'];
+export type ApprovalRequestsPage = components['schemas']['ApprovalRequestsPage'];
+export type Reason = ApprovalRequest['reason'];
 
 /** The API refused a login; [code] is the catalog's (InvalidCredentials, TooManyAttempts). */
 export class LoginRefused extends Error {
@@ -26,6 +29,20 @@ export class SearchRefused extends Error {
   constructor(code: string) {
     super(code);
     this.name = 'SearchRefused';
+    this.code = code;
+  }
+}
+
+/**
+ * The API refused a staff command; [code] is the catalog's (AccountAlreadyBlocked,
+ * RequestNotPending, SelfApprovalNotAllowed, ...), shown to the member in words.
+ */
+export class CommandRefused extends Error {
+  readonly code: string;
+
+  constructor(code: string) {
+    super(code);
+    this.name = 'CommandRefused';
     this.code = code;
   }
 }
@@ -118,7 +135,93 @@ export function adminApi(options: AdminApiOptions) {
       });
       return data ?? orNullWhenMissing(response);
     },
+
+    // The staff's commands (v1.3.0 plan, task 4): each with the key its form
+    // was rendered with (K6), so a repeated submission acts once.
+
+    async blockAccount(customerId: string, reason: Reason, idempotencyKey: string): Promise<void> {
+      const { error, response } = await client.POST('/admin/v1/customers/{customerId}/block', {
+        headers: headers(),
+        params: { header: { 'idempotency-key': idempotencyKey }, path: { customerId } },
+        body: { reason },
+      });
+      if (!response.ok) throw refusalOf(error, response);
+    },
+
+    async requestUnblock(
+      customerId: string,
+      reason: Reason,
+      note: string | null,
+      idempotencyKey: string,
+    ): Promise<ApprovalRequest> {
+      const { data, error, response } = await client.POST('/admin/v1/requests', {
+        headers: headers(),
+        params: { header: { 'idempotency-key': idempotencyKey } },
+        body: { kind: 'UNBLOCK_ACCOUNT', customerId, reason, note },
+      });
+      if (data === undefined) throw refusalOf(error, response);
+      return data;
+    },
+
+    async decideRequest(
+      requestId: string,
+      decision: 'approve' | 'reject',
+      note: string | null,
+      idempotencyKey: string,
+    ): Promise<ApprovalRequest> {
+      const route =
+        decision === 'approve'
+          ? '/admin/v1/requests/{requestId}/approve'
+          : '/admin/v1/requests/{requestId}/reject';
+      const { data, error, response } = await client.POST(route, {
+        headers: headers(),
+        params: { header: { 'idempotency-key': idempotencyKey }, path: { requestId } },
+        body: { note },
+      });
+      if (data === undefined) throw refusalOf(error, response);
+      return data;
+    },
+
+    async cancelRequest(requestId: string, idempotencyKey: string): Promise<ApprovalRequest> {
+      const { data, error, response } = await client.POST('/admin/v1/requests/{requestId}/cancel', {
+        headers: headers(),
+        params: { header: { 'idempotency-key': idempotencyKey }, path: { requestId } },
+        body: {},
+      });
+      if (data === undefined) throw refusalOf(error, response);
+      return data;
+    },
+
+    async listRequests(
+      status: 'PENDING' | 'ALL',
+      cursor: string | null,
+    ): Promise<ApprovalRequestsPage> {
+      const { data, response } = await client.GET('/admin/v1/requests', {
+        headers: headers(),
+        params: { query: cursor === null ? { status } : { status, cursor } },
+      });
+      if (data === undefined) throw failureOf(response);
+      return data;
+    },
+
+    /** The request, or null when the API shows this member no such request. */
+    async request(requestId: string): Promise<ApprovalRequest | null> {
+      const { data, response } = await client.GET('/admin/v1/requests/{requestId}', {
+        headers: headers(),
+        params: { path: { requestId } },
+      });
+      return data ?? orNullWhenMissing(response);
+    },
   };
+}
+
+/** A refused command keeps its catalog code; a lost session still ends here. */
+function refusalOf(error: unknown, response: Response): Error {
+  if (response.status === 401) return new SessionEnded();
+  if ([403, 404, 409, 422].includes(response.status)) {
+    return new CommandRefused(codeOf(error, response));
+  }
+  return failureOf(response);
 }
 
 function codeOf(error: unknown, response: Response): string {

@@ -78,6 +78,14 @@ const CATALOG_STATUS: Readonly<Record<string, number>> = {
   ScheduleInPast: 422,
   InvalidRecurrence: 422,
   ScheduleNotActive: 409,
+  // Blocking accounts and the requests that need two people (v1.3.0 plan, task 4).
+  AccountAlreadyBlocked: 409,
+  AccountNotBlocked: 409,
+  RequestAlreadyOpen: 409,
+  RequestNotPending: 409,
+  SelfApprovalNotAllowed: 403,
+  NotTheRequester: 403,
+  DemoCustomerProtected: 403,
 };
 
 /** Generic RFC 9457 response: never carries stack, SQL or internal detail (API-03). */

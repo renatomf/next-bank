@@ -31,13 +31,20 @@ describe('permissions', () => {
   });
 
   it('knows only the permissions of the table', () => {
-    expect(PERMISSIONS).toEqual(['staff.self', 'customers.read']);
+    expect(PERMISSIONS).toEqual([
+      'staff.self',
+      'customers.read',
+      'accounts.block',
+      'requests.read',
+      'requests.create',
+      'requests.decide',
+    ]);
   });
 
   it('denies a permission nobody granted', () => {
     expect(() => {
       // A permission from a later task, or a typo: denied, never allowed by default.
-      assertAllowed('ADMIN', 'requests.decide' as never);
+      assertAllowed('ADMIN', 'payments.reverse' as never);
     }).toThrow(Forbidden);
   });
 });
