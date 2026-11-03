@@ -57,7 +57,7 @@ export function AppShell({
             </div>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-6xl min-w-0 flex-1 bg-[radial-gradient(ellipse_at_top,var(--nb-glow),transparent_60%)] px-4 py-8 sm:px-6 lg:px-8">
+        <main className="mx-auto w-full max-w-7xl min-w-0 flex-1 bg-[radial-gradient(ellipse_at_top,var(--nb-glow),transparent_60%)] px-4 py-8 sm:px-6 lg:px-8">
           {children}
         </main>
       </div>
