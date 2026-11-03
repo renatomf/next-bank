@@ -47,10 +47,20 @@ const NEWEST_FIRST = 'ORDER BY occurred_at DESC, id DESC';
  * only ever inserted into (STF-10); this only reads.
  */
 export class PgAuditReader {
-  /** Served by audit_events_actor_idx. */
-  static readonly MEMBER_SQL = `SELECT ${COLUMNS} FROM audit.audit_events
-    WHERE actor_id = $1 AND actor_type = 'STAFF' AND ${before(2, 3)}
-    ${NEWEST_FIRST} LIMIT $4`;
+  /**
+   * What the member did, and what happened to them (created, switched,
+   * disabled, a sign-in refused): two index scans, each cut at the page's
+   * size, merged.
+   */
+  static readonly MEMBER_SQL = `SELECT ${COLUMNS} FROM (
+      (SELECT ${COLUMNS} FROM audit.audit_events
+        WHERE actor_id = $1 AND actor_type = 'STAFF' AND ${before(2, 3)}
+        ${NEWEST_FIRST} LIMIT $4)
+      UNION
+      (SELECT ${COLUMNS} FROM audit.audit_events
+        WHERE subject_type = 'STAFF_MEMBER' AND subject_id = $1 AND ${before(2, 3)}
+        ${NEWEST_FIRST} LIMIT $4)
+    ) events ${NEWEST_FIRST} LIMIT $4`;
 
   /**
    * What the customer did, and what happened to them or to their account:

@@ -178,7 +178,10 @@ export class InMemoryOperationsBank
     const matches = (event: AuditRecord): boolean => {
       switch (filter.by) {
         case 'MEMBER':
-          return event.actorType === 'STAFF' && event.actorId === filter.memberId;
+          return (
+            (event.actorType === 'STAFF' && event.actorId === filter.memberId) ||
+            (event.subjectType === 'STAFF_MEMBER' && event.subjectId === filter.memberId)
+          );
         case 'REQUEST':
           return (
             (event.subjectType === 'APPROVAL_REQUEST' && event.subjectId === filter.requestId) ||

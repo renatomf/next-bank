@@ -265,7 +265,11 @@ export interface StalePixPort {
   ): Promise<'APPLIED' | 'NOT_WAITING'>;
 }
 
-/** Which events a reading of the trail asks for: exactly one of the three (STF-16). */
+/**
+ * Which events a reading of the trail asks for: exactly one of the three
+ * (STF-16). A customer's and a member's hold what they did and what
+ * happened to them.
+ */
 export type AuditFilter =
   | { by: 'CUSTOMER'; customerId: string; accountId: string | null }
   | { by: 'MEMBER'; memberId: string }
