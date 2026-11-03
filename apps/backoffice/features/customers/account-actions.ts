@@ -62,3 +62,27 @@ export async function requestUnblock(_previous: ActionState, form: FormData): Pr
   }
   redirect(`/requests/${requestId}`);
 }
+
+/** Opens the request to reverse a sent Pix (task 5); someone else approves it. */
+export async function requestReversal(
+  _previous: ActionState,
+  form: FormData,
+): Promise<ActionState> {
+  const note = field(form, 'note');
+  let requestId: string;
+  try {
+    const request = await asSignedInMember((api) =>
+      api.requestReversal(
+        field(form, 'transferId'),
+        reasonOf(form),
+        note === '' ? null : note,
+        idempotencyKeyOf(form),
+      ),
+    );
+    requestId = request.id;
+  } catch (error) {
+    if (error instanceof CommandRefused) return { error: refusalMessage(error.code) };
+    throw error;
+  }
+  redirect(`/requests/${requestId}`);
+}

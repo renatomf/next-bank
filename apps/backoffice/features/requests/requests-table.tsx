@@ -9,12 +9,8 @@ import {
 } from '@/components/ui/table';
 import type { ApprovalRequest } from '@/lib/api';
 import { formatDateTime } from '@/lib/format';
-import { REASON_LABELS } from '@/lib/staff-words';
+import { KIND_LABELS, REASON_LABELS } from '@/lib/staff-words';
 import { RequestStatusBadge } from './request-status-badge';
-
-const KINDS: Readonly<Record<ApprovalRequest['kind'], string>> = {
-  UNBLOCK_ACCOUNT: 'Desbloqueio de conta',
-};
 
 /** One page of the requests queue, newest first, each row leading to its request. */
 export function RequestsTable({ requests }: { requests: ApprovalRequest[] }) {
@@ -41,7 +37,7 @@ export function RequestsTable({ requests }: { requests: ApprovalRequest[] }) {
                 href={`/requests/${request.id}`}
                 className="font-semibold text-link hover:underline"
               >
-                {KINDS[request.kind]}
+                {KIND_LABELS[request.kind]}
               </Link>
             </TableCell>
             <TableCell>{request.customer.name}</TableCell>

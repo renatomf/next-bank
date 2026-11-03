@@ -33,6 +33,7 @@ const request = {
   kind: 'UNBLOCK_ACCOUNT' as const,
   status: 'APPROVED' as const,
   customer: { id: '0190f0b6-1b2c-7d3e-8f40-123456789abd', name: 'Carla Demo' },
+  transfer: null,
   reason: 'CUSTOMER_REQUEST' as const,
   note: 'Cliente confirmou a identidade',
   requestedBy: { id: '0190f0b6-1b2c-7d3e-8f40-123456789abe', name: 'Olívia' },

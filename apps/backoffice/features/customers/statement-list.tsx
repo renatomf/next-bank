@@ -8,18 +8,31 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import type { Statement } from '@/lib/api';
-import { formatDateTime } from '@/lib/format';
+import { formatDateTime, formatMoney } from '@/lib/format';
+import { newIdempotencyKey } from '@/lib/idempotency';
+import { ReversalButton } from './reversal-button';
 
 const KINDS: Readonly<Record<Statement['items'][number]['kind'], string>> = {
   PIX_SENT: 'Pix enviado',
   PIX_RECEIVED: 'Pix recebido',
   PIX_REFUNDED: 'Pix devolvido',
+  PIX_REVERSED: 'Pix estornado',
   DEMO_FUNDING: 'Saldo inicial',
   TOP_UP: 'Recarga',
 };
 
-/** One page of a customer's statement, the counterparty's document masked. */
-export function StatementList({ items }: { items: Statement['items'] }) {
+/**
+ * One page of a customer's statement, the counterparty's document masked.
+ * With [canReverse], each Pix the customer sent offers its reversal (task 5);
+ * the API refuses one that cannot be reversed.
+ */
+export function StatementList({
+  items,
+  canReverse = false,
+}: {
+  items: Statement['items'];
+  canReverse?: boolean;
+}) {
   if (items.length === 0) return <p className="text-muted-foreground">Nenhum lançamento.</p>;
   return (
     <Table>
@@ -29,6 +42,7 @@ export function StatementList({ items }: { items: Statement['items'] }) {
           <TableHead>O quê</TableHead>
           <TableHead>Com quem</TableHead>
           <TableHead className="text-right">Valor</TableHead>
+          {canReverse ? <TableHead className="sr-only">Ações</TableHead> : null}
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -54,6 +68,17 @@ export function StatementList({ items }: { items: Statement['items'] }) {
             <TableCell className="text-right">
               <MoneyText money={item.amount} direction={item.direction} />
             </TableCell>
+            {canReverse ? (
+              <TableCell className="text-right">
+                {item.kind === 'PIX_SENT' && item.transferId ? (
+                  <ReversalButton
+                    transferId={item.transferId}
+                    amountText={formatMoney(item.amount)}
+                    idempotencyKey={newIdempotencyKey()}
+                  />
+                ) : null}
+              </TableCell>
+            ) : null}
           </TableRow>
         ))}
       </TableBody>

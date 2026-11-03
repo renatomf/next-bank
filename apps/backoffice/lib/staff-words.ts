@@ -16,6 +16,11 @@ export const STATUS_LABELS: Readonly<Record<ApprovalRequest['status'], string>> 
   EXPIRED: 'Vencido',
 };
 
+export const KIND_LABELS: Readonly<Record<ApprovalRequest['kind'], string>> = {
+  UNBLOCK_ACCOUNT: 'Desbloqueio de conta',
+  REVERSE_PIX: 'Estorno de Pix',
+};
+
 const REFUSALS: Readonly<Record<string, string>> = {
   AccountAlreadyBlocked: 'Esta conta já está bloqueada.',
   AccountNotBlocked: 'Esta conta não está bloqueada.',
@@ -27,6 +32,9 @@ const REFUSALS: Readonly<Record<string, string>> = {
   Forbidden: 'Seu papel não faz esta ação.',
   NotFound: 'Não encontramos este cliente ou pedido.',
   InvalidRequest: 'Confira os dados e tente de novo.',
+  PixNotReversible: 'Só um Pix interno concluído, ainda não estornado, pode ser estornado.',
+  PayeeInsufficientFunds:
+    'Quem recebeu o Pix não tem mais o valor. O pedido continua pendente: tente mais tarde ou recuse.',
 };
 
 /** What to tell the member about a refused command. */
