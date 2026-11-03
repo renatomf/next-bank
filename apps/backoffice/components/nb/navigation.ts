@@ -1,4 +1,4 @@
-import { ClipboardCheck, House, type LucideIcon, Scale, Users } from 'lucide-react';
+import { ClipboardCheck, House, type LucideIcon, Scale, UserCog, Users } from 'lucide-react';
 
 export interface NavigationItem {
   href: string;
@@ -15,6 +15,7 @@ const ITEMS: readonly NavigationItem[] = [
   { href: '/customers', label: 'Clientes', icon: Users, roles: ['OPERATOR', 'ANALYST'] },
   { href: '/requests', label: 'Pedidos', icon: ClipboardCheck, roles: ['OPERATOR', 'ANALYST'] },
   { href: '/reconciliation', label: 'Conciliação', icon: Scale, roles: ['OPERATOR', 'ANALYST'] },
+  { href: '/staff', label: 'Equipe', icon: UserCog, roles: ['ADMIN'] },
 ];
 
 /** The items a role may open. */

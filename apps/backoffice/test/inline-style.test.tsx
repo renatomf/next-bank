@@ -23,6 +23,8 @@ import { ThemeToggle } from '../components/nb/theme-toggle';
 import { StatementList } from '../features/customers/statement-list';
 import { ExceptionDetail } from '../features/reconciliation/exception-detail';
 import { ExceptionsTable } from '../features/reconciliation/exceptions-table';
+import { NewMemberCredentials } from '../features/staff/new-member-credentials';
+import { StaffTable } from '../features/staff/staff-table';
 import { RequestDetail } from '../features/requests/request-detail';
 import { RequestsTable } from '../features/requests/requests-table';
 
@@ -126,6 +128,31 @@ const rendered: [string, ReactElement][] = [
   ['RequestDetail', <RequestDetail key="p" request={request} />],
   ['ExceptionsTable', <ExceptionsTable key="q" exceptions={[exception]} />],
   ['ExceptionDetail', <ExceptionDetail key="r" exception={exception} />],
+  [
+    'StaffTable',
+    <StaffTable
+      key="s"
+      members={[
+        {
+          id: '0190f0b6-1b2c-7d3e-8f40-123456789ab2',
+          name: 'Nina',
+          email: 'nina@example.test',
+          role: 'OPERATOR',
+          status: 'ACTIVE',
+          isDemo: false,
+          createdAt: '2026-11-03T12:00:00.000Z',
+        },
+      ]}
+    />,
+  ],
+  [
+    'NewMemberCredentials',
+    <NewMemberCredentials
+      key="t"
+      email="nina@example.test"
+      credentials={{ password: 'p', totpSecret: 'S', totpUri: 'otpauth://totp/x?secret=S' }}
+    />,
+  ],
   ['MoneyText', <MoneyText key="j" money={{ amount: 123456, currency: 'BRL' }} />],
   [
     'StatementList',

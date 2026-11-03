@@ -6,7 +6,9 @@ import { ROLE_LABELS, signedInMember } from '@/lib/backend';
 
 const DESCRIPTIONS: Readonly<Record<string, string>> = {
   '/customers': 'Busca, ficha e extrato',
-  '/requests': 'Desbloqueios que pedem outra pessoa',
+  '/requests': 'Desbloqueios, estornos e resoluções que pedem outra pessoa',
+  '/reconciliation': 'O que a conciliação diária encontrou',
+  '/staff': 'Membros, papéis e acessos',
 };
 
 /** The staff's home: who is signed in, and a shortcut to each page the role may open. */
