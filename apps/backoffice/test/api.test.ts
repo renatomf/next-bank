@@ -286,4 +286,37 @@ describe('adminApi', () => {
       api(fetch, 'opaque-token').explainException('x', 'Explicação qualquer.', 'k'),
     ).rejects.toEqual(new CommandRefused('ExceptionNotOpen'));
   });
+
+  // v1.3.0 plan, task 7: the admin manages the staff.
+  it('lists, creates, switches and disables staff members at their routes', async () => {
+    const id = '0190f0b6-1b2c-7d3e-8f40-123456789abc';
+    const { calls, fetch } = recordingFetch(200, { items: [], nextCursor: null });
+    const client = api(fetch, 'opaque-token');
+
+    await client.listStaff('abc_DEF-1');
+    await client.createStaffMember({ name: 'Nina', email: 'nina@example.test', role: 'OPERATOR' });
+    await client.changeStaffRole(id, 'ANALYST');
+    await client.disableStaffMember(id);
+
+    expect(calls.map((call) => `${call.method} ${call.url}`)).toEqual([
+      'GET https://api.example.test/admin/v1/staff?cursor=abc_DEF-1',
+      'POST https://api.example.test/admin/v1/staff',
+      `POST https://api.example.test/admin/v1/staff/${id}/role`,
+      `POST https://api.example.test/admin/v1/staff/${id}/disable`,
+    ]);
+    expect(JSON.parse(calls[1]?.body ?? '{}')).toEqual({
+      name: 'Nina',
+      email: 'nina@example.test',
+      role: 'OPERATOR',
+    });
+    expect(JSON.parse(calls[2]?.body ?? '{}')).toEqual({ role: 'ANALYST' });
+  });
+
+  it('tells why a staff change was refused', async () => {
+    const { fetch } = recordingFetch(403, { code: 'StaffSelfChangeNotAllowed' });
+
+    await expect(api(fetch, 'opaque-token').disableStaffMember('x')).rejects.toEqual(
+      new CommandRefused('StaffSelfChangeNotAllowed'),
+    );
+  });
 });

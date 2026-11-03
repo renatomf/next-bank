@@ -16,8 +16,8 @@ describe('navigationFor', () => {
     },
   );
 
-  it('keeps the customers away from the admin (task 3, C1)', () => {
-    expect(pathsOf('ADMIN')).toEqual(['/']);
+  it('shows the admin the staff, and keeps the customers away (task 3, C1; task 7)', () => {
+    expect(pathsOf('ADMIN')).toEqual(['/', '/staff']);
   });
 
   it('shows only the home to a role it does not know', () => {
@@ -33,7 +33,7 @@ describe('navigationFor', () => {
 
   // A link to a page that moved fails here, not in the browser.
   it('leads every item to a page that exists', () => {
-    for (const { href } of navigationFor('ANALYST')) {
+    for (const { href } of [...navigationFor('ANALYST'), ...navigationFor('ADMIN')]) {
       const page = new URL(`../app/(staff)${href === '/' ? '' : href}/page.tsx`, import.meta.url);
       expect(existsSync(fileURLToPath(page)), href).toBe(true);
     }
