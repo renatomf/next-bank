@@ -8,6 +8,7 @@ String statementTitle(StatementKind kind) => switch (kind) {
   StatementKind.demoFunding => 'Depósito inicial',
   StatementKind.topUp => 'Recarga de celular',
   StatementKind.pixRefunded => 'Pix devolvido',
+  StatementKind.pixReversed => 'Pix estornado',
   StatementKind.other => 'Movimentação',
 };
 

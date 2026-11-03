@@ -52,6 +52,7 @@ class HttpStatementRepository implements StatementRepository {
       api.StatementItemKindEnum.DEMO_FUNDING => StatementKind.demoFunding,
       api.StatementItemKindEnum.TOP_UP => StatementKind.topUp,
       api.StatementItemKindEnum.PIX_REFUNDED => StatementKind.pixRefunded,
+      api.StatementItemKindEnum.PIX_REVERSED => StatementKind.pixReversed,
       // A kind a later API adds (A4): shown, without a link it cannot follow.
       api.StatementItemKindEnum.unknownDefaultOpenApi => StatementKind.other,
     };
@@ -63,11 +64,14 @@ class HttpStatementRepository implements StatementRepository {
     };
     final known = kind != StatementKind.other;
     final sent = kind == StatementKind.pixSent;
+    final incoming = direction == MoneyDirection.incoming;
+    final reversed = kind == StatementKind.pixReversed;
     final leaves = sent || kind == StatementKind.topUp;
-    // Only a Pix sent and a top-up go out; only a Pix sent or refunded links
-    // to its Pix.
-    final linksPix = sent || kind == StatementKind.pixRefunded;
-    if (known && leaves != (direction == MoneyDirection.outgoing)) {
+    // Only a Pix sent and a top-up go out, and a reversal either way; only a
+    // Pix sent or refunded, or a reversal back to the payer, links to its Pix.
+    final linksPix =
+        sent || kind == StatementKind.pixRefunded || (reversed && incoming);
+    if (known && !reversed && leaves == incoming) {
       throw const ApiUnexpected();
     }
     if (known && !linksPix && item.transferId != null) {

@@ -92,22 +92,25 @@ void main() {
   // v1.3.0 plan, task 5 (V4): a reversal the staff approved is money back for
   // the payer, linking to the Pix it reverses, and money out for the payee,
   // who never reaches the payer's Pix.
-  test('reads a reversal coming back to the payer, linking to the Pix', () async {
-    final server = ScriptedServer({
-      _path: (_) async => JsonReply(
-        200,
-        page([
-          sentItem({'kind': 'PIX_REVERSED', 'direction': 'IN'}),
-        ]),
-      ),
-    });
+  test(
+    'reads a reversal coming back to the payer, linking to the Pix',
+    () async {
+      final server = ScriptedServer({
+        _path: (_) async => JsonReply(
+          200,
+          page([
+            sentItem({'kind': 'PIX_REVERSED', 'direction': 'IN'}),
+          ]),
+        ),
+      });
 
-    final item = (await repositoryFor(server).page()).items.single;
+      final item = (await repositoryFor(server).page()).items.single;
 
-    expect(item.kind, StatementKind.pixReversed);
-    expect(item.direction, MoneyDirection.incoming);
-    expect(item.transferId, _transferId);
-  });
+      expect(item.kind, StatementKind.pixReversed);
+      expect(item.direction, MoneyDirection.incoming);
+      expect(item.transferId, _transferId);
+    },
+  );
 
   test('reads a reversal leaving the payee, with no link', () async {
     final server = ScriptedServer({
