@@ -24,6 +24,8 @@ export interface StaffConclusion {
   outcome: 'SETTLED' | 'REJECTED';
   actorId: string;
   requestId: string | null;
+  /** The approved request that decided it, cited in the event (task 8, H5). */
+  approvalRequestId: string;
 }
 
 /** Who ended the Pix, for the audit trail: the system, or a member of the staff. */
@@ -31,6 +33,8 @@ interface Author {
   actorType: 'SYSTEM' | 'STAFF';
   actorId: string | null;
   requestId: string | null;
+  /** The approval behind a member's conclusion, for the request's trail. */
+  approvalRequestId?: string;
 }
 
 export interface ApplySpiOutcomeDependencies {
@@ -99,7 +103,12 @@ export class ApplySpiOutcome {
       repositories,
       transfer,
       { eventId: null, endToEndId: conclusion.endToEndId, status: conclusion.outcome },
-      { actorType: 'STAFF', actorId: conclusion.actorId, requestId: conclusion.requestId },
+      {
+        actorType: 'STAFF',
+        actorId: conclusion.actorId,
+        requestId: conclusion.requestId,
+        approvalRequestId: conclusion.approvalRequestId,
+      },
       this.#deps.clock.now(),
     );
     return 'APPLIED';
@@ -130,16 +139,18 @@ export class ApplySpiOutcome {
       });
     }
     await repositories.pixTransfers.update(transfer.state);
+    const { approvalRequestId, ...actor } = author;
     await repositories.audit.record({
       id: this.#deps.ids.next(),
       occurredAt: now,
-      ...author,
+      ...actor,
       action: outcome.status === 'SETTLED' ? 'PIX_COMPLETED' : 'PIX_FAILED',
       subjectType: 'PIX_TRANSFER',
       subjectId: state.id,
       metadata: {
         endToEndId: outcome.endToEndId,
         ...(outcome.eventId === null ? {} : { eventId: outcome.eventId }),
+        ...(approvalRequestId === undefined ? {} : { approvalRequestId }),
       },
     });
   }

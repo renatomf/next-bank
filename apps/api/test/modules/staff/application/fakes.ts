@@ -93,6 +93,7 @@ export class InMemoryStaffDatabase implements UnitOfWork, StaffRepositoriesFacto
             [...this.members.values()].find((member) => member.state.email === email) ?? null,
           ),
         lock: (id) => Promise.resolve(this.members.get(id)?.state ?? null),
+        findById: (id) => Promise.resolve(this.members.get(id)?.state ?? null),
         page: ({ after, limit }) =>
           Promise.resolve(
             [...this.members.values()]

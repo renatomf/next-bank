@@ -86,6 +86,16 @@ class PgStaffMembersRepository implements StaffMembersRepository {
   }
 
   /** Served by the primary key. */
+  async findById(id: string): Promise<StaffMemberState | null> {
+    const { rows } = await this.#client.query<MemberRow>(
+      `SELECT ${MEMBER_COLUMNS} FROM staff.members WHERE id = $1`,
+      [id],
+    );
+    const row = rows[0];
+    return row ? toMember(row) : null;
+  }
+
+  /** Served by the primary key. */
   async namesOf(ids: string[]): Promise<Map<string, string>> {
     const { rows } = await this.#client.query<{ id: string; name: string }>(
       'SELECT id, name FROM staff.members WHERE id = ANY($1::uuid[])',

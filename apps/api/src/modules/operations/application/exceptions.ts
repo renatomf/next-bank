@@ -217,6 +217,7 @@ export async function concludeException(
     outcome: resolution === 'SETTLE' ? 'SETTLED' : 'REJECTED',
     actorId: actor.memberId,
     requestId: actor.requestId,
+    approvalRequestId: request.id,
   });
   if (applied === 'NOT_WAITING') throw new PixNoLongerProcessing();
   const resolved = exception.state;

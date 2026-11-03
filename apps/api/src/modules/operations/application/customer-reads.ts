@@ -60,7 +60,7 @@ export function recordAccess(
   tx: Transaction,
   reader: StaffReader,
   customerId: string,
-  view: 'CUSTOMER' | 'STATEMENT',
+  view: 'CUSTOMER' | 'STATEMENT' | 'AUDIT',
 ): Promise<void> {
   return deps.audit.for(tx).record({
     id: deps.ids.next(),

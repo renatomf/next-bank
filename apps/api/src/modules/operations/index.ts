@@ -2,6 +2,7 @@
 // staff (v1.3.0). Other modules use only what is exported here (ADR 0010).
 import type { RequestFingerprint } from '../../shared/application/idempotency.ts';
 import type { Clock, IdGenerator, UnitOfWork } from '../../shared/application/ports.ts';
+import { ReadAuditTrail } from './application/audit-trail.ts';
 import { BlockAccount } from './application/block-account.ts';
 import { CancelRequest } from './application/cancel-request.ts';
 import { DecideRequest } from './application/decide-request.ts';
@@ -16,6 +17,7 @@ import { GetCustomerStatement } from './application/get-customer-statement.ts';
 import { GetRequest, ListRequests } from './application/list-requests.ts';
 import type {
   AccountStatusPort,
+  AuditReaderPort,
   CustomerAccessPort,
   CustomerAccountsPort,
   CustomersPort,
@@ -31,6 +33,7 @@ import { SearchCustomers } from './application/search-customers.ts';
 import { PgAuditTrailFactory } from './infrastructure/pg-audit-trail-factory.ts';
 import { PgOperationsRepositories } from './infrastructure/pg-operations-repositories.ts';
 
+export { auditRoutes } from './http/audit-routes.ts';
 export { customerRoutes } from './http/customer-routes.ts';
 export { exceptionRoutes } from './http/exception-routes.ts';
 export { requestRoutes } from './http/request-routes.ts';
@@ -50,6 +53,7 @@ export interface OperationsModule {
   explainException: ExplainException;
   listExceptions: ListExceptions;
   getException: GetException;
+  readAuditTrail: ReadAuditTrail;
 }
 
 /**
@@ -71,6 +75,7 @@ export function createOperationsModule(settings: {
   reversals: PixReversalsPort;
   exceptions: ReconciliationExceptionsPort;
   stalePix: StalePixPort;
+  auditReader: AuditReaderPort;
 }): OperationsModule {
   const deps = {
     ...settings,
@@ -92,5 +97,6 @@ export function createOperationsModule(settings: {
     explainException: new ExplainException(deps),
     listExceptions: new ListExceptions(deps),
     getException: new GetException(deps),
+    readAuditTrail: new ReadAuditTrail(deps),
   };
 }
