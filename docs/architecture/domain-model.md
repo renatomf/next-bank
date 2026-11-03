@@ -54,7 +54,7 @@ flowchart LR
 
 - **Portas:** o contexto que chama define a interface (ex.: `LedgerPort` dentro de Payments); o outro contexto expõe a implementação pelo seu `index.ts`.
 - **Na V1, tudo roda na mesma transação de banco** (Unit of Work). Na Fase 2, a comunicação com o mundo externo passa a usar Outbox.
-- **Reconciliation só lê** (v1.2.0, ADR 0018): compara o arquivo de liquidação do SPI com os Pix e o ledger e registra cada divergência como `ReconciliationException`; nunca move dinheiro nem muda um Pix.
+- **Reconciliation só lê** (v1.2.0, ADR 0018): compara o arquivo de liquidação do SPI com os Pix e o ledger e registra cada divergência como `ReconciliationException`; nunca move dinheiro nem muda um Pix. Na v1.3.0 (tarefa 6), guarda também a resolução que a equipe dá a cada exceção; o dinheiro de um Pix parado se move por Payments e pelo Ledger, a pedido do Operations.
 - **Audit é conformista:** recebe os eventos de domínio dos outros contextos e os grava na mesma transação.
 - **Falhas também são persistidas.** Um erro de negócio não significa rollback de tudo: PIN incorreto incrementa `failedAttempts`, login falho gera `LOGIN_FAILED`, Pix recusado grava o status `FAILED`. O caso de uso faz commit dessas mudanças e devolve o erro. Só falhas técnicas (exceptions) causam rollback. Sem essa regra, o contador de tentativas do PIN nunca subiria e o bloqueio não funcionaria.
 
@@ -161,7 +161,7 @@ flowchart LR
 ### Operations (v1.3.0)
 
 **`ApprovalRequest`** (tarefa 4)
-- Atributos: `id`, `kind` (`UNBLOCK_ACCOUNT`; `REVERSE_PIX` na tarefa 5; a tarefa 6 traz o seu), `customerId`, `transferId` (só no estorno: o Pix que ele estorna), `reason` (`FRAUD_SUSPECTED`, `CUSTOMER_REQUEST`, `LEGAL_ORDER`, `OTHER`), `note` (até 500), `requestedBy`, `requestedAt`, `expiresAt` (24 h depois), `demoScope`, `decision` (`APPROVED`, `REJECTED` ou `CANCELLED`, com quem e quando)
+- Atributos: `id`, `kind` (`UNBLOCK_ACCOUNT`; `REVERSE_PIX` na tarefa 5; `RESOLVE_EXCEPTION` na tarefa 6), `customerId`, `transferId` (só no estorno: o Pix que ele estorna), `exceptionId` e `resolution` (`SETTLE` ou `REFUND`, só na resolução de exceção), `reason` (`FRAUD_SUSPECTED`, `CUSTOMER_REQUEST`, `LEGAL_ORDER`, `OTHER`), `note` (até 500), `requestedBy`, `requestedAt`, `expiresAt` (24 h depois), `demoScope`, `decision` (`APPROVED`, `REJECTED` ou `CANCELLED`, com quem e quando)
 - Invariantes:
   - quem pede nunca aprova nem recusa; só quem pede cancela (STF-03)
   - decide-se uma vez (STF-09); vencido (sem decisão, 24 h depois) não se decide, e o estado é derivado do relógio, sem job
@@ -169,6 +169,15 @@ flowchart LR
 - Comandos: `Open`, `Approve` (executa o comando pedido na mesma transação), `Reject`, `Cancel`
 - O bloqueio não é um pedido: é imediato e de um só (B6), e marca a conta `BLOCKED` e o cliente `LOCKED`, revogando todas as sessões (K1)
 - O estorno (tarefa 5) só vale para um Pix interno `COMPLETED` ainda não estornado, sempre pelo valor do Pix; aprovado, vira um lançamento `PIX_REVERSAL` no ledger, do recebedor ao pagador, e o Pix original não muda. Sem saldo no recebedor, nada se move e o pedido continua pendente (V1)
+- A resolução de exceção (tarefa 6) só vale para um Pix externo parado (`STALE_PROCESSING`) ainda `PROCESSING`; aprovada, encerra o Pix pelo mesmo caminho da resposta do SPI (liquidar conclui, estornar devolve ao pagador) e resolve a exceção. Se o SPI respondeu antes, nada se move e o pedido continua pendente (X4)
+
+**`ReconciliationException`**, visto pela equipe (tarefa 6)
+- Atributos: os da conciliação (`id`, `runDate`, `kind`, `endToEndId`, `expected`, `actual`, `detectedAt`) e a `resolution`: `outcome` (`SETTLED`, `REFUNDED` ou `EXPLAINED`), `approvalRequestId` (só na liquidação e no estorno), `explanation` (só na explicação, de 10 a 500 caracteres), `resolvedBy`, `resolvedAt`
+- Invariantes:
+  - a exceção nunca muda (R5); a resolução é um registro novo, um por exceção
+  - só o Pix parado é liquidado ou estornado, e só por um pedido aprovado (X1, X3); qualquer exceção é explicada pelo analista, sem mover dinheiro (X2)
+  - exceção com pedido pendente não se explica nem recebe outro pedido
+- Comandos: `RequestResolution` (abre o `ApprovalRequest`), `Explain`; a aprovação do pedido executa `Resolve`
 
 ### 3.5 Audit
 
@@ -176,7 +185,7 @@ flowchart LR
 - Atributos: `id`, `occurredAt`, `actorType` (`USER`, `SYSTEM`, `STAFF`), `actorId`, `action`, `subjectType`, `subjectId`, `requestId`, `metadata`
 - Invariantes: só inclusão; `metadata` **nunca** contém senha, PIN, token, CPF completo ou valor de chave Pix completo
 - Ações da V1: `USER_REGISTERED`, `LOGIN_SUCCEEDED`, `LOGIN_FAILED`, `SESSION_CREATED`, `SESSION_REVOKED`, `REFRESH_REUSE_DETECTED`, `PIN_CREATED`, `PIN_LOCKED`, `PIN_CHANGED`, `PASSWORD_CHANGED`, `ACCOUNT_OPENED`, `PIX_CREATED`, `PIX_COMPLETED`, `PIX_SENT` (v1.2.0: Pix enviado a outro banco, com o id de ponta a ponta), `PIX_FAILED`, `PIX_CANCELLED`, `TOP_UP_COMPLETED` (v1.1.0: a operadora e o valor, nunca o número), `PIX_SCHEDULE_CREATED` e `PIX_SCHEDULE_CANCELLED` (v1.2.0: ator `USER`; cada ocorrência grava o desfecho do Pix com ator `SYSTEM` e o id do agendamento)
-- Ações da equipe (v1.3.0, tarefa 1; ator `STAFF`, ou `SYSTEM` quando ninguém está autenticado): `STAFF_MEMBER_CREATED`, `STAFF_LOGIN_SUCCEEDED`, `STAFF_LOGIN_FAILED` (o motivo só no `metadata`: senha, código, código repetido ou membro desativado) e `STAFF_SESSION_REVOKED`; na tarefa 5, `PIX_REVERSED` (sujeito: o Pix; `metadata`: o pedido, o pagador e o recebedor); na tarefa 4, `ACCOUNT_BLOCKED` e `ACCOUNT_UNBLOCKED` (sujeito: a conta; `metadata`: o cliente e o motivo), `SESSION_REVOKED` com o motivo `ACCOUNT_BLOCKED` e `REQUEST_CREATED`, `REQUEST_APPROVED`, `REQUEST_REJECTED` e `REQUEST_CANCELLED` (sujeito: o pedido); na tarefa 3, `SENSITIVE_DATA_ACCESSED` (sujeito: o cliente, `USER`; `metadata.view`: `CUSTOMER` ou `STATEMENT`) e `CUSTOMERS_SEARCHED` (sujeito: o membro; `metadata`: o tipo do termo e a quantidade, nunca o termo)
+- Ações da equipe (v1.3.0, tarefa 1; ator `STAFF`, ou `SYSTEM` quando ninguém está autenticado): `STAFF_MEMBER_CREATED`, `STAFF_LOGIN_SUCCEEDED`, `STAFF_LOGIN_FAILED` (o motivo só no `metadata`: senha, código, código repetido ou membro desativado) e `STAFF_SESSION_REVOKED`; na tarefa 6, `EXCEPTION_RESOLVED` (sujeito: a exceção; `metadata`: o tipo, o desfecho e o pedido, nunca a explicação), e `PIX_COMPLETED` ou `PIX_FAILED` com ator `STAFF` quando a equipe encerra um Pix parado; na tarefa 5, `PIX_REVERSED` (sujeito: o Pix; `metadata`: o pedido, o pagador e o recebedor); na tarefa 4, `ACCOUNT_BLOCKED` e `ACCOUNT_UNBLOCKED` (sujeito: a conta; `metadata`: o cliente e o motivo), `SESSION_REVOKED` com o motivo `ACCOUNT_BLOCKED` e `REQUEST_CREATED`, `REQUEST_APPROVED`, `REQUEST_REJECTED` e `REQUEST_CANCELLED` (sujeito: o pedido); na tarefa 3, `SENSITIVE_DATA_ACCESSED` (sujeito: o cliente, `USER`; `metadata.view`: `CUSTOMER` ou `STATEMENT`) e `CUSTOMERS_SEARCHED` (sujeito: o membro; `metadata`: o tipo do termo e a quantidade, nunca o termo)
 
 ## 4. Máquina de estados do Pix
 
@@ -344,6 +353,9 @@ O extrato não é um agregado: é uma consulta (lado de leitura do CQRS) que lê
 | `DemoCustomerProtected` | 403 | Backoffice | "A equipe de demonstração não bloqueia Ana nem Bruno." (v1.3.0) |
 | `PixNotReversible` | 409 | Backoffice | "Só um Pix interno concluído, ainda não estornado, pode ser estornado." (v1.3.0) |
 | `PayeeInsufficientFunds` | 409 | Backoffice | "Quem recebeu o Pix não tem mais o valor. O pedido continua pendente." (v1.3.0) |
+| `ExceptionNotOpen` | 409 | Backoffice | "Esta exceção já foi resolvida ou tem um pedido pendente." (v1.3.0) |
+| `ExceptionNotSettleable` | 409 | Backoffice | "Só um Pix parado sem resposta do SPI pode ser liquidado ou estornado." (v1.3.0) |
+| `PixNoLongerProcessing` | 409 | Backoffice | "O SPI já respondeu este Pix. Nada foi movido: recuse o pedido e explique a exceção." (v1.3.0) |
 | `PayeeUnavailable` | 422 | Revisar | "A conta de destino não pode receber Pix agora." |
 | `TransferExpired` | 409 | Revisar | "O tempo para confirmar acabou. Comece de novo." |
 | `InvalidTransferState` | 409 | Revisar | "Este Pix já foi processado." |
