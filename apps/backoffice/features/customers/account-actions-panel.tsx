@@ -16,29 +16,42 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { REASON_LABELS } from '@/lib/staff-words';
+import { useMounted } from '@/lib/use-mounted';
 import { type ActionState, blockAccount, requestUnblock } from './account-actions';
 
 const NO_ERROR: ActionState = { error: null };
 
-const SELECT =
-  'h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50';
-
 function ReasonField() {
+  // Drawn in the browser only: Radix's hidden form select carries an inline style.
+  const mounted = useMounted();
   return (
     <div className="space-y-2">
       <Label htmlFor="reason">Motivo</Label>
-      <select id="reason" name="reason" required defaultValue="" className={SELECT}>
-        <option value="" disabled>
-          Escolha o motivo
-        </option>
-        {Object.entries(REASON_LABELS).map(([code, label]) => (
-          <option key={code} value={code}>
-            {label}
-          </option>
-        ))}
-      </select>
+      {mounted ? (
+        <Select name="reason" required>
+          <SelectTrigger id="reason">
+            <SelectValue placeholder="Escolha o motivo" />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.entries(REASON_LABELS).map(([code, label]) => (
+              <SelectItem key={code} value={code}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : (
+        <div aria-hidden="true" className="h-9 rounded-md border border-input bg-card" />
+      )}
     </div>
   );
 }
