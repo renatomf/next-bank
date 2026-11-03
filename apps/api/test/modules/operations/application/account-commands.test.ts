@@ -50,6 +50,8 @@ beforeEach(() => {
     fingerprint: new FakeFingerprint(),
     transfers: bank,
     reversals: bank,
+    exceptions: bank,
+    stalePix: bank,
   };
   bank.addCustomer({ id: 'carla', name: 'Carla', email: 'carla@x.test', isDemo: true });
   bank.addCustomer({

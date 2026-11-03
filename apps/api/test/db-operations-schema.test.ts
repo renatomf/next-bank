@@ -30,13 +30,15 @@ async function insertRequest(overrides: Record<string, unknown> = {}) {
     expires_at: new Date('2026-11-03T12:00:00.000Z'),
     demo_scope: false,
     transfer_id: null,
+    exception_id: null,
+    resolution: null,
     ...overrides,
   };
   await app.query(
     `INSERT INTO operations.requests
        (id, kind, customer_id, reason, note, requested_by, requested_at, expires_at, demo_scope,
-        transfer_id)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+        transfer_id, exception_id, resolution)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
     [
       request.id,
       request.kind,
@@ -48,6 +50,8 @@ async function insertRequest(overrides: Record<string, unknown> = {}) {
       request.expires_at,
       request.demo_scope,
       request.transfer_id,
+      request.exception_id,
+      request.resolution,
     ],
   );
   return request;
@@ -156,6 +160,23 @@ describe('operations.requests and operations.decisions', () => {
     await expect(
       insertRequest({ kind: 'REVERSE_PIX', transfer_id: randomUUID() }),
     ).resolves.toBeDefined();
+  });
+
+  // v1.3.0 plan, task 6: settling or refunding an exception names it and how.
+  it('ties a resolution request to its exception and outcome, and only it', async () => {
+    const exception = { exception_id: randomUUID(), resolution: 'REFUND' };
+
+    await expect(insertRequest({ kind: 'RESOLVE_EXCEPTION' })).rejects.toThrow(
+      /requests_exception_id_check/,
+    );
+    await expect(insertRequest(exception)).rejects.toThrow(/requests_exception_id_check/);
+    await expect(
+      insertRequest({ kind: 'RESOLVE_EXCEPTION', exception_id: randomUUID() }),
+    ).rejects.toThrow(/requests_exception_id_check/);
+    await expect(
+      insertRequest({ kind: 'RESOLVE_EXCEPTION', ...exception, resolution: 'FORGET' }),
+    ).rejects.toThrow(/requests_resolution_check/);
+    await expect(insertRequest({ kind: 'RESOLVE_EXCEPTION', ...exception })).resolves.toBeDefined();
   });
 
   it('denies UPDATE and DELETE to the API role (STF-10)', async () => {

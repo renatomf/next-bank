@@ -45,6 +45,8 @@ beforeEach(() => {
     fingerprint: new FakeFingerprint(),
     transfers: bank,
     reversals: bank,
+    exceptions: bank,
+    stalePix: bank,
   };
   bank.addCustomer({ id: 'carla', name: 'Carla', email: 'c@x.test', isDemo: true });
   bank.addCustomer({ id: 'ana', name: 'Ana', email: 'a@x.test', isDemo: true });
@@ -52,6 +54,7 @@ beforeEach(() => {
   const pix = (id: string, payer: string, payee: string | null, status = 'COMPLETED') => {
     bank.pix.set(id, {
       id,
+      endToEndId: null,
       payerAccountId: payer,
       payeeAccountId: payee,
       amount: Money.of(8_000n),

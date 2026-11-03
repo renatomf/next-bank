@@ -3,7 +3,10 @@ import type {
   AccountStatusPort,
   CompletedPix,
   CustomerAccessPort,
+  ExceptionPosition,
   PixReversalsPort,
+  ReconciliationExceptionsPort,
+  StalePixPort,
   PixTransfersPort,
   OperationsRepositories,
   OperationsRepositoriesFactory,
@@ -11,6 +14,10 @@ import type {
   StaffNamesPort,
 } from '../../../../src/modules/operations/application/ports.ts';
 import type { ApprovalRequestState } from '../../../../src/modules/operations/domain/approval-request.ts';
+import type {
+  ExceptionState,
+  ResolutionState,
+} from '../../../../src/modules/operations/domain/reconciliation-exception.ts';
 import {
   AccountAlreadyBlocked,
   AccountNotBlocked,
@@ -37,7 +44,9 @@ export class InMemoryOperationsBank
     CustomerAccessPort,
     StaffNamesPort,
     PixTransfersPort,
-    PixReversalsPort
+    PixReversalsPort,
+    ReconciliationExceptionsPort,
+    StalePixPort
 {
   /** Pix by id, as Payments keeps them; the account ids are the holders' here. */
   readonly pix = new Map<string, CompletedPix>();
@@ -52,6 +61,82 @@ export class InMemoryOperationsBank
 
   pixByIds(_tx: Transaction, ids: string[]): Promise<CompletedPix[]> {
     return Promise.resolve(ids.flatMap((id) => this.pix.get(id) ?? []));
+  }
+
+  pixByEndToEndIds(_tx: Transaction, endToEndIds: string[]): Promise<CompletedPix[]> {
+    return Promise.resolve(
+      [...this.pix.values()].filter(
+        (pix) => pix.endToEndId !== null && endToEndIds.includes(pix.endToEndId),
+      ),
+    );
+  }
+
+  /** The reconciliation's exceptions by id, each with its resolution once it has one. */
+  readonly exceptions = new Map<string, ExceptionState>();
+  /** The end-to-end ids of the Pix still waiting for the SPI. */
+  readonly waiting = new Set<string>();
+  /** What the staff concluded, as Payments would apply it. */
+  readonly concluded: {
+    endToEndId: string;
+    outcome: 'SETTLED' | 'REJECTED';
+    actorId: string;
+    requestId: string | null;
+  }[] = [];
+
+  // ReconciliationExceptionsPort
+  exceptionsPage(
+    _tx: Transaction,
+    filter: { status: 'OPEN' | 'ALL'; after: ExceptionPosition | null; limit: number },
+  ): Promise<ExceptionState[]> {
+    const { after } = filter;
+    const newestFirst = [...this.exceptions.values()].sort(
+      (a, b) => b.detectedAt.getTime() - a.detectedAt.getTime() || b.id.localeCompare(a.id),
+    );
+    return Promise.resolve(
+      newestFirst
+        .filter((exception) => filter.status === 'ALL' || exception.resolution === null)
+        .filter(
+          (exception) =>
+            after === null ||
+            exception.detectedAt < after.detectedAt ||
+            (exception.detectedAt.getTime() === after.detectedAt.getTime() &&
+              exception.id < after.id),
+        )
+        .slice(0, filter.limit)
+        .map((exception) => ({ ...exception })),
+    );
+  }
+
+  exceptionById(_tx: Transaction, id: string): Promise<ExceptionState | null> {
+    const exception = this.exceptions.get(id);
+    return Promise.resolve(exception ? { ...exception } : null);
+  }
+
+  lockException(tx: Transaction, id: string): Promise<ExceptionState | null> {
+    return this.exceptionById(tx, id);
+  }
+
+  recordResolution(_tx: Transaction, resolution: ResolutionState): Promise<void> {
+    const exception = this.exceptions.get(resolution.exceptionId);
+    if (!exception) return Promise.reject(new Error('resolutions_exception_id_fkey'));
+    if (exception.resolution) return Promise.reject(new Error('resolutions_pkey'));
+    this.exceptions.set(exception.id, { ...exception, resolution: { ...resolution } });
+    return Promise.resolve();
+  }
+
+  // StalePixPort
+  concludeWaitingPix(
+    _tx: Transaction,
+    input: {
+      endToEndId: string;
+      outcome: 'SETTLED' | 'REJECTED';
+      actorId: string;
+      requestId: string | null;
+    },
+  ): Promise<'APPLIED' | 'NOT_WAITING'> {
+    if (!this.waiting.delete(input.endToEndId)) return Promise.resolve('NOT_WAITING');
+    this.concluded.push({ ...input });
+    return Promise.resolve('APPLIED');
   }
 
   // PixReversalsPort
@@ -144,6 +229,20 @@ export class InMemoryOperationsBank
               request.customerId === customerId &&
               request.decision === null &&
               now < request.expiresAt,
+          ),
+        ),
+      pendingForExceptions: (exceptionIds, now) =>
+        Promise.resolve(
+          new Map(
+            [...this.requests.values()]
+              .filter(
+                (request) =>
+                  request.exceptionId !== null &&
+                  exceptionIds.includes(request.exceptionId) &&
+                  request.decision === null &&
+                  now < request.expiresAt,
+              )
+              .map((request) => [request.exceptionId ?? '', request.id]),
           ),
         ),
       hasPendingForTransfer: (transferId, now) =>

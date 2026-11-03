@@ -38,7 +38,28 @@ describe('permissions', () => {
       'requests.read',
       'requests.create',
       'requests.decide',
+      'exceptions.read',
+      'exceptions.explain',
     ]);
+  });
+
+  it('lets the operator and the analyst read exceptions, and only the analyst explain one (task 6, X2)', () => {
+    for (const role of ['OPERATOR', 'ANALYST'] as const) {
+      expect(() => {
+        assertAllowed(role, 'exceptions.read');
+      }).not.toThrow();
+    }
+    expect(() => {
+      assertAllowed('ANALYST', 'exceptions.explain');
+    }).not.toThrow();
+    for (const role of ['OPERATOR', 'ADMIN'] as const) {
+      expect(() => {
+        assertAllowed(role, 'exceptions.explain');
+      }).toThrow(Forbidden);
+    }
+    expect(() => {
+      assertAllowed('ADMIN', 'exceptions.read');
+    }).toThrow(Forbidden);
   });
 
   it('denies a permission nobody granted', () => {
