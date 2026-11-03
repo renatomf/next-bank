@@ -23,8 +23,10 @@ const KINDS: Readonly<Record<Statement['items'][number]['kind'], string>> = {
 
 /**
  * One page of a customer's statement, the counterparty's document masked.
- * With [canReverse], each Pix the customer sent offers its reversal (task 5);
- * the API refuses one that cannot be reversed.
+ * With [canReverse], each Pix the customer sent offers its reversal (task 5),
+ * except one whose reversal back to the payer, which names it, is on the
+ * page. The API refuses any Pix that cannot be reversed: the button only
+ * spares that refusal, so a reversal on a newer page still leaves it.
  */
 export function StatementList({
   items,
@@ -34,6 +36,11 @@ export function StatementList({
   canReverse?: boolean;
 }) {
   if (items.length === 0) return <p className="text-muted-foreground">Nenhum lançamento.</p>;
+  const reversed = new Set(
+    items.flatMap((item) =>
+      item.kind === 'PIX_REVERSED' && item.transferId ? [item.transferId] : [],
+    ),
+  );
   return (
     <Table>
       <TableHeader>
@@ -70,7 +77,7 @@ export function StatementList({
             </TableCell>
             {canReverse ? (
               <TableCell className="text-right">
-                {item.kind === 'PIX_SENT' && item.transferId ? (
+                {item.kind === 'PIX_SENT' && item.transferId && !reversed.has(item.transferId) ? (
                   <ReversalButton
                     transferId={item.transferId}
                     amountText={formatMoney(item.amount)}
