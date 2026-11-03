@@ -11,6 +11,9 @@ export default defineConfig({
     globalSetup: ['test/global-setup.ts'],
     // Integration tests share the same database.
     fileParallelism: false,
+    // Integration tests run against Postgres on a machine that may be busy: 5 s
+    // failed sound tests under load (F-49). A test needing more than this is a bug.
+    testTimeout: 15_000,
     // Coverage gate (CLAUDE.md, section 5): business rules only. Everything else is
     // judged by testing behavior, not by a number.
     coverage: {

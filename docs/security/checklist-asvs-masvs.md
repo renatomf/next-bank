@@ -6,7 +6,7 @@
 
 Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat model) · ➖ não se aplica
 
-**Conferido item a item em 2026-11-01, antes da `v1.2.0`** (as anteriores, de 2026-10-21 e 2026-10-13, foram antes da `v1.1.0` e da `v1.0.0`). A evidência de cada item (teste, gate do CI ou verificação) está na matriz `controles-de-seguranca.md`.
+**Conferido item a item em 2026-11-03, antes da `v1.3.0`**, com a seção nova do backoffice (as anteriores, de 2026-11-01, 2026-10-21 e 2026-10-13, foram antes da `v1.2.0`, da `v1.1.0` e da `v1.0.0`). A evidência de cada item (teste, gate do CI ou verificação) está na matriz `controles-de-seguranca.md`.
 
 ## OWASP ASVS — API (nível 2)
 
@@ -118,6 +118,57 @@ Legenda: ⏳ planejado · ✅ feito · 🚫 fora da V1 (risco aceito no threat m
 | Segredos fora do repositório; varredura de segredos (API-08) | ✅ | 2 |
 | Pipeline com permissões mínimas e actions fixadas por SHA (API-09) | ✅ | 2 |
 | Modo debug e endpoints de diagnóstico desligados em produção (conferido na API publicada: sem rota de documentação ou diagnóstico, erros sem detalhe interno) | ✅ | 8 |
+
+## OWASP ASVS — Backoffice web (nível 2, v1.3.0)
+
+O backoffice da equipe (Next.js na Vercel) e as rotas `/admin/v1` da API (plano `v1.3.0-backoffice.md`). As ameaças estão no threat model, seção 5.9 (STF-01 a STF-16).
+
+### Arquitetura
+| Item | Status | Sem. |
+|---|---|---|
+| O servidor do backoffice é o BFF: a chave da API e o token da equipe nunca chegam ao navegador, e o cliente da API não compila para o navegador (B2, STF-08) | ✅ | v1.3.0 |
+| Contrato próprio das rotas da equipe (`openapi-admin.json`), com o mesmo gate de divergência do app (B8) | ✅ | v1.3.0 |
+
+### Autenticação
+| Item | Status | Sem. |
+|---|---|---|
+| MFA obrigatório para toda a equipe (TOTP), com uma só resposta para qualquer fator errado e cada código valendo uma vez (STF-01) | ✅ | v1.3.0 |
+| Senha em Argon2id e segredo TOTP cifrado; bloqueio progressivo por tentativas (STF-01) | ✅ | v1.3.0 |
+| Credenciais de um membro novo mostradas uma vez, fora dos logs e de qualquer registro guardado (STF-15) | ✅ | v1.3.0 |
+
+### Sessão
+| Item | Status | Sem. |
+|---|---|---|
+| Cookie da sessão `httpOnly`, `Secure` e `SameSite=Strict`, conferido no navegador (STF-06) | ✅ | v1.3.0 |
+| 15 minutos sem uso e 8 horas no máximo; logout e desativação encerram a sessão no servidor (STF-06) | ✅ | v1.3.0 |
+
+### Controle de acesso
+| Item | Status | Sem. |
+|---|---|---|
+| Papel lido do banco a cada requisição, negar por padrão, permissão declarada por rota (STF-02) | ✅ | v1.3.0 |
+| Segregação de funções: quem pede nunca aprova, na API e na tela (STF-03; E2E) | ✅ | v1.3.0 |
+| Escopo da equipe demo: só clientes, pedidos, exceções e membros de demonstração; fora dele, 404 (STF-11) | ✅ | v1.3.0 |
+| O admin não lê dados de cliente (C1); ninguém muda o próprio papel nem mexe num admin (STF-14) | ✅ | v1.3.0 |
+
+### Validação, codificação e CSRF
+| Item | Status | Sem. |
+|---|---|---|
+| Toda entrada das rotas `/admin` validada na borda (Zod), com corpos estritos | ✅ | v1.3.0 |
+| Saída escapada pelo React; CSP com `nonce` e sem `unsafe-inline`; `dangerouslySetInnerHTML` recusado pelo Semgrep (STF-05) | ✅ | v1.3.0 |
+| Server Actions com checagem de origem e nenhuma mutação por `GET`; outra origem recusada no navegador (STF-04; E2E) | ✅ | v1.3.0 |
+
+### Logs e auditoria
+| Item | Status | Sem. |
+|---|---|---|
+| Todo comando da equipe e toda leitura de dados de cliente na trilha, na mesma transação (STF-07, STF-10) | ✅ | v1.3.0 |
+| Trilha consultável só por filtro e no escopo de quem lê (STF-16) | ✅ | v1.3.0 |
+
+### Comunicação e configuração
+| Item | Status | Sem. |
+|---|---|---|
+| HTTPS com HSTS (`max-age` de 2 anos, `preload`), `X-Frame-Options: DENY` e `Referrer-Policy: no-referrer` | ✅ | v1.3.0 |
+| Prévias da Vercel sem as variáveis de produção: não alcançam a API (D3) | ✅ | v1.3.0 |
+| ZAP baseline contra o backoffice publicado sem falhas (avisos explicados na matriz, seção 4) | ✅ | v1.3.0 |
 
 ## OWASP MASVS v2 — App Flutter
 

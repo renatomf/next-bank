@@ -33,7 +33,7 @@ next bank é um banco fictício construído como **projeto de portfólio para va
 | **3. Backoffice** | Next.js: RBAC, MFA da equipe, dupla aprovação, fila de exceções da conciliação. Plano: `docs/plans/v1.3.0-backoffice.md` | ~3 semanas | `v1.3.0` |
 | **4. Produtos do app** | Minhas chaves Pix e QR Code dinâmico; recarga assíncrona, boleto e contas de consumo com provedor simulado; cartão de crédito e fatura | ~2 semanas por versão | `v1.4.0` → `v2.0.0` |
 
-> ✅ **Entregue:** `v1.2.0`, em 2026-11-01 ([Releases](https://github.com/renatomf/next-bank/releases/tag/v1.2.0)), com o plano em [v1.2.0-pix-assincrono.md](plans/v1.2.0-pix-assincrono.md); antes, `v1.1.0`, em 2026-10-21, com o plano em [v1.1.0-produtos-do-dia-a-dia.md](plans/v1.1.0-produtos-do-dia-a-dia.md). O que entrou em cada uma está no [CHANGELOG](../CHANGELOG.md).
+> ✅ **Entregue:** `v1.3.0`, em 2026-11-03 ([Releases](https://github.com/renatomf/next-bank/releases/tag/v1.3.0)), com o plano em [v1.3.0-backoffice.md](plans/v1.3.0-backoffice.md); antes, `v1.2.0`, em 2026-11-01, com o plano em [v1.2.0-pix-assincrono.md](plans/v1.2.0-pix-assincrono.md), e `v1.1.0`, em 2026-10-21, com o plano em [v1.1.0-produtos-do-dia-a-dia.md](plans/v1.1.0-produtos-do-dia-a-dia.md). O que entrou em cada uma está no [CHANGELOG](../CHANGELOG.md).
 >
 > Da Fase 2, o **débito automático** ficou para a Fase 4, com as contas de consumo (plano da `v1.2.0`, D9): sem uma conta a pagar, não há o que debitar.
 
@@ -425,6 +425,14 @@ Cada item recebe um parágrafo de design no README, sem implementação:
 - **Recarga de celular, depois da `v1.1.0`:** "Recargas recentes" para repetir uma recarga (precisa de um atalho guardado pelo servidor, decisão R3), o comprovante da recarga como imagem compartilhada (decisão R8, com a imagem do Pix movida antes para `core/ui`) e uma operadora de verdade, com reserva, timeout e estorno (Fase 4, D5).
 - **Testes visuais de regressão (golden tests)** do `design_system` e das telas: hoje os testes conferem valores (cor, tamanho, contraste), não a aparência renderizada.
 - **Atualizações de versão maior, depois da `v1.2.0`:** `go_router` 17 → 18 e `sentry_flutter` 9 → 10, propostas pelo Dependabot em 2026-10-26 (PRs #180 e #179, fechados). Ficaram fora pelo escopo congelado. O `sentry_flutter` 10 quebrava os testes do app e o E2E, e cada uma entra como tarefa própria, com desenho: o que muda na API da biblioteca, os testes afetados e, no Sentry, a redação de dados pessoais (`beforeSend`) conferida de novo.
+
+- **Backoffice, depois da `v1.3.0`:**
+  - esconder **Bloquear** dos clientes que a equipe demo não bloqueia (Ana e Bruno); hoje a API recusa, e o botão só leva à recusa;
+  - uma mensagem própria no app para a conta bloqueada, em vez da recusa genérica do login;
+  - estorno parcial de um Pix;
+  - reativar um membro desativado, e redefinir a senha ou o MFA de quem perdeu o aparelho, com a aprovação de um segundo admin (B3);
+  - exportar a trilha de auditoria e filtrá-la por período ou por ação;
+  - E2E também do estorno e da conciliação (hoje cobertos por testes de integração).
 
 ## 12. Fora do código (mesma prioridade)
 

@@ -6,8 +6,33 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não publicado]
 
+## [1.3.0] — 2026-11-03
+
+Backoffice: o "banco por dentro". Uma equipe fictícia, com papéis e MFA, consulta clientes com dados mascarados, bloqueia contas, estorna Pix, resolve as exceções da conciliação e lê a trilha de auditoria. Tudo que mexe em dinheiro ou desbloqueia uma conta pede **duas pessoas**: quem pede nunca aprova (plano `v1.3.0-backoffice.md`).
+
+### Adicionado
+- **Backoffice publicado** (#204), em Next.js na Vercel, com login por e-mail, senha e código do autenticador (#196). Uma operadora e um analista de demonstração, com as credenciais no README, só enxergam os clientes de demonstração.
+- **Clientes** (#206): busca por CPF, e-mail, conta ou nome; ficha e extrato com CPF e e-mail mascarados, e cada consulta registrada na trilha.
+- **Bloqueio e desbloqueio** (#208): o bloqueio é imediato e encerra todas as sessões do cliente; o desbloqueio é um pedido que um analista aprova.
+- **Estorno de Pix** (#210, #212): de um Pix interno concluído, pelo valor do próprio Pix, com dupla aprovação; aparece como "Pix estornado" no extrato dos dois clientes, no backoffice e no app.
+- **Conciliação** (#211): a fila das divergências da conciliação diária; um Pix parado sem resposta do SPI é liquidado ou estornado com dupla aprovação, e qualquer exceção pode ser explicada pelo analista.
+- **Equipe** (#213): o admin cria operadores e analistas, com o acesso mostrado uma vez, troca o papel entre os dois e desativa um membro, encerrando as suas sessões.
+- **Trilha de auditoria** (#214, #215): quem fez o quê e quando, por cliente, por membro da equipe ou por pedido.
+- **E2E do backoffice** (#216): a dupla aprovação de ponta a ponta no navegador, com Playwright, em todo PR.
+
 ### Alterado
-- **Nome do app no celular:** "Next Bank", com iniciais maiúsculas como os outros apps, embaixo do ícone e na tela de apps recentes. Dentro do app, a marca continua escrita "next bank".
+- **Nome do app no celular** (#205): "Next Bank", com iniciais maiúsculas como os outros apps, embaixo do ícone e na tela de apps recentes. Dentro do app, a marca continua escrita "next bank".
+- **Design system do backoffice** (#207, #209): a identidade do app (tokens, claro e escuro), com barra lateral recolhível.
+
+### Segurança
+- **Rotas da equipe isoladas:** `/admin` só aceita a chave do servidor do backoffice e o token da equipe; nenhum token de cliente abre uma rota da equipe, e vice-versa (STF-08).
+- **Dupla aprovação no banco:** quem pede não aprova, no domínio e num `CHECK`; cada pedido é decidido uma vez, sob trava (STF-03, STF-09).
+- **Conta bloqueada não renova a sessão,** e um login em andamento não escapa do bloqueio (F-12 fechado, STF-12).
+- **Exceções e resoluções só por inclusão;** a resposta atrasada do SPI concorrendo com a aprovação termina o Pix uma vez (REC-01).
+- **Navegador:** cookie `httpOnly`, `Secure` e `SameSite=Strict`, CSP com `nonce` e Server Action de outra origem recusada (STF-04, STF-05, STF-06). ZAP baseline contra o backoffice publicado sem falhas.
+
+### Corrigido
+- Os testes de integração da API ganharam 15 s de limite, em vez de 5, depois de três estouros com a máquina carregada (F-49).
 
 ## [1.2.0] — 2026-11-01
 

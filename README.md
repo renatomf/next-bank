@@ -44,7 +44,7 @@ https://github.com/user-attachments/assets/a2748bde-302c-45a7-a953-d19fa6b02b93
 4. **Um Pix em 30 segundos:** entre como Ana, toque em **Pix**, use a chave CPF de Bruno (`529.982.247-25`), escolha o valor e confirme com o PIN `2580`. O comprovante aparece na hora, e o Pix já está no extrato dos dois.
 5. **Um Pix para outro banco:** use a chave `clara.aurora@example.com`, de Clara, do Banco Aurora (fictício). O Pix passa pelo simulador do Bacen do próprio projeto e fica alguns segundos em processamento, até o "SPI" responder; o app acompanha sozinho até o comprovante.
 
-**O banco por dentro:** no [backoffice](https://next-bank-backoffice.vercel.app), a equipe de demonstração consulta Ana e Bruno, com CPF e e-mail mascarados, e cada consulta fica na trilha de auditoria. O código vem de um aplicativo autenticador (Google Authenticator, Microsoft Authenticator, 1Password): cadastre a chave manualmente, como TOTP.
+**O banco por dentro:** no [backoffice](https://next-bank-backoffice.vercel.app), a equipe de demonstração consulta Ana, Bruno e Carla, com CPF e e-mail mascarados, bloqueia contas, estorna Pix e resolve as divergências da conciliação. Tudo que mexe em dinheiro ou desbloqueia uma conta pede duas pessoas: Olívia, a operadora, pede, e Diogo, o analista, aprova. Diogo também lê a trilha de auditoria: quem fez o quê e quando. O código vem de um aplicativo autenticador (Google Authenticator, Microsoft Authenticator, 1Password): cadastre a chave manualmente, como TOTP.
 
 | Equipe | E-mail | Senha | Chave do autenticador |
 |---|---|---|---|
