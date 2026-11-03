@@ -34,7 +34,7 @@ describe('the audit trail queries of the staff', () => {
       'by member',
       PgAuditReader.MEMBER_SQL,
       [randomUUID(), ...AFTER, 21],
-      ['audit_events_actor_idx'],
+      ['audit_events_actor_idx', 'audit_events_subject_idx'],
     ],
     [
       'by customer',

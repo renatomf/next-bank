@@ -13,17 +13,20 @@ import { ACTION_LABELS, ACTOR_LABELS } from '@/lib/staff-words';
 /** The first block of an id: enough to tell events apart on the screen. */
 const shortId = (id: string) => id.split('-')[0] ?? id;
 
-/** The metadata as `key: value` text; recorded with allowed fields only (API-04). */
-function detailsOf(metadata: AuditEntry['metadata']): string {
-  return Object.entries(metadata)
-    .map(([key, value]) => `${key}: ${typeof value === 'string' ? value : JSON.stringify(value)}`)
-    .join(' · ');
+/** The metadata as `key: value` lines; recorded with allowed fields only (API-04). */
+function detailsOf(metadata: AuditEntry['metadata']): [string, string][] {
+  return Object.entries(metadata).map(([key, value]) => [
+    key,
+    typeof value === 'string' ? value : JSON.stringify(value),
+  ]);
 }
 
 /**
  * One page of the audit trail, newest first (v1.3.0 plan, task 8): each
  * action in words with its code beside it (H6), the staff by name and
- * anyone else by kind and id (H4), the metadata as text (STF-05).
+ * anyone else by kind and id (H4), the metadata as text (STF-05). The
+ * details wrap, one field a line and long ids broken where needed, so the
+ * table fits the page with no sideways scroll.
  */
 export function AuditTable({ entries }: { entries: AuditEntry[] }) {
   if (entries.length === 0) return <p className="text-muted-foreground">Nenhum evento aqui.</p>;
@@ -40,9 +43,9 @@ export function AuditTable({ entries }: { entries: AuditEntry[] }) {
       </TableHeader>
       <TableBody>
         {entries.map((entry) => (
-          <TableRow key={entry.id}>
-            <TableCell className="whitespace-nowrap">{formatDateTime(entry.occurredAt)}</TableCell>
-            <TableCell>
+          <TableRow key={entry.id} className="align-top">
+            <TableCell className="align-top">{formatDateTime(entry.occurredAt)}</TableCell>
+            <TableCell className="align-top">
               <span className="block">
                 {entry.actor.name ?? ACTOR_LABELS[entry.actor.type] ?? entry.actor.type}
               </span>
@@ -52,7 +55,7 @@ export function AuditTable({ entries }: { entries: AuditEntry[] }) {
                 </span>
               ) : null}
             </TableCell>
-            <TableCell>
+            <TableCell className="align-top">
               <span className="block font-semibold">
                 {ACTION_LABELS[entry.action] ?? entry.action}
               </span>
@@ -62,11 +65,18 @@ export function AuditTable({ entries }: { entries: AuditEntry[] }) {
                 </span>
               ) : null}
             </TableCell>
-            <TableCell className="font-mono text-xs">
+            <TableCell className="align-top font-mono text-xs">
               {entry.subject.type} {shortId(entry.subject.id)}
             </TableCell>
-            <TableCell className="text-sm break-words text-muted-foreground">
-              {detailsOf(entry.metadata)}
+            <TableCell className="w-full min-w-48 align-top text-xs whitespace-normal text-muted-foreground">
+              <dl className="space-y-0.5">
+                {detailsOf(entry.metadata).map(([key, value]) => (
+                  <div key={key}>
+                    <dt className="inline font-semibold">{key}: </dt>
+                    <dd className="inline font-mono wrap-anywhere">{value}</dd>
+                  </div>
+                ))}
+              </dl>
             </TableCell>
           </TableRow>
         ))}

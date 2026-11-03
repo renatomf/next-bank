@@ -38,10 +38,10 @@ export function SidebarNav({
                 'flex h-10 items-center gap-3 rounded-md text-sm font-semibold text-muted-foreground transition-colors duration-150',
                 'hover:bg-accent hover:text-foreground motion-reduce:transition-none',
                 current && 'bg-selected text-link hover:bg-selected hover:text-link',
-                collapsed ? 'w-10 justify-center self-center' : 'px-3',
+                collapsed ? 'w-10 justify-center' : 'px-3',
               )}
             >
-              <Icon aria-hidden="true" className="size-5 shrink-0" />
+              <Icon aria-hidden="true" className="size-[18px] shrink-0" />
               {collapsed ? null : label}
             </Link>
           );
