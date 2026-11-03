@@ -231,4 +231,59 @@ describe('adminApi', () => {
       note: null,
     });
   });
+
+  // v1.3.0 plan, task 6: the reconciliation's exceptions, and how the staff resolves them.
+  it('lists the exceptions by status, from a cursor, and reads one', async () => {
+    const id = '0190f0b6-1b2c-7d3e-8f40-123456789abc';
+    const { calls, fetch } = recordingFetch(200, { items: [], nextCursor: null });
+    const client = api(fetch, 'opaque-token');
+
+    await client.listExceptions('ALL', 'abc_DEF-1');
+    await client.exception(id);
+
+    expect(calls.map((call) => call.url)).toEqual([
+      'https://api.example.test/admin/v1/exceptions?status=ALL&cursor=abc_DEF-1',
+      `https://api.example.test/admin/v1/exceptions/${id}`,
+    ]);
+  });
+
+  it('reads no exception the API does not show this member', async () => {
+    const { fetch } = recordingFetch(404, { code: 'NotFound' });
+
+    await expect(api(fetch, 'opaque-token').exception('x')).resolves.toBeNull();
+  });
+
+  it('asks to settle or refund an exception, and explains one, with the form key', async () => {
+    const exceptionId = '0190f0b6-1b2c-7d3e-8f40-123456789abc';
+    const key = '0190f0b6-0000-7000-8000-000000000004';
+    const { calls, fetch } = recordingFetch(201, { id: exceptionId });
+    const client = api(fetch, 'opaque-token');
+
+    await client.requestResolution(exceptionId, 'REFUND', 'OTHER', 'Conferido no SPI', key);
+    await client.explainException(exceptionId, 'Tarifa lançada no dia seguinte.', key);
+
+    expect(calls.map((call) => call.url)).toEqual([
+      'https://api.example.test/admin/v1/requests',
+      `https://api.example.test/admin/v1/exceptions/${exceptionId}/explain`,
+    ]);
+    expect(JSON.parse(calls[0]?.body ?? '{}')).toEqual({
+      kind: 'RESOLVE_EXCEPTION',
+      exceptionId,
+      resolution: 'REFUND',
+      reason: 'OTHER',
+      note: 'Conferido no SPI',
+    });
+    expect(JSON.parse(calls[1]?.body ?? '{}')).toEqual({
+      explanation: 'Tarifa lançada no dia seguinte.',
+    });
+    expect(calls.every((call) => call.headers.get('idempotency-key') === key)).toBe(true);
+  });
+
+  it('tells why an explanation was refused', async () => {
+    const { fetch } = recordingFetch(409, { code: 'ExceptionNotOpen' });
+
+    await expect(
+      api(fetch, 'opaque-token').explainException('x', 'Explicação qualquer.', 'k'),
+    ).rejects.toEqual(new CommandRefused('ExceptionNotOpen'));
+  });
 });
