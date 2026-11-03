@@ -19,7 +19,7 @@ class FakeBiometricPinStore implements BiometricPinStore {
   int reads = 0;
 
   /// What forgetting the PIN fails with, if anything.
-  Object? clearError;
+  Error? clearError;
 
   @override
   Future<bool> isAvailable() async => available;
