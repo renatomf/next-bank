@@ -16,45 +16,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { REASON_LABELS } from '@/lib/staff-words';
-import { useMounted } from '@/lib/use-mounted';
 import { type ActionState, blockAccount, requestUnblock } from './account-actions';
+import { ReasonField } from './reason-field';
 
 const NO_ERROR: ActionState = { error: null };
-
-function ReasonField() {
-  // Drawn in the browser only: Radix's hidden form select carries an inline style.
-  const mounted = useMounted();
-  return (
-    <div className="space-y-2">
-      <Label htmlFor="reason">Motivo</Label>
-      {mounted ? (
-        <Select name="reason" required>
-          <SelectTrigger id="reason">
-            <SelectValue placeholder="Escolha o motivo" />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.entries(REASON_LABELS).map(([code, label]) => (
-              <SelectItem key={code} value={code}>
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      ) : (
-        <div aria-hidden="true" className="h-9 rounded-md border border-input bg-card" />
-      )}
-    </div>
-  );
-}
 
 /**
  * What the staff does to a customer's account (v1.3.0 plan, task 4): block

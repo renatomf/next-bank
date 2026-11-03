@@ -13,8 +13,11 @@ import type {
   CustomerAccessPort,
   CustomerAccountsPort,
   CustomersPort,
+  PixReversalsPort,
+  PixTransfersPort,
   StaffNamesPort,
 } from './application/ports.ts';
+import { RequestReversal } from './application/request-reversal.ts';
 import { RequestUnblock } from './application/request-unblock.ts';
 import { SearchCustomers } from './application/search-customers.ts';
 import { PgAuditTrailFactory } from './infrastructure/pg-audit-trail-factory.ts';
@@ -29,6 +32,7 @@ export interface OperationsModule {
   getCustomerStatement: GetCustomerStatement;
   blockAccount: BlockAccount;
   requestUnblock: RequestUnblock;
+  requestReversal: RequestReversal;
   decideRequest: DecideRequest;
   cancelRequest: CancelRequest;
   listRequests: ListRequests;
@@ -49,6 +53,8 @@ export function createOperationsModule(settings: {
   access: CustomerAccessPort;
   staffNames: StaffNamesPort;
   fingerprint: RequestFingerprint;
+  transfers: PixTransfersPort;
+  reversals: PixReversalsPort;
 }): OperationsModule {
   const deps = {
     ...settings,
@@ -61,6 +67,7 @@ export function createOperationsModule(settings: {
     getCustomerStatement: new GetCustomerStatement(deps),
     blockAccount: new BlockAccount(deps),
     requestUnblock: new RequestUnblock(deps),
+    requestReversal: new RequestReversal(deps),
     decideRequest: new DecideRequest(deps),
     cancelRequest: new CancelRequest(deps),
     listRequests: new ListRequests(deps),

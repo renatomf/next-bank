@@ -1,7 +1,10 @@
 import type {
   AccountStatus,
   AccountStatusPort,
+  CompletedPix,
   CustomerAccessPort,
+  PixReversalsPort,
+  PixTransfersPort,
   OperationsRepositories,
   OperationsRepositoriesFactory,
   RequestsRepository,
@@ -29,8 +32,45 @@ export { FakeFingerprint } from '../../payments/application/fakes.ts';
  */
 export class InMemoryOperationsBank
   extends InMemoryBank
-  implements AccountStatusPort, CustomerAccessPort, StaffNamesPort
+  implements
+    AccountStatusPort,
+    CustomerAccessPort,
+    StaffNamesPort,
+    PixTransfersPort,
+    PixReversalsPort
 {
+  /** Pix by id, as Payments keeps them; the account ids are the holders' here. */
+  readonly pix = new Map<string, CompletedPix>();
+  readonly reversed = new Set<string>();
+  /** Balance each holder may still give back, in cents; absent means plenty. */
+  readonly spendable = new Map<string, bigint>();
+
+  // PixTransfersPort
+  pixById(_tx: Transaction, transferId: string): Promise<CompletedPix | null> {
+    return Promise.resolve(this.pix.get(transferId) ?? null);
+  }
+
+  pixByIds(_tx: Transaction, ids: string[]): Promise<CompletedPix[]> {
+    return Promise.resolve(ids.flatMap((id) => this.pix.get(id) ?? []));
+  }
+
+  // PixReversalsPort
+  isReversed(_tx: Transaction, transferId: string): Promise<boolean> {
+    return Promise.resolve(this.reversed.has(transferId));
+  }
+
+  reverse(
+    _tx: Transaction,
+    posting: { transferId: string; payeeAccountId: string; amount: { cents: bigint } },
+  ): Promise<'REVERSED' | 'PAYEE_WITHOUT_FUNDS'> {
+    const spendable = this.spendable.get(posting.payeeAccountId);
+    if (spendable !== undefined && spendable < posting.amount.cents) {
+      return Promise.resolve('PAYEE_WITHOUT_FUNDS');
+    }
+    this.reversed.add(posting.transferId);
+    return Promise.resolve('REVERSED');
+  }
+
   readonly statuses = new Map<string, AccountStatus>();
   readonly lockedOut = new Set<string>();
   readonly requests = new Map<string, ApprovalRequestState>();
@@ -102,6 +142,15 @@ export class InMemoryOperationsBank
           [...this.requests.values()].some(
             (request) =>
               request.customerId === customerId &&
+              request.decision === null &&
+              now < request.expiresAt,
+          ),
+        ),
+      hasPendingForTransfer: (transferId, now) =>
+        Promise.resolve(
+          [...this.requests.values()].some(
+            (request) =>
+              request.transferId === transferId &&
               request.decision === null &&
               now < request.expiresAt,
           ),

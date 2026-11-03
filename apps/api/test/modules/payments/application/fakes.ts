@@ -208,6 +208,10 @@ export class FakePaymentsRepositories implements PaymentsRepositoriesFactory {
           );
         },
         lockForPayer: (id, payerAccountId) => Promise.resolve(this.#transferOf(id, payerAccountId)),
+        findByIds: (ids) =>
+          Promise.resolve(
+            this.transfers.filter((transfer) => ids.includes(transfer.id)).map(copyOf),
+          ),
         update: (state) => {
           const index = this.transfers.findIndex((transfer) => transfer.id === state.id);
           this.transfers[index] = state;

@@ -45,7 +45,7 @@ export interface ExternalPixPosting {
 }
 
 export type StatementItemKind =
-  'PIX_SENT' | 'PIX_RECEIVED' | 'PIX_REFUNDED' | 'DEMO_FUNDING' | 'TOP_UP';
+  'PIX_SENT' | 'PIX_RECEIVED' | 'PIX_REFUNDED' | 'PIX_REVERSED' | 'DEMO_FUNDING' | 'TOP_UP';
 
 export interface StatementItem {
   /** The posting's id. */
@@ -181,6 +181,48 @@ export class CustomerLedgerAccounts {
         },
       ],
     });
+  }
+
+  /**
+   * The staff's reversal of an internal Pix (v1.3.0 plan, task 5; B7): a new
+   * entry, never a change of the Pix's (ADR 0005), from the payee back to the
+   * payer, each side keeping who was on the other. A payee without the money
+   * fails with InsufficientFunds before any write: no debt, never below zero.
+   */
+  async reversePix(tx: Transaction, input: PixTransferPosting): Promise<void> {
+    const repository = this.#repositories.for(tx);
+    const payer = await repository.findByCode(customerCodeOf(input.payerAccountId));
+    const payee = await repository.findByCode(customerCodeOf(input.payeeAccountId));
+    if (!payer || !payee) {
+      throw new Error(`Cannot reverse Pix ${input.transferId}: ledger account missing`);
+    }
+
+    await this.#postJournalEntry.execute(tx, {
+      kind: 'PIX_REVERSAL',
+      referenceType: 'PIX_TRANSFER',
+      referenceId: input.transferId,
+      postings: [
+        {
+          ledgerAccountId: payee.id,
+          direction: 'DEBIT',
+          amount: input.amount,
+          counterpartyName: input.payer.name,
+          counterpartyDocumentMasked: input.payer.documentMasked,
+        },
+        {
+          ledgerAccountId: payer.id,
+          direction: 'CREDIT',
+          amount: input.amount,
+          counterpartyName: input.payee.name,
+          counterpartyDocumentMasked: input.payee.documentMasked,
+        },
+      ],
+    });
+  }
+
+  /** Whether the staff already reversed this Pix: once per Pix (PIX-14). */
+  isReversed(tx: Transaction, transferId: string): Promise<boolean> {
+    return this.#repositories.for(tx).hasEntry('PIX_REVERSAL', 'PIX_TRANSFER', transferId);
   }
 
   /**
@@ -402,6 +444,9 @@ function kindOf(row: StatementRow): StatementItemKind {
       return 'PIX_SENT';
     case 'PIX_EXTERNAL_REFUND':
       return 'PIX_REFUNDED';
+    // Money back for the payer, money out for the payee (V4).
+    case 'PIX_REVERSAL':
+      return 'PIX_REVERSED';
     // Only system accounts: it never reaches a customer's statement.
     case 'PIX_EXTERNAL_SETTLEMENT':
       throw new Error('A settlement has no customer posting');
@@ -421,7 +466,11 @@ function statementItemOf(row: StatementRow): StatementItem {
       row.counterpartyName === null
         ? null
         : { name: row.counterpartyName, documentMasked: row.counterpartyDocumentMasked },
-    transferId: kind === 'PIX_SENT' || kind === 'PIX_REFUNDED' ? row.referenceId : null,
+    // Only the payer reaches the Pix (PIX-01): sent, refunded, or reversed back to them.
+    transferId:
+      kind === 'PIX_SENT' || kind === 'PIX_REFUNDED' || (kind === 'PIX_REVERSED' && !sent)
+        ? row.referenceId
+        : null,
     topUpId: kind === 'TOP_UP' ? row.referenceId : null,
   };
 }

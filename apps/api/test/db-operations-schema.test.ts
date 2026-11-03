@@ -29,12 +29,14 @@ async function insertRequest(overrides: Record<string, unknown> = {}) {
     requested_at: new Date('2026-11-02T12:00:00.000Z'),
     expires_at: new Date('2026-11-03T12:00:00.000Z'),
     demo_scope: false,
+    transfer_id: null,
     ...overrides,
   };
   await app.query(
     `INSERT INTO operations.requests
-       (id, kind, customer_id, reason, note, requested_by, requested_at, expires_at, demo_scope)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+       (id, kind, customer_id, reason, note, requested_by, requested_at, expires_at, demo_scope,
+        transfer_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
     [
       request.id,
       request.kind,
@@ -45,6 +47,7 @@ async function insertRequest(overrides: Record<string, unknown> = {}) {
       request.requested_at,
       request.expires_at,
       request.demo_scope,
+      request.transfer_id,
     ],
   );
   return request;
@@ -140,6 +143,19 @@ describe('operations.requests and operations.decisions', () => {
     await expect(
       app.query('UPDATE operations.requests SET id = id WHERE id = $1', [request.id]),
     ).rejects.toThrow(/append-only/);
+  });
+
+  // v1.3.0 plan, task 5: a reversal names its Pix; an unblock names none.
+  it('ties a reversal to its Pix, and only a reversal', async () => {
+    await expect(insertRequest({ kind: 'REVERSE_PIX' })).rejects.toThrow(
+      /requests_transfer_id_check/,
+    );
+    await expect(insertRequest({ transfer_id: randomUUID() })).rejects.toThrow(
+      /requests_transfer_id_check/,
+    );
+    await expect(
+      insertRequest({ kind: 'REVERSE_PIX', transfer_id: randomUUID() }),
+    ).resolves.toBeDefined();
   });
 
   it('denies UPDATE and DELETE to the API role (STF-10)', async () => {

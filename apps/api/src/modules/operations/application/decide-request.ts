@@ -1,6 +1,7 @@
 import { Idempotency } from '../../../shared/application/idempotency.ts';
 import type { Transaction } from '../../../shared/application/ports.ts';
 import type { StaffReader } from './ports.ts';
+import { reversePix } from './request-reversal.ts';
 import {
   type CommandDependencies,
   lockedRequestFor,
@@ -49,7 +50,11 @@ export class DecideRequest {
           const request = await lockedRequestFor(this.#deps, tx, actor, input.requestId);
           if (input.decision === 'APPROVE') {
             request.approve(actor.memberId, now, input.note);
-            await this.#unblock(tx, actor, request.state.customerId, now);
+            if (request.state.kind === 'REVERSE_PIX') {
+              await reversePix(this.#deps, tx, actor, request.state, now);
+            } else {
+              await this.#unblock(tx, actor, request.state.customerId, now);
+            }
           } else {
             request.reject(actor.memberId, now, input.note);
           }

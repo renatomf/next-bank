@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { ApprovalRequest } from '@/lib/api';
-import { formatDateTime } from '@/lib/format';
-import { REASON_LABELS } from '@/lib/staff-words';
+import { formatDateTime, formatMoney } from '@/lib/format';
+import { KIND_LABELS, REASON_LABELS } from '@/lib/staff-words';
 import { RequestStatusBadge } from './request-status-badge';
 
 const DECISIONS: Readonly<Record<NonNullable<ApprovalRequest['decision']>['decision'], string>> = {
@@ -17,6 +17,12 @@ const DECISIONS: Readonly<Record<NonNullable<ApprovalRequest['decision']>['decis
 export function RequestDetail({ request }: { request: ApprovalRequest }) {
   const facts: [string, string][] = [
     ['Cliente', request.customer.name],
+    ...(request.transfer
+      ? ([
+          ['Valor do Pix', formatMoney(request.transfer.amount)],
+          ['Recebedor', request.transfer.payeeName],
+        ] as [string, string][])
+      : []),
     ['Motivo', REASON_LABELS[request.reason]],
     ['Pedido por', request.requestedBy.name],
     ['Pedido em', formatDateTime(request.requestedAt)],
@@ -32,7 +38,7 @@ export function RequestDetail({ request }: { request: ApprovalRequest }) {
   return (
     <Card>
       <CardHeader className="flex flex-wrap items-center justify-between gap-3">
-        <CardTitle className="text-2xl">Desbloqueio de conta</CardTitle>
+        <CardTitle className="text-2xl">{KIND_LABELS[request.kind]}</CardTitle>
         <RequestStatusBadge status={request.status} />
       </CardHeader>
       <CardContent>

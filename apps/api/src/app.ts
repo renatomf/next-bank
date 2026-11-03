@@ -32,7 +32,7 @@ import {
   RandomRefreshTokens,
   sessionRoutes,
 } from './modules/identity/index.ts';
-import { createLedgerModule } from './modules/ledger/index.ts';
+import { createLedgerModule, InsufficientFunds } from './modules/ledger/index.ts';
 import {
   createOperationsModule,
   customerRoutes,
@@ -383,6 +383,20 @@ export function buildApp({
       access: identity.access,
       staffNames: staff.directory,
       fingerprint: new HmacRequestFingerprint(security.piiKeys),
+      transfers: payments.forStaff,
+      reversals: {
+        isReversed: (tx, transferId) => ledger.customerAccounts.isReversed(tx, transferId),
+        // The ledger refuses a payee without the money; Operations hears it as an answer.
+        reverse: async (tx, posting) => {
+          try {
+            await ledger.customerAccounts.reversePix(tx, posting);
+            return 'REVERSED';
+          } catch (error) {
+            if (error instanceof InsufficientFunds) return 'PAYEE_WITHOUT_FUNDS';
+            throw error;
+          }
+        },
+      },
     });
     void app.register(
       async (scope) => {

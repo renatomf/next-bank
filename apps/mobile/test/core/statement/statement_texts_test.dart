@@ -33,6 +33,7 @@ void main() {
       (StatementKind.demoFunding, 'Depósito inicial'),
       (StatementKind.topUp, 'Recarga de celular'),
       (StatementKind.pixRefunded, 'Pix devolvido'),
+      (StatementKind.pixReversed, 'Pix estornado'),
       (StatementKind.other, 'Movimentação'),
     ]) {
       test(kind.name, () {

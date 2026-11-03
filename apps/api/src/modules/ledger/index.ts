@@ -6,6 +6,8 @@ import { PostJournalEntry } from './application/post-journal-entry.ts';
 import { PgLedgerRepositories } from './infrastructure/pg-ledger-repository.ts';
 
 export type { CustomerLedgerAccounts } from './application/customer-ledger-accounts.ts';
+// The composition root hears a payee without the money in a reversal (v1.3.0, task 5).
+export { InsufficientFunds } from './domain/errors.ts';
 export type { PostJournalEntry, PostJournalEntryInput } from './application/post-journal-entry.ts';
 
 export interface LedgerModule {

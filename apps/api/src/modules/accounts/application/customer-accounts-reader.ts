@@ -48,6 +48,11 @@ export class CustomerAccountsReader {
     return account?.holderUserId ?? null;
   }
 
+  async holderOfAccount(tx: Transaction, accountId: string): Promise<string | null> {
+    const account = await this.#repositories.for(tx).accounts.findById(accountId);
+    return account?.holderUserId ?? null;
+  }
+
   async balanceOf(tx: Transaction, holderId: string): Promise<Money> {
     const accountId = await this.#accountOf(tx, holderId);
     const balance = await this.#ledger.availableBalance(tx, accountId);

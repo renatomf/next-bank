@@ -53,7 +53,7 @@ export default async function CustomerPage({
         <h2 id="statement-title" className="text-xl font-semibold">
           Extrato
         </h2>
-        <StatementList items={statement.items} />
+        <StatementList items={statement.items} canReverse={member.role === 'OPERATOR'} />
         {statement.nextCursor ? (
           <Button asChild variant="outline">
             <Link href={`/customers/${id}?cursor=${statement.nextCursor}`}>

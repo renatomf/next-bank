@@ -1139,6 +1139,7 @@
               "PIX_SENT",
               "PIX_RECEIVED",
               "PIX_REFUNDED",
+              "PIX_REVERSED",
               "DEMO_FUNDING",
               "TOP_UP"
             ]

@@ -19,6 +19,7 @@ function opened(note: string | null = null) {
     id: 'req-1',
     kind: 'UNBLOCK_ACCOUNT',
     customerId: 'customer-1',
+    transferId: null,
     reason: 'CUSTOMER_REQUEST',
     note,
     requestedBy: 'operator-1',
@@ -35,6 +36,7 @@ describe('ApprovalRequest.open', () => {
       id: 'req-1',
       kind: 'UNBLOCK_ACCOUNT',
       customerId: 'customer-1',
+      transferId: null,
       reason: 'CUSTOMER_REQUEST',
       note: 'Cliente ligou',
       requestedBy: 'operator-1',
@@ -140,5 +142,43 @@ describe('cancelling', () => {
     expect(() => {
       opened().cancel('operator-1', later(24 * 60));
     }).toThrow(RequestNotPending);
+  });
+});
+
+// v1.3.0 plan, task 5: a reversal names the Pix it reverses; an unblock names
+// none. The amount is never the request's: it is read from the Pix (PIX-14).
+describe('a reversal request', () => {
+  const reversal = (transferId: string | null) =>
+    ApprovalRequest.open({
+      id: 'req-2',
+      kind: 'REVERSE_PIX',
+      customerId: 'customer-1',
+      transferId,
+      reason: 'FRAUD_SUSPECTED',
+      note: null,
+      requestedBy: 'operator-1',
+      demoScope: false,
+      now: OPENED,
+    });
+
+  it('opens with the Pix it reverses', () => {
+    expect(reversal('pix-1').state).toMatchObject({ kind: 'REVERSE_PIX', transferId: 'pix-1' });
+  });
+
+  it('refuses a reversal without its Pix, and an unblock with one', () => {
+    expect(() => reversal(null)).toThrow(/Pix/);
+    expect(() =>
+      ApprovalRequest.open({
+        id: 'req-3',
+        kind: 'UNBLOCK_ACCOUNT',
+        customerId: 'customer-1',
+        transferId: 'pix-1',
+        reason: 'OTHER',
+        note: null,
+        requestedBy: 'operator-1',
+        demoScope: false,
+        now: OPENED,
+      }),
+    ).toThrow(/Pix/);
   });
 });

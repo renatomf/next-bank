@@ -163,6 +163,22 @@ export function adminApi(options: AdminApiOptions) {
       return data;
     },
 
+    /** The reversal of a Pix, by its id: the amount is the Pix's own (task 5, PIX-14). */
+    async requestReversal(
+      transferId: string,
+      reason: Reason,
+      note: string | null,
+      idempotencyKey: string,
+    ): Promise<ApprovalRequest> {
+      const { data, error, response } = await client.POST('/admin/v1/requests', {
+        headers: headers(),
+        params: { header: { 'idempotency-key': idempotencyKey } },
+        body: { kind: 'REVERSE_PIX', transferId, reason, note },
+      });
+      if (data === undefined) throw refusalOf(error, response);
+      return data;
+    },
+
     async decideRequest(
       requestId: string,
       decision: 'approve' | 'reject',

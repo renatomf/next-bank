@@ -89,6 +89,50 @@ void main() {
     },
   );
 
+  // v1.3.0 plan, task 5 (V4): a reversal the staff approved is money back for
+  // the payer, linking to the Pix it reverses, and money out for the payee,
+  // who never reaches the payer's Pix.
+  test(
+    'reads a reversal coming back to the payer, linking to the Pix',
+    () async {
+      final server = ScriptedServer({
+        _path: (_) async => JsonReply(
+          200,
+          page([
+            sentItem({'kind': 'PIX_REVERSED', 'direction': 'IN'}),
+          ]),
+        ),
+      });
+
+      final item = (await repositoryFor(server).page()).items.single;
+
+      expect(item.kind, StatementKind.pixReversed);
+      expect(item.direction, MoneyDirection.incoming);
+      expect(item.transferId, _transferId);
+    },
+  );
+
+  test('reads a reversal leaving the payee, with no link', () async {
+    final server = ScriptedServer({
+      _path: (_) async => JsonReply(
+        200,
+        page([
+          sentItem({
+            'kind': 'PIX_REVERSED',
+            'direction': 'OUT',
+            'transferId': null,
+          }),
+        ]),
+      ),
+    });
+
+    final item = (await repositoryFor(server).page()).items.single;
+
+    expect(item.kind, StatementKind.pixReversed);
+    expect(item.direction, MoneyDirection.outgoing);
+    expect(item.transferId, isNull);
+  });
+
   // A4: a kind a later version of the API adds is shown, never a broken page.
   test('reads a kind it does not know as a movement without links', () async {
     final server = ScriptedServer({
@@ -275,6 +319,7 @@ void main() {
       ),
       ('a top-up coming in', {'kind': 'TOP_UP', 'direction': 'IN'}),
       ('a refund going out', {'kind': 'PIX_REFUNDED'}),
+      ('a reversal going out with a Pix link', {'kind': 'PIX_REVERSED'}),
       ('a Pix receipt link on a top-up', {'kind': 'TOP_UP'}),
       (
         'a top-up receipt link on a Pix',

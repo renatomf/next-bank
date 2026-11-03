@@ -62,7 +62,7 @@ export interface StatementPosition {
 export interface StatementItem {
   id: string;
   occurredAt: Date;
-  kind: 'PIX_SENT' | 'PIX_RECEIVED' | 'PIX_REFUNDED' | 'DEMO_FUNDING' | 'TOP_UP';
+  kind: 'PIX_SENT' | 'PIX_RECEIVED' | 'PIX_REFUNDED' | 'PIX_REVERSED' | 'DEMO_FUNDING' | 'TOP_UP';
   direction: 'IN' | 'OUT';
   amount: Money;
   counterparty: { name: string; documentMasked: string | null } | null;
@@ -79,6 +79,8 @@ export interface StatementPage {
 export interface CustomerAccountsPort {
   ofHolders(tx: Transaction, holderIds: string[]): Promise<CustomerAccount[]>;
   holderOf(tx: Transaction, number: string): Promise<string | null>;
+  /** The customer who holds this account (v1.3.0, task 5). */
+  holderOfAccount(tx: Transaction, accountId: string): Promise<string | null>;
   balanceOf(tx: Transaction, holderId: string): Promise<Money>;
   statementOf(
     tx: Transaction,
@@ -141,6 +143,8 @@ export interface RequestsRepository {
   /** Writes the decision the state holds; the primary key keeps it to one. */
   insertDecision(state: ApprovalRequestState): Promise<void>;
   hasPending(customerId: string, kind: RequestKind, now: Date): Promise<boolean>;
+  /** A pending reversal of this Pix: one at a time (v1.3.0, task 5). */
+  hasPendingForTransfer(transferId: string, now: Date): Promise<boolean>;
   /** Newest first, a page at a time; the demo staff sees the demo ones only. */
   list(filter: {
     status: 'PENDING' | 'ALL';
@@ -160,4 +164,47 @@ export interface OperationsRepositories {
 /** Binds the repositories to the shared transaction (ADR 0010). */
 export interface OperationsRepositoriesFactory {
   for(tx: Transaction): OperationsRepositories;
+}
+
+/** A Pix as the staff's reversal reads it; the amount is the Pix's own (PIX-14). */
+export interface CompletedPix {
+  id: string;
+  payerAccountId: string;
+  /** Null for a Pix to another bank, never reversed here (B9). */
+  payeeAccountId: string | null;
+  amount: Money;
+  status: string;
+  payee: { name: string; documentMasked: string };
+}
+
+/** What a reversal needs from Payments (v1.3.0, task 5); Payments implements it. */
+export interface PixTransfersPort {
+  pixById(tx: Transaction, transferId: string): Promise<CompletedPix | null>;
+  pixByIds(tx: Transaction, ids: string[]): Promise<CompletedPix[]>;
+}
+
+/** Who was on each side, as the statement shows them. */
+interface PixParty {
+  name: string;
+  documentMasked: string;
+}
+
+/**
+ * What a reversal needs from the ledger (v1.3.0, task 5): a new entry from
+ * payee to payer, once per Pix, never below zero. A payee without the money
+ * is an answer, not an error: the request stays pending (V1).
+ */
+export interface PixReversalsPort {
+  isReversed(tx: Transaction, transferId: string): Promise<boolean>;
+  reverse(
+    tx: Transaction,
+    posting: {
+      transferId: string;
+      payerAccountId: string;
+      payeeAccountId: string;
+      amount: Money;
+      payer: PixParty;
+      payee: PixParty;
+    },
+  ): Promise<'REVERSED' | 'PAYEE_WITHOUT_FUNDS'>;
 }

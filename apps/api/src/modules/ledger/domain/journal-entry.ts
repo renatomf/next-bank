@@ -7,7 +7,9 @@ export type JournalEntryKind =
   | 'TOP_UP'
   | 'PIX_EXTERNAL'
   | 'PIX_EXTERNAL_SETTLEMENT'
-  | 'PIX_EXTERNAL_REFUND';
+  | 'PIX_EXTERNAL_REFUND'
+  /** The staff's reversal of an internal Pix, from payee to payer (v1.3.0, task 5). */
+  | 'PIX_REVERSAL';
 
 export interface PostingInput {
   id: string;

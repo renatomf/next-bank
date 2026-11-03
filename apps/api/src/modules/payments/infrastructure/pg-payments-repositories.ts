@@ -157,6 +157,15 @@ export class PgPixTransfersRepository implements PixTransfersRepository {
     return stateOf(rows[0]);
   }
 
+  /** Served by the primary key. */
+  async findByIds(ids: string[]): Promise<PixTransferState[]> {
+    const { rows } = await this.#client.query<TransferRow>(
+      `${SELECT_TRANSFER} WHERE id = ANY($1::uuid[])`,
+      [ids],
+    );
+    return rows.flatMap((row) => stateOf(row) ?? []);
+  }
+
   async lockForPayer(id: string, payerAccountId: string): Promise<PixTransferState | null> {
     const { rows } = await this.#client.query<TransferRow>(
       `${SELECT_TRANSFER} WHERE id = $1 AND payer_account_id = $2 FOR UPDATE`,

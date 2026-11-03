@@ -20,6 +20,7 @@ interface RequestRow {
   id: string;
   kind: RequestKind;
   customer_id: string;
+  transfer_id: string | null;
   reason: Reason;
   note: string | null;
   requested_by: string;
@@ -32,7 +33,8 @@ interface RequestRow {
   decision_note: string | null;
 }
 
-const REQUEST_WITH_DECISION = `SELECT r.id, r.kind, r.customer_id, r.reason, r.note, r.requested_by,
+const REQUEST_WITH_DECISION = `SELECT r.id, r.kind, r.customer_id, r.transfer_id, r.reason, r.note,
+    r.requested_by,
     r.requested_at, r.expires_at, r.demo_scope,
     d.decision, d.decided_by, d.decided_at, d.note AS decision_note
   FROM operations.requests r
@@ -57,6 +59,13 @@ export class PgRequestsRepository implements RequestsRepository {
         AND NOT EXISTS (SELECT 1 FROM operations.decisions d WHERE d.request_id = r.id)
     ) AS pending`;
 
+  /** Served by requests_transfer_idx and the decisions' primary key. */
+  static readonly HAS_PENDING_FOR_TRANSFER_SQL = `SELECT EXISTS (
+      SELECT 1 FROM operations.requests r
+      WHERE r.transfer_id = $1 AND r.expires_at > $2
+        AND NOT EXISTS (SELECT 1 FROM operations.decisions d WHERE d.request_id = r.id)
+    ) AS pending`;
+
   readonly #client: pg.ClientBase;
 
   constructor(client: pg.ClientBase) {
@@ -66,12 +75,14 @@ export class PgRequestsRepository implements RequestsRepository {
   async insert(state: ApprovalRequestState): Promise<void> {
     await this.#client.query(
       `INSERT INTO operations.requests
-         (id, kind, customer_id, reason, note, requested_by, requested_at, expires_at, demo_scope)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+         (id, kind, customer_id, transfer_id, reason, note, requested_by, requested_at,
+          expires_at, demo_scope)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
       [
         state.id,
         state.kind,
         state.customerId,
+        state.transferId,
         state.reason,
         state.note,
         state.requestedBy,
@@ -131,6 +142,14 @@ export class PgRequestsRepository implements RequestsRepository {
     return rows[0]?.pending ?? false;
   }
 
+  async hasPendingForTransfer(transferId: string, now: Date): Promise<boolean> {
+    const { rows } = await this.#client.query<{ pending: boolean }>(
+      PgRequestsRepository.HAS_PENDING_FOR_TRANSFER_SQL,
+      [transferId, now],
+    );
+    return rows[0]?.pending ?? false;
+  }
+
   async list(filter: {
     status: 'PENDING' | 'ALL';
     onlyDemo: boolean;
@@ -155,6 +174,7 @@ function stateOf(row: RequestRow): ApprovalRequestState {
     id: row.id,
     kind: row.kind,
     customerId: row.customer_id,
+    transferId: row.transfer_id,
     reason: row.reason,
     note: row.note,
     requestedBy: row.requested_by,

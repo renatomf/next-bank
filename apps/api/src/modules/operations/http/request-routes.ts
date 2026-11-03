@@ -2,6 +2,7 @@ import type { FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { DomainError } from '../../../shared/domain/domain-error.ts';
+import { MoneySchema } from '../../../shared/http/money.ts';
 import { PROBLEM_CONTENT_TYPE, ProblemSchema } from '../../../shared/http/problem.ts';
 import { staffCallerOf } from '../../staff/index.ts';
 import type { BlockAccount } from '../application/block-account.ts';
@@ -9,6 +10,7 @@ import type { CancelRequest } from '../application/cancel-request.ts';
 import type { DecideRequest } from '../application/decide-request.ts';
 import type { GetRequest, ListRequests } from '../application/list-requests.ts';
 import type { RequestPosition, StaffReader } from '../application/ports.ts';
+import type { RequestReversal } from '../application/request-reversal.ts';
 import type { RequestUnblock } from '../application/request-unblock.ts';
 import { REASONS, REQUEST_KINDS } from '../domain/approval-request.ts';
 
@@ -31,6 +33,10 @@ const RequestSchema = z
     kind: z.enum(REQUEST_KINDS),
     status: z.enum(['PENDING', 'EXPIRED', 'APPROVED', 'REJECTED', 'CANCELLED']),
     customer: PersonSchema,
+    // The Pix a reversal reverses, with its own amount (PIX-14); none for an unblock.
+    transfer: z
+      .strictObject({ id: z.uuid(), amount: MoneySchema, payeeName: z.string() })
+      .nullable(),
     reason: z.enum(REASONS),
     note: z.string().nullable(),
     requestedBy: PersonSchema,
@@ -91,6 +97,7 @@ function actorOf(request: FastifyRequest): StaffReader {
 export const requestRoutes: FastifyPluginAsyncZod<{
   blockAccount: BlockAccount;
   requestUnblock: RequestUnblock;
+  requestReversal: RequestReversal;
   decideRequest: DecideRequest;
   cancelRequest: CancelRequest;
   listRequests: ListRequests;
@@ -132,12 +139,21 @@ export const requestRoutes: FastifyPluginAsyncZod<{
       schema: {
         operationId: 'createRequest',
         headers: IdempotencyHeadersSchema,
-        body: z.strictObject({
-          kind: z.enum(REQUEST_KINDS),
-          customerId: z.uuid(),
-          reason: z.enum(REASONS),
-          note: NoteSchema,
-        }),
+        // An unblock names the customer; a reversal names the Pix, never an amount (PIX-14).
+        body: z.discriminatedUnion('kind', [
+          z.strictObject({
+            kind: z.literal('UNBLOCK_ACCOUNT'),
+            customerId: z.uuid(),
+            reason: z.enum(REASONS),
+            note: NoteSchema,
+          }),
+          z.strictObject({
+            kind: z.literal('REVERSE_PIX'),
+            transferId: z.uuid(),
+            reason: z.enum(REASONS),
+            note: NoteSchema,
+          }),
+        ]),
         response: {
           201: RequestSchema,
           401: problem,
@@ -149,12 +165,22 @@ export const requestRoutes: FastifyPluginAsyncZod<{
       },
     },
     async (request, reply) => {
-      const created = await deps.requestUnblock.execute(actorOf(request), {
-        customerId: request.body.customerId,
-        reason: request.body.reason,
-        note: request.body.note ?? null,
+      const { body } = request;
+      const common = {
+        reason: body.reason,
+        note: body.note ?? null,
         idempotencyKey: request.headers['idempotency-key'],
-      });
+      };
+      const created =
+        body.kind === 'REVERSE_PIX'
+          ? await deps.requestReversal.execute(actorOf(request), {
+              ...common,
+              transferId: body.transferId,
+            })
+          : await deps.requestUnblock.execute(actorOf(request), {
+              ...common,
+              customerId: body.customerId,
+            });
       return reply.status(201).send(created);
     },
   );

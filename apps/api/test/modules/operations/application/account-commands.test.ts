@@ -48,6 +48,8 @@ beforeEach(() => {
     staffNames: bank,
     repositories: bank.repositories,
     fingerprint: new FakeFingerprint(),
+    transfers: bank,
+    reversals: bank,
   };
   bank.addCustomer({ id: 'carla', name: 'Carla', email: 'carla@x.test', isDemo: true });
   bank.addCustomer({

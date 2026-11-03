@@ -86,6 +86,9 @@ const CATALOG_STATUS: Readonly<Record<string, number>> = {
   SelfApprovalNotAllowed: 403,
   NotTheRequester: 403,
   DemoCustomerProtected: 403,
+  // The two-person Pix reversal (v1.3.0 plan, task 5).
+  PixNotReversible: 409,
+  PayeeInsufficientFunds: 409,
 };
 
 /** Generic RFC 9457 response: never carries stack, SQL or internal detail (API-03). */

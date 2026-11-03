@@ -5,7 +5,7 @@ import {
   SelfApprovalNotAllowed,
 } from './errors.ts';
 
-export const REQUEST_KINDS = ['UNBLOCK_ACCOUNT'] as const;
+export const REQUEST_KINDS = ['UNBLOCK_ACCOUNT', 'REVERSE_PIX'] as const;
 export type RequestKind = (typeof REQUEST_KINDS)[number];
 
 /** Why the staff acts; a code, never free text, so the audit holds no personal data. */
@@ -26,6 +26,8 @@ export interface ApprovalRequestState {
   id: string;
   kind: RequestKind;
   customerId: string;
+  /** The Pix a reversal reverses (v1.3.0, task 5); none for an unblock. */
+  transferId: string | null;
   reason: Reason;
   note: string | null;
   requestedBy: string;
@@ -56,16 +58,22 @@ export class ApprovalRequest {
     id: string;
     kind: RequestKind;
     customerId: string;
+    transferId: string | null;
     reason: Reason;
     note: string | null;
     requestedBy: string;
     demoScope: boolean;
     now: Date;
   }): ApprovalRequest {
+    // A reversal names its Pix, an unblock none: a bug in the caller otherwise.
+    if ((input.kind === 'REVERSE_PIX') !== (input.transferId !== null)) {
+      throw new Error(`A ${input.kind} request ${input.transferId ? 'names no' : 'needs its'} Pix`);
+    }
     return new ApprovalRequest({
       id: input.id,
       kind: input.kind,
       customerId: input.customerId,
+      transferId: input.transferId,
       reason: input.reason,
       note: noteOf(input.note),
       requestedBy: input.requestedBy,

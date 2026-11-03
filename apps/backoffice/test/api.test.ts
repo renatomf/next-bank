@@ -213,4 +213,22 @@ describe('adminApi', () => {
       new CommandRefused(code),
     );
   });
+
+  // v1.3.0 plan, task 5: the reversal names the Pix, never an amount (PIX-14).
+  it('asks to reverse a Pix by its id, with the form key', async () => {
+    const transferId = '0190f0b6-1b2c-7d3e-8f40-123456789abc';
+    const key = '0190f0b6-0000-7000-8000-000000000003';
+    const { calls, fetch } = recordingFetch(201, { id: transferId });
+
+    await api(fetch, 'opaque-token').requestReversal(transferId, 'FRAUD_SUSPECTED', null, key);
+
+    expect(calls[0]?.url).toBe('https://api.example.test/admin/v1/requests');
+    expect(calls[0]?.headers.get('idempotency-key')).toBe(key);
+    expect(JSON.parse(calls[0]?.body ?? '{}')).toEqual({
+      kind: 'REVERSE_PIX',
+      transferId,
+      reason: 'FRAUD_SUSPECTED',
+      note: null,
+    });
+  });
 });

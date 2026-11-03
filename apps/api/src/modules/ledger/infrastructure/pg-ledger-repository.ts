@@ -100,6 +100,22 @@ export class PgLedgerRepository implements LedgerRepository {
     );
   }
 
+  /** Served by the journal_entries_reference_type_reference_id_kind_key unique index. */
+  async hasEntry(
+    kind: JournalEntryKind,
+    referenceType: string,
+    referenceId: string,
+  ): Promise<boolean> {
+    const { rows } = await this.#client.query<{ found: boolean }>(
+      `SELECT EXISTS (
+         SELECT 1 FROM ledger.journal_entries
+         WHERE reference_type = $1 AND reference_id = $2 AND kind = $3
+       ) AS found`,
+      [referenceType, referenceId, kind],
+    );
+    return rows[0]?.found ?? false;
+  }
+
   async insertEntry(entry: JournalEntryState): Promise<void> {
     await this.#client.query(
       `INSERT INTO ledger.journal_entries (id, kind, reference_type, reference_id, created_at)

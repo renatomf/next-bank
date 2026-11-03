@@ -15,6 +15,10 @@ enum StatementKind {
   /// The money of a Pix another bank refused, back (v1.2.0 plan, task 5).
   pixRefunded,
 
+  /// A Pix the bank's staff reversed (v1.3.0 plan, task 5): money back for
+  /// the payer, money out for the payee.
+  pixReversed,
+
   /// A kind a later version of the API adds: shown, never a broken page.
   other,
 }

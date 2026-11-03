@@ -15,6 +15,8 @@ import type {
   CustomerAccessPort,
   CustomerRecord,
   OperationsRepositoriesFactory,
+  PixReversalsPort,
+  PixTransfersPort,
   StaffNamesPort,
   StaffReader,
 } from './ports.ts';
@@ -27,6 +29,8 @@ export interface CommandDependencies extends CustomerReadsDependencies {
   repositories: OperationsRepositoriesFactory;
   /** Keyed hash of each command, for its idempotency record (ADR 0015). */
   fingerprint: RequestFingerprint;
+  transfers: PixTransfersPort;
+  reversals: PixReversalsPort;
 }
 
 interface Person {
@@ -40,6 +44,12 @@ export interface RequestView {
   kind: RequestKind;
   status: RequestStatus;
   customer: Person;
+  /** The Pix a reversal reverses, with its own amount (PIX-14); none for an unblock. */
+  transfer: {
+    id: string;
+    amount: { amount: number; currency: 'BRL' };
+    payeeName: string;
+  } | null;
   reason: Reason;
   note: string | null;
   requestedBy: Person;
@@ -98,6 +108,20 @@ export async function viewsOf(
       ),
     ),
   ]);
+  const transfers = await deps.transfers.pixByIds(
+    tx,
+    requests.flatMap((request) => (request.transferId ? [request.transferId] : [])),
+  );
+  const transferOf = (id: string | null) => {
+    const pix = transfers.find((transfer) => transfer.id === id);
+    return pix
+      ? {
+          id: pix.id,
+          amount: { amount: pix.amount.toJsonAmount(), currency: 'BRL' as const },
+          payeeName: pix.payee.name,
+        }
+      : null;
+  };
   const customerName = (id: string) => customers.find((customer) => customer.id === id)?.name ?? '';
   const person = (id: string) => ({ id, name: staff.get(id) ?? '' });
   return requests.map((state) => ({
@@ -105,6 +129,7 @@ export async function viewsOf(
     kind: state.kind,
     status: ApprovalRequest.restore(state).statusAt(now),
     customer: { id: state.customerId, name: customerName(state.customerId) },
+    transfer: transferOf(state.transferId),
     reason: state.reason,
     note: state.note,
     requestedBy: person(state.requestedBy),
@@ -148,6 +173,11 @@ export function requestEvent(
     subjectType: 'APPROVAL_REQUEST',
     subjectId: request.id,
     requestId: actor.requestId,
-    metadata: { kind: request.kind, customerId: request.customerId, reason: request.reason },
+    metadata: {
+      kind: request.kind,
+      customerId: request.customerId,
+      reason: request.reason,
+      ...(request.transferId ? { transferId: request.transferId } : {}),
+    },
   };
 }

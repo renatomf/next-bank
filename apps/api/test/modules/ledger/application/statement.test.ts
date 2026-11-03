@@ -91,6 +91,40 @@ describe('CustomerLedgerAccounts.statement', () => {
     });
   });
 
+  // v1.3.0 plan, task 5 (V4): a reversal is money back in for the payer, with
+  // the Pix's receipt, and money out for the payee, each with the other side.
+  it('shows a reversal as money back in for the payer and out for the payee', async () => {
+    const { clock, accounts } = await setup();
+    await pix(accounts, 'pix-1', 8_000n);
+    clock.current = new Date('2026-10-08T12:10:00.000Z');
+    await accounts.reversePix(tx, {
+      transferId: 'pix-1',
+      payerAccountId: 'account-a',
+      payeeAccountId: 'account-b',
+      amount: Money.of(8_000n),
+      payer: ANA,
+      payee: MARINA,
+    });
+
+    const [payerSide] = (await accounts.statement(tx, 'account-a', null)).items;
+    const [payeeSide] = (await accounts.statement(tx, 'account-b', null)).items;
+
+    expect(payerSide).toMatchObject({
+      kind: 'PIX_REVERSED',
+      direction: 'IN',
+      amount: Money.of(8_000n),
+      counterparty: MARINA,
+      transferId: 'pix-1',
+    });
+    expect(payeeSide).toMatchObject({
+      kind: 'PIX_REVERSED',
+      direction: 'OUT',
+      amount: Money.of(8_000n),
+      counterparty: ANA,
+      transferId: null,
+    });
+  });
+
   // v1.1.0 plan, task 5: a top-up is money out to the operator, with its
   // receipt; never mistaken for a Pix.
   it('shows a top-up as money out to the operator, with its receipt', async () => {
