@@ -66,4 +66,13 @@ describe('the boundaries of the UI', () => {
       expect(read(file)).not.toMatch(/\bstyle=\{/);
     },
   );
+
+  // A bare select opens the operating system's list, white and blue whatever
+  // the theme: the screens use the ui Select, drawn with the tokens.
+  it.each([...sources('app'), ...sources('features'), ...sources('components/nb')])(
+    '%s uses the themed select',
+    (file) => {
+      expect(read(file)).not.toMatch(/<select[\s>]/);
+    },
+  );
 });
