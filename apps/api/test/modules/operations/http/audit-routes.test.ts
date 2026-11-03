@@ -190,6 +190,56 @@ describe('the audit trail', () => {
     );
   });
 
+  // A member's trail also holds what happened to them: who created, switched or
+  // disabled them, and a sign-in refused, recorded by the system.
+  it('reads what happened to a member too: created, disabled, a sign-in refused', async () => {
+    const boss = await staff('ADMIN');
+    const created = await creator.execute({
+      email: uniqueEmail(),
+      name: 'Nina',
+      role: 'OPERATOR',
+      isDemo: false,
+    });
+    const disabled = await app.inject({
+      method: 'POST',
+      url: `/admin/v1/staff/${created.id}/disable`,
+      headers: admin(boss.token),
+      payload: {},
+    });
+    expect(disabled.statusCode, disabled.body).toBe(200);
+    clock.current = new Date(clock.now().getTime() + 30_000);
+    const refused = await app.inject({
+      method: 'POST',
+      url: '/admin/v1/auth/login',
+      headers: { 'x-backoffice-key': BACKOFFICE_KEY },
+      payload: {
+        email: created.email,
+        password: created.password,
+        mfaCode: new TOTP({ secret: Secret.fromBase32(created.totpSecret) }).generate({
+          timestamp: clock.now().getTime(),
+        }),
+      },
+    });
+    expect(refused.statusCode).toBe(401);
+
+    const response = await trail(boss.token, `memberId=${created.id}`);
+
+    expect(response.statusCode, response.body).toBe(200);
+    const items = response.json<{ items: (Entry & { metadata: Record<string, unknown> })[] }>()
+      .items;
+    expect(items.map((item) => item.action)).toEqual(
+      expect.arrayContaining(['STAFF_MEMBER_DISABLED', 'STAFF_LOGIN_FAILED']),
+    );
+    expect(items.find((item) => item.action === 'STAFF_LOGIN_FAILED')).toMatchObject({
+      actor: { type: 'SYSTEM', id: null, name: null },
+      metadata: { reason: 'MEMBER_DISABLED' },
+    });
+    expect(items.find((item) => item.action === 'STAFF_MEMBER_DISABLED')?.actor).toMatchObject({
+      type: 'STAFF',
+      id: boss.id,
+    });
+  });
+
   it('takes exactly one filter (STF-16)', async () => {
     const analyst = await staff('ANALYST');
 
