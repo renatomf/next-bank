@@ -166,6 +166,15 @@ export class PgPixTransfersRepository implements PixTransfersRepository {
     return rows.flatMap((row) => stateOf(row) ?? []);
   }
 
+  /** Served by pix_transfers_end_to_end_id_key. */
+  async findByEndToEndIds(endToEndIds: string[]): Promise<PixTransferState[]> {
+    const { rows } = await this.#client.query<TransferRow>(
+      `${SELECT_TRANSFER} WHERE end_to_end_id = ANY($1::text[])`,
+      [endToEndIds],
+    );
+    return rows.flatMap((row) => stateOf(row) ?? []);
+  }
+
   async lockForPayer(id: string, payerAccountId: string): Promise<PixTransferState | null> {
     const { rows } = await this.#client.query<TransferRow>(
       `${SELECT_TRANSFER} WHERE id = $1 AND payer_account_id = $2 FOR UPDATE`,

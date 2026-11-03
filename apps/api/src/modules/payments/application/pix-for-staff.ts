@@ -3,9 +3,11 @@ import type { Money } from '../../../shared/domain/money.ts';
 import type { PixTransferState } from '../domain/pix-transfer.ts';
 import type { PaymentsRepositoriesFactory } from './ports.ts';
 
-/** A Pix as the staff's reversal reads it (v1.3.0 plan, task 5). */
+/** A Pix as the staff reads it: to reverse it (v1.3.0, task 5) or for an exception (task 6). */
 export interface PixForReversal {
   id: string;
+  /** The SPI's id of a Pix to another bank, once sent; the reconciliation's key. */
+  endToEndId: string | null;
   payerAccountId: string;
   /** Null for a Pix to another bank, which the staff never reverses here (B9). */
   payeeAccountId: string | null;
@@ -35,11 +37,19 @@ export class PixForStaff {
     const found = await this.#repositories.for(tx).pixTransfers.findByIds(ids);
     return found.map(reversalViewOf);
   }
+
+  /** The Pix of the reconciliation's exceptions (v1.3.0, task 6), by the SPI's id. */
+  async pixByEndToEndIds(tx: Transaction, endToEndIds: string[]): Promise<PixForReversal[]> {
+    if (endToEndIds.length === 0) return [];
+    const found = await this.#repositories.for(tx).pixTransfers.findByEndToEndIds(endToEndIds);
+    return found.map(reversalViewOf);
+  }
 }
 
 function reversalViewOf(state: PixTransferState): PixForReversal {
   return {
     id: state.id,
+    endToEndId: state.endToEndId,
     payerAccountId: state.payerAccountId,
     payeeAccountId: state.payee.accountId,
     amount: state.amount,

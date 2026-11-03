@@ -66,6 +66,13 @@ function waiting(id: string, payer: string, endToEndId: string) {
   bank.waiting.add(endToEndId);
 }
 
+/** The SPI answers the Pix on its own: it is no longer waiting. */
+function spiAnswered(pixId: string, endToEndId: string) {
+  const pix = bank.pix.get(pixId);
+  if (pix) bank.pix.set(pixId, { ...pix, status: 'COMPLETED' });
+  bank.waiting.delete(endToEndId);
+}
+
 const E2E = {
   carla: 'E00000000202611021200carlacarlax',
   visitor: 'E00000000202611021200visitorvisi',
@@ -163,7 +170,7 @@ describe('RequestResolution', () => {
   });
 
   it('refuses a Pix the SPI already answered (X4)', async () => {
-    bank.waiting.delete(E2E.carla);
+    spiAnswered('pix-carla', E2E.carla);
 
     await expect(ask(operator, 'stale-carla')).rejects.toThrow(PixNoLongerProcessing);
   });
@@ -216,7 +223,7 @@ describe('approving a resolution', () => {
 
   it('moves nothing and leaves the request pending when the SPI answered first (X4)', async () => {
     const request = await ask(operator, 'stale-carla');
-    bank.waiting.delete(E2E.carla);
+    spiAnswered('pix-carla', E2E.carla);
 
     await expect(approve(analyst, request.id)).rejects.toThrow(PixNoLongerProcessing);
     expect(bank.concluded).toEqual([]);

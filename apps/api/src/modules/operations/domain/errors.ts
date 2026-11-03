@@ -89,3 +89,39 @@ export class PayeeInsufficientFunds extends DomainError {
     super('The payee does not have the amount to give back');
   }
 }
+
+/** Already resolved, or with a pending request to settle or refund it (catalog: 409; task 6). */
+export class ExceptionNotOpen extends DomainError {
+  readonly code = 'ExceptionNotOpen';
+
+  constructor() {
+    super('The exception is already resolved or has a pending request');
+  }
+}
+
+/** Only a Pix left waiting for the SPI is settled or refunded (catalog: 409; X1). */
+export class ExceptionNotSettleable extends DomainError {
+  readonly code = 'ExceptionNotSettleable';
+
+  constructor() {
+    super('Only a Pix left waiting for the SPI can be settled or refunded');
+  }
+}
+
+/** The SPI answered first: nothing moves, the request waits (catalog: 409; X4, REC-01). */
+export class PixNoLongerProcessing extends DomainError {
+  readonly code = 'PixNoLongerProcessing';
+
+  constructor() {
+    super('The Pix is no longer waiting for the SPI');
+  }
+}
+
+/** An explanation from 10 to 500 characters (catalog: 422; X2). */
+export class InvalidExplanation extends DomainError {
+  readonly code = 'InvalidRequest';
+
+  constructor() {
+    super('An explanation has 10 to 500 characters');
+  }
+}

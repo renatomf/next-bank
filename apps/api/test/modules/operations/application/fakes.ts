@@ -114,6 +114,16 @@ export class InMemoryBank
     return Promise.resolve(this.accounts.some((a) => a.holderId === accountId) ? accountId : null);
   }
 
+  holdersOfAccounts(_tx: Transaction, accountIds: string[]): Promise<Map<string, string>> {
+    return Promise.resolve(
+      new Map(
+        this.accounts
+          .filter((a) => accountIds.includes(a.holderId))
+          .map((a) => [a.holderId, a.holderId]),
+      ),
+    );
+  }
+
   holderOf(_tx: Transaction, number: string): Promise<string | null> {
     return Promise.resolve(this.accounts.find((a) => a.number === number)?.holderId ?? null);
   }

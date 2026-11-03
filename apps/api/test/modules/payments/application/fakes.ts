@@ -212,6 +212,15 @@ export class FakePaymentsRepositories implements PaymentsRepositoriesFactory {
           Promise.resolve(
             this.transfers.filter((transfer) => ids.includes(transfer.id)).map(copyOf),
           ),
+        findByEndToEndIds: (endToEndIds) =>
+          Promise.resolve(
+            this.transfers
+              .filter(
+                (transfer) =>
+                  transfer.endToEndId !== null && endToEndIds.includes(transfer.endToEndId),
+              )
+              .map(copyOf),
+          ),
         update: (state) => {
           const index = this.transfers.findIndex((transfer) => transfer.id === state.id);
           this.transfers[index] = state;

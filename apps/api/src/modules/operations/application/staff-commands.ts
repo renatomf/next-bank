@@ -9,6 +9,7 @@ import {
   type RequestKind,
   type RequestStatus,
 } from '../domain/approval-request.ts';
+import type { Resolution } from '../domain/reconciliation-exception.ts';
 import { type CustomerReadsDependencies, scopeOf } from './customer-reads.ts';
 import type {
   AccountStatusPort,
@@ -17,6 +18,8 @@ import type {
   OperationsRepositoriesFactory,
   PixReversalsPort,
   PixTransfersPort,
+  ReconciliationExceptionsPort,
+  StalePixPort,
   StaffNamesPort,
   StaffReader,
 } from './ports.ts';
@@ -31,6 +34,8 @@ export interface CommandDependencies extends CustomerReadsDependencies {
   fingerprint: RequestFingerprint;
   transfers: PixTransfersPort;
   reversals: PixReversalsPort;
+  exceptions: ReconciliationExceptionsPort;
+  stalePix: StalePixPort;
 }
 
 interface Person {
@@ -50,6 +55,8 @@ export interface RequestView {
     amount: { amount: number; currency: 'BRL' };
     payeeName: string;
   } | null;
+  /** The exception a resolution resolves, and how (task 6); none for the others. */
+  exception: { id: string; resolution: Resolution } | null;
   reason: Reason;
   note: string | null;
   requestedBy: Person;
@@ -130,6 +137,10 @@ export async function viewsOf(
     status: ApprovalRequest.restore(state).statusAt(now),
     customer: { id: state.customerId, name: customerName(state.customerId) },
     transfer: transferOf(state.transferId),
+    exception:
+      state.exceptionId && state.resolution
+        ? { id: state.exceptionId, resolution: state.resolution }
+        : null,
     reason: state.reason,
     note: state.note,
     requestedBy: person(state.requestedBy),
@@ -178,6 +189,9 @@ export function requestEvent(
       customerId: request.customerId,
       reason: request.reason,
       ...(request.transferId ? { transferId: request.transferId } : {}),
+      ...(request.exceptionId && request.resolution
+        ? { exceptionId: request.exceptionId, resolution: request.resolution }
+        : {}),
     },
   };
 }

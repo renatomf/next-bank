@@ -89,6 +89,10 @@ const CATALOG_STATUS: Readonly<Record<string, number>> = {
   // The two-person Pix reversal (v1.3.0 plan, task 5).
   PixNotReversible: 409,
   PayeeInsufficientFunds: 409,
+  // The reconciliation's exceptions (v1.3.0 plan, task 6).
+  ExceptionNotOpen: 409,
+  ExceptionNotSettleable: 409,
+  PixNoLongerProcessing: 409,
 };
 
 /** Generic RFC 9457 response: never carries stack, SQL or internal detail (API-03). */

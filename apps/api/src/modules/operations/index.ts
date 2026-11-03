@@ -5,6 +5,12 @@ import type { Clock, IdGenerator, UnitOfWork } from '../../shared/application/po
 import { BlockAccount } from './application/block-account.ts';
 import { CancelRequest } from './application/cancel-request.ts';
 import { DecideRequest } from './application/decide-request.ts';
+import {
+  ExplainException,
+  GetException,
+  ListExceptions,
+  RequestResolution,
+} from './application/exceptions.ts';
 import { GetCustomer } from './application/get-customer.ts';
 import { GetCustomerStatement } from './application/get-customer-statement.ts';
 import { GetRequest, ListRequests } from './application/list-requests.ts';
@@ -15,6 +21,8 @@ import type {
   CustomersPort,
   PixReversalsPort,
   PixTransfersPort,
+  ReconciliationExceptionsPort,
+  StalePixPort,
   StaffNamesPort,
 } from './application/ports.ts';
 import { RequestReversal } from './application/request-reversal.ts';
@@ -24,6 +32,7 @@ import { PgAuditTrailFactory } from './infrastructure/pg-audit-trail-factory.ts'
 import { PgOperationsRepositories } from './infrastructure/pg-operations-repositories.ts';
 
 export { customerRoutes } from './http/customer-routes.ts';
+export { exceptionRoutes } from './http/exception-routes.ts';
 export { requestRoutes } from './http/request-routes.ts';
 
 export interface OperationsModule {
@@ -37,11 +46,16 @@ export interface OperationsModule {
   cancelRequest: CancelRequest;
   listRequests: ListRequests;
   getRequest: GetRequest;
+  requestResolution: RequestResolution;
+  explainException: ExplainException;
+  listExceptions: ListExceptions;
+  getException: GetException;
 }
 
 /**
- * Builds the operations context; it reaches Identity, Accounts and Staff
- * only through the ports it defines.
+ * Builds the operations context; it reaches Identity, Accounts, Staff,
+ * Payments, the Ledger and the Reconciliation only through the ports it
+ * defines.
  */
 export function createOperationsModule(settings: {
   unitOfWork: UnitOfWork;
@@ -55,6 +69,8 @@ export function createOperationsModule(settings: {
   fingerprint: RequestFingerprint;
   transfers: PixTransfersPort;
   reversals: PixReversalsPort;
+  exceptions: ReconciliationExceptionsPort;
+  stalePix: StalePixPort;
 }): OperationsModule {
   const deps = {
     ...settings,
@@ -72,5 +88,9 @@ export function createOperationsModule(settings: {
     cancelRequest: new CancelRequest(deps),
     listRequests: new ListRequests(deps),
     getRequest: new GetRequest(deps),
+    requestResolution: new RequestResolution(deps),
+    explainException: new ExplainException(deps),
+    listExceptions: new ListExceptions(deps),
+    getException: new GetException(deps),
   };
 }

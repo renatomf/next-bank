@@ -8,11 +8,13 @@ import { staffCallerOf } from '../../staff/index.ts';
 import type { BlockAccount } from '../application/block-account.ts';
 import type { CancelRequest } from '../application/cancel-request.ts';
 import type { DecideRequest } from '../application/decide-request.ts';
+import type { RequestResolution } from '../application/exceptions.ts';
 import type { GetRequest, ListRequests } from '../application/list-requests.ts';
 import type { RequestPosition, StaffReader } from '../application/ports.ts';
 import type { RequestReversal } from '../application/request-reversal.ts';
 import type { RequestUnblock } from '../application/request-unblock.ts';
 import { REASONS, REQUEST_KINDS } from '../domain/approval-request.ts';
+import { RESOLUTIONS } from '../domain/reconciliation-exception.ts';
 
 // Every command of the staff carries an Idempotency-Key, which the backoffice
 // draws when it renders the form (task 4, K6; ADR 0007).
@@ -37,6 +39,8 @@ const RequestSchema = z
     transfer: z
       .strictObject({ id: z.uuid(), amount: MoneySchema, payeeName: z.string() })
       .nullable(),
+    // The exception a resolution resolves, and how (task 6); none for the others.
+    exception: z.strictObject({ id: z.uuid(), resolution: z.enum(RESOLUTIONS) }).nullable(),
     reason: z.enum(REASONS),
     note: z.string().nullable(),
     requestedBy: PersonSchema,
@@ -98,6 +102,7 @@ export const requestRoutes: FastifyPluginAsyncZod<{
   blockAccount: BlockAccount;
   requestUnblock: RequestUnblock;
   requestReversal: RequestReversal;
+  requestResolution: RequestResolution;
   decideRequest: DecideRequest;
   cancelRequest: CancelRequest;
   listRequests: ListRequests;
@@ -139,7 +144,8 @@ export const requestRoutes: FastifyPluginAsyncZod<{
       schema: {
         operationId: 'createRequest',
         headers: IdempotencyHeadersSchema,
-        // An unblock names the customer; a reversal names the Pix, never an amount (PIX-14).
+        // An unblock names the customer; a reversal names the Pix, never an amount
+        // (PIX-14); a resolution names the exception and how (task 6).
         body: z.discriminatedUnion('kind', [
           z.strictObject({
             kind: z.literal('UNBLOCK_ACCOUNT'),
@@ -150,6 +156,13 @@ export const requestRoutes: FastifyPluginAsyncZod<{
           z.strictObject({
             kind: z.literal('REVERSE_PIX'),
             transferId: z.uuid(),
+            reason: z.enum(REASONS),
+            note: NoteSchema,
+          }),
+          z.strictObject({
+            kind: z.literal('RESOLVE_EXCEPTION'),
+            exceptionId: z.uuid(),
+            resolution: z.enum(RESOLUTIONS),
             reason: z.enum(REASONS),
             note: NoteSchema,
           }),
@@ -171,17 +184,29 @@ export const requestRoutes: FastifyPluginAsyncZod<{
         note: body.note ?? null,
         idempotencyKey: request.headers['idempotency-key'],
       };
-      const created =
-        body.kind === 'REVERSE_PIX'
-          ? await deps.requestReversal.execute(actorOf(request), {
+      const actor = actorOf(request);
+      switch (body.kind) {
+        case 'REVERSE_PIX':
+          return reply
+            .status(201)
+            .send(
+              await deps.requestReversal.execute(actor, { ...common, transferId: body.transferId }),
+            );
+        case 'RESOLVE_EXCEPTION':
+          return reply.status(201).send(
+            await deps.requestResolution.execute(actor, {
               ...common,
-              transferId: body.transferId,
-            })
-          : await deps.requestUnblock.execute(actorOf(request), {
-              ...common,
-              customerId: body.customerId,
-            });
-      return reply.status(201).send(created);
+              exceptionId: body.exceptionId,
+              resolution: body.resolution,
+            }),
+          );
+        case 'UNBLOCK_ACCOUNT':
+          return reply
+            .status(201)
+            .send(
+              await deps.requestUnblock.execute(actor, { ...common, customerId: body.customerId }),
+            );
+      }
     },
   );
 
