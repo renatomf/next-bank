@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { type ActionState, requestReversal } from './account-actions';
-import { ReasonField } from './reason-field';
+import { ReasonField } from '@/components/nb/reason-field';
 
 const NO_ERROR: ActionState = { error: null };
 

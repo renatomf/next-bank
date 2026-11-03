@@ -21,12 +21,40 @@ import { MoneyText } from '../components/nb/money-text';
 import { SidebarNav } from '../components/nb/sidebar-nav';
 import { ThemeToggle } from '../components/nb/theme-toggle';
 import { StatementList } from '../features/customers/statement-list';
+import { ExceptionDetail } from '../features/reconciliation/exception-detail';
+import { ExceptionsTable } from '../features/reconciliation/exceptions-table';
 import { RequestDetail } from '../features/requests/request-detail';
 import { RequestsTable } from '../features/requests/requests-table';
 
 // The CSP has no unsafe-inline (STF-05; task 3.5, E5): a style attribute in
 // the server's HTML would be dropped by the browser. Every component the
 // screens use renders without one.
+// An exception of the reconciliation as the API answers it (task 6), explained.
+const exception = {
+  id: '0190f0b6-1b2c-7d3e-8f40-123456789abf',
+  runDate: '2026-11-02',
+  kind: 'STALE_PROCESSING' as const,
+  endToEndId: 'E00000000202611021200abcdefghijk',
+  expected: null,
+  actual: null,
+  detectedAt: '2026-11-03T06:30:00.000Z',
+  status: 'RESOLVED' as const,
+  pix: {
+    id: '0190f0b6-1b2c-7d3e-8f40-123456789ab0',
+    amount: { amount: 8000, currency: 'BRL' as const },
+    status: 'COMPLETED',
+    customer: { id: '0190f0b6-1b2c-7d3e-8f40-123456789abd', name: 'Carla Demo' },
+  },
+  pendingRequestId: null,
+  resolution: {
+    outcome: 'EXPLAINED' as const,
+    resolvedBy: { id: '0190f0b6-1b2c-7d3e-8f40-123456789ab1', name: 'Diogo' },
+    resolvedAt: '2026-11-03T15:00:00.000Z',
+    explanation: 'Conferido no SPI: liquidado no dia seguinte.',
+    approvalRequestId: null,
+  },
+};
+
 // A request as the API answers it (task 4), decided, with notes.
 const request = {
   id: '0190f0b6-1b2c-7d3e-8f40-123456789abc',
@@ -34,6 +62,7 @@ const request = {
   status: 'APPROVED' as const,
   customer: { id: '0190f0b6-1b2c-7d3e-8f40-123456789abd', name: 'Carla Demo' },
   transfer: null,
+  exception: null,
   reason: 'CUSTOMER_REQUEST' as const,
   note: 'Cliente confirmou a identidade',
   requestedBy: { id: '0190f0b6-1b2c-7d3e-8f40-123456789abe', name: 'Olívia' },
@@ -95,6 +124,8 @@ const rendered: [string, ReactElement][] = [
   ['ThemeToggle', <ThemeToggle key="n" />],
   ['RequestsTable', <RequestsTable key="o" requests={[request]} />],
   ['RequestDetail', <RequestDetail key="p" request={request} />],
+  ['ExceptionsTable', <ExceptionsTable key="q" exceptions={[exception]} />],
+  ['ExceptionDetail', <ExceptionDetail key="r" exception={exception} />],
   ['MoneyText', <MoneyText key="j" money={{ amount: 123456, currency: 'BRL' }} />],
   [
     'StatementList',

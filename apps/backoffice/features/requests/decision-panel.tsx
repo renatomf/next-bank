@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import type { ApprovalRequest } from '@/lib/api';
+import { APPROVAL_EFFECTS } from '@/lib/staff-words';
 import { type DecisionState, decideRequest } from './actions';
 
 const NO_ERROR: DecisionState = { error: null };
@@ -19,12 +21,14 @@ const NO_ERROR: DecisionState = { error: null };
  */
 export function DecisionPanel({
   requestId,
+  kind,
   canDecide,
   canCancel,
   decideKey,
   cancelKey,
 }: {
   requestId: string;
+  kind: ApprovalRequest['kind'];
   canDecide: boolean;
   canCancel: boolean;
   decideKey: string;
@@ -38,9 +42,7 @@ export function DecisionPanel({
       <CardHeader>
         <CardTitle className="text-lg">{canDecide ? 'Decidir' : 'Cancelar o pedido'}</CardTitle>
         <CardDescription>
-          {canDecide
-            ? 'Aprovar desbloqueia a conta na hora, e o cliente volta a entrar.'
-            : 'Só quem fez o pedido pode cancelá-lo.'}
+          {canDecide ? APPROVAL_EFFECTS[kind] : 'Só quem fez o pedido pode cancelá-lo.'}
         </CardDescription>
       </CardHeader>
       <CardContent>

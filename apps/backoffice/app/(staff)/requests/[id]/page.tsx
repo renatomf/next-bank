@@ -28,14 +28,22 @@ export default async function RequestPage({ params }: { params: Promise<{ id: st
       <RequestDetail request={request} />
       <DecisionPanel
         requestId={request.id}
+        kind={request.kind}
         canDecide={pending && member.role === 'ANALYST'}
         canCancel={pending && member.role === 'OPERATOR'}
         decideKey={newIdempotencyKey()}
         cancelKey={newIdempotencyKey()}
       />
-      <Button asChild variant="link">
-        <Link href={`/customers/${request.customer.id}`}>Abrir a ficha do cliente</Link>
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button asChild variant="link">
+          <Link href={`/customers/${request.customer.id}`}>Abrir a ficha do cliente</Link>
+        </Button>
+        {request.exception ? (
+          <Button asChild variant="link">
+            <Link href={`/reconciliation/${request.exception.id}`}>Abrir a exceção</Link>
+          </Button>
+        ) : null}
+      </div>
     </div>
   );
 }
