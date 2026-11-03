@@ -58,10 +58,15 @@ class SessionController extends AsyncNotifier<Session> {
   /// [reason] when the server ended the session.
   Future<void> signOut([SessionEndReason? reason]) async {
     await ref.read(tokenStoreProvider).clear();
-    // Nothing of the account stays for whoever signs in next on this phone
-    // (v1.1.0 plan, task 2; MOB-11, MOB-12).
-    await ref.read(biometricPinStoreProvider).clear();
-    await ref.read(greetingNameStoreProvider).clear();
-    state = AsyncData(SignedOut(reason));
+    try {
+      // Nothing of the account stays for whoever signs in next on this phone
+      // (v1.1.0 plan, task 2; MOB-11, MOB-12).
+      await ref.read(biometricPinStoreProvider).clear();
+      await ref.read(greetingNameStoreProvider).clear();
+    } finally {
+      // The tokens are gone: the customer is signed out whatever else
+      // failed, and the failure still reaches the error reporter (F-52).
+      state = AsyncData(SignedOut(reason));
+    }
   }
 }

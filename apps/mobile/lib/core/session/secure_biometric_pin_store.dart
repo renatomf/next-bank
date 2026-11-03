@@ -41,8 +41,13 @@ final class SecureBiometricPinStore implements BiometricPinStore {
   @override
   Future<bool> isAvailable() => _hasStrongBiometrics();
 
+  /// With no strong biometric enrolled, the Keystore refuses the key even to
+  /// look, and nothing kept under it could be read anyway (F-52).
   @override
-  Future<bool> hasPin() => _storage.containsKey(key: _key, aOptions: _options);
+  Future<bool> hasPin() async {
+    if (!await _hasStrongBiometrics()) return false;
+    return await _storage.containsKey(key: _key, aOptions: _options);
+  }
 
   @override
   Future<void> save(String pin) =>
@@ -65,6 +70,16 @@ final class SecureBiometricPinStore implements BiometricPinStore {
     }
   }
 
+  /// With no strong biometric enrolled, the Keystore refuses the key even to
+  /// delete; what was kept under it died with the last fingerprint, so there
+  /// is nothing left to forget (F-52). With biometrics, a failure still
+  /// shows: the PIN must not stay for the next person (MOB-11).
   @override
-  Future<void> clear() => _storage.delete(key: _key, aOptions: _options);
+  Future<void> clear() async {
+    try {
+      await _storage.delete(key: _key, aOptions: _options);
+    } on PlatformException {
+      if (await _hasStrongBiometrics()) rethrow;
+    }
+  }
 }
