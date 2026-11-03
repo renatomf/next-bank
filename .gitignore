@@ -154,6 +154,8 @@ test-results/
 playwright-report/
 blob-report/
 playwright/.cache/
+# As sessões da equipe que o E2E guarda entre os testes: um cookie de sessão é segredo.
+**/e2e/.auth/
 
 # Flutter em subpastas (apps/mobile, packages_flutter/*)
 **/.dart_tool/

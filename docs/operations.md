@@ -224,6 +224,14 @@ O login da equipe pede e-mail, senha e o código de 6 dígitos do autenticador, 
 
 Para o backoffice local: em `apps/backoffice`, crie um `.env.local` com `API_URL=http://127.0.0.1:3000` e a mesma `BACKOFFICE_API_KEY` da API, e rode `pnpm dev` (porta 3000 ocupada pela API: use `pnpm dev -p 3001`).
 
+**E2E do backoffice (tarefa 9 da `v1.3.0`).** O Playwright percorre a dupla aprovação no navegador, entrando como Olívia e Diogo, com as credenciais publicadas, e bloqueando e desbloqueando a Carla. Localmente:
+
+1. A API rodando, com as chaves do backoffice, e o banco com a demo: `pnpm --filter @nextbank/api seed:demo` e a equipe demo (`staff:create --reset`, com `STAFF_ADMIN_EMAIL`, `STAFF_ADMIN_PASSWORD` e `STAFF_ADMIN_TOTP_SECRET` no ambiente).
+2. A conta da Carla **ativa**, como a demo a deixa.
+3. Em `apps/backoffice`: `pnpm build`, uma vez, `pnpm exec playwright install chromium` e, então, `pnpm e2e`. O backoffice sobe na porta 3101, com o `.env.local`.
+
+O login usa o código do autenticador uma vez: entre duas rodadas seguidas, espere 30 segundos, ou o login da preparação é recusado como código repetido. As sessões guardadas ficam em `apps/backoffice/e2e/.auth/`, ignorada pelo git. No CI, o job **Backoffice (Playwright)** do workflow `E2E` faz o mesmo do zero a cada PR e só guarda o trace quando um teste falha.
+
 ## 13. Backoffice publicado (v1.3.0)
 
 O backoffice roda na Vercel, no plano gratuito, e só o servidor dele fala com a API (plano da `v1.3.0`, B1 e B2). Faça os passos nesta ordem.
