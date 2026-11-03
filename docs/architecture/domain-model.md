@@ -161,13 +161,14 @@ flowchart LR
 ### Operations (v1.3.0)
 
 **`ApprovalRequest`** (tarefa 4)
-- Atributos: `id`, `kind` (`UNBLOCK_ACCOUNT`; as tarefas 5 e 6 trazem os seus), `customerId`, `reason` (`FRAUD_SUSPECTED`, `CUSTOMER_REQUEST`, `LEGAL_ORDER`, `OTHER`), `note` (até 500), `requestedBy`, `requestedAt`, `expiresAt` (24 h depois), `demoScope`, `decision` (`APPROVED`, `REJECTED` ou `CANCELLED`, com quem e quando)
+- Atributos: `id`, `kind` (`UNBLOCK_ACCOUNT`; `REVERSE_PIX` na tarefa 5; a tarefa 6 traz o seu), `customerId`, `transferId` (só no estorno: o Pix que ele estorna), `reason` (`FRAUD_SUSPECTED`, `CUSTOMER_REQUEST`, `LEGAL_ORDER`, `OTHER`), `note` (até 500), `requestedBy`, `requestedAt`, `expiresAt` (24 h depois), `demoScope`, `decision` (`APPROVED`, `REJECTED` ou `CANCELLED`, com quem e quando)
 - Invariantes:
   - quem pede nunca aprova nem recusa; só quem pede cancela (STF-03)
   - decide-se uma vez (STF-09); vencido (sem decisão, 24 h depois) não se decide, e o estado é derivado do relógio, sem job
   - só por inclusão: a decisão é um registro novo (STF-10)
 - Comandos: `Open`, `Approve` (executa o comando pedido na mesma transação), `Reject`, `Cancel`
 - O bloqueio não é um pedido: é imediato e de um só (B6), e marca a conta `BLOCKED` e o cliente `LOCKED`, revogando todas as sessões (K1)
+- O estorno (tarefa 5) só vale para um Pix interno `COMPLETED` ainda não estornado, sempre pelo valor do Pix; aprovado, vira um lançamento `PIX_REVERSAL` no ledger, do recebedor ao pagador, e o Pix original não muda. Sem saldo no recebedor, nada se move e o pedido continua pendente (V1)
 
 ### 3.5 Audit
 
@@ -175,7 +176,7 @@ flowchart LR
 - Atributos: `id`, `occurredAt`, `actorType` (`USER`, `SYSTEM`, `STAFF`), `actorId`, `action`, `subjectType`, `subjectId`, `requestId`, `metadata`
 - Invariantes: só inclusão; `metadata` **nunca** contém senha, PIN, token, CPF completo ou valor de chave Pix completo
 - Ações da V1: `USER_REGISTERED`, `LOGIN_SUCCEEDED`, `LOGIN_FAILED`, `SESSION_CREATED`, `SESSION_REVOKED`, `REFRESH_REUSE_DETECTED`, `PIN_CREATED`, `PIN_LOCKED`, `PIN_CHANGED`, `PASSWORD_CHANGED`, `ACCOUNT_OPENED`, `PIX_CREATED`, `PIX_COMPLETED`, `PIX_SENT` (v1.2.0: Pix enviado a outro banco, com o id de ponta a ponta), `PIX_FAILED`, `PIX_CANCELLED`, `TOP_UP_COMPLETED` (v1.1.0: a operadora e o valor, nunca o número), `PIX_SCHEDULE_CREATED` e `PIX_SCHEDULE_CANCELLED` (v1.2.0: ator `USER`; cada ocorrência grava o desfecho do Pix com ator `SYSTEM` e o id do agendamento)
-- Ações da equipe (v1.3.0, tarefa 1; ator `STAFF`, ou `SYSTEM` quando ninguém está autenticado): `STAFF_MEMBER_CREATED`, `STAFF_LOGIN_SUCCEEDED`, `STAFF_LOGIN_FAILED` (o motivo só no `metadata`: senha, código, código repetido ou membro desativado) e `STAFF_SESSION_REVOKED`; na tarefa 4, `ACCOUNT_BLOCKED` e `ACCOUNT_UNBLOCKED` (sujeito: a conta; `metadata`: o cliente e o motivo), `SESSION_REVOKED` com o motivo `ACCOUNT_BLOCKED` e `REQUEST_CREATED`, `REQUEST_APPROVED`, `REQUEST_REJECTED` e `REQUEST_CANCELLED` (sujeito: o pedido); na tarefa 3, `SENSITIVE_DATA_ACCESSED` (sujeito: o cliente, `USER`; `metadata.view`: `CUSTOMER` ou `STATEMENT`) e `CUSTOMERS_SEARCHED` (sujeito: o membro; `metadata`: o tipo do termo e a quantidade, nunca o termo)
+- Ações da equipe (v1.3.0, tarefa 1; ator `STAFF`, ou `SYSTEM` quando ninguém está autenticado): `STAFF_MEMBER_CREATED`, `STAFF_LOGIN_SUCCEEDED`, `STAFF_LOGIN_FAILED` (o motivo só no `metadata`: senha, código, código repetido ou membro desativado) e `STAFF_SESSION_REVOKED`; na tarefa 5, `PIX_REVERSED` (sujeito: o Pix; `metadata`: o pedido, o pagador e o recebedor); na tarefa 4, `ACCOUNT_BLOCKED` e `ACCOUNT_UNBLOCKED` (sujeito: a conta; `metadata`: o cliente e o motivo), `SESSION_REVOKED` com o motivo `ACCOUNT_BLOCKED` e `REQUEST_CREATED`, `REQUEST_APPROVED`, `REQUEST_REJECTED` e `REQUEST_CANCELLED` (sujeito: o pedido); na tarefa 3, `SENSITIVE_DATA_ACCESSED` (sujeito: o cliente, `USER`; `metadata.view`: `CUSTOMER` ou `STATEMENT`) e `CUSTOMERS_SEARCHED` (sujeito: o membro; `metadata`: o tipo do termo e a quantidade, nunca o termo)
 
 ## 4. Máquina de estados do Pix
 
@@ -341,6 +342,8 @@ O extrato não é um agregado: é uma consulta (lado de leitura do CQRS) que lê
 | `SelfApprovalNotAllowed` | 403 | Backoffice | "Quem fez o pedido não pode decidi-lo." (v1.3.0) |
 | `NotTheRequester` | 403 | Backoffice | "Só quem fez o pedido pode cancelá-lo." (v1.3.0) |
 | `DemoCustomerProtected` | 403 | Backoffice | "A equipe de demonstração não bloqueia Ana nem Bruno." (v1.3.0) |
+| `PixNotReversible` | 409 | Backoffice | "Só um Pix interno concluído, ainda não estornado, pode ser estornado." (v1.3.0) |
+| `PayeeInsufficientFunds` | 409 | Backoffice | "Quem recebeu o Pix não tem mais o valor. O pedido continua pendente." (v1.3.0) |
 | `PayeeUnavailable` | 422 | Revisar | "A conta de destino não pode receber Pix agora." |
 | `TransferExpired` | 409 | Revisar | "O tempo para confirmar acabou. Comece de novo." |
 | `InvalidTransferState` | 409 | Revisar | "Este Pix já foi processado." |
