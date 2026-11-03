@@ -213,6 +213,7 @@ const _$StatementItemKindEnumEnumMap = {
   StatementItemKindEnum.PIX_SENT: 'PIX_SENT',
   StatementItemKindEnum.PIX_RECEIVED: 'PIX_RECEIVED',
   StatementItemKindEnum.PIX_REFUNDED: 'PIX_REFUNDED',
+  StatementItemKindEnum.PIX_REVERSED: 'PIX_REVERSED',
   StatementItemKindEnum.DEMO_FUNDING: 'DEMO_FUNDING',
   StatementItemKindEnum.TOP_UP: 'TOP_UP',
   StatementItemKindEnum.unknownDefaultOpenApi: 'unknown_default_open_api',

@@ -204,10 +204,16 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            kind: "UNBLOCK_ACCOUNT";
+            kind: "UNBLOCK_ACCOUNT" | "REVERSE_PIX";
             /** @enum {string} */
             status: "PENDING" | "EXPIRED" | "APPROVED" | "REJECTED" | "CANCELLED";
             customer: components["schemas"]["Person"];
+            transfer: {
+                /** Format: uuid */
+                id: string;
+                amount: components["schemas"]["Money"];
+                payeeName: string;
+            } | null;
             /** @enum {string} */
             reason: "FRAUD_SUSPECTED" | "CUSTOMER_REQUEST" | "LEGAL_ORDER" | "OTHER";
             note: string | null;
@@ -322,7 +328,7 @@ export interface components {
             /** Format: date-time */
             occurredAt: string;
             /** @enum {string} */
-            kind: "PIX_SENT" | "PIX_RECEIVED" | "PIX_REFUNDED" | "DEMO_FUNDING" | "TOP_UP";
+            kind: "PIX_SENT" | "PIX_RECEIVED" | "PIX_REFUNDED" | "PIX_REVERSED" | "DEMO_FUNDING" | "TOP_UP";
             /** @enum {string} */
             direction: "IN" | "OUT";
             amount: components["schemas"]["Money"];
@@ -755,6 +761,14 @@ export interface operations {
                     kind: "UNBLOCK_ACCOUNT";
                     /** Format: uuid */
                     customerId: string;
+                    /** @enum {string} */
+                    reason: "FRAUD_SUSPECTED" | "CUSTOMER_REQUEST" | "LEGAL_ORDER" | "OTHER";
+                    note?: string | null;
+                } | {
+                    /** @enum {string} */
+                    kind: "REVERSE_PIX";
+                    /** Format: uuid */
+                    transferId: string;
                     /** @enum {string} */
                     reason: "FRAUD_SUSPECTED" | "CUSTOMER_REQUEST" | "LEGAL_ORDER" | "OTHER";
                     note?: string | null;

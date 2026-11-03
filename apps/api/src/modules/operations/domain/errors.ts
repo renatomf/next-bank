@@ -71,3 +71,21 @@ export class DemoCustomerProtected extends DomainError {
     super('The demo staff does not block the demo customers of the app');
   }
 }
+
+/** Only a completed internal Pix, not yet reversed, is reversed (catalog: 409; PIX-14). */
+export class PixNotReversible extends DomainError {
+  readonly code = 'PixNotReversible';
+
+  constructor() {
+    super('Only a completed internal Pix not yet reversed can be reversed');
+  }
+}
+
+/** The payee no longer has the amount: nothing moves, the request waits (catalog: 409; B7). */
+export class PayeeInsufficientFunds extends DomainError {
+  readonly code = 'PayeeInsufficientFunds';
+
+  constructor() {
+    super('The payee does not have the amount to give back');
+  }
+}

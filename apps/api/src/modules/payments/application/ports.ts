@@ -59,6 +59,11 @@ export interface PixTransfersRepository {
   findForPayer(id: string, payerAccountId: string): Promise<PixTransferState | null>;
   /** Locks the Pix until the transaction ends: it changes state once (PIX-08). */
   lockForPayer(id: string, payerAccountId: string): Promise<PixTransferState | null>;
+  /**
+   * The Pix with these ids, whoever paid them: for the staff's reversal only
+   * (v1.3.0, task 5), never on a customer's request.
+   */
+  findByIds(ids: string[]): Promise<PixTransferState[]>;
   update(transfer: PixTransferState): Promise<void>;
   /**
    * Locks the Pix the SPI knows by this id until the transaction ends, for

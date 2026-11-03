@@ -3,7 +3,11 @@ import type { FastifyInstance } from 'fastify';
 import { Secret, TOTP } from 'otpauth';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../../../../src/app.ts';
+import { createLedgerModule } from '../../../../src/modules/ledger/index.ts';
 import { createPool } from '../../../../src/shared/db.ts';
+import { Money } from '../../../../src/shared/domain/money.ts';
+import { PgUnitOfWork } from '../../../../src/shared/infrastructure/pg-unit-of-work.ts';
+import { UuidV7Generator } from '../../../../src/shared/infrastructure/system-ports.ts';
 import { staffCreator } from '../../../../scripts/create-staff.ts';
 import { captureLogs, testDatabaseUrl, testSecurity } from '../../../helpers.ts';
 import { FixedClock } from '../../identity/application/fakes.ts';
@@ -23,6 +27,35 @@ const clock = new FixedClock(new Date());
 const creator = staffCreator({ pool, totpKey: TOTP_KEY, clock });
 let app: FastifyInstance;
 let nextIp = 1;
+// The Pix limit (R$ 1.000 a Pix) keeps a test from emptying an account through
+// the app: the ledger empties it directly, as a Pix to elsewhere would.
+const ledger = createLedgerModule({ clock, ids: new UuidV7Generator() });
+const unitOfWork = new PgUnitOfWork(pool);
+
+async function accountOf(customerId: string): Promise<string> {
+  const { rows } = await pool.query<{ id: string }>(
+    'SELECT id FROM accounts.accounts WHERE holder_user_id = $1',
+    [customerId],
+  );
+  return rows[0]?.id ?? '';
+}
+
+/** Leaves [who] with only [cents], the rest sent to [elsewhere]. */
+async function leaveOnly(who: Customer, elsewhere: Customer, cents: number) {
+  const balance = await balanceOf(who.accessToken);
+  const party = { name: 'Clara Teste', documentMasked: '***.444.777-**' };
+  const [from, to] = [await accountOf(who.id), await accountOf(elsewhere.id)];
+  await unitOfWork.run((tx) =>
+    ledger.customerAccounts.transferPix(tx, {
+      transferId: randomUUID(),
+      payerAccountId: from,
+      payeeAccountId: to,
+      amount: Money.of(BigInt(balance - cents)),
+      payer: party,
+      payee: party,
+    }),
+  );
+}
 
 beforeAll(() => {
   app = buildApp({
@@ -187,7 +220,7 @@ describe('the Pix reversal', () => {
     const payee = await customer();
     const elsewhere = await customer();
     const sent = await pix(payer, payee, 8_000);
-    await pix(payee, elsewhere, START + 5_000);
+    await leaveOnly(payee, elsewhere, 3_000);
     const { requestId } = await opened(sent.id);
 
     const refused = await approve(await staff('ANALYST'), requestId);
@@ -216,24 +249,25 @@ describe('the Pix reversal', () => {
     const payee = await customer();
     const elsewhere = await customer();
     const sent = await pix(payer, payee, 8_000);
+    await leaveOnly(payee, elsewhere, 13_000);
     const { requestId } = await opened(sent.id);
     const analyst = await staff('ANALYST');
 
-    // The payee holds START + 8,000: the reversal and this Pix cannot both pass.
+    // 8,000 back and 10,000 out do not both fit in 13,000.
     const [approved, spent] = await Promise.all([
       approve(analyst, requestId),
-      pix(payee, elsewhere, START),
+      pix(payee, elsewhere, 10_000),
     ]);
 
     const balance = await balanceOf(payee.accessToken);
     expect(balance).toBeGreaterThanOrEqual(0);
     if (approved.statusCode === 200) {
       expect(spent.status).toBe('FAILED');
-      expect(balance).toBe(START);
+      expect(balance).toBe(5_000);
     } else {
       expect(approved.json<{ code: string }>().code).toBe('PayeeInsufficientFunds');
       expect(spent.status).toBe('COMPLETED');
-      expect(balance).toBe(8_000);
+      expect(balance).toBe(3_000);
     }
   });
 

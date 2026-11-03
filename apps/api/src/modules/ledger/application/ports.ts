@@ -52,6 +52,8 @@ export interface LedgerRepository {
   postedSum(ledgerAccountId: string): Promise<Money>;
   /** The entry and its postings. */
   insertEntry(entry: JournalEntryState): Promise<void>;
+  /** Whether an entry of this kind already references this, for a once-only posting. */
+  hasEntry(kind: JournalEntryKind, referenceType: string, referenceId: string): Promise<boolean>;
   updateBalance(account: LedgerAccountState): Promise<void>;
   /**
    * The postings of one account, newest first by (created_at, id), after the

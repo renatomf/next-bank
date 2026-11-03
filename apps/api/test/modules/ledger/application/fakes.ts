@@ -121,6 +121,15 @@ export class InMemoryLedger implements LedgerRepositoryFactory {
         this.entries.push(entry);
         return Promise.resolve();
       },
+      hasEntry: (kind, referenceType, referenceId) =>
+        Promise.resolve(
+          this.entries.some(
+            (entry) =>
+              entry.kind === kind &&
+              entry.referenceType === referenceType &&
+              entry.referenceId === referenceId,
+          ),
+        ),
       updateBalance: (account) => {
         this.accounts.set(account.id, { ...account });
         return Promise.resolve();

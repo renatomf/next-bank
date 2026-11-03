@@ -146,6 +146,15 @@ export class InMemoryOperationsBank
               now < request.expiresAt,
           ),
         ),
+      hasPendingForTransfer: (transferId, now) =>
+        Promise.resolve(
+          [...this.requests.values()].some(
+            (request) =>
+              request.transferId === transferId &&
+              request.decision === null &&
+              now < request.expiresAt,
+          ),
+        ),
       list: ({ onlyDemo }) =>
         Promise.resolve(
           [...this.requests.values()].filter((request) => !onlyDemo || request.demoScope),

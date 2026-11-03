@@ -24,7 +24,8 @@
           "kind": {
             "type": "string",
             "enum": [
-              "UNBLOCK_ACCOUNT"
+              "UNBLOCK_ACCOUNT",
+              "REVERSE_PIX"
             ]
           },
           "status": {
@@ -39,6 +40,35 @@
           },
           "customer": {
             "$ref": "#/components/schemas/Person"
+          },
+          "transfer": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "amount": {
+                    "$ref": "#/components/schemas/Money"
+                  },
+                  "payeeName": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "amount",
+                  "payeeName"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "reason": {
             "type": "string",
@@ -115,6 +145,7 @@
           "kind",
           "status",
           "customer",
+          "transfer",
           "reason",
           "note",
           "requestedBy",
@@ -517,6 +548,7 @@
               "PIX_SENT",
               "PIX_RECEIVED",
               "PIX_REFUNDED",
+              "PIX_REVERSED",
               "DEMO_FUNDING",
               "TOP_UP"
             ]
@@ -1004,47 +1036,94 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "type": "string",
-                    "enum": [
-                      "UNBLOCK_ACCOUNT"
-                    ]
-                  },
-                  "customerId": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  "reason": {
-                    "type": "string",
-                    "enum": [
-                      "FRAUD_SUSPECTED",
-                      "CUSTOMER_REQUEST",
-                      "LEGAL_ORDER",
-                      "OTHER"
-                    ]
-                  },
-                  "note": {
-                    "anyOf": [
-                      {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
                         "type": "string",
-                        "maxLength": 500,
-                        "pattern": "^[^\\p{Cc}]*$"
+                        "enum": [
+                          "UNBLOCK_ACCOUNT"
+                        ]
                       },
-                      {
-                        "type": "null"
+                      "customerId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "reason": {
+                        "type": "string",
+                        "enum": [
+                          "FRAUD_SUSPECTED",
+                          "CUSTOMER_REQUEST",
+                          "LEGAL_ORDER",
+                          "OTHER"
+                        ]
+                      },
+                      "note": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "maxLength": 500,
+                            "pattern": "^[^\\p{Cc}]*$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
                       }
-                    ]
+                    },
+                    "required": [
+                      "kind",
+                      "customerId",
+                      "reason"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "REVERSE_PIX"
+                        ]
+                      },
+                      "transferId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "reason": {
+                        "type": "string",
+                        "enum": [
+                          "FRAUD_SUSPECTED",
+                          "CUSTOMER_REQUEST",
+                          "LEGAL_ORDER",
+                          "OTHER"
+                        ]
+                      },
+                      "note": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "maxLength": 500,
+                            "pattern": "^[^\\p{Cc}]*$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "transferId",
+                      "reason"
+                    ],
+                    "additionalProperties": false
                   }
-                },
-                "required": [
-                  "kind",
-                  "customerId",
-                  "reason"
-                ],
-                "additionalProperties": false
+                ]
               }
             }
           }

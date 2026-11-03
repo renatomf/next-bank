@@ -52,6 +52,7 @@ export class RequestUnblock {
             id: this.#deps.ids.next(),
             kind: 'UNBLOCK_ACCOUNT',
             customerId: customer.id,
+            transferId: null,
             reason: input.reason,
             note: input.note,
             requestedBy: actor.memberId,

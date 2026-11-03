@@ -17,6 +17,7 @@ import { GetPixSchedules } from './application/get-pix-schedules.ts';
 import { GetPixTransfer } from './application/get-pix-transfer.ts';
 import { GetReceivingKey } from './application/get-receiving-key.ts';
 import { LookupPixKey } from './application/lookup-pix-key.ts';
+import { PixForStaff } from './application/pix-for-staff.ts';
 import { RunDueSchedules } from './application/run-due-schedules.ts';
 import { SendExternalPix } from './application/send-external-pix.ts';
 import type { AccountsPort, IdentityPort, LedgerPort, SpiPort } from './application/ports.ts';
@@ -27,6 +28,7 @@ import { InMemoryKeyLookupQuota } from './infrastructure/in-memory-key-lookup-qu
 import { PgPaymentsRepositories } from './infrastructure/pg-payments-repositories.ts';
 
 export { HttpSpiClient } from './infrastructure/http-spi-client.ts';
+export type { PixForStaff } from './application/pix-for-staff.ts';
 export { PgExternalPixReader } from './infrastructure/pg-external-pix-reader.ts';
 export { keyLookupRoutes } from './http/key-lookup-route.ts';
 export { spiWebhookRoutes } from './http/spi-webhook-route.ts';
@@ -70,6 +72,8 @@ export interface PaymentsModule {
   cancelPixSchedule: CancelPixSchedule;
   /** The worker of the scheduled Pix; the server runs it in a loop (D3). */
   runDueSchedules: RunDueSchedules;
+  /** Implements the PixTransfersPort of Operations (v1.3.0, task 5). */
+  forStaff: PixForStaff;
 }
 
 /**
@@ -232,5 +236,6 @@ export function createPaymentsModule(settings: {
       clock: settings.clock,
       ids: settings.ids,
     }),
+    forStaff: new PixForStaff(repositories),
   };
 }
