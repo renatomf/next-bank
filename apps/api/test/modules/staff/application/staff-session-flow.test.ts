@@ -88,7 +88,10 @@ describe('CreateStaffMember', () => {
       isDemo: false,
     });
 
-    expect(created).toEqual({
+    const { member, ...shown } = created;
+    // The member as created, for the admin's screen (task 7).
+    expect(member).toMatchObject({ id: 'id-1', role: 'ADMIN', status: 'ACTIVE' });
+    expect(shown).toEqual({
       id: 'id-1',
       email: 'lia@example.com',
       // Drawn by the token generator, 43 characters in production.

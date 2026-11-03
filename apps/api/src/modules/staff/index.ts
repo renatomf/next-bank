@@ -2,6 +2,7 @@ import type { Clock, IdGenerator, UnitOfWork } from '../../shared/application/po
 import { InMemoryLoginAttempts } from '../../shared/infrastructure/in-memory-login-attempts.ts';
 import { AuthenticateStaff } from './application/authenticate-staff.ts';
 import { CreateStaffMember } from './application/create-staff-member.ts';
+import { ChangeStaffRole, DisableStaffMember, ListStaff } from './application/manage-staff.ts';
 import type { SecretHasher, SessionTokens } from './application/ports.ts';
 import { StaffLogin } from './application/staff-login.ts';
 import { StaffDirectory } from './application/staff-directory.ts';
@@ -12,6 +13,7 @@ import { PgStaffRepositories } from './infrastructure/pg-staff-repositories.ts';
 
 export { registerStaffAuthentication, staffCallerOf } from './http/staff-authentication.ts';
 export { staffAuthRoutes } from './http/staff-auth-routes.ts';
+export { staffManagementRoutes } from './http/staff-management-routes.ts';
 export type { StaffCaller } from './application/authenticate-staff.ts';
 export type { CreatedStaffMember } from './application/create-staff-member.ts';
 export type { StaffDirectory } from './application/staff-directory.ts';
@@ -22,6 +24,10 @@ export interface StaffModule {
   logout: StaffLogout;
   authenticate: AuthenticateStaff;
   createMember: CreateStaffMember;
+  /** The admin's screen of the staff (v1.3.0, task 7). */
+  listStaff: ListStaff;
+  changeStaffRole: ChangeStaffRole;
+  disableStaffMember: DisableStaffMember;
   /** Implements the StaffNamesPort of Operations (v1.3.0, task 4). */
   directory: StaffDirectory;
 }
@@ -69,5 +75,8 @@ export function createStaffModule(settings: StaffSettings): StaffModule {
       tokens: settings.tokens,
     }),
     directory: new StaffDirectory(repositories),
+    listStaff: new ListStaff(shared),
+    changeStaffRole: new ChangeStaffRole(shared),
+    disableStaffMember: new DisableStaffMember(shared),
   };
 }

@@ -40,6 +40,7 @@ describe('permissions', () => {
       'requests.decide',
       'exceptions.read',
       'exceptions.explain',
+      'staff.manage',
     ]);
   });
 

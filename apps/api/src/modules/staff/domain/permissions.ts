@@ -13,6 +13,7 @@ export const PERMISSIONS = [
   'requests.decide',
   'exceptions.read',
   'exceptions.explain',
+  'staff.manage',
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
@@ -42,8 +43,8 @@ const GRANTS: Readonly<Record<StaffRole, readonly Permission[]>> = {
     'exceptions.read',
     'exceptions.explain',
   ],
-  // Manages the staff and reads no customer: segregation of duties (task 3, C1).
-  ADMIN: ['staff.self'],
+  // Manages the staff and reads no customer: segregation of duties (task 3, C1; task 7).
+  ADMIN: ['staff.self', 'staff.manage'],
 };
 
 export function assertAllowed(role: StaffRole, permission: Permission): void {

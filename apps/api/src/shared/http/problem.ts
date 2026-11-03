@@ -93,6 +93,10 @@ const CATALOG_STATUS: Readonly<Record<string, number>> = {
   ExceptionNotOpen: 409,
   ExceptionNotSettleable: 409,
   PixNoLongerProcessing: 409,
+  // The staff management (v1.3.0 plan, task 7).
+  StaffSelfChangeNotAllowed: 403,
+  AdminNotManaged: 403,
+  StaffMemberDisabled: 409,
 };
 
 /** Generic RFC 9457 response: never carries stack, SQL or internal detail (API-03). */
