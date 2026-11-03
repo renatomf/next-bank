@@ -1,4 +1,4 @@
-import type pg from 'pg';
+import pg from 'pg';
 import type { Transaction } from '../../../shared/application/ports.ts';
 import { pgClientOf } from '../../../shared/infrastructure/pg-unit-of-work.ts';
 import { PgAuditTrail } from '../../audit/index.ts';
@@ -9,6 +9,7 @@ import type {
   StaffRepositoriesFactory,
   StaffSessionsRepository,
 } from '../application/ports.ts';
+import { StaffMemberExists } from '../domain/errors.ts';
 import type { StaffRole } from '../domain/permissions.ts';
 import type { StaffMemberState, StaffStatus } from '../domain/staff-member.ts';
 import type { StaffSessionState } from '../domain/staff-session.ts';
@@ -27,6 +28,8 @@ interface MemberRow {
 }
 
 const MEMBER_COLUMNS = `id, email, name, role, status, last_totp_step, is_demo, created_at, updated_at`;
+
+const UNIQUE_VIOLATION = '23505';
 
 function toMember(row: MemberRow): StaffMemberState {
   return {
@@ -91,7 +94,23 @@ class PgStaffMembersRepository implements StaffMembersRepository {
     return new Map(rows.map((row) => [row.id, row.name]));
   }
 
+  /** Two creations with one e-mail at once: the second meets members_email_key. */
   async insert({ state, passwordHash, totpSecret }: StaffMemberRecord): Promise<void> {
+    try {
+      await this.#insert({ state, passwordHash, totpSecret });
+    } catch (error) {
+      if (
+        error instanceof pg.DatabaseError &&
+        error.code === UNIQUE_VIOLATION &&
+        error.constraint === 'members_email_key'
+      ) {
+        throw new StaffMemberExists();
+      }
+      throw error;
+    }
+  }
+
+  async #insert({ state, passwordHash, totpSecret }: StaffMemberRecord): Promise<void> {
     await this.#client.query(
       `INSERT INTO staff.members
          (id, email, name, password_hash, totp_secret_ciphertext, totp_key_version,
@@ -118,6 +137,31 @@ class PgStaffMembersRepository implements StaffMembersRepository {
     await this.#client.query(
       'UPDATE staff.members SET last_totp_step = $2, updated_at = $3 WHERE id = $1',
       [state.id, state.lastTotpStep, state.updatedAt],
+    );
+  }
+
+  /** Served by members_created_idx. */
+  static readonly PAGE_SQL = `SELECT ${MEMBER_COLUMNS} FROM staff.members
+    WHERE $1::timestamptz IS NULL OR (created_at, id) < ($1, $2::uuid)
+    ORDER BY created_at DESC, id DESC
+    LIMIT $3`;
+
+  async page(filter: {
+    after: { createdAt: Date; id: string } | null;
+    limit: number;
+  }): Promise<StaffMemberState[]> {
+    const { rows } = await this.#client.query<MemberRow>(PgStaffMembersRepository.PAGE_SQL, [
+      filter.after?.createdAt ?? null,
+      filter.after?.id ?? null,
+      filter.limit,
+    ]);
+    return rows.map(toMember);
+  }
+
+  async updateAccess(state: StaffMemberState): Promise<void> {
+    await this.#client.query(
+      'UPDATE staff.members SET role = $2, status = $3, updated_at = $4 WHERE id = $1',
+      [state.id, state.role, state.status, state.updatedAt],
     );
   }
 }
@@ -207,6 +251,16 @@ class PgStaffSessionsRepository implements StaffSessionsRepository {
       updated_at: row.m_updated_at,
     });
     return { session: toSession(row), member };
+  }
+
+  /** Served by sessions_member_id_idx. */
+  async revokeAllOf(memberId: string, now: Date): Promise<number> {
+    const { rowCount } = await this.#client.query(
+      `UPDATE staff.sessions SET revoked_at = $2
+       WHERE member_id = $1 AND revoked_at IS NULL AND expires_at > $2`,
+      [memberId, now],
+    );
+    return rowCount ?? 0;
   }
 
   async lock(id: string): Promise<StaffSessionState | null> {

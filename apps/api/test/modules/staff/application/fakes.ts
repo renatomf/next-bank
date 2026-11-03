@@ -93,6 +93,26 @@ export class InMemoryStaffDatabase implements UnitOfWork, StaffRepositoriesFacto
             [...this.members.values()].find((member) => member.state.email === email) ?? null,
           ),
         lock: (id) => Promise.resolve(this.members.get(id)?.state ?? null),
+        page: ({ after, limit }) =>
+          Promise.resolve(
+            [...this.members.values()]
+              .map((record) => record.state)
+              .sort(
+                (a, b) => b.createdAt.getTime() - a.createdAt.getTime() || b.id.localeCompare(a.id),
+              )
+              .filter(
+                (state) =>
+                  after === null ||
+                  state.createdAt < after.createdAt ||
+                  (state.createdAt.getTime() === after.createdAt.getTime() && state.id < after.id),
+              )
+              .slice(0, limit),
+          ),
+        updateAccess: (state) => {
+          const record = this.members.get(state.id);
+          if (record) this.members.set(state.id, { ...record, state });
+          return Promise.resolve();
+        },
         namesOf: (ids) =>
           Promise.resolve(
             new Map(
@@ -130,6 +150,15 @@ export class InMemoryStaffDatabase implements UnitOfWork, StaffRepositoriesFacto
           );
         },
         lock: (id) => Promise.resolve(this.sessions.get(id)?.state ?? null),
+        revokeAllOf: (memberId, now) => {
+          let revoked = 0;
+          for (const [id, stored] of this.sessions) {
+            if (stored.state.memberId !== memberId || stored.state.revokedAt !== null) continue;
+            this.sessions.set(id, { ...stored, state: { ...stored.state, revokedAt: now } });
+            revoked += 1;
+          }
+          return Promise.resolve(revoked);
+        },
         update: (state) => {
           const stored = this.sessions.get(state.id);
           if (stored) this.sessions.set(state.id, { ...stored, state });

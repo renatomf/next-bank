@@ -21,9 +21,17 @@ export interface StaffMembersRepository {
   lock(id: string): Promise<StaffMemberState | null>;
   /** The names of these members, for the requests' screens (v1.3.0, task 4). */
   namesOf(ids: string[]): Promise<Map<string, string>>;
+  /** The unique e-mail refuses a second member with it (StaffMemberExists). */
   insert(record: StaffMemberRecord): Promise<void>;
   /** Only what a login changes: the last TOTP step. */
   update(state: StaffMemberState): Promise<void>;
+  /** Newest first, a page at a time, for the admin's screen (v1.3.0, task 7). */
+  page(filter: {
+    after: { createdAt: Date; id: string } | null;
+    limit: number;
+  }): Promise<StaffMemberState[]>;
+  /** Only what the admin changes: the role and the status (task 7). */
+  updateAccess(state: StaffMemberState): Promise<void>;
 }
 
 export interface StaffSessionsRepository {
@@ -36,6 +44,8 @@ export interface StaffSessionsRepository {
   lock(id: string): Promise<StaffSessionState | null>;
   /** Only its last use and its revocation. */
   update(state: StaffSessionState): Promise<void>;
+  /** Ends every session of a member still open, for its disabling (STF-06); how many. */
+  revokeAllOf(memberId: string, now: Date): Promise<number>;
 }
 
 export interface StaffRepositories {

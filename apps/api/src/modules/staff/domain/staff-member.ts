@@ -1,4 +1,9 @@
-import { InvalidStaffMember } from './errors.ts';
+import {
+  AdminNotManaged,
+  InvalidStaffMember,
+  StaffMemberDisabled,
+  StaffSelfChangeNotAllowed,
+} from './errors.ts';
 import { STAFF_ROLES, type StaffRole } from './permissions.ts';
 
 export type StaffStatus = 'ACTIVE' | 'DISABLED';
@@ -19,6 +24,13 @@ export interface StaffMemberState {
 }
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** The roles the admin gives and changes; an admin only comes from the script (G1, STF-14). */
+export const MANAGED_ROLES = ['OPERATOR', 'ANALYST'] as const;
+
+export function assertManagedRole(role: StaffRole): void {
+  if (!(MANAGED_ROLES as readonly StaffRole[]).includes(role)) throw new AdminNotManaged();
+}
 
 /** A member of the staff (v1.3.0 plan, task 1). */
 export class StaffMember {
@@ -76,5 +88,32 @@ export class StaffMember {
     this.#state.lastTotpStep = step;
     this.#state.updatedAt = now;
     return true;
+  }
+
+  /**
+   * Switches between operator and analyst, by someone else (v1.3.0 plan,
+   * task 7); false when the member already has the role. The role counts on
+   * the member's next request, read from the database (STF-02).
+   */
+  changeRole(role: StaffRole, by: string, now: Date): boolean {
+    this.#assertManagedBy(by);
+    assertManagedRole(role);
+    if (this.#state.role === role) return false;
+    this.#state.role = role;
+    this.#state.updatedAt = now;
+    return true;
+  }
+
+  /** For good (G4): its sessions end with it (STF-06). */
+  disable(by: string, now: Date): void {
+    this.#assertManagedBy(by);
+    this.#state.status = 'DISABLED';
+    this.#state.updatedAt = now;
+  }
+
+  #assertManagedBy(by: string): void {
+    if (by === this.#state.id) throw new StaffSelfChangeNotAllowed();
+    assertManagedRole(this.#state.role);
+    if (!this.isActive) throw new StaffMemberDisabled();
   }
 }

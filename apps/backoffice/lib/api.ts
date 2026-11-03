@@ -13,6 +13,10 @@ export type Reason = ApprovalRequest['reason'];
 export type ReconciliationException = components['schemas']['ReconciliationException'];
 export type ReconciliationExceptionsPage = components['schemas']['ReconciliationExceptionsPage'];
 export type Resolution = NonNullable<ApprovalRequest['exception']>['resolution'];
+export type StaffMemberView = components['schemas']['StaffMemberView'];
+export type StaffPage = components['schemas']['StaffPage'];
+export type CreatedStaffMember = components['schemas']['CreatedStaffMember'];
+export type ManagedRole = 'OPERATOR' | 'ANALYST';
 
 /** The API refused a login; [code] is the catalog's (InvalidCredentials, TooManyAttempts). */
 export class LoginRefused extends Error {
@@ -267,6 +271,51 @@ export function adminApi(options: AdminApiOptions) {
         headers: headers(),
         params: { header: { 'idempotency-key': idempotencyKey } },
         body: { kind: 'RESOLVE_EXCEPTION', exceptionId, resolution, reason, note },
+      });
+      if (data === undefined) throw refusalOf(error, response);
+      return data;
+    },
+
+    // The staff management, by the admin (v1.3.0 plan, task 7).
+
+    async listStaff(cursor: string | null): Promise<StaffPage> {
+      const { data, response } = await client.GET('/admin/v1/staff', {
+        headers: headers(),
+        params: { query: cursor === null ? {} : { cursor } },
+      });
+      if (data === undefined) throw failureOf(response);
+      return data;
+    },
+
+    /** The credentials come in this answer only (G5, STF-15): shown once, never kept. */
+    async createStaffMember(body: {
+      name: string;
+      email: string;
+      role: ManagedRole;
+    }): Promise<CreatedStaffMember> {
+      const { data, error, response } = await client.POST('/admin/v1/staff', {
+        headers: headers(),
+        body,
+      });
+      if (data === undefined) throw refusalOf(error, response);
+      return data;
+    },
+
+    async changeStaffRole(memberId: string, role: ManagedRole): Promise<StaffMemberView> {
+      const { data, error, response } = await client.POST('/admin/v1/staff/{memberId}/role', {
+        headers: headers(),
+        params: { path: { memberId } },
+        body: { role },
+      });
+      if (data === undefined) throw refusalOf(error, response);
+      return data;
+    },
+
+    async disableStaffMember(memberId: string): Promise<StaffMemberView> {
+      const { data, error, response } = await client.POST('/admin/v1/staff/{memberId}/disable', {
+        headers: headers(),
+        params: { path: { memberId } },
+        body: {},
       });
       if (data === undefined) throw refusalOf(error, response);
       return data;

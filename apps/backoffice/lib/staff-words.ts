@@ -1,4 +1,10 @@
-import type { ApprovalRequest, Reason, ReconciliationException, Resolution } from './api';
+import type {
+  ApprovalRequest,
+  Reason,
+  ReconciliationException,
+  Resolution,
+  StaffMemberView,
+} from './api';
 
 /** The reasons the staff picks from (v1.3.0 plan, task 4): codes for the API, words here. */
 export const REASON_LABELS: Readonly<Record<Reason, string>> = {
@@ -52,6 +58,18 @@ export const OUTCOME_LABELS: Readonly<
   EXPLAINED: 'Explicada',
 };
 
+/** The staff's roles and statuses, on the admin's screen (task 7). */
+export const STAFF_ROLE_LABELS: Readonly<Record<StaffMemberView['role'], string>> = {
+  OPERATOR: 'Operador',
+  ANALYST: 'Analista',
+  ADMIN: 'Admin',
+};
+
+export const STAFF_STATUS_LABELS: Readonly<Record<StaffMemberView['status'], string>> = {
+  ACTIVE: 'Ativo',
+  DISABLED: 'Desativado',
+};
+
 const REFUSALS: Readonly<Record<string, string>> = {
   AccountAlreadyBlocked: 'Esta conta já está bloqueada.',
   AccountNotBlocked: 'Esta conta não está bloqueada.',
@@ -68,6 +86,10 @@ const REFUSALS: Readonly<Record<string, string>> = {
     'Quem recebeu o Pix não tem mais o valor. O pedido continua pendente: tente mais tarde ou recuse.',
   ExceptionNotOpen: 'Esta exceção já foi resolvida ou tem um pedido pendente.',
   ExceptionNotSettleable: 'Só um Pix parado sem resposta do SPI pode ser liquidado ou estornado.',
+  StaffSelfChangeNotAllowed: 'Ninguém muda o próprio papel nem desativa a si mesmo.',
+  AdminNotManaged: 'Um admin não é criado, mudado nem desativado por esta tela.',
+  StaffMemberDisabled: 'Este membro já está desativado.',
+  AlreadyRegistered: 'Já existe um membro com este e-mail.',
   PixNoLongerProcessing:
     'O SPI já respondeu este Pix. Nada foi movido: recuse o pedido e explique a exceção.',
 };

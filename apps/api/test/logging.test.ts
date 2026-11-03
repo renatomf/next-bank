@@ -23,6 +23,8 @@ const SECRETS = {
   // The staff's login (v1.3.0 plan, task 1): the authenticator's code and secret.
   mfaCode: '864209',
   totpSecret: 'FAKESECRETFAKESECRET',
+  // A new member's authenticator link carries the secret (task 7, STF-15).
+  totpUri: 'otpauth://totp/fake?secret=FAKELINKSECRET',
 };
 
 /** Every value at the leaves of a log line, as text. */

@@ -59,6 +59,7 @@ import {
   createStaffModule,
   registerStaffAuthentication,
   staffAuthRoutes,
+  staffManagementRoutes,
 } from './modules/staff/index.ts';
 import { createTopUpsModule, topUpRoutes } from './modules/top-ups/index.ts';
 import { healthRoutes } from './shared/http/health.ts';
@@ -415,6 +416,7 @@ export function buildApp({
           authenticate: (token) => staff.authenticate.execute(token),
         });
         await scope.register(staffAuthRoutes, { login: staff.login, logout: staff.logout });
+        await scope.register(staffManagementRoutes, staff);
         await scope.register(customerRoutes, operations);
         await scope.register(requestRoutes, operations);
         await scope.register(exceptionRoutes, operations);

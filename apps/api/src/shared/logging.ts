@@ -25,6 +25,8 @@ export const SENSITIVE_KEYS = [
   // The staff's login (v1.3.0 plan, task 1): the authenticator's code and secret.
   'mfaCode',
   'totpSecret',
+  // A new member's authenticator link carries the secret (task 7, STF-15).
+  'totpUri',
 ];
 
 export const REDACT_PATHS = SENSITIVE_KEYS.flatMap((key) => [key, `*.${key}`, `*.*.${key}`]);

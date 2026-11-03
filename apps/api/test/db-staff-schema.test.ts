@@ -102,7 +102,7 @@ describe('staff schema', () => {
     await expect(insertSession(member, { token_hash: tokenHash })).rejects.toThrow(/duplicate key/);
   });
 
-  it('lets the API move only the last code and the session, and delete nothing', async () => {
+  it('lets the API move only the last code, the role, the status and the session, and delete nothing', async () => {
     const member = await insertMember();
     const session = await insertSession(member);
 
@@ -110,6 +110,13 @@ describe('staff schema', () => {
       app.query('UPDATE staff.members SET last_totp_step = 5, updated_at = now() WHERE id = $1', [
         member,
       ]),
+    ).resolves.toBeDefined();
+    // The admin's screen (task 7): a role and a status, never the credentials.
+    await expect(
+      app.query(
+        "UPDATE staff.members SET role = 'ANALYST', status = 'DISABLED', updated_at = now() WHERE id = $1",
+        [member],
+      ),
     ).resolves.toBeDefined();
     await expect(
       app.query(
@@ -121,7 +128,8 @@ describe('staff schema', () => {
       ),
     ).resolves.toBeDefined();
     for (const change of [
-      "UPDATE staff.members SET role = 'ADMIN' WHERE id = $1",
+      "UPDATE staff.members SET email = 'x@example.com' WHERE id = $1",
+      'UPDATE staff.members SET is_demo = true WHERE id = $1',
       "UPDATE staff.members SET password_hash = 'x' WHERE id = $1",
       'UPDATE staff.members SET totp_secret_ciphertext = NULL WHERE id = $1',
       'DELETE FROM staff.members WHERE id = $1',

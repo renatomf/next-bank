@@ -51,3 +51,30 @@ export class StaffMemberExists extends DomainError {
     super('A staff member with this e-mail already exists');
   }
 }
+
+/** Nobody changes their own role nor disables themselves (catalog: 403; task 7). */
+export class StaffSelfChangeNotAllowed extends DomainError {
+  readonly code = 'StaffSelfChangeNotAllowed';
+
+  constructor() {
+    super('A member never changes their own role nor disables themselves');
+  }
+}
+
+/** The admin's screen never makes nor touches an admin (catalog: 403; G1, STF-14). */
+export class AdminNotManaged extends DomainError {
+  readonly code = 'AdminNotManaged';
+
+  constructor() {
+    super('An admin is neither created, changed nor disabled from the staff screen');
+  }
+}
+
+/** A disabled member stays as it is (catalog: 409; G4). */
+export class StaffMemberDisabled extends DomainError {
+  readonly code = 'StaffMemberDisabled';
+
+  constructor() {
+    super('The staff member is disabled');
+  }
+}

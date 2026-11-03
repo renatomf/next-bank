@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { InvalidStaffMember } from '../../../../src/modules/staff/domain/errors.ts';
+import {
+  AdminNotManaged,
+  InvalidStaffMember,
+  StaffMemberDisabled,
+  StaffSelfChangeNotAllowed,
+} from '../../../../src/modules/staff/domain/errors.ts';
 import { StaffMember } from '../../../../src/modules/staff/domain/staff-member.ts';
 
 // A member of the staff (v1.3.0 plan, task 1): a role, a status, and the
@@ -56,5 +61,58 @@ describe('StaffMember', () => {
   it('is active only while its status says so', () => {
     expect(create().isActive).toBe(true);
     expect(StaffMember.restore({ ...create().state, status: 'DISABLED' }).isActive).toBe(false);
+  });
+});
+
+// v1.3.0 plan, task 7: the admin switches a member between operator and
+// analyst and disables one; never itself, never an admin (G1, STF-14).
+describe('managing a member', () => {
+  const admin = 'admin-1';
+
+  it('switches an operator to analyst, and tells when nothing changed', () => {
+    const member = create();
+
+    expect(member.changeRole('ANALYST', admin, LATER)).toBe(true);
+    expect(member.state).toMatchObject({ role: 'ANALYST', updatedAt: LATER });
+    expect(member.changeRole('ANALYST', admin, LATER)).toBe(false);
+  });
+
+  it('disables a member', () => {
+    const member = create();
+
+    member.disable(admin, LATER);
+
+    expect(member.state).toMatchObject({ status: 'DISABLED', updatedAt: LATER });
+    expect(member.isActive).toBe(false);
+  });
+
+  it('never lets a member change or disable itself', () => {
+    const member = create();
+
+    expect(() => member.changeRole('ANALYST', 'member-1', LATER)).toThrow(
+      StaffSelfChangeNotAllowed,
+    );
+    expect(() => {
+      member.disable('member-1', LATER);
+    }).toThrow(StaffSelfChangeNotAllowed);
+  });
+
+  it('never makes nor touches an admin (G1)', () => {
+    expect(() => create().changeRole('ADMIN', admin, LATER)).toThrow(AdminNotManaged);
+    const other = create({ id: 'admin-2', role: 'ADMIN' });
+    expect(() => other.changeRole('OPERATOR', admin, LATER)).toThrow(AdminNotManaged);
+    expect(() => {
+      other.disable(admin, LATER);
+    }).toThrow(AdminNotManaged);
+  });
+
+  it('leaves a disabled member as it is (G4)', () => {
+    const member = create();
+    member.disable(admin, LATER);
+
+    expect(() => member.changeRole('ANALYST', admin, LATER)).toThrow(StaffMemberDisabled);
+    expect(() => {
+      member.disable(admin, LATER);
+    }).toThrow(StaffMemberDisabled);
   });
 });
