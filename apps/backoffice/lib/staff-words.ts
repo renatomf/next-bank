@@ -70,6 +70,51 @@ export const STAFF_STATUS_LABELS: Readonly<Record<StaffMemberView['status'], str
   DISABLED: 'Desativado',
 };
 
+/** The actions of the audit trail in words (task 8, H6); one not here shows by its code. */
+export const ACTION_LABELS: Readonly<Record<string, string>> = {
+  USER_REGISTERED: 'Cliente cadastrado',
+  ACCOUNT_OPENED: 'Conta aberta',
+  LOGIN_SUCCEEDED: 'Entrou no app',
+  LOGIN_FAILED: 'Login recusado',
+  SESSION_CREATED: 'Sessão aberta',
+  SESSION_REVOKED: 'Sessão encerrada',
+  REFRESH_REUSE_DETECTED: 'Reuso de sessão detectado',
+  PASSWORD_CHANGED: 'Senha trocada',
+  PIN_CREATED: 'PIN criado',
+  PIN_CHANGED: 'PIN trocado',
+  PIN_LOCKED: 'PIN bloqueado',
+  PIX_CREATED: 'Pix criado',
+  PIX_SENT: 'Pix enviado ao SPI',
+  PIX_COMPLETED: 'Pix concluído',
+  PIX_FAILED: 'Pix não concluído',
+  PIX_CANCELLED: 'Pix cancelado',
+  PIX_REVERSED: 'Pix estornado',
+  PIX_SCHEDULE_CREATED: 'Pix agendado',
+  PIX_SCHEDULE_CANCELLED: 'Agendamento cancelado',
+  TOP_UP_COMPLETED: 'Recarga feita',
+  SENSITIVE_DATA_ACCESSED: 'Dados do cliente consultados',
+  CUSTOMERS_SEARCHED: 'Busca de clientes',
+  ACCOUNT_BLOCKED: 'Conta bloqueada',
+  ACCOUNT_UNBLOCKED: 'Conta desbloqueada',
+  REQUEST_CREATED: 'Pedido aberto',
+  REQUEST_APPROVED: 'Pedido aprovado',
+  REQUEST_REJECTED: 'Pedido recusado',
+  REQUEST_CANCELLED: 'Pedido cancelado',
+  EXCEPTION_RESOLVED: 'Exceção resolvida',
+  STAFF_LOGIN_SUCCEEDED: 'Entrou no backoffice',
+  STAFF_LOGIN_FAILED: 'Login da equipe recusado',
+  STAFF_SESSION_REVOKED: 'Sessão da equipe encerrada',
+  STAFF_MEMBER_CREATED: 'Membro criado',
+  STAFF_ROLE_CHANGED: 'Papel trocado',
+  STAFF_MEMBER_DISABLED: 'Membro desativado',
+};
+
+export const ACTOR_LABELS: Readonly<Record<string, string>> = {
+  USER: 'Cliente',
+  STAFF: 'Equipe',
+  SYSTEM: 'Sistema',
+};
+
 const REFUSALS: Readonly<Record<string, string>> = {
   AccountAlreadyBlocked: 'Esta conta já está bloqueada.',
   AccountNotBlocked: 'Esta conta não está bloqueada.',

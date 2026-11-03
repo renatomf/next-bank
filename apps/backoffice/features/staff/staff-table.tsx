@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { StatusBadge } from '@/components/nb/status-badge';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -53,9 +54,17 @@ export function StaffTable({ members }: { members: StaffMemberView[] }) {
             </TableCell>
             <TableCell>{formatDateTime(member.createdAt)}</TableCell>
             <TableCell>
-              {member.role !== 'ADMIN' && member.status === 'ACTIVE' ? (
-                <MemberActions member={member} />
-              ) : null}
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <Link
+                  href={`/audit?memberId=${member.id}`}
+                  className="text-sm font-semibold text-link hover:underline"
+                >
+                  Ver trilha
+                </Link>
+                {member.role !== 'ADMIN' && member.status === 'ACTIVE' ? (
+                  <MemberActions member={member} />
+                ) : null}
+              </div>
             </TableCell>
           </TableRow>
         ))}

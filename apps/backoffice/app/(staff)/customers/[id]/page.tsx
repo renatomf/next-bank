@@ -41,6 +41,11 @@ export default async function CustomerPage({
         </Link>
       </Button>
       <CustomerCard customer={customer} />
+      {member.role === 'ANALYST' ? (
+        <Button asChild variant="link">
+          <Link href={`/audit?customerId=${customer.id}`}>Ver a trilha do cliente</Link>
+        </Button>
+      ) : null}
       <AccountActionsPanel
         customerId={customer.id}
         accountStatus={customer.account.status}

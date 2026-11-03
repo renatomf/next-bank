@@ -38,6 +38,11 @@ export default async function RequestPage({ params }: { params: Promise<{ id: st
         <Button asChild variant="link">
           <Link href={`/customers/${request.customer.id}`}>Abrir a ficha do cliente</Link>
         </Button>
+        {member.role === 'ANALYST' ? (
+          <Button asChild variant="link">
+            <Link href={`/audit?requestId=${request.id}`}>Ver a trilha do pedido</Link>
+          </Button>
+        ) : null}
         {request.exception ? (
           <Button asChild variant="link">
             <Link href={`/reconciliation/${request.exception.id}`}>Abrir a exceção</Link>

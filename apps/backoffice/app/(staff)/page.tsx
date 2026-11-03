@@ -9,6 +9,7 @@ const DESCRIPTIONS: Readonly<Record<string, string>> = {
   '/requests': 'Desbloqueios, estornos e resoluções que pedem outra pessoa',
   '/reconciliation': 'O que a conciliação diária encontrou',
   '/staff': 'Membros, papéis e acessos',
+  '/audit': 'Quem fez o quê e quando',
 };
 
 /** The staff's home: who is signed in, and a shortcut to each page the role may open. */
