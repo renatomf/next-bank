@@ -14,7 +14,7 @@ export function Logo({ className }: { className?: string }) {
       next
       <span
         aria-hidden="true"
-        className="ml-[0.06em] inline-block size-[0.2em] rounded-full bg-mint align-baseline"
+        className="ml-[0.14em] inline-block size-[0.2em] translate-y-px rounded-full bg-mint"
       />
     </span>
   );
@@ -41,7 +41,7 @@ export function LogoMark({ className }: { className?: string }) {
         n
         <span
           aria-hidden="true"
-          className="ml-[0.06em] inline-block size-[0.26em] rounded-full bg-mint"
+          className="ml-[0.12em] inline-block size-[0.24em] rounded-full bg-mint"
         />
       </span>
     </span>
