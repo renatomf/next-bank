@@ -32,6 +32,7 @@ Backoffice: o "banco por dentro". Uma equipe fictícia, com papéis e MFA, consu
 - **Navegador:** cookie `httpOnly`, `Secure` e `SameSite=Strict`, CSP com `nonce` e Server Action de outra origem recusada (STF-04, STF-05, STF-06). ZAP baseline contra o backoffice publicado sem falhas.
 
 ### Corrigido
+- **App:** num celular com bloqueio de tela e sem digital cadastrada, sair da conta e trocar de conta não funcionavam desde a v1.1.0; agora funcionam, e um PIN errado no Pix e na recarga ou a troca de PIN também não travam mais (F-52).
 - Os testes de integração da API ganharam 15 s de limite, em vez de 5, depois de três estouros com a máquina carregada (F-49).
 
 ## [1.2.0] — 2026-11-01
