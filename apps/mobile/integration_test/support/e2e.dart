@@ -76,15 +76,13 @@ Future<void> signIn(
   }
   await tester.enterText(find.byType(TextField).at(0), email);
   await tester.enterText(find.byType(TextField).at(1), password);
-  // The keyboard the fields open pushes "Entrar" out of a small screen, as
-  // on the CI emulator, where the list then does not even build it (PR
-  // #163): close it and scroll to the button. Login with the password goes
-  // straight to the Home (week 6 plan, D5).
-  await scrollAndTap(
-    tester,
-    LoginScreen,
-    find.widgetWithText(FilledButton, 'Entrar'),
-  );
+  // Sent by the keyboard's "done" on the password, as a customer may: a tap
+  // on "Entrar" depends on where the button is drawn, and on the CI's
+  // emulator, freshly booted for the first test, it was lost while the
+  // keyboard and the list still moved, and no login ever left the app
+  // (F-53). Login with the password goes straight to the Home (week 6 plan,
+  // D5).
+  await tester.testTextInput.receiveAction(TextInputAction.done);
   await waitFor(tester, find.bySemanticsLabel('Área Pix'));
 }
 
