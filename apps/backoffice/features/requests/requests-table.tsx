@@ -10,7 +10,7 @@ import {
 import type { ApprovalRequest } from '@/lib/api';
 import { formatDateTime } from '@/lib/format';
 import { KIND_LABELS, REASON_LABELS } from '@/lib/staff-words';
-import { RequestStatusBadge } from './request-status-badge';
+import { RequestStatusBadge } from '@/components/nb/request-status-badge';
 
 /** One page of the requests queue, newest first, each row leading to its request. */
 export function RequestsTable({ requests }: { requests: ApprovalRequest[] }) {

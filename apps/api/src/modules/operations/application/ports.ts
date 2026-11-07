@@ -161,6 +161,8 @@ export interface RequestsRepository {
     now: Date;
     after: RequestPosition | null;
     limit: number;
+    /** Only the requests this member asked; null for everyone's. */
+    requestedBy: string | null;
   }): Promise<ApprovalRequestState[]>;
 }
 

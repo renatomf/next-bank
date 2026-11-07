@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { ApprovalRequest } from '@/lib/api';
 import { formatDateTime, formatMoney } from '@/lib/format';
 import { KIND_LABELS, REASON_LABELS, RESOLUTION_LABELS } from '@/lib/staff-words';
-import { RequestStatusBadge } from './request-status-badge';
+import { RequestStatusBadge } from '@/components/nb/request-status-badge';
 
 const DECISIONS: Readonly<Record<NonNullable<ApprovalRequest['decision']>['decision'], string>> = {
   APPROVED: 'Aprovado por',

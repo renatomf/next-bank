@@ -5,6 +5,8 @@ import { sessionOf, type StaffName } from './staff';
 // (2)): the operator blocks Carla and asks to unblock her, and never sees a
 // way to approve her own request (STF-03); the analyst approves, Carla's
 // account is active again, and the request's trail names both of them.
+// The homes carry the request (home plan): the operator's own, pending and
+// then approved; the analyst's queue, from which she decides.
 async function pageOf(browser: Browser, name: StaffName): Promise<Page> {
   const context = await browser.newContext({ storageState: sessionOf(name) });
   return context.newPage();
@@ -46,10 +48,23 @@ test('two people unblock an account, and the requester never approves', async ({
   await expect(operator.getByRole('button', { name: 'Recusar' })).toHaveCount(0);
   await expect(operator.getByRole('button', { name: 'Cancelar pedido' })).toBeVisible();
 
-  // The analyst approves it.
-  await analyst.goto(requestUrl);
+  // The operator's home shows it among her own, waiting.
+  const requestLink = `a[href="${new URL(requestUrl).pathname}"]`;
+  await operator.goto('/');
+  const mine = operator.locator('[data-slot="card"]').filter({ hasText: 'Seus pedidos' });
+  await expect(mine.locator(requestLink)).toContainText(/vence em/);
+
+  // The analyst finds it in her queue on the home, and approves it.
+  await analyst.goto('/');
+  const queue = analyst.locator('[data-slot="card"]').filter({ hasText: 'Aguardando sua decisão' });
+  await queue.locator(requestLink).click();
+  await expect(analyst).toHaveURL(requestUrl);
   await analyst.getByRole('button', { name: 'Aprovar' }).click();
   await expect(analyst.getByText('Aprovado por')).toBeVisible();
+
+  // The operator's home shows how it ended.
+  await operator.goto('/');
+  await expect(mine.locator(requestLink)).toContainText('Aprovado');
 
   // Carla's account is active again.
   await operator.goto(customerUrl);

@@ -219,13 +219,21 @@ export function adminApi(options: AdminApiOptions) {
       return data;
     },
 
+    /** With mine, only what this member asked (home plan, H1). */
     async listRequests(
       status: 'PENDING' | 'ALL',
       cursor: string | null,
+      options: { mine?: boolean } = {},
     ): Promise<ApprovalRequestsPage> {
       const { data, response } = await client.GET('/admin/v1/requests', {
         headers: headers(),
-        params: { query: cursor === null ? { status } : { status, cursor } },
+        params: {
+          query: {
+            status,
+            ...(options.mine === true ? { mine: 'true' as const } : {}),
+            ...(cursor === null ? {} : { cursor }),
+          },
+        },
       });
       if (data === undefined) throw failureOf(response);
       return data;

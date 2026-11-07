@@ -311,9 +311,13 @@ export class InMemoryOperationsBank
               now < request.expiresAt,
           ),
         ),
-      list: ({ onlyDemo }) =>
+      list: ({ onlyDemo, requestedBy }) =>
         Promise.resolve(
-          [...this.requests.values()].filter((request) => !onlyDemo || request.demoScope),
+          [...this.requests.values()].filter(
+            (request) =>
+              (!onlyDemo || request.demoScope) &&
+              (requestedBy === null || request.requestedBy === requestedBy),
+          ),
         ),
     };
     const idempotency = {

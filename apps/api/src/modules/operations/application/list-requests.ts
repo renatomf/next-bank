@@ -12,6 +12,7 @@ export interface RequestsPage {
 /**
  * The requests queue (v1.3.0 plan, task 4): newest first, pending only or
  * all of them, a page at a time; the demo staff sees the demo ones only.
+ * With mine, only what the member asked (home plan, H1).
  */
 export class ListRequests {
   readonly #deps: CommandDependencies;
@@ -22,7 +23,7 @@ export class ListRequests {
 
   execute(
     actor: StaffReader,
-    input: { status: 'PENDING' | 'ALL'; after: RequestPosition | null },
+    input: { status: 'PENDING' | 'ALL'; after: RequestPosition | null; mine: boolean },
   ): Promise<RequestsPage> {
     const now = this.#deps.clock.now();
     return this.#deps.unitOfWork.run(async (tx) => {
@@ -32,6 +33,7 @@ export class ListRequests {
         now,
         after: input.after,
         limit: PAGE_SIZE + 1,
+        requestedBy: input.mine ? actor.memberId : null,
       });
       const page = found.slice(0, PAGE_SIZE);
       const last = page.at(-1);

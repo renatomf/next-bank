@@ -58,8 +58,14 @@ describe('the customer queries of the staff', () => {
     [
       'requests: the queue, a page from a position',
       PgRequestsRepository.LIST_SQL,
-      ['PENDING', new Date(), false, new Date(), randomUUID(), 21],
+      ['PENDING', new Date(), false, new Date(), randomUUID(), 21, null],
       'requests_queue_idx',
+    ],
+    [
+      "requests: the member's own, a page from a position",
+      PgRequestsRepository.LIST_SQL,
+      ['ALL', new Date(), false, new Date(), randomUUID(), 21, randomUUID()],
+      'requests_requester_idx',
     ],
     [
       'requests: an open one for the customer',

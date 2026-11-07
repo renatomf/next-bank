@@ -46,12 +46,14 @@ const REQUEST_WITH_DECISION = `SELECT r.id, r.kind, r.customer_id, r.transfer_id
 export class PgRequestsRepository implements RequestsRepository {
   /**
    * Newest first, from a position, pending only or all; served by
-   * requests_queue_idx. The demo staff sees the demo ones only (STF-11).
+   * requests_queue_idx, or requests_requester_idx for one member's own
+   * (home plan, H1). The demo staff sees the demo ones only (STF-11).
    */
   static readonly LIST_SQL = `${REQUEST_WITH_DECISION}
     WHERE ($1 = 'ALL' OR (d.request_id IS NULL AND r.expires_at > $2))
       AND (r.demo_scope OR NOT $3::boolean)
       AND ($4::timestamptz IS NULL OR (r.requested_at, r.id) < ($4, $5::uuid))
+      AND ($7::uuid IS NULL OR r.requested_by = $7)
     ORDER BY r.requested_at DESC, r.id DESC
     LIMIT $6`;
 
@@ -176,6 +178,7 @@ export class PgRequestsRepository implements RequestsRepository {
     now: Date;
     after: RequestPosition | null;
     limit: number;
+    requestedBy: string | null;
   }): Promise<ApprovalRequestState[]> {
     const { rows } = await this.#client.query<RequestRow>(PgRequestsRepository.LIST_SQL, [
       filter.status,
@@ -184,6 +187,7 @@ export class PgRequestsRepository implements RequestsRepository {
       filter.after?.requestedAt ?? null,
       filter.after?.id ?? null,
       filter.limit,
+      filter.requestedBy,
     ]);
     return rows.map(stateOf);
   }

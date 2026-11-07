@@ -6,6 +6,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não publicado]
 
+### Adicionado
+- **Home do backoffice com a fila de trabalho:** a home deixa de repetir a barra lateral e mostra o que espera por quem entrou. O analista vê os pedidos pendentes, do mais antigo para o mais novo, cada um com o tempo que falta para vencer; o operador vê os pedidos que abriu, os pendentes e os decididos por último, e um atalho para buscar cliente; os dois veem as exceções da conciliação em aberto. A saudação e a data seguem o horário de Brasília (plano `backoffice-home-fila-de-trabalho.md`).
+- **API:** `GET /admin/v1/requests?mine=true` lista só os pedidos de quem está na sessão.
+
 ## [1.3.0] — 2026-11-03
 
 Backoffice: o "banco por dentro". Uma equipe fictícia, com papéis e MFA, consulta clientes com dados mascarados, bloqueia contas, estorna Pix, resolve as exceções da conciliação e lê a trilha de auditoria. Tudo que mexe em dinheiro ou desbloqueia uma conta pede **duas pessoas**: quem pede nunca aprova (plano `v1.3.0-backoffice.md`).
