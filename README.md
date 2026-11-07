@@ -28,9 +28,9 @@ O **next bank** é um banco digital de portfólio construído como se fosse para
 
 ## Veja funcionando
 
-O app na demo publicada (1 min 40 s, sem áudio):
+O app em 1 min 30 s, sem áudio: um Pix para o Bruno, do next bank, e outro para a Clara, de um banco fictício, passando pelo simulador do Bacen; o extrato; uma passada por todas as telas; e a troca de tema.
 
-https://github.com/user-attachments/assets/a2748bde-302c-45a7-a953-d19fa6b02b93
+https://github.com/user-attachments/assets/a5467f94-7f4c-4ae1-b8bc-b43a819baf64
 
 ### O banco por dentro: o backoffice
 
