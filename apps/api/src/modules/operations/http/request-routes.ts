@@ -218,6 +218,11 @@ export const requestRoutes: FastifyPluginAsyncZod<{
         operationId: 'listRequests',
         querystring: z.strictObject({
           status: z.enum(['PENDING', 'ALL']).default('PENDING'),
+          // Only what the member asked (home plan, H1); the session says who.
+          mine: z
+            .enum(['true', 'false'])
+            .default('false')
+            .transform((value) => value === 'true'),
           cursor: z
             .string()
             .regex(/^[A-Za-z0-9_-]{1,200}$/)
@@ -227,9 +232,10 @@ export const requestRoutes: FastifyPluginAsyncZod<{
       },
     },
     async (request) => {
-      const { status, cursor } = request.query;
+      const { status, mine, cursor } = request.query;
       const page = await deps.listRequests.execute(actorOf(request), {
         status,
+        mine,
         after: cursor === undefined ? null : decodeCursor(cursor),
       });
       return { items: page.items, nextCursor: page.next && encodeCursor(page.next) };

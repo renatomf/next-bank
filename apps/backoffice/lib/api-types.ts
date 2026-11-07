@@ -1172,6 +1172,7 @@ export interface operations {
         parameters: {
             query?: {
                 status?: "PENDING" | "ALL";
+                mine?: "true" | "false";
                 cursor?: string;
             };
             header?: never;
