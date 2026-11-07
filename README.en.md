@@ -28,9 +28,9 @@
 
 ## See it working
 
-The app on the published demo (1 min 40 s, no sound):
+The app in 1 min 30 s, no sound: a Pix to Bruno, at next bank, and another to Clara, at a made-up bank, through the Bacen simulator; the statement; a pass through every screen; and the theme switch.
 
-https://github.com/user-attachments/assets/a2748bde-302c-45a7-a953-d19fa6b02b93
+https://github.com/user-attachments/assets/a5467f94-7f4c-4ae1-b8bc-b43a819baf64
 
 ### The bank from the inside: the backoffice
 
