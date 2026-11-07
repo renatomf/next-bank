@@ -411,3 +411,84 @@ describe('the demo staff', () => {
     expect((await block(demoOperator, carla.id)).statusCode).toBe(204);
   });
 });
+
+// The backoffice's home (home plan, H1): the operator's own requests, decided
+// by the session on the server. The filter only narrows a list the member
+// may already read, and never lifts the demo scope (STF-11).
+describe("the member's own requests", () => {
+  async function openedBy(operator: string) {
+    const target = await customer();
+    await block(operator, target.id);
+    const opened = await requestUnblock(operator, target.id);
+    expect(opened.statusCode, opened.body).toBe(201);
+    return opened.json<{ id: string }>().id;
+  }
+
+  const idsOf = async (token: string, query: string) => {
+    const response = await app.inject({
+      method: 'GET',
+      url: `/admin/v1/requests${query}`,
+      headers: admin(token),
+    });
+    expect(response.statusCode, response.body).toBe(200);
+    return response.json<{ items: { id: string }[] }>().items.map((item) => item.id);
+  };
+
+  it('lists only what the member asked, pending or all', async () => {
+    const olivia = await staff('OPERATOR');
+    const other = await staff('OPERATOR');
+    const hers = await openedBy(olivia);
+    const theirs = await openedBy(other);
+
+    for (const status of ['PENDING', 'ALL']) {
+      const mine = await idsOf(olivia, `?status=${status}&mine=true`);
+      expect(mine).toContain(hers);
+      expect(mine).not.toContain(theirs);
+    }
+  });
+
+  it('lists everyone’s requests without the filter, as before', async () => {
+    const olivia = await staff('OPERATOR');
+    const other = await staff('OPERATOR');
+    const hers = await openedBy(olivia);
+    const theirs = await openedBy(other);
+
+    for (const query of ['', '?mine=false']) {
+      const all = await idsOf(olivia, query);
+      expect(all).toEqual(expect.arrayContaining([hers, theirs]));
+    }
+  });
+
+  it('finds nothing for a member who asked nothing', async () => {
+    const analyst = await staff('ANALYST');
+    await openedBy(await staff('OPERATOR'));
+
+    expect(await idsOf(analyst, '?status=ALL&mine=true')).toEqual([]);
+  });
+
+  it('refuses a filter that is not true or false', async () => {
+    const operator = await staff('OPERATOR');
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/admin/v1/requests?mine=maybe',
+      headers: admin(operator),
+    });
+
+    expect(response.statusCode).toBe(422);
+  });
+
+  it('keeps the demo staff to the demo customers (STF-11)', async () => {
+    const demoOperator = await staff('OPERATOR', true);
+    const target = await customer({ demo: true });
+    await block(demoOperator, target.id);
+    const opened = await requestUnblock(demoOperator, target.id);
+    expect(opened.statusCode, opened.body).toBe(201);
+    const outside = await openedBy(await staff('OPERATOR'));
+
+    const mine = await idsOf(demoOperator, '?status=ALL&mine=true');
+
+    expect(mine).toContain(opened.json<{ id: string }>().id);
+    expect(mine).not.toContain(outside);
+  });
+});
