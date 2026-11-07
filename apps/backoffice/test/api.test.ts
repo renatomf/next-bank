@@ -202,6 +202,17 @@ describe('adminApi', () => {
     );
   });
 
+  // Home plan, H1: the member's own requests, decided by the session.
+  it("lists the member's own requests", async () => {
+    const { calls, fetch } = recordingFetch(200, { items: [], nextCursor: null });
+
+    await api(fetch, 'opaque-token').listRequests('PENDING', null, { mine: true });
+
+    expect(calls[0]?.url).toBe(
+      'https://api.example.test/admin/v1/requests?status=PENDING&mine=true',
+    );
+  });
+
   it.each([
     [409, 'AccountAlreadyBlocked'],
     [403, 'SelfApprovalNotAllowed'],
