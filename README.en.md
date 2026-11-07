@@ -10,11 +10,11 @@
 **next bank** is a portfolio digital bank built as if for production: a **Flutter app** for the customer, a **TypeScript API** that keeps the money in a double-entry ledger, a **Bacen simulator** (Brazil's central bank) that fails on purpose, and a **Next.js backoffice** where the bank's staff works under two-person approval. All of it published, with a public demo, at no cost and with fictitious data only.
 
 <p align="center">
-  <img src="docs/design/mockups/home-dark.png" width="230" alt="App home screen with balance and recent transactions">
-  <img src="docs/design/mockups/pix-dark.png" width="230" alt="Pix transfer screen">
-  <img src="docs/design/mockups/comprovante-dark.png" width="230" alt="Pix receipt">
+  <img src="docs/screenshots/app/05-home-saldo.jpg" width="230" alt="The app's home with the balance">
+  <img src="docs/screenshots/app/11-pix-favorecido.jpg" width="230" alt="Pix with the payee found">
+  <img src="docs/screenshots/app/14-pix-comprovante.jpg" width="230" alt="The Pix receipt">
 </p>
-<p align="center"><sub>The app: the V1 visual concept the screens evolved from.</sub></p>
+<p align="center"><sub>The app: home, Pix and receipt. <a href="docs/screenshots/README.md"><b>See every screen of the app and the backoffice →</b></a></sub></p>
 
 ## By the numbers
 
@@ -36,36 +36,16 @@ https://github.com/user-attachments/assets/a2748bde-302c-45a7-a953-d19fa6b02b93
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/backoffice/01-home-analista.png" alt="The analyst's home with the queue of requests and each one's deadline"></td>
-    <td width="50%"><img src="docs/screenshots/backoffice/03-pedido-dupla-aprovacao.png" alt="An unblock request waiting for the analyst's decision"></td>
+    <td width="50%"><img src="docs/screenshots/backoffice/02-home-analista.jpg" alt="The analyst's home with the queue of requests and each one's deadline"></td>
+    <td width="50%"><img src="docs/screenshots/backoffice/21-pedido-para-decidir.jpg" alt="An unblock request waiting for the analyst's decision"></td>
   </tr>
   <tr>
     <td><sub><b>The analyst's home:</b> the queue of requests, oldest first, with the time left before each one expires.</sub></td>
     <td><sub><b>Two-person approval:</b> the operator asks, the analyst decides. Whoever asks never approves, neither on screen nor through the API.</sub></td>
   </tr>
-  <tr>
-    <td><img src="docs/screenshots/backoffice/04-ficha-do-cliente.png" alt="A customer's card with masked CPF and e-mail, and the statement"></td>
-    <td><img src="docs/screenshots/backoffice/06-trilha-de-auditoria.png" alt="The audit trail of a request"></td>
-  </tr>
-  <tr>
-    <td><sub><b>Customer card:</b> masked CPF and e-mail, an immediate block, and a Pix reversal from the statement. Every lookup lands in the trail.</sub></td>
-    <td><sub><b>Audit trail:</b> who did what and when, by customer, by staff member or by request. Append-only.</sub></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/backoffice/02-home-operadora.png" alt="The operator's home with the requests she opened"></td>
-    <td><img src="docs/screenshots/backoffice/05-pedidos.png" alt="The list of requests with each one's status"></td>
-  </tr>
-  <tr>
-    <td><sub><b>The operator's home</b> (light theme): the requests she opened and how they ended.</sub></td>
-    <td><sub><b>Requests:</b> unblocks, Pix reversals and reconciliation resolutions, with each one's status.</sub></td>
-  </tr>
 </table>
 
-<p align="center">
-  <img src="docs/screenshots/backoffice/00-login.png" width="49%" alt="Staff sign-in with the authenticator code">
-  <img src="docs/screenshots/backoffice/07-home-celular.png" width="22%" alt="The analyst's home on a phone">
-</p>
-<p align="center"><sub>Sign-in with mandatory MFA (TOTP), and the same home on a phone. The screens are in Portuguese.</sub></p>
+**[Full gallery →](docs/screenshots/README.md)** 37 screens of the app and 21 of the backoffice, organized by area (Pix, statement, profile; customers, requests, reconciliation, audit, staff), each with what it shows and what is behind it. The screens and the captions are in Portuguese.
 
 ## Try it in a minute
 

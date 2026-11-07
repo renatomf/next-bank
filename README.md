@@ -10,11 +10,11 @@
 O **next bank** é um banco digital de portfólio construído como se fosse para produção: um **app Flutter** para o cliente, uma **API em TypeScript** que guarda o dinheiro num livro-razão de partidas dobradas, um **simulador do Bacen** que falha de propósito e um **backoffice em Next.js** onde a equipe do banco trabalha com dupla aprovação. Tudo publicado, com demo pública, sem custo e só com dados fictícios.
 
 <p align="center">
-  <img src="docs/design/mockups/home-dark.png" width="230" alt="Tela inicial do app com saldo e últimas movimentações">
-  <img src="docs/design/mockups/pix-dark.png" width="230" alt="Tela de envio de Pix">
-  <img src="docs/design/mockups/comprovante-dark.png" width="230" alt="Comprovante de Pix">
+  <img src="docs/screenshots/app/05-home-saldo.jpg" width="230" alt="Home do app com o saldo">
+  <img src="docs/screenshots/app/11-pix-favorecido.jpg" width="230" alt="Pix com o favorecido encontrado">
+  <img src="docs/screenshots/app/14-pix-comprovante.jpg" width="230" alt="Comprovante do Pix">
 </p>
-<p align="center"><sub>O app: conceito visual da V1, do qual as telas evoluíram.</sub></p>
+<p align="center"><sub>O app: Home, Pix e comprovante. <a href="docs/screenshots/README.md"><b>Ver todas as telas do app e do backoffice →</b></a></sub></p>
 
 ## Em números
 
@@ -36,36 +36,16 @@ https://github.com/user-attachments/assets/a2748bde-302c-45a7-a953-d19fa6b02b93
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/backoffice/01-home-analista.png" alt="Home do analista com a fila de pedidos e o prazo de cada um"></td>
-    <td width="50%"><img src="docs/screenshots/backoffice/03-pedido-dupla-aprovacao.png" alt="Pedido de desbloqueio aguardando a decisão do analista"></td>
+    <td width="50%"><img src="docs/screenshots/backoffice/02-home-analista.jpg" alt="Home do analista com a fila de pedidos e o prazo de cada um"></td>
+    <td width="50%"><img src="docs/screenshots/backoffice/21-pedido-para-decidir.jpg" alt="Pedido de desbloqueio aguardando a decisão do analista"></td>
   </tr>
   <tr>
     <td><sub><b>Home do analista:</b> a fila de pedidos, do mais antigo ao mais novo, com o tempo que falta para cada um vencer.</sub></td>
     <td><sub><b>Dupla aprovação:</b> a operadora pede, o analista decide. Quem pede nunca aprova, nem pela tela nem pela API.</sub></td>
   </tr>
-  <tr>
-    <td><img src="docs/screenshots/backoffice/04-ficha-do-cliente.png" alt="Ficha da cliente com CPF e e-mail mascarados e o extrato"></td>
-    <td><img src="docs/screenshots/backoffice/06-trilha-de-auditoria.png" alt="Trilha de auditoria de um pedido"></td>
-  </tr>
-  <tr>
-    <td><sub><b>Ficha do cliente:</b> CPF e e-mail mascarados, bloqueio imediato e estorno de Pix a partir do extrato. Cada consulta fica na trilha.</sub></td>
-    <td><sub><b>Trilha de auditoria:</b> quem fez o quê e quando, por cliente, por membro da equipe ou por pedido. Só por inclusão.</sub></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/backoffice/02-home-operadora.png" alt="Home da operadora com os pedidos que ela abriu"></td>
-    <td><img src="docs/screenshots/backoffice/05-pedidos.png" alt="Lista de pedidos com a situação de cada um"></td>
-  </tr>
-  <tr>
-    <td><sub><b>Home da operadora</b> (tema claro): os pedidos que ela abriu e como terminaram.</sub></td>
-    <td><sub><b>Pedidos:</b> desbloqueios, estornos de Pix e resoluções da conciliação, com a situação de cada um.</sub></td>
-  </tr>
 </table>
 
-<p align="center">
-  <img src="docs/screenshots/backoffice/00-login.png" width="49%" alt="Login da equipe com o código do autenticador">
-  <img src="docs/screenshots/backoffice/07-home-celular.png" width="22%" alt="Home do analista no celular">
-</p>
-<p align="center"><sub>Login com MFA (TOTP) obrigatório e a mesma home no celular.</sub></p>
+**[Galeria completa →](docs/screenshots/README.md)** 37 telas do app e 21 do backoffice, organizadas por área (Pix, extrato, perfil; clientes, pedidos, conciliação, auditoria, equipe), cada uma com o que mostra e o que há por trás.
 
 ## Experimente em um minuto
 
