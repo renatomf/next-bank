@@ -27,6 +27,8 @@ export function SearchForm() {
             minLength={3}
             maxLength={120}
             autoComplete="off"
+            // The page exists to search, and the home's "Buscar cliente" leads here (home plan, H4).
+            autoFocus
             required
           />
         </div>
