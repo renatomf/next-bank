@@ -427,6 +427,8 @@ Cada item recebe um parágrafo de design no README, sem implementação:
 - **Atualizações de versão maior, depois da `v1.2.0`:** `go_router` 17 → 18 e `sentry_flutter` 9 → 10, propostas pelo Dependabot em 2026-10-26 (PRs #180 e #179, fechados). Ficaram fora pelo escopo congelado. O `sentry_flutter` 10 quebrava os testes do app e o E2E, e cada uma entra como tarefa própria, com desenho: o que muda na API da biblioteca, os testes afetados e, no Sentry, a redação de dados pessoais (`beforeSend`) conferida de novo.
 
 - **Backoffice, depois da `v1.3.0`:**
+  - ✅ a home com a fila de trabalho do operador e do analista (plano `backoffice-home-fila-de-trabalho.md`), em "Não publicado" no CHANGELOG até a próxima versão;
+  - a home do admin, com os membros por papel e as mudanças recentes na equipe (plano da home, H5);
   - esconder **Bloquear** dos clientes que a equipe demo não bloqueia (Ana e Bruno); hoje a API recusa, e o botão só leva à recusa;
   - uma mensagem própria no app para a conta bloqueada, em vez da recusa genérica do login;
   - estorno parcial de um Pix;

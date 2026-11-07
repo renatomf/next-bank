@@ -5,7 +5,7 @@
 - **Referências:** OWASP ASVS (nível 2) para API, OWASP MASVS para o app — checklist em `checklist-asvs-masvs.md`; status consolidado dos controles em `controles-de-seguranca.md`
 - **Base:** `docs/architecture/domain-model.md`, `docs/architecture/database.md`
 - **Regra viva:** toda feature nova revisa este documento; ameaça nova vira uma linha aqui **e** um teste.
-- **Revisado em:** 2026-11-03, antes da `v1.3.0`: as ameaças STF-01 a STF-16, PIX-14 e REC-01 conferidas, cada uma com o seu teste; o ZAP baseline contra o backoffice publicado sem falhas. Antes, em 2026-11-01, as da `v1.2.0` (EXT-01 a EXT-10)
+- **Revisado em:** 2026-11-07, na home do backoffice: nenhuma ameaça nova; o filtro `mine=true` só estreita uma lista que o membro já lê e mantém o escopo demo (STF-11), e a home só chama as listas dos blocos do papel (STF-02), com testes em `own-requests-routes.test.ts` e `load-home.test.ts`. Antes, em 2026-11-03, antes da `v1.3.0`: as ameaças STF-01 a STF-16, PIX-14 e REC-01 conferidas, cada uma com o seu teste; o ZAP baseline contra o backoffice publicado sem falhas. Antes, em 2026-11-01, as da `v1.2.0` (EXT-01 a EXT-10)
 
 ## 1. Escopo
 

@@ -1,6 +1,6 @@
 # Plano — Home do backoffice: a fila de trabalho
 
-- **Status:** Aprovado (2026-11-07), com as decisões H1 a H5 nos padrões recomendados
+- **Status:** Aprovado (2026-11-07), com as decisões H1 a H5 nos padrões recomendados; implementado na branch `feat/backoffice-home`
 - **Roadmap:** `docs/roadmap.md`, seção 11, "Backoffice, depois da `v1.3.0`" (item novo)
 - **Base:**
   - plano da `v1.3.0` (`v1.3.0-backoffice.md`): B5 (equipe de demonstração), B6 (quem pede não aprova), K4 (o pedido vence em 24 h), C2 (o termo da busca nunca vai numa URL);
@@ -137,11 +137,18 @@ O layout dos blocos não tem TDD (CLAUDE.md); os testes de componente vêm depoi
 
 ## Tarefas
 
-1. **API: o filtro `mine`.** Teste HTTP vermelho, migração do índice, query, rota, `EXPLAIN ANALYZE`, contrato regenerado.
-2. **Funções puras** (`deadline`, `greeting`, `queue`), em TDD.
-3. **Os blocos e a página.** Mover o selo de situação; o selo do prazo; os três blocos, o estado vazio e o aviso de erro; a página compondo pelo papel; os testes de componente.
-4. **E2E** da fila de ponta a ponta.
-5. **Documentação.** README (o passeio da equipe demo começa pela home), CHANGELOG em "Não publicado", roadmap (o item sai da seção 11) e a revisão do threat model registrada.
+1. ✅ **API: o filtro `mine`.** Teste HTTP vermelho, migração do índice, query, rota, `EXPLAIN ANALYZE`, contrato regenerado.
+2. ✅ **Funções puras** (`deadline`, `greeting`, `queue`), em TDD.
+3. ✅ **Os blocos e a página.** Mover o selo de situação; o selo do prazo; os três blocos, o estado vazio e o aviso de erro; a página compondo pelo papel; os testes de componente.
+4. ✅ **E2E** da fila de ponta a ponta.
+5. ✅ **Documentação.** README (o passeio da equipe demo começa pela home), CHANGELOG em "Não publicado", roadmap (o item sai da seção 11) e a revisão do threat model registrada.
+
+### O que mudou no caminho
+
+- **H3, sem âmbar:** os tokens do design system não têm uma cor de atenção, e criar uma mexeria no `tokens.dart` do app, com a conferência de contraste, fora desta fatia. O selo do prazo distingue os tons pelo ícone e pelo peso, sempre com o texto: calmo em cinza com relógio, perto de vencer em texto forte com ampulheta, urgente em vermelho com alerta.
+- **Testes do filtro num arquivo próprio** (`own-requests-routes.test.ts`): no arquivo das rotas de conta, os testes novos passaram do limite global de requisições do mesmo endereço (429). Cada arquivo de rota tem a sua instância da API e o seu limite.
+- **O E2E da home estende o da dupla aprovação** (`approval.spec.ts`), em vez de um `home.spec.ts`: o pedido já nasce ali, e repetir o fluxo num arquivo novo seria só duplicação.
+- **Os testes de componente** ficaram em `home-blocks.test.tsx` e `load-home.test.ts`, este com o que cada papel lê (STF-02).
 
 `/security-review` antes do PR, porque a fatia mexe numa rota de autorização (o filtro de pedidos).
 
