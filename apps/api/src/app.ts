@@ -73,6 +73,7 @@ import { HmacRequestFingerprint } from './shared/infrastructure/hmac-request-fin
 import { createOutbox } from './shared/infrastructure/outbox-factory.ts';
 import type { OutboxWorker } from './shared/infrastructure/outbox-worker.ts';
 import { PgUnitOfWork } from './shared/infrastructure/pg-unit-of-work.ts';
+import { guardConnections } from './shared/db.ts';
 import type { Clock, ErrorReporter } from './shared/application/ports.ts';
 import { NoopErrorReporter } from './shared/infrastructure/sentry-error-reporter.ts';
 import { SystemClock, UuidV7Generator } from './shared/infrastructure/system-ports.ts';
@@ -181,8 +182,9 @@ export function buildApp({
     void reply.header('cache-control', 'no-store');
     done(null, payload);
   });
-  pool.on('error', (err) => {
-    app.log.error({ err }, 'idle database connection error');
+  // A connection the database cuts, idle or in use, never ends the process (F-54).
+  guardConnections(pool, (lost) => {
+    app.log.error({ lost }, 'database connection lost');
   });
   app.addHook('onClose', async () => {
     await pool.end();
