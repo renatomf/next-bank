@@ -44,7 +44,8 @@ describe('connections the database cuts', () => {
 
     await expect(transaction).rejects.toThrow();
     await settled();
-    expect(logged).toEqual([expect.objectContaining({ message: expect.any(String) })]);
+    expect(logged).toHaveLength(1);
+    expect(typeof (logged[0] as { message: unknown }).message).toBe('string');
     // The pool still serves: the cut connection was discarded, not reused.
     await expect(pool.query('SELECT 1 AS one')).resolves.toMatchObject({ rows: [{ one: 1 }] });
   });
