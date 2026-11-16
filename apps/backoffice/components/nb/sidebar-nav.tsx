@@ -24,7 +24,7 @@ export function SidebarNav({
 }) {
   return (
     <TooltipProvider delayDuration={200}>
-      <nav aria-label="Navegação principal" className="flex flex-col gap-2">
+      <nav aria-label="Navegação principal" className="flex flex-col gap-1">
         {navigationFor(role).map(({ href, label, icon: Icon }) => {
           const current = isCurrent(href, currentPath);
           const link = (
@@ -35,13 +35,13 @@ export function SidebarNav({
               aria-current={current ? 'page' : undefined}
               aria-label={collapsed ? label : undefined}
               className={cn(
-                'flex h-10 items-center gap-3 rounded-md text-sm font-semibold text-muted-foreground transition-colors duration-150',
+                'flex h-9 items-center gap-2.5 rounded-md text-[13px] whitespace-nowrap font-medium text-muted-foreground transition-colors duration-150',
                 'hover:bg-accent hover:text-foreground motion-reduce:transition-none',
-                current && 'bg-selected text-link hover:bg-selected hover:text-link',
-                collapsed ? 'w-10 justify-center' : 'px-3',
+                current && 'bg-selected font-semibold text-link hover:bg-selected hover:text-link',
+                collapsed ? 'w-9 justify-center' : 'px-2.5',
               )}
             >
-              <Icon aria-hidden="true" className="size-[18px] shrink-0" />
+              <Icon aria-hidden="true" className="size-4 shrink-0" />
               {collapsed ? null : label}
             </Link>
           );
