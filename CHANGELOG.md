@@ -11,6 +11,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - **API:** `GET /admin/v1/requests?mine=true` lista só os pedidos de quem está na sessão.
 
 ### Corrigido
+- **Barra lateral do backoffice mais compacta e que abre como no ChatGPT:** ícones e nomes menores; recolhida, fica só o logo, que abre a barra com um clique, assim como o espaço vazio dela; ao abrir, os nomes não piscam mais nem quebram de linha durante a animação.
 - **A API não cai mais quando o banco corta as conexões** (F-54): no reset diário da demo, uma conexão em uso derrubava o processo, que voltava sozinho em uns 20 segundos. O log do erro deixa de gravar os detalhes da conexão.
 
 ## [1.3.0] — 2026-11-03
