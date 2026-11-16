@@ -38,7 +38,7 @@ class StatementDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Opened from the statement screen, the movement may be only in its
     // filtered list; from the Home, in the whole statement.
-    final statement = ref.exists(filteredStatementProvider)
+    final statement = ref.read(filteredStatementProvider.exists)
         ? ref.watch(filteredStatementProvider)
         : ref.watch(statementProvider);
     return Scaffold(

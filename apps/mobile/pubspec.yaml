@@ -14,7 +14,7 @@ dependencies:
   dio: ^5.11.1
   flutter:
     sdk: flutter
-  flutter_riverpod: ^3.4.3
+  flutter_riverpod: ^3.5.0
   flutter_secure_storage: 11.2.0
   go_router: 17.5.0
   local_auth: 3.0.2
@@ -22,7 +22,7 @@ dependencies:
   local_auth_android: 2.3.0
   # Reads the Pix QR Code with the camera (v1.1.0 plan, task 4; E1: ML Kit
   # bundled, so the first read needs no download).
-  mobile_scanner: 7.4.2
+  mobile_scanner: 7.5.0
   nextbank_api:
     path: ../../packages/contracts/dart
   path_provider: 2.1.6
