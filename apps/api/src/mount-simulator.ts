@@ -7,7 +7,7 @@ import {
   WebhookDispatcher,
 } from '@nextbank/simulator';
 import type { FastifyInstance } from 'fastify';
-import { createPool } from './shared/db.ts';
+import { createPool, guardConnections } from './shared/db.ts';
 
 export interface MountedSimulatorOptions {
   /** The simulator's own role (S1): it never shares the API's. */
@@ -46,6 +46,10 @@ export async function mountSimulator(
   options: MountedSimulatorOptions,
 ): Promise<MountedSimulator> {
   const pool = createPool(options.databaseUrl);
+  // Its connections are cut with the API's, as on the demo reset (F-54).
+  guardConnections(pool, (lost) => {
+    app.log.error({ lost }, 'simulator database connection lost');
+  });
   app.addHook('onClose', async () => {
     await pool.end();
   });
